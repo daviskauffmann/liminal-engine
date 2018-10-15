@@ -1,19 +1,21 @@
 #include <cglm/cglm.h>
+#include <stdio.h>
 
+#include "../engine/config.h"
 #include "../engine/camera.h"
 #include "../engine/material.h"
 #include "../engine/mesh.h"
 #include "../engine/object.h"
 #include "../engine/program.h"
-#include "../engine/time.h"
 #include "../engine/texture.h"
+#include "../engine/time.h"
 #include "../engine/window.h"
 #include "game.h"
 
 struct program *standard_program;
 struct mesh *quad_mesh;
-struct mesh *triangle_mesh;
 struct mesh *cube_mesh;
+struct mesh *monkey_mesh;
 struct texture *box_diffuse_texture;
 struct texture *box_specular_texture;
 struct material *box_material;
@@ -58,23 +60,6 @@ int game_init(void)
               sizeof(quad_vertices),
               quad_indices,
               sizeof(quad_indices))))
-    {
-        return 1;
-    }
-
-    float triangle_vertices[] = {
-        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f};
-
-    unsigned int triangle_indices[] = {
-        0, 1, 2};
-
-    if (!(triangle_mesh = mesh_create(
-              triangle_vertices,
-              sizeof(triangle_vertices),
-              triangle_indices,
-              sizeof(triangle_indices))))
     {
         return 1;
     }
@@ -136,6 +121,11 @@ int game_init(void)
               sizeof(cube_vertices),
               cube_indices,
               sizeof(cube_indices))))
+    {
+        return 1;
+    }
+
+    if (!(monkey_mesh = mesh_create_obj("assets/models/monkey.obj")))
     {
         return 1;
     }
@@ -311,7 +301,7 @@ bool game_input(void)
         }
     }
 
-    float speed = 5.0f * delta_time;
+    float speed = 5.0f * time_delta();
 
     if (keys[SDL_SCANCODE_LSHIFT])
     {
@@ -372,13 +362,27 @@ void game_update(void)
     camera_calc_view(camera, camera_view);
 
     program_bind(standard_program);
-    program_set_int(standard_program_time, current_time);
+    program_set_int(standard_program_time, time_current());
     program_set_mat4(standard_program_camera_projection, camera_projection);
     program_set_mat4(standard_program_camera_view, camera_view);
     program_set_vec3(standard_program_camera_position, camera->position);
     program_unbind();
 
     object_update(object);
+
+    static float fps_update_timer = 0.0f;
+    static unsigned int fps = 0;
+    float delta = time_delta();
+    fps_update_timer += delta;
+    if (fps_update_timer >= 0.25f)
+    {
+        fps_update_timer = 0.0f;
+        fps = (unsigned int)(1 / delta);
+    }
+
+    char title[256];
+    sprintf(title, "%s - FPS: %d", WINDOW_TITLE, fps);
+    window_set_title(title);
 }
 
 void game_render(void)
@@ -402,6 +406,7 @@ void game_quit(void)
     material_destroy(box_material);
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
+    mesh_destroy(monkey_mesh);
     mesh_destroy(cube_mesh);
     mesh_destroy(quad_mesh);
     program_destroy(standard_program);

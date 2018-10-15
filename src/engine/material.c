@@ -1,9 +1,6 @@
 #include <malloc.h>
 
 #include "material.h"
-#include "texture.h"
-
-struct texture;
 
 struct material *material_create(
     struct texture *diffuse,

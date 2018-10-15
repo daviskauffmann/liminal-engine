@@ -6,7 +6,7 @@
 
 struct texture *texture_create(const char *file)
 {
-    struct texture *texture = calloc(1, sizeof(struct texture));
+    struct texture *texture = malloc(sizeof(struct texture));
 
     glGenTextures(1, &texture->texture);
 

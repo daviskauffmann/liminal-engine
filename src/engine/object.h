@@ -4,8 +4,8 @@
 #include <cglm/cglm.h>
 #include <GL/glew.h>
 
-struct mesh;
-struct material;
+#include "material.h"
+#include "mesh.h"
 
 struct object
 {

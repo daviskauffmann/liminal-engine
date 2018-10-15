@@ -8,7 +8,7 @@ struct mesh *mesh_create(
     unsigned int *indices,
     unsigned int num_indices)
 {
-    struct mesh *mesh = calloc(1, sizeof(struct mesh));
+    struct mesh *mesh = malloc(sizeof(struct mesh));
 
     glGenVertexArrays(1, &mesh->vao);
     glGenBuffers(1, &mesh->vbo);
@@ -34,6 +34,13 @@ struct mesh *mesh_create(
     return mesh;
 }
 
+struct mesh *mesh_create_obj(const char *file)
+{
+    struct mesh *mesh = malloc(sizeof(struct mesh));
+
+    return mesh;
+}
+
 void mesh_draw(struct mesh *mesh)
 {
     glBindVertexArray(mesh->vao);
@@ -41,7 +48,11 @@ void mesh_draw(struct mesh *mesh)
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-    
+
+    // glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    // glDrawArrays(GL_TRIANGLES, 0, mesh->num_vertices);
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
     glDrawElements(GL_TRIANGLES, mesh->num_indices, GL_UNSIGNED_INT, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

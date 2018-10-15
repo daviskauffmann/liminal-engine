@@ -17,6 +17,7 @@ struct mesh *mesh_create(
     unsigned int num_vertices,
     unsigned int *indices,
     unsigned int num_indices);
+struct mesh *mesh_create_obj(const char *file);
 void mesh_draw(struct mesh *mesh);
 void mesh_destroy(struct mesh *mesh);
 

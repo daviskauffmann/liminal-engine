@@ -1,10 +1,14 @@
 #include <malloc.h>
 #include <SDL/SDL.h>
 
-#include "material.h"
-#include "mesh.h"
 #include "object.h"
 #include "time.h"
+
+// TODO: scenes
+// objects should be created inside a scene
+// the game then can make a call to draw an entire scene, rather than specific objects
+// also, rather than drawing a scene explicitly, the game can set a scene to be active, which the engine will draw each render pass
+// the engine is responsible for sorting and reducing draw calls for all objects in the scene
 
 struct object *object_create(
     struct mesh *mesh,
@@ -13,7 +17,7 @@ struct object *object_create(
     vec3 rotation,
     vec3 scale)
 {
-    struct object *object = calloc(1, sizeof(struct object));
+    struct object *object = malloc(sizeof(struct object));
 
     object->mesh = mesh;
     object->material = material;
@@ -26,7 +30,7 @@ struct object *object_create(
 
 void object_update(struct object *object)
 {
-    float angle = current_time * 0.001f;
+    float angle = time_current() * 0.001f;
     object->rotation[0] = angle;
     object->rotation[1] = angle;
     object->rotation[2] = angle;

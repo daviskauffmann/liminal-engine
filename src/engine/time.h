@@ -1,7 +1,8 @@
 #ifndef TIME_H
 #define TIME_H
 
-extern unsigned int current_time;
-extern float delta_time;
+void time_update(void);
+unsigned int time_current(void);
+float time_delta(void);
 
 #endif
