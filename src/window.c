@@ -1,5 +1,4 @@
 #include <GL/glew.h>
-#include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <stdio.h>
 
@@ -81,9 +80,29 @@ int window_init(const char *title, int width, int height)
     return 0;
 }
 
+const unsigned char *window_keys(int *num_keys)
+{
+    return SDL_GetKeyboardState(num_keys);
+}
+
+unsigned int window_mouse(int *mouse_x, int *mouse_y)
+{
+    return SDL_GetMouseState(mouse_x, mouse_y);
+}
+
+int window_events(SDL_Event *event)
+{
+    return SDL_PollEvent(event);
+}
+
 const char *window_get_title(void)
 {
     return SDL_GetWindowTitle(window);
+}
+
+void window_toggle_mouse()
+{
+    SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
 }
 
 void window_set_title(const char *title)

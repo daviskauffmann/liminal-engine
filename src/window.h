@@ -1,9 +1,15 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include <SDL/SDL.h>
+
 int window_init(const char *title, int width, int height);
+const unsigned char *window_keys(int *num_keys);
+unsigned int window_mouse(int *mouse_x, int *mouse_y);
+int window_events(SDL_Event *event);
 const char *window_get_title(void);
 void window_set_title(const char *title);
+void window_toggle_mouse(void);
 void window_toggle_fullscreen(void);
 void window_resize(int width, int height);
 void window_clear(void);

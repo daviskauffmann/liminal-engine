@@ -52,19 +52,9 @@ int main(int argc, char *argv[])
             fps = (unsigned int)(1 / delta_time);
         }
 
-        int num_keys;
-        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
+        quit = game_input(delta_time);
 
-        int mouse_x, mouse_y;
-        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            quit = game_input(num_keys, keys, mouse_x, mouse_y, mouse, event);
-        }
-
-        game_update(delta_time);
+        game_update(current_time, delta_time);
 
         window_clear();
 

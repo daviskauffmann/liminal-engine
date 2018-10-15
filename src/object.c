@@ -1,4 +1,3 @@
-#include <cglm/cglm.h>
 #include <malloc.h>
 #include <SDL/SDL.h>
 
