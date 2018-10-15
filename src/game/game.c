@@ -1,13 +1,14 @@
 #include <cglm/cglm.h>
 
-#include "camera.h"
+#include "../engine/camera.h"
+#include "../engine/material.h"
+#include "../engine/mesh.h"
+#include "../engine/object.h"
+#include "../engine/program.h"
+#include "../engine/time.h"
+#include "../engine/texture.h"
+#include "../engine/window.h"
 #include "game.h"
-#include "material.h"
-#include "mesh.h"
-#include "object.h"
-#include "program.h"
-#include "texture.h"
-#include "window.h"
 
 struct program *standard_program;
 struct mesh *quad_mesh;
@@ -19,10 +20,13 @@ struct material *box_material;
 struct object *object;
 struct camera *camera;
 
+GLint standard_program_time;
 GLint standard_program_material_diffuse;
 GLint standard_program_material_specular;
 GLint standard_program_material_emission;
-GLint standard_program_time;
+GLint standard_program_material_shininess;
+GLint standard_program_material_glow;
+GLint standard_program_object_model;
 GLint standard_program_camera_projection;
 GLint standard_program_camera_view;
 GLint standard_program_camera_position;
@@ -180,10 +184,13 @@ int game_init(void)
 
     window_toggle_mouse();
 
+    standard_program_time = program_get_location(standard_program, "time");
     standard_program_material_diffuse = program_get_location(standard_program, "material.diffuse");
     standard_program_material_specular = program_get_location(standard_program, "material.specular");
     standard_program_material_emission = program_get_location(standard_program, "material.emission");
-    standard_program_time = program_get_location(standard_program, "time");
+    standard_program_material_shininess = program_get_location(standard_program, "material.shininess");
+    standard_program_material_glow = program_get_location(standard_program, "material.glow");
+    standard_program_object_model = program_get_location(standard_program, "object.model");
     standard_program_camera_projection = program_get_location(standard_program, "camera.projection");
     standard_program_camera_view = program_get_location(standard_program, "camera.view");
     standard_program_camera_position = program_get_location(standard_program, "camera.position");
@@ -197,7 +204,7 @@ int game_init(void)
     return 0;
 }
 
-bool game_input(float delta_time)
+bool game_input(void)
 {
     int num_keys;
     const unsigned char *keys = window_keys(&num_keys);
@@ -356,7 +363,7 @@ bool game_input(float delta_time)
     return false;
 }
 
-void game_update(unsigned int current_time, float delta_time)
+void game_update(void)
 {
     mat4 camera_projection;
     camera_calc_projection(camera, camera_projection);
@@ -376,15 +383,13 @@ void game_update(unsigned int current_time, float delta_time)
 
 void game_render(void)
 {
-    program_bind(standard_program);
-
     mat4 model = GLM_MAT4_IDENTITY_INIT;
     object_calc_model(object, model);
 
-    program_set_mat4(program_get_location(standard_program, "object.model"), model);
-
-    program_set_float(program_get_location(standard_program, "material.shininess"), object->material->shininess);
-    program_set_float(program_get_location(standard_program, "material.glow"), object->material->glow);
+    program_bind(standard_program);
+    program_set_mat4(standard_program_object_model, model);
+    program_set_float(standard_program_material_shininess, object->material->shininess);
+    program_set_float(standard_program_material_glow, object->material->glow);
 
     object_draw(object);
 

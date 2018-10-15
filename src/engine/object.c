@@ -4,7 +4,7 @@
 #include "material.h"
 #include "mesh.h"
 #include "object.h"
-#include "program.h"
+#include "time.h"
 
 struct object *object_create(
     struct mesh *mesh,
@@ -26,7 +26,7 @@ struct object *object_create(
 
 void object_update(struct object *object)
 {
-    float angle = SDL_GetTicks() / 1000.0f;
+    float angle = current_time * 0.001f;
     object->rotation[0] = angle;
     object->rotation[1] = angle;
     object->rotation[2] = angle;

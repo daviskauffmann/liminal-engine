@@ -1,4 +1,3 @@
-#include <GL/glew.h>
 #include <malloc.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>

@@ -5,8 +5,8 @@
 #include <stdbool.h>
 
 int game_init(void);
-bool game_input(float delta_time);
-void game_update(unsigned int current_time, float delta_time);
+bool game_input(void);
+void game_update(void);
 void game_render(void);
 void game_quit(void);
 

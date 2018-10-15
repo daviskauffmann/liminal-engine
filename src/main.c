@@ -3,9 +3,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "config.h"
-#include "game.h"
-#include "window.h"
+#include "engine/config.h"
+#include "engine/time.h"
+#include "engine/window.h"
+#include "game/game.h"
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
     }
 
     bool quit = false;
-    unsigned int current_time = 0;
+    current_time = 0;
 
     while (!quit)
     {
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
 
         unsigned int previous_time = current_time;
         current_time = frame_start;
-        float delta_time = (current_time - previous_time) / 1000.0f;
+        delta_time = (current_time - previous_time) / 1000.0f;
 
         static float fps_update_timer = 0.0f;
         static unsigned int fps = 0;
@@ -52,9 +53,9 @@ int main(int argc, char *argv[])
             fps = (unsigned int)(1 / delta_time);
         }
 
-        quit = game_input(delta_time);
+        quit = game_input();
 
-        game_update(current_time, delta_time);
+        game_update();
 
         window_clear();
 

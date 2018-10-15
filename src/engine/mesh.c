@@ -41,11 +41,9 @@ void mesh_draw(struct mesh *mesh)
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-
+    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-
     glDrawElements(GL_TRIANGLES, mesh->num_indices, GL_UNSIGNED_INT, NULL);
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     glDisableVertexAttribArray(0);

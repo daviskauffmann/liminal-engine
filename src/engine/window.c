@@ -73,7 +73,7 @@ int window_init(const char *title, int width, int height)
     // glFrontFace(GL_CW);
     // glCullFace(GL_BACK);
     // glEnable(GL_CULL_FACE);
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_FRAMEBUFFER_SRGB);
 
