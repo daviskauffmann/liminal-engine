@@ -1,0 +1,10 @@
+.vs
+.vscode
+
+Thumbs.db
+
+build
+
+bin/**/*.exe
+bin/**/*.ilk
+bin/**/*.pdb
