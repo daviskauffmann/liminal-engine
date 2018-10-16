@@ -1,9 +1,12 @@
 #include <cglm/cglm.h>
 #include <GL/glew.h>
+#include <SDL/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "../engine/audio.h"
 #include "../engine/camera.h"
+#include "../engine/engine.h"
 #include "../engine/error.h"
 #include "../engine/material.h"
 #include "../engine/mesh.h"
@@ -21,7 +24,21 @@
 
 int main(int argc, char *argv[])
 {
+    if (engine_init())
+    {
+        printf("Error: %s\n", error_get());
+
+        return 1;
+    }
+
     if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    {
+        printf("Error: %s\n", error_get());
+
+        return 1;
+    }
+
+    if (audio_init())
     {
         printf("Error: %s\n", error_get());
 
@@ -238,7 +255,7 @@ int main(int argc, char *argv[])
         unsigned int mouse = window_mouse(&mouse_x, &mouse_y);
 
         SDL_Event event;
-        while (window_events(&event))
+        while (window_event(&event))
         {
             switch (event.type)
             {

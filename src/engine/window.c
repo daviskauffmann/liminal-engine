@@ -1,5 +1,4 @@
 #include <GL/glew.h>
-#include <SDL/SDL_image.h>
 #include <stdio.h>
 
 #include "error.h"
@@ -10,23 +9,6 @@ SDL_GLContext context;
 
 int window_init(const char *title, int width, int height)
 {
-    if (SDL_Init(SDL_INIT_VIDEO))
-    {
-        error_set(SDL_GetError());
-
-        return 1;
-    }
-
-    {
-        int flags = IMG_INIT_JPG | IMG_INIT_PNG;
-
-        if (IMG_Init(flags) & flags != flags)
-        {
-            error_set(IMG_GetError());
-
-            return 1;
-        }
-    }
     window = SDL_CreateWindow(
         title,
         SDL_WINDOWPOS_CENTERED,
@@ -72,12 +54,9 @@ int window_init(const char *title, int width, int height)
 
     glClearColor(0.3f, 0.4f, 0.5f, 1.0f);
 
-    // glFrontFace(GL_CW);
-    // glCullFace(GL_BACK);
-    // glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-
     glEnable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_TEXTURE_2D);
 
     return 0;
 }
@@ -92,7 +71,7 @@ unsigned int window_mouse(int *mouse_x, int *mouse_y)
     return SDL_GetMouseState(mouse_x, mouse_y);
 }
 
-int window_events(SDL_Event *event)
+int window_event(SDL_Event *event)
 {
     return SDL_PollEvent(event);
 }
@@ -156,6 +135,4 @@ void window_quit(void)
 {
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
-    IMG_Quit();
-    SDL_Quit();
 }
