@@ -57,6 +57,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    struct program *phong_program = program_create(
+        "assets/shaders/phong.vs",
+        "assets/shaders/phong.fs");
+
+    if (!phong_program)
+    {
+        printf("Error: %s\n", error_get());
+
+        return 1;
+    }
     float quad_vertices[] = {
         // position          // normal            // uv
         +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f, // top right
@@ -175,6 +185,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    struct texture *matrix_texture = texture_create("assets/images/matrix.jpg");
+
+    if (!matrix_texture)
+    {
+        printf("Error: %s\n", error_get());
+
+        return 1;
+    }
+
     struct material *box_material = material_create(
         box_diffuse_texture,
         box_specular_texture,
@@ -278,62 +297,74 @@ int main(int argc, char *argv[])
 
     GLint basic_program_time = program_get_location(basic_program, "time");
     GLint basic_program_material_diffuse = program_get_location(basic_program, "material.diffuse");
-    GLint basic_program_material_specular = program_get_location(basic_program, "material.specular");
-    GLint basic_program_material_emission = program_get_location(basic_program, "material.emission");
     GLint basic_program_material_color = program_get_location(basic_program, "material.color");
-    GLint basic_program_material_shininess = program_get_location(basic_program, "material.shininess");
-    GLint basic_program_material_glow = program_get_location(basic_program, "material.glow");
     GLint basic_program_object_model = program_get_location(basic_program, "object.model");
     GLint basic_program_camera_projection = program_get_location(basic_program, "camera.projection");
     GLint basic_program_camera_view = program_get_location(basic_program, "camera.view");
     GLint basic_program_camera_position = program_get_location(basic_program, "camera.position");
-    GLint basic_program_directional_light_direction = program_get_location(basic_program, "directional_light.direction");
-    GLint basic_program_directional_light_ambient = program_get_location(basic_program, "directional_light.ambient");
-    GLint basic_program_directional_light_diffuse = program_get_location(basic_program, "directional_light.diffuse");
-    GLint basic_program_directional_light_specular = program_get_location(basic_program, "directional_light.specular");
-    GLint basic_program_point_lights_0_position = program_get_location(basic_program, "point_lights[0].position");
-    GLint basic_program_point_lights_0_ambient = program_get_location(basic_program, "point_lights[0].ambient");
-    GLint basic_program_point_lights_0_diffuse = program_get_location(basic_program, "point_lights[0].diffuse");
-    GLint basic_program_point_lights_0_specular = program_get_location(basic_program, "point_lights[0].specular");
-    GLint basic_program_point_lights_0_constant = program_get_location(basic_program, "point_lights[0].constant");
-    GLint basic_program_point_lights_0_linear = program_get_location(basic_program, "point_lights[0].linear");
-    GLint basic_program_point_lights_0_quadratic = program_get_location(basic_program, "point_lights[0].quadratic");
-    GLint basic_program_point_lights_1_position = program_get_location(basic_program, "point_lights[1].position");
-    GLint basic_program_point_lights_1_ambient = program_get_location(basic_program, "point_lights[1].ambient");
-    GLint basic_program_point_lights_1_diffuse = program_get_location(basic_program, "point_lights[1].diffuse");
-    GLint basic_program_point_lights_1_specular = program_get_location(basic_program, "point_lights[1].specular");
-    GLint basic_program_point_lights_1_constant = program_get_location(basic_program, "point_lights[1].constant");
-    GLint basic_program_point_lights_1_linear = program_get_location(basic_program, "point_lights[1].linear");
-    GLint basic_program_point_lights_1_quadratic = program_get_location(basic_program, "point_lights[1].quadratic");
-    GLint basic_program_point_lights_2_position = program_get_location(basic_program, "point_lights[2].position");
-    GLint basic_program_point_lights_2_ambient = program_get_location(basic_program, "point_lights[2].ambient");
-    GLint basic_program_point_lights_2_diffuse = program_get_location(basic_program, "point_lights[2].diffuse");
-    GLint basic_program_point_lights_2_specular = program_get_location(basic_program, "point_lights[2].specular");
-    GLint basic_program_point_lights_2_constant = program_get_location(basic_program, "point_lights[2].constant");
-    GLint basic_program_point_lights_2_linear = program_get_location(basic_program, "point_lights[2].linear");
-    GLint basic_program_point_lights_2_quadratic = program_get_location(basic_program, "point_lights[2].quadratic");
-    GLint basic_program_point_lights_3_position = program_get_location(basic_program, "point_lights[3].position");
-    GLint basic_program_point_lights_3_ambient = program_get_location(basic_program, "point_lights[3].ambient");
-    GLint basic_program_point_lights_3_diffuse = program_get_location(basic_program, "point_lights[3].diffuse");
-    GLint basic_program_point_lights_3_specular = program_get_location(basic_program, "point_lights[3].specular");
-    GLint basic_program_point_lights_3_constant = program_get_location(basic_program, "point_lights[3].constant");
-    GLint basic_program_point_lights_3_linear = program_get_location(basic_program, "point_lights[3].linear");
-    GLint basic_program_point_lights_3_quadratic = program_get_location(basic_program, "point_lights[3].quadratic");
-    GLint basic_program_spot_light_position = program_get_location(basic_program, "spot_light.position");
-    GLint basic_program_spot_light_direction = program_get_location(basic_program, "spot_light.direction");
-    GLint basic_program_spot_light_ambient = program_get_location(basic_program, "spot_light.ambient");
-    GLint basic_program_spot_light_diffuse = program_get_location(basic_program, "spot_light.diffuse");
-    GLint basic_program_spot_light_specular = program_get_location(basic_program, "spot_light.specular");
-    GLint basic_program_spot_light_constant = program_get_location(basic_program, "spot_light.constant");
-    GLint basic_program_spot_light_linear = program_get_location(basic_program, "spot_light.linear");
-    GLint basic_program_spot_light_quadratic = program_get_location(basic_program, "spot_light.quadratic");
-    GLint basic_program_spot_light_cutOff = program_get_location(basic_program, "spot_light.cutOff");
-    GLint basic_program_spot_light_outerCutOff = program_get_location(basic_program, "spot_light.outerCutOff");
+
+    GLint phong_program_time = program_get_location(phong_program, "time");
+    GLint phong_program_material_diffuse = program_get_location(phong_program, "material.diffuse");
+    GLint phong_program_material_specular = program_get_location(phong_program, "material.specular");
+    GLint phong_program_material_emission = program_get_location(phong_program, "material.emission");
+    GLint phong_program_material_color = program_get_location(phong_program, "material.color");
+    GLint phong_program_material_shininess = program_get_location(phong_program, "material.shininess");
+    GLint phong_program_material_glow = program_get_location(phong_program, "material.glow");
+    GLint phong_program_object_model = program_get_location(phong_program, "object.model");
+    GLint phong_program_camera_projection = program_get_location(phong_program, "camera.projection");
+    GLint phong_program_camera_view = program_get_location(phong_program, "camera.view");
+    GLint phong_program_camera_position = program_get_location(phong_program, "camera.position");
+    GLint phong_program_directional_light_direction = program_get_location(phong_program, "directional_light.direction");
+    GLint phong_program_directional_light_ambient = program_get_location(phong_program, "directional_light.ambient");
+    GLint phong_program_directional_light_diffuse = program_get_location(phong_program, "directional_light.diffuse");
+    GLint phong_program_directional_light_specular = program_get_location(phong_program, "directional_light.specular");
+    GLint phong_program_point_lights_0_position = program_get_location(phong_program, "point_lights[0].position");
+    GLint phong_program_point_lights_0_ambient = program_get_location(phong_program, "point_lights[0].ambient");
+    GLint phong_program_point_lights_0_diffuse = program_get_location(phong_program, "point_lights[0].diffuse");
+    GLint phong_program_point_lights_0_specular = program_get_location(phong_program, "point_lights[0].specular");
+    GLint phong_program_point_lights_0_constant = program_get_location(phong_program, "point_lights[0].constant");
+    GLint phong_program_point_lights_0_linear = program_get_location(phong_program, "point_lights[0].linear");
+    GLint phong_program_point_lights_0_quadratic = program_get_location(phong_program, "point_lights[0].quadratic");
+    GLint phong_program_point_lights_1_position = program_get_location(phong_program, "point_lights[1].position");
+    GLint phong_program_point_lights_1_ambient = program_get_location(phong_program, "point_lights[1].ambient");
+    GLint phong_program_point_lights_1_diffuse = program_get_location(phong_program, "point_lights[1].diffuse");
+    GLint phong_program_point_lights_1_specular = program_get_location(phong_program, "point_lights[1].specular");
+    GLint phong_program_point_lights_1_constant = program_get_location(phong_program, "point_lights[1].constant");
+    GLint phong_program_point_lights_1_linear = program_get_location(phong_program, "point_lights[1].linear");
+    GLint phong_program_point_lights_1_quadratic = program_get_location(phong_program, "point_lights[1].quadratic");
+    GLint phong_program_point_lights_2_position = program_get_location(phong_program, "point_lights[2].position");
+    GLint phong_program_point_lights_2_ambient = program_get_location(phong_program, "point_lights[2].ambient");
+    GLint phong_program_point_lights_2_diffuse = program_get_location(phong_program, "point_lights[2].diffuse");
+    GLint phong_program_point_lights_2_specular = program_get_location(phong_program, "point_lights[2].specular");
+    GLint phong_program_point_lights_2_constant = program_get_location(phong_program, "point_lights[2].constant");
+    GLint phong_program_point_lights_2_linear = program_get_location(phong_program, "point_lights[2].linear");
+    GLint phong_program_point_lights_2_quadratic = program_get_location(phong_program, "point_lights[2].quadratic");
+    GLint phong_program_point_lights_3_position = program_get_location(phong_program, "point_lights[3].position");
+    GLint phong_program_point_lights_3_ambient = program_get_location(phong_program, "point_lights[3].ambient");
+    GLint phong_program_point_lights_3_diffuse = program_get_location(phong_program, "point_lights[3].diffuse");
+    GLint phong_program_point_lights_3_specular = program_get_location(phong_program, "point_lights[3].specular");
+    GLint phong_program_point_lights_3_constant = program_get_location(phong_program, "point_lights[3].constant");
+    GLint phong_program_point_lights_3_linear = program_get_location(phong_program, "point_lights[3].linear");
+    GLint phong_program_point_lights_3_quadratic = program_get_location(phong_program, "point_lights[3].quadratic");
+    GLint phong_program_spot_light_position = program_get_location(phong_program, "spot_light.position");
+    GLint phong_program_spot_light_direction = program_get_location(phong_program, "spot_light.direction");
+    GLint phong_program_spot_light_ambient = program_get_location(phong_program, "spot_light.ambient");
+    GLint phong_program_spot_light_diffuse = program_get_location(phong_program, "spot_light.diffuse");
+    GLint phong_program_spot_light_specular = program_get_location(phong_program, "spot_light.specular");
+    GLint phong_program_spot_light_constant = program_get_location(phong_program, "spot_light.constant");
+    GLint phong_program_spot_light_linear = program_get_location(phong_program, "spot_light.linear");
+    GLint phong_program_spot_light_quadratic = program_get_location(phong_program, "spot_light.quadratic");
+    GLint phong_program_spot_light_cutOff = program_get_location(phong_program, "spot_light.cutOff");
+    GLint phong_program_spot_light_outerCutOff = program_get_location(phong_program, "spot_light.outerCutOff");
 
     program_bind(basic_program);
     program_set_int(basic_program_material_diffuse, 0);
-    program_set_int(basic_program_material_specular, 1);
-    program_set_int(basic_program_material_emission, 2);
+    program_unbind();
+
+    program_bind(phong_program);
+    program_set_int(phong_program_material_diffuse, 0);
+    program_set_int(phong_program_material_specular, 1);
+    program_set_int(phong_program_material_emission, 2);
     program_unbind();
 
     bool quit = false;
@@ -513,48 +544,55 @@ int main(int argc, char *argv[])
         program_set_mat4(basic_program_camera_projection, camera_projection);
         program_set_mat4(basic_program_camera_view, camera_view);
         program_set_vec3(basic_program_camera_position, camera->position);
-        program_set_vec3(basic_program_directional_light_direction, directional_light->direction);
-        program_set_vec3(basic_program_directional_light_ambient, directional_light->ambient);
-        program_set_vec3(basic_program_directional_light_diffuse, directional_light->diffuse);
-        program_set_vec3(basic_program_directional_light_specular, directional_light->specular);
-        program_set_vec3(basic_program_point_lights_0_position, point_lights[0]->position);
-        program_set_vec3(basic_program_point_lights_0_ambient, point_lights[0]->ambient);
-        program_set_vec3(basic_program_point_lights_0_diffuse, point_lights[0]->diffuse);
-        program_set_vec3(basic_program_point_lights_0_specular, point_lights[0]->specular);
-        program_set_float(basic_program_point_lights_0_constant, point_lights[0]->constant);
-        program_set_float(basic_program_point_lights_0_linear, point_lights[0]->linear);
-        program_set_float(basic_program_point_lights_0_quadratic, point_lights[0]->quadratic);
-        program_set_vec3(basic_program_point_lights_1_position, point_lights[1]->position);
-        program_set_vec3(basic_program_point_lights_1_ambient, point_lights[1]->ambient);
-        program_set_vec3(basic_program_point_lights_1_diffuse, point_lights[1]->diffuse);
-        program_set_vec3(basic_program_point_lights_1_specular, point_lights[1]->specular);
-        program_set_float(basic_program_point_lights_1_constant, point_lights[1]->constant);
-        program_set_float(basic_program_point_lights_1_linear, point_lights[1]->linear);
-        program_set_float(basic_program_point_lights_1_quadratic, point_lights[1]->quadratic);
-        program_set_vec3(basic_program_point_lights_2_position, point_lights[2]->position);
-        program_set_vec3(basic_program_point_lights_2_ambient, point_lights[2]->ambient);
-        program_set_vec3(basic_program_point_lights_2_diffuse, point_lights[2]->diffuse);
-        program_set_vec3(basic_program_point_lights_2_specular, point_lights[2]->specular);
-        program_set_float(basic_program_point_lights_2_constant, point_lights[2]->constant);
-        program_set_float(basic_program_point_lights_2_linear, point_lights[2]->linear);
-        program_set_float(basic_program_point_lights_2_quadratic, point_lights[2]->quadratic);
-        program_set_vec3(basic_program_point_lights_3_position, point_lights[3]->position);
-        program_set_vec3(basic_program_point_lights_3_ambient, point_lights[3]->ambient);
-        program_set_vec3(basic_program_point_lights_3_diffuse, point_lights[3]->diffuse);
-        program_set_vec3(basic_program_point_lights_3_specular, point_lights[3]->specular);
-        program_set_float(basic_program_point_lights_3_constant, point_lights[3]->constant);
-        program_set_float(basic_program_point_lights_3_linear, point_lights[3]->linear);
-        program_set_float(basic_program_point_lights_3_quadratic, point_lights[3]->quadratic);
-        program_set_vec3(basic_program_spot_light_position, spot_light->position);
-        program_set_vec3(basic_program_spot_light_direction, spot_light->direction);
-        program_set_vec3(basic_program_spot_light_ambient, spot_light->ambient);
-        program_set_vec3(basic_program_spot_light_diffuse, spot_light->diffuse);
-        program_set_vec3(basic_program_spot_light_specular, spot_light->specular);
-        program_set_float(basic_program_spot_light_constant, spot_light->constant);
-        program_set_float(basic_program_spot_light_linear, spot_light->linear);
-        program_set_float(basic_program_spot_light_quadratic, spot_light->quadratic);
-        program_set_float(basic_program_spot_light_cutOff, spot_light->cutOff);
-        program_set_float(basic_program_spot_light_outerCutOff, spot_light->outerCutOff);
+        program_unbind();
+
+        program_bind(phong_program);
+        program_set_int(phong_program_time, time_current());
+        program_set_mat4(phong_program_camera_projection, camera_projection);
+        program_set_mat4(phong_program_camera_view, camera_view);
+        program_set_vec3(phong_program_camera_position, camera->position);
+        program_set_vec3(phong_program_directional_light_direction, directional_light->direction);
+        program_set_vec3(phong_program_directional_light_ambient, directional_light->ambient);
+        program_set_vec3(phong_program_directional_light_diffuse, directional_light->diffuse);
+        program_set_vec3(phong_program_directional_light_specular, directional_light->specular);
+        program_set_vec3(phong_program_point_lights_0_position, point_lights[0]->position);
+        program_set_vec3(phong_program_point_lights_0_ambient, point_lights[0]->ambient);
+        program_set_vec3(phong_program_point_lights_0_diffuse, point_lights[0]->diffuse);
+        program_set_vec3(phong_program_point_lights_0_specular, point_lights[0]->specular);
+        program_set_float(phong_program_point_lights_0_constant, point_lights[0]->constant);
+        program_set_float(phong_program_point_lights_0_linear, point_lights[0]->linear);
+        program_set_float(phong_program_point_lights_0_quadratic, point_lights[0]->quadratic);
+        program_set_vec3(phong_program_point_lights_1_position, point_lights[1]->position);
+        program_set_vec3(phong_program_point_lights_1_ambient, point_lights[1]->ambient);
+        program_set_vec3(phong_program_point_lights_1_diffuse, point_lights[1]->diffuse);
+        program_set_vec3(phong_program_point_lights_1_specular, point_lights[1]->specular);
+        program_set_float(phong_program_point_lights_1_constant, point_lights[1]->constant);
+        program_set_float(phong_program_point_lights_1_linear, point_lights[1]->linear);
+        program_set_float(phong_program_point_lights_1_quadratic, point_lights[1]->quadratic);
+        program_set_vec3(phong_program_point_lights_2_position, point_lights[2]->position);
+        program_set_vec3(phong_program_point_lights_2_ambient, point_lights[2]->ambient);
+        program_set_vec3(phong_program_point_lights_2_diffuse, point_lights[2]->diffuse);
+        program_set_vec3(phong_program_point_lights_2_specular, point_lights[2]->specular);
+        program_set_float(phong_program_point_lights_2_constant, point_lights[2]->constant);
+        program_set_float(phong_program_point_lights_2_linear, point_lights[2]->linear);
+        program_set_float(phong_program_point_lights_2_quadratic, point_lights[2]->quadratic);
+        program_set_vec3(phong_program_point_lights_3_position, point_lights[3]->position);
+        program_set_vec3(phong_program_point_lights_3_ambient, point_lights[3]->ambient);
+        program_set_vec3(phong_program_point_lights_3_diffuse, point_lights[3]->diffuse);
+        program_set_vec3(phong_program_point_lights_3_specular, point_lights[3]->specular);
+        program_set_float(phong_program_point_lights_3_constant, point_lights[3]->constant);
+        program_set_float(phong_program_point_lights_3_linear, point_lights[3]->linear);
+        program_set_float(phong_program_point_lights_3_quadratic, point_lights[3]->quadratic);
+        program_set_vec3(phong_program_spot_light_position, spot_light->position);
+        program_set_vec3(phong_program_spot_light_direction, spot_light->direction);
+        program_set_vec3(phong_program_spot_light_ambient, spot_light->ambient);
+        program_set_vec3(phong_program_spot_light_diffuse, spot_light->diffuse);
+        program_set_vec3(phong_program_spot_light_specular, spot_light->specular);
+        program_set_float(phong_program_spot_light_constant, spot_light->constant);
+        program_set_float(phong_program_spot_light_linear, spot_light->linear);
+        program_set_float(phong_program_spot_light_quadratic, spot_light->quadratic);
+        program_set_float(phong_program_spot_light_cutOff, spot_light->cutOff);
+        program_set_float(phong_program_spot_light_outerCutOff, spot_light->outerCutOff);
         program_unbind();
 
         object_update(object);
@@ -567,11 +605,16 @@ int main(int argc, char *argv[])
         program_bind(basic_program);
         program_set_mat4(basic_program_object_model, model);
         program_set_vec3(basic_program_material_color, object->material->color);
-        program_set_float(basic_program_material_shininess, object->material->shininess);
-        program_set_float(basic_program_material_glow, object->material->glow);
         program_unbind();
 
-        program_bind(basic_program);
+        program_bind(phong_program);
+        program_set_mat4(phong_program_object_model, model);
+        program_set_vec3(phong_program_material_color, object->material->color);
+        program_set_float(phong_program_material_shininess, object->material->shininess);
+        program_set_float(phong_program_material_glow, object->material->glow);
+        program_unbind();
+
+        program_bind(phong_program);
         object_draw(object);
         program_unbind();
 

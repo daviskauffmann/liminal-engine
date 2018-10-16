@@ -64,8 +64,6 @@ struct spot_light *spot_light_create(
     float quadratic,
     float cutOff,
     float outerCutOff);
-void spot_light_bind(struct spot_light *spot_light);
-void spot_light_unbind(void);
 void spot_light_destroy(struct spot_light *spot_light);
 
 #endif

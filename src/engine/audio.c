@@ -6,7 +6,7 @@ int audio_init(void)
     if (Mix_OpenAudio(
             MIX_DEFAULT_FREQUENCY,
             MIX_DEFAULT_FORMAT,
-            2,
+            MIX_DEFAULT_CHANNELS,
             1024))
     {
         error_set(Mix_GetError());
