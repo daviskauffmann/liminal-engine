@@ -215,48 +215,52 @@ int main(int argc, char *argv[])
         (vec3){-0.2f, -1.0f, -0.3f},
         (vec3){0.05f, 0.05f, 0.05f},
         (vec3){0.4f, 0.4f, 0.4f},
-        (vec3){0.5f, 0.5f, 0.5f});
+        (vec3){1.0f, 0.0f, 0.0f});
 
     struct point_light *point_lights[] = {
+        // red
         point_light_create(
-            (vec3){0.7f, 0.2f, 2.0f},
-            (vec3){0.05f, 0.05f, 0.05f},
-            (vec3){0.8f, 0.8f, 0.8f},
-            (vec3){1.0f, 1.0f, 1.0f},
+            (vec3){2.0f, 0.0f, 2.0f},
+            (vec3){0.1f, 0.0f, 0.0f},
+            (vec3){0.8f, 0.0f, 0.0f},
+            (vec3){1.0f, 0.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f),
+        // yellow
         point_light_create(
-            (vec3){2.3f, -3.3f, -4.0f},
-            (vec3){0.05f, 0.05f, 0.05f},
-            (vec3){0.8f, 0.8f, 0.8f},
-            (vec3){1.0f, 1.0f, 1.0f},
+            (vec3){-2.0f, 0.0f, -2.0f},
+            (vec3){0.1f, 0.1f, 0.0f},
+            (vec3){0.8f, 0.8f, 0.0f},
+            (vec3){1.0f, 1.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f),
+        // green
         point_light_create(
-            (vec3){-4.0f, 2.0f, -12.0f},
-            (vec3){0.05f, 0.05f, 0.05f},
-            (vec3){0.8f, 0.8f, 0.8f},
-            (vec3){1.0f, 1.0f, 1.0f},
+            (vec3){2.0f, 0.0f, -2.0f},
+            (vec3){0.0f, 0.1f, 0.0f},
+            (vec3){0.0f, 0.8f, 0.0f},
+            (vec3){0.0f, 1.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f),
+        // blue
         point_light_create(
-            (vec3){0.0f, 0.0f, -3.0f},
-            (vec3){0.05f, 0.05f, 0.05f},
-            (vec3){0.8f, 0.8f, 0.8f},
-            (vec3){1.0f, 1.0f, 1.0f},
+            (vec3){-2.0f, 0.0f, 2.0f},
+            (vec3){0.0f, 0.0f, 0.1f},
+            (vec3){0.0f, 0.0f, 0.8f},
+            (vec3){0.0f, 0.0f, 1.0f},
             1.0f,
             0.09f,
             0.032f)};
 
     struct spot_light *spot_light = spot_light_create(
-        GLM_VEC3_ZERO,
-        GLM_VEC3_ZERO,
         (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){1.0f, 1.0f, 1.0f},
-        (vec3){1.0f, 1.0f, 1.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
         1.0f,
         0.09f,
         0.032f,
@@ -355,6 +359,8 @@ int main(int argc, char *argv[])
     program_set_int(phong_program_material_emission, 2);
     program_unbind();
 
+    struct program *current_program = phong_program;
+
     bool quit = false;
     while (!quit)
     {
@@ -379,17 +385,27 @@ int main(int argc, char *argv[])
             {
                 switch (event.key.keysym.sym)
                 {
+                case SDLK_ESCAPE:
+                {
+                    quit = true;
+                }
+                break;
+                case SDLK_F1:
+                {
+                    current_program = basic_program;
+                }
+                break;
+                case SDLK_F2:
+                {
+                    current_program = phong_program;
+                }
+                break;
                 case SDLK_F4:
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
                         quit = true;
                     }
-                }
-                break;
-                case SDLK_ESCAPE:
-                {
-                    quit = true;
                 }
                 break;
                 case SDLK_RETURN:
@@ -602,7 +618,7 @@ int main(int argc, char *argv[])
         program_set_float(phong_program_material_glow, object->material->glow);
         program_unbind();
 
-        program_bind(phong_program);
+        program_bind(current_program);
         object_draw(object);
         program_unbind();
 
@@ -613,13 +629,17 @@ int main(int argc, char *argv[])
 
     object_destroy(object);
     material_destroy(box_material);
+    texture_destroy(matrix_texture);
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
     mesh_destroy(monkey_mesh);
     mesh_destroy(cube_mesh);
     mesh_destroy(quad_mesh);
+    program_destroy(phong_program);
     program_destroy(basic_program);
+    audio_quit();
     window_quit();
+    engine_quit();
 
     return 0;
 }

@@ -4,12 +4,6 @@
 #include <malloc.h>
 #include <SDL/SDL.h>
 
-// TODO: scenes
-// objects should be created inside a scene
-// the game then can make a call to draw an entire scene, rather than specific objects
-// also, rather than drawing a scene explicitly, the game can set a scene to be active, which the engine will draw each render pass
-// the engine is responsible for sorting and reducing draw calls for all objects in the scene
-
 struct object *object_create(
     struct mesh *mesh,
     struct material *material,

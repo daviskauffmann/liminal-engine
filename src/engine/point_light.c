@@ -1,3 +1,4 @@
+#include <engine/error.h>
 #include <engine/point_light.h>
 #include <malloc.h>
 
@@ -11,6 +12,13 @@ struct point_light *point_light_create(
     float quadratic)
 {
     struct point_light *point_light = malloc(sizeof(struct point_light));
+
+    if (!point_light)
+    {
+        error_set("Couldn't allocate point light");
+
+        return NULL;
+    }
 
     glm_vec_copy(position, point_light->position);
     glm_vec_copy(ambient, point_light->ambient);

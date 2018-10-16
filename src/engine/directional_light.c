@@ -1,3 +1,4 @@
+#include <engine/error.h>
 #include <engine/directional_light.h>
 #include <malloc.h>
 
@@ -8,6 +9,13 @@ struct directional_light *directional_light_create(
     vec3 specular)
 {
     struct directional_light *directional_light = malloc(sizeof(struct directional_light));
+
+    if (!directional_light)
+    {
+        error_set("Couldn't allocate directional light");
+
+        return NULL;
+    }
 
     glm_vec_copy(direction, directional_light->direction);
     glm_vec_copy(ambient, directional_light->ambient);

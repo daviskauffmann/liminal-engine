@@ -1,3 +1,4 @@
+#include <engine/error.h>
 #include <engine/spot_light.h>
 #include <malloc.h>
 
@@ -14,6 +15,13 @@ struct spot_light *spot_light_create(
     float outerCutOff)
 {
     struct spot_light *spot_light = malloc(sizeof(struct spot_light));
+
+    if (!spot_light)
+    {
+        error_set("Couldn't allocate spot light");
+
+        return NULL;
+    }
 
     glm_vec_copy(position, spot_light->position);
     glm_vec_copy(direction, spot_light->direction);

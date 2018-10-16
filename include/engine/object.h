@@ -2,7 +2,6 @@
 #define OBJECT_H
 
 #include <cglm/cglm.h>
-#include <GL/glew.h>
 
 #include "material.h"
 #include "mesh.h"

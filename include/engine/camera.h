@@ -2,7 +2,6 @@
 #define CAMERA_H
 
 #include <cglm/cglm.h>
-#include <GL/glew.h>
 
 struct camera
 {
