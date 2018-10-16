@@ -1,5 +1,4 @@
-#include <SDL/SDL.h>
-#include <shared/data.h>
+#include <game/shared/data.h>
 #include <string.h>
 
 struct data data_create(enum data_type type)

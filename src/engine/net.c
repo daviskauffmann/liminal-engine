@@ -93,7 +93,7 @@ void net_udp_free_packet(UDPpacket *packet)
 
 SDLNet_SocketSet net_alloc_socket_set(int max_sockets)
 {
-    SDLNet_SocketSet set = SDLNet_AllocSocketSet(2);
+    SDLNet_SocketSet set = SDLNet_AllocSocketSet(max_sockets);
 
     if (!set)
     {

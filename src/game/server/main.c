@@ -1,14 +1,14 @@
 #include <engine/engine.h>
+#include <game/shared/data.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_net.h>
-#include <shared/data.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 #define SERVER_PORT 1000
 #define MAX_CLIENTS 8
 
-#define FPS_CAP 30
+#define FPS_CAP 60
 
 // TODO: handle timeouts on clients to automatically disconnect them
 struct client
@@ -83,8 +83,8 @@ int main(int argc, char *args[])
         return 1;
     }
 
-    SDLNet_TCP_AddSocket(socket_set, tcp_socket);
-    SDLNet_UDP_AddSocket(socket_set, udp_socket);
+    net_tcp_add_socket(socket_set, tcp_socket);
+    net_udp_add_socket(socket_set, udp_socket);
 
     struct client clients[MAX_CLIENTS];
 
@@ -146,7 +146,7 @@ int main(int argc, char *args[])
                         clients[client_id].id = client_id;
                         clients[client_id].socket = socket;
 
-                        SDLNet_TCP_AddSocket(socket_set, clients[client_id].socket);
+                        net_tcp_add_socket(socket_set, clients[client_id].socket);
 
                         {
                             struct id_data id_data = id_data_create(DATA_CONNECT_OK, clients[client_id].id);
@@ -239,7 +239,6 @@ int main(int argc, char *args[])
                 }
             }
 
-            // handle UDP messages
             if (SDLNet_SocketReady(udp_socket))
             {
                 if (net_udp_recv(udp_socket, udp_packet) == 1)
