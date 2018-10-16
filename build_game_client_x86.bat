@@ -14,4 +14,3 @@ rd build\x86\game\client\ /s /q
 md build\x86\game\client\
 
 cl %COMPILER_OPTS% %SRC_DIR% /link %LINKER_OPTS% %LIBS%
-
