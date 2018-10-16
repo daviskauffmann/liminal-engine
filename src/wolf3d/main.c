@@ -11,6 +11,11 @@
 
 #define FPS_CAP 60
 
+#define VERTICES_PER_PIXEL 4
+#define FLOATS_PER_VERTEX 8
+#define INDICES_PER_PIXEL 2
+#define INTS_PER_INDEX 3
+
 int main(int argc, char *argv[])
 {
     engine_init();
@@ -19,63 +24,82 @@ int main(int argc, char *argv[])
     struct program *phong_program = program_create(
         "assets/shaders/phong.vs",
         "assets/shaders/phong.fs");
-    float quad_vertices[] = {
-        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f};
-    unsigned int quad_indices[] = {
-        0, 1, 3,
-        1, 2, 3};
-    struct mesh *quad_mesh = mesh_create(
-        quad_vertices,
-        sizeof(quad_vertices),
-        quad_indices,
-        sizeof(quad_indices));
-    struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
-    struct texture *box_specular_texture = texture_create("assets/images/box_specular.png");
-    struct material *box_material = material_create(
-        box_diffuse_texture,
-        box_specular_texture,
+    struct bitmap *level_bitmap = bitmap_create("assets/images/level_bitmap.png");
+    const unsigned int num_vertices = level_bitmap->width * level_bitmap->height * VERTICES_PER_PIXEL * FLOATS_PER_VERTEX * sizeof(float);
+    float *vertices = malloc(num_vertices);
+    const unsigned int num_indices = level_bitmap->width * level_bitmap->height * INDICES_PER_PIXEL * INTS_PER_INDEX * sizeof(unsigned int);
+    unsigned int *indices = malloc(num_indices);
+    int i = 0;
+    for (int x = 0; x < level_bitmap->width; x++)
+    {
+        for (int y = 0; y < level_bitmap->height; y++)
+        {
+            float x_high = 1.0f;
+            float x_low = 0.0f;
+            float y_high = 1.0f;
+            float y_low = 0.0f;
+
+            vertices[(x + y * level_bitmap->width) + 0] = x;
+            vertices[(x + y * level_bitmap->width) + 1] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 2] = y;
+            vertices[(x + y * level_bitmap->width) + 3] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 4] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 5] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 6] = x_low;
+            vertices[(x + y * level_bitmap->width) + 7] = y_low;
+
+            vertices[(x + y * level_bitmap->width) + 8] = x + 1;
+            vertices[(x + y * level_bitmap->width) + 9] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 10] = y;
+            vertices[(x + y * level_bitmap->width) + 11] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 12] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 13] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 14] = x_high;
+            vertices[(x + y * level_bitmap->width) + 15] = y_low;
+
+            vertices[(x + y * level_bitmap->width) + 16] = x + 1;
+            vertices[(x + y * level_bitmap->width) + 17] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 18] = y + 1;
+            vertices[(x + y * level_bitmap->width) + 19] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 20] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 21] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 22] = x_high;
+            vertices[(x + y * level_bitmap->width) + 23] = y_high;
+
+            vertices[(x + y * level_bitmap->width) + 24] = x;
+            vertices[(x + y * level_bitmap->width) + 25] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 26] = y + 1;
+            vertices[(x + y * level_bitmap->width) + 27] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 28] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 29] = 0.0f;
+            vertices[(x + y * level_bitmap->width) + 30] = x_low;
+            vertices[(x + y * level_bitmap->width) + 31] = y_high;
+
+            indices[(x + y * level_bitmap->width) + 0] = i + 2;
+            indices[(x + y * level_bitmap->width) + 1] = i + 1;
+            indices[(x + y * level_bitmap->width) + 2] = i + 0;
+
+            indices[(x + y * level_bitmap->width) + 3] = i + 3;
+            indices[(x + y * level_bitmap->width) + 4] = i + 2;
+            indices[(x + y * level_bitmap->width) + 5] = i + 0;
+
+            i += VERTICES_PER_PIXEL;
+        }
+    }
+    struct mesh *level_mesh = mesh_create(vertices, num_vertices, indices, num_indices);
+    struct texture *level_texture = texture_create("assets/images/level_texture.png");
+    struct material *level_material = material_create(
+        level_texture,
+        NULL,
         NULL,
         (vec3){1.0f, 1.0f, 1.0f},
         32.0f,
         1.0f);
     struct object *objects[] = {
         object_create(
-            quad_mesh,
-            box_material,
+            level_mesh,
+            level_material,
             (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f}),
-        object_create(
-            quad_mesh,
-            box_material,
-            (vec3){2.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f}),
-        object_create(
-            quad_mesh,
-            box_material,
-            (vec3){4.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f}),
-        object_create(
-            quad_mesh,
-            box_material,
-            (vec3){6.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f}),
-        object_create(
-            quad_mesh,
-            box_material,
-            (vec3){8.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f}),
-        object_create(
-            quad_mesh,
-            box_material,
-            (vec3){10.0f, 0.0f, 0.0f},
             (vec3){0.0f, 0.0f, 0.0f},
             (vec3){1.0f, 1.0f, 1.0f})};
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
@@ -448,10 +472,10 @@ int main(int argc, char *argv[])
     {
         object_destroy(objects[i]);
     }
-    material_destroy(box_material);
-    texture_destroy(box_specular_texture);
-    texture_destroy(box_diffuse_texture);
-    mesh_destroy(quad_mesh);
+    material_destroy(level_material);
+    texture_destroy(level_texture);
+    mesh_destroy(level_mesh);
+    bitmap_destroy(level_bitmap);
     program_destroy(phong_program);
     audio_quit();
     window_quit();

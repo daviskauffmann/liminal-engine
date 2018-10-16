@@ -2,6 +2,7 @@
 #define ENGINE_H
 
 #include "audio.h"
+#include "bitmap.h"
 #include "camera.h"
 #include "directional_light.h"
 #include "error.h"
