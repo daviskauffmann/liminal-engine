@@ -7,6 +7,7 @@ struct material *material_create(
     struct texture *diffuse,
     struct texture *specular,
     struct texture *emission,
+    vec3 color,
     float shininess,
     float glow)
 {
@@ -22,6 +23,7 @@ struct material *material_create(
     material->diffuse = diffuse;
     material->specular = specular;
     material->emission = emission;
+    glm_vec_copy(color, material->color);
     material->shininess = shininess;
     material->glow = glow;
 
