@@ -1,6 +1,5 @@
 #include <engine/error.h>
 #include <engine/object.h>
-#include <engine/time.h>
 #include <malloc.h>
 #include <SDL/SDL.h>
 
@@ -27,14 +26,6 @@ struct object *object_create(
     glm_vec_copy(scale, object->scale);
 
     return object;
-}
-
-void object_update(struct object *object)
-{
-    float angle = time_current() * 0.001f;
-    object->rotation[0] = angle;
-    object->rotation[1] = angle;
-    object->rotation[2] = angle;
 }
 
 void object_calc_model(struct object *object, vec4 *model)

@@ -13,147 +13,27 @@
 
 int main(int argc, char *argv[])
 {
-    if (engine_init())
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
-    if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
-    if (audio_init())
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
+    engine_init();
+    window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+    audio_init();
     struct program *phong_program = program_create(
         "assets/shaders/phong.vs",
         "assets/shaders/phong.fs");
-
-    if (!phong_program)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
     float quad_vertices[] = {
-        // position          // normal            // uv
-        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f, // top right
-        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f, // bottom left
-        -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f  // top left
-    };
-
+        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
+        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f,
+        -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f};
     unsigned int quad_indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
-
+        0, 1, 3,
+        1, 2, 3};
     struct mesh *quad_mesh = mesh_create(
         quad_vertices,
         sizeof(quad_vertices),
         quad_indices,
         sizeof(quad_indices));
-
-    if (!quad_mesh)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
-    float cube_vertices[] = {
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f};
-
-    unsigned int cube_indices[] = {
-        0, 1, 2,
-        3, 4, 5,
-        6, 7, 8,
-        9, 10, 11,
-        12, 13, 14,
-        15, 16, 17,
-        18, 19, 20,
-        21, 22, 23,
-        24, 25, 26,
-        27, 28, 29,
-        30, 31, 32,
-        33, 34, 35};
-
-    struct mesh *cube_mesh = mesh_create(
-        cube_vertices,
-        sizeof(cube_vertices),
-        cube_indices,
-        sizeof(cube_indices));
-
-    if (!cube_mesh)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
     struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
-
-    if (!box_diffuse_texture)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
     struct texture *box_specular_texture = texture_create("assets/images/box_specular.png");
-
-    if (!box_specular_texture)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
     struct material *box_material = material_create(
         box_diffuse_texture,
         box_specular_texture,
@@ -161,72 +41,83 @@ int main(int argc, char *argv[])
         (vec3){1.0f, 1.0f, 1.0f},
         32.0f,
         1.0f);
-
-    if (!box_material)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
-    struct object *object = object_create(
-        cube_mesh,
-        box_material,
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){1.0f, 1.0f, 1.0f});
-
-    if (!object)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
-
+    struct object *objects[] = {
+        object_create(
+            quad_mesh,
+            box_material,
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f}),
+        object_create(
+            quad_mesh,
+            box_material,
+            (vec3){2.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f}),
+        object_create(
+            quad_mesh,
+            box_material,
+            (vec3){4.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f}),
+        object_create(
+            quad_mesh,
+            box_material,
+            (vec3){6.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f}),
+        object_create(
+            quad_mesh,
+            box_material,
+            (vec3){8.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f}),
+        object_create(
+            quad_mesh,
+            box_material,
+            (vec3){10.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f})};
+    const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
     struct directional_light *directional_light = directional_light_create(
         (vec3){-0.2f, -1.0f, -0.3f},
-        (vec3){0.05f, 0.05f, 0.05f},
-        (vec3){0.4f, 0.4f, 0.4f},
-        (vec3){1.0f, 0.0f, 0.0f});
-
+        (vec3){0.1f, 0.1f, 0.1f},
+        (vec3){0.8f, 0.8f, 0.8f},
+        (vec3){1.0f, 1.0f, 1.0f});
     struct point_light *point_lights[] = {
-        // red
         point_light_create(
-            (vec3){2.0f, 0.0f, 2.0f},
-            (vec3){0.1f, 0.0f, 0.0f},
-            (vec3){0.8f, 0.0f, 0.0f},
-            (vec3){1.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f),
-        // yellow
         point_light_create(
-            (vec3){-2.0f, 0.0f, -2.0f},
-            (vec3){0.1f, 0.1f, 0.0f},
-            (vec3){0.8f, 0.8f, 0.0f},
-            (vec3){1.0f, 1.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f),
-        // green
         point_light_create(
-            (vec3){2.0f, 0.0f, -2.0f},
-            (vec3){0.0f, 0.1f, 0.0f},
-            (vec3){0.0f, 0.8f, 0.0f},
-            (vec3){0.0f, 1.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f),
-        // blue
         point_light_create(
-            (vec3){-2.0f, 0.0f, 2.0f},
-            (vec3){0.0f, 0.0f, 0.1f},
-            (vec3){0.0f, 0.0f, 0.8f},
-            (vec3){0.0f, 0.0f, 1.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
             1.0f,
             0.09f,
             0.032f)};
-
+    const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
     struct spot_light *spot_light = spot_light_create(
         (vec3){0.0f, 0.0f, 0.0f},
         (vec3){0.0f, 0.0f, 0.0f},
@@ -238,7 +129,6 @@ int main(int argc, char *argv[])
         0.032f,
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
-
     struct camera *camera = camera_create(
         (vec3){0.0f, 0.0f, 3.0f},
         (vec3){0.0f, 0.0f, -1.0f},
@@ -247,13 +137,6 @@ int main(int argc, char *argv[])
         -90.0f,
         0.0f,
         45.0f);
-
-    if (!camera)
-    {
-        printf("Error: %s\n", error_get());
-
-        return 1;
-    }
 
     time_cap_fps(FPS_CAP);
 
@@ -537,34 +420,37 @@ int main(int argc, char *argv[])
         program_set_float(phong_program_spot_light_outerCutOff, spot_light->outerCutOff);
         program_unbind();
 
-        object_update(object);
-
         window_clear();
 
-        mat4 model = GLM_MAT4_IDENTITY_INIT;
-        object_calc_model(object, model);
+        for (int i = 0; i < num_objects; i++)
+        {
+            mat4 model = GLM_MAT4_IDENTITY_INIT;
+            object_calc_model(objects[i], model);
 
-        program_bind(phong_program);
-        program_set_mat4(phong_program_object_model, model);
-        program_set_vec3(phong_program_material_color, object->material->color);
-        program_set_float(phong_program_material_shininess, object->material->shininess);
-        program_set_float(phong_program_material_glow, object->material->glow);
-        program_unbind();
+            program_bind(phong_program);
+            program_set_mat4(phong_program_object_model, model);
+            program_set_vec3(phong_program_material_color, objects[i]->material->color);
+            program_set_float(phong_program_material_shininess, objects[i]->material->shininess);
+            program_set_float(phong_program_material_glow, objects[i]->material->glow);
+            program_unbind();
 
-        program_bind(current_program);
-        object_draw(object);
-        program_unbind();
+            program_bind(current_program);
+            object_draw(objects[i]);
+            program_unbind();
+        }
 
         window_render();
 
         time_frame_end();
     }
 
-    object_destroy(object);
+    for (int i = 0; i < num_objects; i++)
+    {
+        object_destroy(objects[i]);
+    }
     material_destroy(box_material);
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
-    mesh_destroy(cube_mesh);
     mesh_destroy(quad_mesh);
     program_destroy(phong_program);
     audio_quit();

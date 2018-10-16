@@ -11,7 +11,7 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-#define NETWORK 1
+#define NETWORK 0
 #define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 1000
 
@@ -203,18 +203,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    struct object *object = object_create(
-        cube_mesh,
-        box_material,
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){1.0f, 1.0f, 1.0f});
+    struct object *objects[] = {
+        object_create(
+            cube_mesh,
+            box_material,
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){1.0f, 1.0f, 1.0f})};
+    const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
 
-    if (!object)
+    for (int i = 0; i < num_objects; i++)
     {
-        printf("Error: %s\n", error_get());
+        if (!objects[i])
+        {
+            printf("Error: %s\n", error_get());
 
-        return 1;
+            return 1;
+        }
     }
 
     struct directional_light *directional_light = directional_light_create(
@@ -260,6 +265,17 @@ int main(int argc, char *argv[])
             1.0f,
             0.09f,
             0.032f)};
+    const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
+
+    for (int i = 0; i < num_point_lights; i++)
+    {
+        if (!point_lights[i])
+        {
+            printf("Error: %s\n", error_get());
+
+            return 1;
+        }
+    }
 
     struct spot_light *spot_light = spot_light_create(
         (vec3){0.0f, 0.0f, 0.0f},
@@ -773,28 +789,37 @@ int main(int argc, char *argv[])
         program_set_float(phong_program_spot_light_outerCutOff, spot_light->outerCutOff);
         program_unbind();
 
-        object_update(object);
+        for (int i = 0; i < num_objects; i++)
+        {
+            float angle = time_current() * 0.001f;
+            objects[i]->rotation[0] = angle;
+            objects[i]->rotation[1] = angle;
+            objects[i]->rotation[2] = angle;
+        }
 
         window_clear();
 
-        mat4 model = GLM_MAT4_IDENTITY_INIT;
-        object_calc_model(object, model);
+        for (int i = 0; i < num_objects; i++)
+        {
+            mat4 model = GLM_MAT4_IDENTITY_INIT;
+            object_calc_model(objects[i], model);
 
-        program_bind(basic_program);
-        program_set_mat4(basic_program_object_model, model);
-        program_set_vec3(basic_program_material_color, object->material->color);
-        program_unbind();
+            program_bind(basic_program);
+            program_set_mat4(basic_program_object_model, model);
+            program_set_vec3(basic_program_material_color, objects[i]->material->color);
+            program_unbind();
 
-        program_bind(phong_program);
-        program_set_mat4(phong_program_object_model, model);
-        program_set_vec3(phong_program_material_color, object->material->color);
-        program_set_float(phong_program_material_shininess, object->material->shininess);
-        program_set_float(phong_program_material_glow, object->material->glow);
-        program_unbind();
+            program_bind(phong_program);
+            program_set_mat4(phong_program_object_model, model);
+            program_set_vec3(phong_program_material_color, objects[i]->material->color);
+            program_set_float(phong_program_material_shininess, objects[i]->material->shininess);
+            program_set_float(phong_program_material_glow, objects[i]->material->glow);
+            program_unbind();
 
-        program_bind(current_program);
-        object_draw(object);
-        program_unbind();
+            program_bind(current_program);
+            object_draw(objects[i]);
+            program_unbind();
+        }
 
         window_render();
 
@@ -816,7 +841,10 @@ int main(int argc, char *argv[])
     SDLNet_TCP_Close(tcp_socket);
 #endif
 
-    object_destroy(object);
+    for (int i = 0; i < num_objects; i++)
+    {
+        object_destroy(objects[i]);
+    }
     material_destroy(box_material);
     texture_destroy(matrix_texture);
     texture_destroy(box_specular_texture);
