@@ -12,6 +12,7 @@ void window_set_title(const char *title);
 void window_toggle_mouse(void);
 void window_toggle_fullscreen(void);
 void window_resize(int width, int height);
+float window_aspect_ratio(void);
 void window_clear(void);
 void window_render(void);
 void window_quit(void);

@@ -1,7 +1,7 @@
 #include <malloc.h>
 
-#include "config.h"
 #include "camera.h"
+#include "window.h"
 
 struct camera *camera_create(
     vec3 position,
@@ -29,7 +29,7 @@ void camera_calc_projection(struct camera *camera, vec4 *projection)
 {
     glm_perspective(
         glm_rad(camera->fov),
-        (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+        window_aspect_ratio(),
         0.01f,
         100.0f,
         projection);

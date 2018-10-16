@@ -80,21 +80,6 @@ int window_init(const char *title, int width, int height)
     return 0;
 }
 
-const unsigned char *window_keys(int *num_keys)
-{
-    return SDL_GetKeyboardState(num_keys);
-}
-
-unsigned int window_mouse(int *mouse_x, int *mouse_y)
-{
-    return SDL_GetMouseState(mouse_x, mouse_y);
-}
-
-int window_events(SDL_Event *event)
-{
-    return SDL_PollEvent(event);
-}
-
 const char *window_get_title(void)
 {
     return SDL_GetWindowTitle(window);
@@ -126,9 +111,18 @@ void window_toggle_fullscreen(void)
 
 void window_resize(int width, int height)
 {
+    SDL_SetWindowSize(window, width, height);
     glViewport(0, 0, width, height);
 
     printf("Window resized to %dx%d\n", width, height);
+}
+
+float window_aspect_ratio(void)
+{
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    return (float)width / (float)height;
 }
 
 void window_clear(void)
