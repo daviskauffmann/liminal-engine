@@ -7,6 +7,7 @@
 #include "error.h"
 #include "material.h"
 #include "mesh.h"
+#include "net.h"
 #include "object.h"
 #include "point_light.h"
 #include "program.h"
