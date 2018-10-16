@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <SDL/SDL.h>
 
+#include "error.h"
 #include "object.h"
 #include "time.h"
 
@@ -18,6 +19,13 @@ struct object *object_create(
     vec3 scale)
 {
     struct object *object = malloc(sizeof(struct object));
+
+    if (!object)
+    {
+        error_set("Couldn't allocate object");
+
+        return NULL;
+    }
 
     object->mesh = mesh;
     object->material = material;

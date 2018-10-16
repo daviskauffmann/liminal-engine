@@ -1,6 +1,7 @@
 #include <malloc.h>
 
 #include "camera.h"
+#include "error.h"
 #include "window.h"
 
 struct camera *camera_create(
@@ -13,6 +14,13 @@ struct camera *camera_create(
     float fov)
 {
     struct camera *camera = malloc(sizeof(struct camera));
+
+    if (!camera)
+    {
+        error_set("Couldn't allocate camera");
+
+        return NULL;
+    }
 
     glm_vec_copy(position, camera->position);
     glm_vec_copy(front, camera->front);

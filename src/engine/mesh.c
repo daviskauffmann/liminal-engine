@@ -1,5 +1,6 @@
 #include <malloc.h>
 
+#include "error.h"
 #include "mesh.h"
 
 struct mesh *mesh_create(
@@ -9,6 +10,13 @@ struct mesh *mesh_create(
     unsigned int num_indices)
 {
     struct mesh *mesh = malloc(sizeof(struct mesh));
+
+    if (!mesh)
+    {
+        error_set("Couldn't allocate mesh");
+
+        return NULL;
+    }
 
     glGenVertexArrays(1, &mesh->vao);
     glGenBuffers(1, &mesh->vbo);
@@ -37,6 +45,13 @@ struct mesh *mesh_create(
 struct mesh *mesh_create_obj(const char *file)
 {
     struct mesh *mesh = malloc(sizeof(struct mesh));
+
+    if (!mesh)
+    {
+        error_set("Couldn't allocate mesh");
+
+        return NULL;
+    }
 
     return mesh;
 }

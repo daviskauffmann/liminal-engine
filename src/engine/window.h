@@ -4,7 +4,7 @@
 #include <SDL/SDL.h>
 
 int window_init(const char *title, int width, int height);
-const unsigned char *window_keys(int *num_keys);
+const unsigned char *window_keyboard(int *num_keys);
 unsigned int window_mouse(int *mouse_x, int *mouse_y);
 int window_events(SDL_Event *event);
 const char *window_get_title(void);

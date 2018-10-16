@@ -1,10 +1,10 @@
 #include <cglm/cglm.h>
 #include <GL/glew.h>
-#include <SDL/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 #include "../engine/camera.h"
+#include "../engine/error.h"
 #include "../engine/material.h"
 #include "../engine/mesh.h"
 #include "../engine/object.h"
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 {
     if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
     if (!standard_program)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     if (!quad_mesh)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 
     if (!cube_mesh)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 
     if (!monkey_mesh)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
     if (!box_diffuse_texture)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 
     if (!box_specular_texture)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
     if (!box_material)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     if (!object)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 
     if (!camera)
     {
-        printf("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", error_get());
 
         return 1;
     }
@@ -223,7 +223,6 @@ int main(int argc, char *argv[])
     program_unbind();
 
     bool quit = false;
-
     while (!quit)
     {
         time_frame_start();
@@ -233,13 +232,13 @@ int main(int argc, char *argv[])
         window_set_title(title);
 
         int num_keys;
-        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
+        const unsigned char *keys = window_keyboard(&num_keys);
 
         int mouse_x, mouse_y;
-        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
+        unsigned int mouse = window_mouse(&mouse_x, &mouse_y);
 
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (window_events(&event))
         {
             switch (event.type)
             {

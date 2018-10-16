@@ -2,6 +2,7 @@
 #include <SDL/SDL.h>
 #include <string.h>
 
+#include "error.h"
 #include "program.h"
 
 static GLuint shader_create(GLenum type, const char *file);
@@ -9,6 +10,13 @@ static GLuint shader_create(GLenum type, const char *file);
 struct program *program_create(const char *vertex_file, const char *fragment_file)
 {
     struct program *program = malloc(sizeof(struct program));
+
+    if (!program)
+    {
+        error_set("Couldn't allocate program");
+
+        return NULL;
+    }
 
     program->program = glCreateProgram();
 
@@ -52,7 +60,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             GLchar info_log[512];
             glGetProgramInfoLog(program->program, sizeof(info_log), NULL, info_log);
 
-            SDL_SetError("Program linking failed\n%s", info_log);
+            error_set("Program linking failed\n%s", info_log);
 
             return NULL;
         }
@@ -78,7 +86,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             GLchar info_log[512];
             glGetProgramInfoLog(program->program, sizeof(info_log), NULL, info_log);
 
-            SDL_SetError("Program validation failed\n%s", info_log);
+            error_set("Program validation failed\n%s", info_log);
 
             return NULL;
         }
@@ -137,7 +145,7 @@ static GLuint shader_create(GLenum type, const char *file)
 
     if (!io)
     {
-        SDL_SetError("Couldn't open file %s", file);
+        error_set("Couldn't open file %s", file);
 
         return 0;
     }
@@ -150,14 +158,14 @@ static GLuint shader_create(GLenum type, const char *file)
 
     if (!source)
     {
-        SDL_SetError("Couldn't allocate size %ld", size);
+        error_set("Couldn't allocate size %ld", size);
 
         return 0;
     }
 
     if (SDL_RWread(io, source, size, 1) <= 0)
     {
-        SDL_SetError("Couldn't read file %s", file);
+        error_set("Couldn't read file %s", file);
 
         return 0;
     }
@@ -180,7 +188,7 @@ static GLuint shader_create(GLenum type, const char *file)
         GLchar info_log[512];
         glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
 
-        SDL_SetError("Shader compilation failed\n%s", info_log);
+        error_set("Shader compilation failed\n%s", info_log);
 
         return 0;
     }

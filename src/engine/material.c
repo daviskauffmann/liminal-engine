@@ -1,5 +1,6 @@
 #include <malloc.h>
 
+#include "error.h"
 #include "material.h"
 
 struct material *material_create(
@@ -10,6 +11,13 @@ struct material *material_create(
     float glow)
 {
     struct material *material = malloc(sizeof(struct material));
+
+    if (!material)
+    {
+        error_set("Couldn't allocate material");
+
+        return NULL;
+    }
 
     material->diffuse = diffuse;
     material->specular = specular;

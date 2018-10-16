@@ -2,11 +2,19 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 
+#include "error.h"
 #include "texture.h"
 
 struct texture *texture_create(const char *file)
 {
     struct texture *texture = malloc(sizeof(struct texture));
+
+    if (!texture)
+    {
+        error_set("Couldn't allocate texture");
+
+        return NULL;
+    }
 
     glGenTextures(1, &texture->texture);
 
@@ -16,7 +24,7 @@ struct texture *texture_create(const char *file)
 
     if (!surface)
     {
-        SDL_SetError(IMG_GetError());
+        error_set(IMG_GetError());
 
         return NULL;
     }

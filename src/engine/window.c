@@ -2,6 +2,7 @@
 #include <SDL/SDL_image.h>
 #include <stdio.h>
 
+#include "error.h"
 #include "window.h"
 
 SDL_Window *window;
@@ -9,26 +10,23 @@ SDL_GLContext context;
 
 int window_init(const char *title, int width, int height)
 {
+    if (SDL_Init(SDL_INIT_VIDEO))
     {
-        int error = SDL_Init(SDL_INIT_VIDEO);
+        error_set(SDL_GetError());
 
-        if (error)
-        {
-            return error;
-        }
+        return 1;
     }
 
     {
         int flags = IMG_INIT_JPG | IMG_INIT_PNG;
 
-        if ((IMG_Init(flags) & (flags)) != (flags))
+        if (IMG_Init(flags) & flags != flags)
         {
-            SDL_SetError(IMG_GetError());
+            error_set(IMG_GetError());
 
             return 1;
         }
     }
-
     window = SDL_CreateWindow(
         title,
         SDL_WINDOWPOS_CENTERED,
@@ -39,6 +37,8 @@ int window_init(const char *title, int width, int height)
 
     if (!window)
     {
+        error_set(SDL_GetError());
+
         return 1;
     }
 
@@ -49,6 +49,8 @@ int window_init(const char *title, int width, int height)
 
     if (!context)
     {
+        error_set(SDL_GetError());
+
         return 1;
     }
 
@@ -57,9 +59,9 @@ int window_init(const char *title, int width, int height)
 
         if (error != GLEW_OK)
         {
-            SDL_SetError(glewGetErrorString(error));
+            error_set(glewGetErrorString(error));
 
-            return error;
+            return 1;
         }
     }
 
@@ -78,6 +80,21 @@ int window_init(const char *title, int width, int height)
     glEnable(GL_FRAMEBUFFER_SRGB);
 
     return 0;
+}
+
+const unsigned char *window_keyboard(int *num_keys)
+{
+    return SDL_GetKeyboardState(num_keys);
+}
+
+unsigned int window_mouse(int *mouse_x, int *mouse_y)
+{
+    return SDL_GetMouseState(mouse_x, mouse_y);
+}
+
+int window_events(SDL_Event *event)
+{
+    return SDL_PollEvent(event);
 }
 
 const char *window_get_title(void)
