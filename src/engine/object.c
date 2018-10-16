@@ -1,9 +1,8 @@
+#include <engine/error.h>
+#include <engine/object.h>
+#include <engine/time.h>
 #include <malloc.h>
 #include <SDL/SDL.h>
-
-#include "error.h"
-#include "object.h"
-#include "time.h"
 
 // TODO: scenes
 // objects should be created inside a scene

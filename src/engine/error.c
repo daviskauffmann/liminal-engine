@@ -1,8 +1,7 @@
+#include <engine/error.h>
 #include <SDL/SDL.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-#include "error.h"
 
 void error_set(const char *fmt, ...)
 {

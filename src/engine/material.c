@@ -1,7 +1,6 @@
+#include <engine/error.h>
+#include <engine/material.h>
 #include <malloc.h>
-
-#include "error.h"
-#include "material.h"
 
 struct material *material_create(
     struct texture *diffuse,

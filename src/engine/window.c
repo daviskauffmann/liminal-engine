@@ -1,8 +1,7 @@
+#include <engine/error.h>
+#include <engine/window.h>
 #include <GL/glew.h>
 #include <stdio.h>
-
-#include "error.h"
-#include "window.h"
 
 SDL_Window *window;
 SDL_GLContext context;
@@ -52,10 +51,10 @@ int window_init(const char *title, int width, int height)
 
     glViewport(0, 0, width, height);
 
-    glClearColor(0.3f, 0.4f, 0.5f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_DEPTH_CLAMP);
     glEnable(GL_TEXTURE_2D);
 
     return 0;

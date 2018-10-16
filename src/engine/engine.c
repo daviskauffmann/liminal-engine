@@ -4,9 +4,6 @@
 #include <SDL/SDL_net.h>
 #include <SDL/SDL_ttf.h>
 
-#include "engine.h"
-#include "error.h"
-
 int engine_init(void)
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))

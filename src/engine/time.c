@@ -1,6 +1,5 @@
+#include <engine/time.h>
 #include <SDL/SDL.h>
-
-#include "time.h"
 
 static unsigned int frame_delay = 0;
 static unsigned int frame_start = 0;

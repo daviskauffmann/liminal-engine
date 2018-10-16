@@ -1,8 +1,7 @@
+#include <engine/camera.h>
+#include <engine/error.h>
+#include <engine/window.h>
 #include <malloc.h>
-
-#include "camera.h"
-#include "error.h"
-#include "window.h"
 
 struct camera *camera_create(
     vec3 position,

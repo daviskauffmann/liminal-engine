@@ -1,9 +1,8 @@
+#include <engine/error.h>
+#include <engine/program.h>
 #include <malloc.h>
 #include <SDL/SDL.h>
 #include <string.h>
-
-#include "error.h"
-#include "program.h"
 
 static GLuint shader_create(GLenum type, const char *file);
 

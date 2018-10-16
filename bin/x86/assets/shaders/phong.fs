@@ -1,5 +1,7 @@
 #version 330 core
 
+const int NUM_POINT_LIGHTS = 4;
+
 in struct Vertex
 {
     vec3 position;
@@ -43,7 +45,7 @@ uniform struct PointLight
     float constant;
     float linear;
     float quadratic;
-} point_lights[4];
+} point_lights[NUM_POINT_LIGHTS];
 
 uniform struct SpotLight
 {
@@ -74,7 +76,7 @@ void main()
     color += calc_directional_light(directional_light, normal, view_direction);
 
     // point lights
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < NUM_POINT_LIGHTS; i++)
     {
         color += calc_point_light(point_lights[i], normal, view_direction);
     }

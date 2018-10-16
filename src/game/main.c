@@ -1,21 +1,9 @@
 #include <cglm/cglm.h>
+#include <engine/engine.h>
 #include <GL/glew.h>
 #include <SDL/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
-
-#include "../engine/audio.h"
-#include "../engine/camera.h"
-#include "../engine/engine.h"
-#include "../engine/error.h"
-#include "../engine/light.h"
-#include "../engine/material.h"
-#include "../engine/mesh.h"
-#include "../engine/object.h"
-#include "../engine/program.h"
-#include "../engine/texture.h"
-#include "../engine/time.h"
-#include "../engine/window.h"
 
 #define WINDOW_TITLE "Test Game v0.1"
 #define WINDOW_WIDTH 800
