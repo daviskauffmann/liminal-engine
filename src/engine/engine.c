@@ -5,7 +5,7 @@ int engine_init(void)
     // init SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
-        error_set(SDL_GetError());
+        error(SDL_GetError());
 
         return 1;
     }
@@ -13,7 +13,8 @@ int engine_init(void)
     {
         SDL_version version;
         SDL_GetVersion(&version);
-        printf("SDL %d.%d.%d.\n", version.major, version.minor, version.patch);
+
+        info("SDL %d.%d.%d", version.major, version.minor, version.patch);
     }
 
     // init SDL_image
@@ -22,7 +23,7 @@ int engine_init(void)
 
         if (IMG_Init(flags) & flags != flags)
         {
-            error_set(IMG_GetError());
+            error(IMG_GetError());
 
             return 1;
         }
@@ -30,7 +31,8 @@ int engine_init(void)
 
     {
         const SDL_version *version = IMG_Linked_Version();
-        printf("SDL_image %d.%d.%d.\n", version->major, version->minor, version->patch);
+
+        info("SDL_image %d.%d.%d", version->major, version->minor, version->patch);
     }
 
     // init SDL_mixer
@@ -39,7 +41,7 @@ int engine_init(void)
 
         if (Mix_Init(flags) & flags != flags)
         {
-            error_set(Mix_GetError());
+            error(Mix_GetError());
 
             return 1;
         }
@@ -47,33 +49,35 @@ int engine_init(void)
 
     {
         const SDL_version *version = Mix_Linked_Version();
-        printf("SDL_mixer %d.%d.%d.\n", version->major, version->minor, version->patch);
+
+        info("SDL_mixer %d.%d.%d", version->major, version->minor, version->patch);
     }
 
     // init SDL_net
     if (SDLNet_Init())
     {
-        error_set(SDLNet_GetError());
+        error(SDLNet_GetError());
 
         return 1;
     }
 
     {
         const SDL_version *version = SDLNet_Linked_Version();
-        printf("SDL_net %d.%d.%d.\n", version->major, version->minor, version->patch);
+        info("SDL_net %d.%d.%d", version->major, version->minor, version->patch);
     }
 
     // init SDL_ttf
     if (TTF_Init())
     {
-        error_set(TTF_GetError());
+        error(TTF_GetError());
 
         return 1;
     }
 
     {
         const SDL_version *version = TTF_Linked_Version();
-        printf("SDL_ttf %d.%d.%d.\n", version->major, version->minor, version->patch);
+
+        info("SDL_ttf %d.%d.%d", version->major, version->minor, version->patch);
     }
 
     return 0;

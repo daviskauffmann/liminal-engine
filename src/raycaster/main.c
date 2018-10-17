@@ -160,10 +160,8 @@ int main(int argc, char *args[])
 {
     // setup engine
     engine_init();
-
     window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    audio_init();
+    audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     time_cap_fps(FPS_CAP);
 
@@ -215,7 +213,7 @@ int main(int argc, char *args[])
     player->plane_x = 0.0f;
     player->plane_y = 1.0f;
 
-    printf("FOV: %d\n", (int)(2 * atanf(player->plane_y) / M_PI * 180));
+    info("FOV: %d", (int)(2 * atanf(player->plane_y) / M_PI * 180));
 
     // render buffers
     unsigned int *pixel_buffer = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(unsigned int));
@@ -945,11 +943,8 @@ int main(int argc, char *args[])
     // free resources
     free(depth_buffer);
     free(pixel_buffer);
-
     free(player);
-
     TTF_CloseFont(font);
-
     for (int i = 0; i < NUM_TRACKS; i++)
     {
         Mix_FreeMusic(tracks[i]);
@@ -958,7 +953,6 @@ int main(int argc, char *args[])
     {
         Mix_FreeChunk(sounds[i]);
     }
-
     for (int i = 0; i < NUM_TEXTURES; i++)
     {
         bitmap_destroy(textures[i]);

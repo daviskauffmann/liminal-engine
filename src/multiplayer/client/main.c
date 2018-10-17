@@ -16,15 +16,11 @@ int main(int argc, char *argv[])
     // setup engine
     if (engine_init())
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
     if (window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -33,72 +29,64 @@ int main(int argc, char *argv[])
     // setup server info
     IPaddress server_address;
 
-    if (net_resolve_host(&server_address, SERVER_HOST, SERVER_PORT))
+    if (SDLNet_ResolveHost(&server_address, SERVER_HOST, SERVER_PORT))
     {
-        printf("Error: %s\n", error_get());
+        error(SDLNet_GetError());
 
         return 1;
     }
 
     // open TCP socket
-    TCPsocket tcp_socket = net_tcp_open(&server_address);
+    TCPsocket tcp_socket = tcp_open(&server_address);
 
     if (!tcp_socket)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
     // allocate TCP packet
-    TCPpacket *tcp_packet = net_tcp_alloc_packet(PACKET_SIZE);
+    TCPpacket *tcp_packet = tcp_alloc_packet(PACKET_SIZE);
 
     if (!tcp_packet)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
     // open UDP socket
-    UDPsocket udp_socket = net_udp_open(0);
+    UDPsocket udp_socket = udp_open(0);
 
     if (!udp_socket)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
     // allocate UDP packet
-    UDPpacket *udp_packet = net_udp_alloc_packet(PACKET_SIZE);
+    UDPpacket *udp_packet = udp_alloc_packet(PACKET_SIZE);
 
     if (!udp_packet)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
     // allocate socket set
-    SDLNet_SocketSet socket_set = net_alloc_socket_set(2);
+    SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(2);
 
     if (!socket_set)
     {
-        printf("Error: %s\n", error_get());
+        error(SDLNet_GetError());
 
         return 1;
     }
 
     // add TCP and UDP sockets to socket set
-    net_tcp_add_socket(socket_set, tcp_socket);
-    net_udp_add_socket(socket_set, udp_socket);
+    SDLNet_TCP_AddSocket(socket_set, tcp_socket);
+    SDLNet_UDP_AddSocket(socket_set, udp_socket);
 
     // keep track of unique client ID given by server
     int client_id = -1;
 
     // check the server's response to the connection
-    if (net_tcp_recv(tcp_socket, tcp_packet) == 1)
+    if (tcp_recv(tcp_socket, tcp_packet) == 1)
     {
         struct data *data = (struct data *)tcp_packet->data;
 
@@ -108,21 +96,21 @@ int main(int argc, char *argv[])
         {
             struct id_data *id_data = (struct id_data *)data;
 
-            printf("Server assigned ID: %d\n", id_data->id);
+            info("Server assigned ID: %d", id_data->id);
 
             client_id = id_data->id;
         }
         break;
         case DATA_CONNECT_FULL:
         {
-            printf("Server is full\n");
+            error("Server is full");
 
             return 1;
         }
         break;
         default:
         {
-            printf("TCP: Unknown packet type\n");
+            error("Unknown server response");
 
             return 1;
         }
@@ -133,7 +121,7 @@ int main(int argc, char *argv[])
     // make a UDP "connection" to the server
     {
         struct id_data id_data = id_data_create(DATA_UDP_CONNECT_REQUEST, client_id);
-        net_udp_send(udp_socket, udp_packet, server_address, &id_data, sizeof(id_data));
+        udp_send(udp_socket, udp_packet, server_address, &id_data, sizeof(id_data));
     }
 
     // main loop
@@ -171,7 +159,7 @@ int main(int argc, char *argv[])
                 case SDLK_RETURN:
                 {
                     struct chat_data chat_data = chat_data_create(DATA_CHAT_REQUEST, client_id, "Hello, World!");
-                    net_tcp_send(tcp_socket, &chat_data, sizeof(chat_data));
+                    tcp_send(tcp_socket, &chat_data, sizeof(chat_data));
                 }
                 break;
                 }
@@ -180,7 +168,7 @@ int main(int argc, char *argv[])
             case SDL_MOUSEBUTTONDOWN:
             {
                 struct mouse_data mouse_data = mouse_data_create(DATA_MOUSEDOWN_REQUEST, client_id, event.button.x, event.button.y);
-                net_udp_send(udp_socket, udp_packet, server_address, &mouse_data, sizeof(mouse_data));
+                udp_send(udp_socket, udp_packet, server_address, &mouse_data, sizeof(mouse_data));
             }
             break;
             case SDL_QUIT:
@@ -198,7 +186,7 @@ int main(int argc, char *argv[])
             if (SDLNet_SocketReady(tcp_socket))
             {
                 // accept new clients
-                if (net_tcp_recv(tcp_socket, tcp_packet) == 1)
+                if (tcp_recv(tcp_socket, tcp_packet) == 1)
                 {
                     struct data *data = (struct data *)tcp_packet->data;
 
@@ -208,26 +196,26 @@ int main(int argc, char *argv[])
                     {
                         struct id_data *id_data = (struct id_data *)data;
 
-                        printf("Client with ID %d has joined\n", id_data->id);
+                        info("Client with ID %d has joined", id_data->id);
                     }
                     break;
                     case DATA_DISCONNECT_BROADCAST:
                     {
                         struct id_data *id_data = (struct id_data *)data;
 
-                        printf("Client with ID %d has disconnected\n", id_data->id);
+                        info("Client with ID %d has disconnected", id_data->id);
                     }
                     break;
                     case DATA_CHAT_BROADCAST:
                     {
                         struct chat_data *chat_data = (struct chat_data *)data;
 
-                        printf("Client %d: %s\n", chat_data->id, chat_data->message);
+                        info("Client %d: %s", chat_data->id, chat_data->message);
                     }
                     break;
                     default:
                     {
-                        printf("TCP: Unknown packet type\n");
+                        info("TCP: Unknown packet type");
                     }
                     break;
                     }
@@ -237,7 +225,7 @@ int main(int argc, char *argv[])
             // handle UDP messages
             if (SDLNet_SocketReady(udp_socket))
             {
-                if (net_udp_recv(udp_socket, udp_packet) == 1)
+                if (udp_recv(udp_socket, udp_packet) == 1)
                 {
                     struct data *data = (struct data *)udp_packet->data;
 
@@ -245,7 +233,7 @@ int main(int argc, char *argv[])
                     {
                     default:
                     {
-                        printf("UDP: Unknown packet type\n");
+                        info("UDP: Unknown packet type");
                     }
                     break;
                     }
@@ -260,16 +248,16 @@ int main(int argc, char *argv[])
     // send a disconnect message
     {
         struct data data = data_create(DATA_DISCONNECT_REQUEST);
-        net_tcp_send(tcp_socket, &data, sizeof(data));
+        tcp_send(tcp_socket, &data, sizeof(data));
     }
 
     // free resources
     SDLNet_UDP_DelSocket(socket_set, udp_socket);
     SDLNet_TCP_DelSocket(socket_set, tcp_socket);
     SDLNet_FreeSocketSet(socket_set);
-    net_udp_free_packet(udp_packet);
+    udp_free_packet(udp_packet);
     SDLNet_UDP_Close(udp_socket);
-    net_tcp_free_packet(tcp_packet);
+    tcp_free_packet(tcp_packet);
     SDLNet_TCP_Close(tcp_socket);
 
     // close engine

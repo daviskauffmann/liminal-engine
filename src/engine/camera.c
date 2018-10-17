@@ -13,7 +13,7 @@ struct camera *camera_create(
 
     if (!camera)
     {
-        error_set("Couldn't allocate camera");
+        error("Couldn't allocate camera");
 
         return NULL;
     }

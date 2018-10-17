@@ -11,22 +11,16 @@ int main(int argc, char *argv[])
     // setup engine
     if (engine_init())
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
     if (window_gl_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
-    if (audio_init())
+    if (audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024))
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -41,8 +35,6 @@ int main(int argc, char *argv[])
 
     if (!basic_program)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -52,8 +44,6 @@ int main(int argc, char *argv[])
 
     if (!phong_program)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -79,8 +69,6 @@ int main(int argc, char *argv[])
 
     if (!quad_mesh)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -144,8 +132,6 @@ int main(int argc, char *argv[])
 
     if (!cube_mesh)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -153,8 +139,6 @@ int main(int argc, char *argv[])
 
     if (!monkey_mesh)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -163,8 +147,6 @@ int main(int argc, char *argv[])
 
     if (!box_diffuse_texture)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -172,8 +154,6 @@ int main(int argc, char *argv[])
 
     if (!box_specular_texture)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -181,8 +161,6 @@ int main(int argc, char *argv[])
 
     if (!matrix_texture)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -197,8 +175,6 @@ int main(int argc, char *argv[])
 
     if (!box_material)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -216,8 +192,6 @@ int main(int argc, char *argv[])
     {
         if (!objects[i])
         {
-            printf("Error: %s\n", error_get());
-
             return 1;
         }
     }
@@ -231,8 +205,6 @@ int main(int argc, char *argv[])
 
     if (!directional_light)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -279,8 +251,6 @@ int main(int argc, char *argv[])
     {
         if (!point_lights[i])
         {
-            printf("Error: %s\n", error_get());
-
             return 1;
         }
     }
@@ -299,8 +269,6 @@ int main(int argc, char *argv[])
 
     if (!spot_light)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 
@@ -316,8 +284,6 @@ int main(int argc, char *argv[])
 
     if (!camera)
     {
-        printf("Error: %s\n", error_get());
-
         return 1;
     }
 

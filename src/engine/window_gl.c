@@ -16,7 +16,7 @@ int window_gl_init(const char *title, int width, int height)
 
     if (!window)
     {
-        error_set(SDL_GetError());
+        error(SDL_GetError());
 
         return 1;
     }
@@ -29,25 +29,25 @@ int window_gl_init(const char *title, int width, int height)
 
     if (!context)
     {
-        error_set(SDL_GetError());
+        error(SDL_GetError());
 
         return 1;
     }
 
     // init GLEW
     {
-        GLenum error = glewInit();
+        GLenum glewError = glewInit();
 
-        if (error != GLEW_OK)
+        if (glewError != GLEW_OK)
         {
-            error_set(glewGetErrorString(error));
+            error(glewGetErrorString(glewError));
 
             return 1;
         }
     }
 
-    printf("GLEW %s\n", glewGetString(GLEW_VERSION));
-    printf("OpenGL %s\n", glGetString(GL_VERSION));
+    info("GLEW %s", glewGetString(GLEW_VERSION));
+    info("OpenGL %s", glGetString(GL_VERSION));
 
     // configure OpenGL
     glViewport(0, 0, width, height);
@@ -103,7 +103,7 @@ void window_gl_resize(int width, int height)
     SDL_SetWindowSize(window, width, height);
     glViewport(0, 0, width, height);
 
-    printf("Window resized to %dx%d\n", width, height);
+    info("Window resized to %dx%d", width, height);
 }
 
 void window_gl_clear(void)

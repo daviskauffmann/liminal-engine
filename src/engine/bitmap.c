@@ -9,7 +9,7 @@ struct bitmap *bitmap_create(const char *file)
 
     if (!surface)
     {
-        error_set(IMG_GetError());
+        error(IMG_GetError());
 
         return NULL;
     }
@@ -18,7 +18,7 @@ struct bitmap *bitmap_create(const char *file)
 
     if (!bitmap)
     {
-        error_set("Couldn't allocate bitmap");
+        error("Couldn't allocate bitmap");
 
         return NULL;
     }
@@ -29,7 +29,7 @@ struct bitmap *bitmap_create(const char *file)
 
     if (!bitmap->pixels)
     {
-        error_set("Couldn't allocate pixels");
+        error("Couldn't allocate pixels");
 
         return NULL;
     }

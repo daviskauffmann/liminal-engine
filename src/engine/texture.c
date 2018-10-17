@@ -6,7 +6,7 @@ struct texture *texture_create(const char *file)
 
     if (!texture)
     {
-        error_set("Couldn't allocate texture");
+        error("Couldn't allocate texture");
 
         return NULL;
     }
@@ -19,7 +19,7 @@ struct texture *texture_create(const char *file)
 
     if (!surface)
     {
-        error_set(IMG_GetError());
+        error(IMG_GetError());
 
         return NULL;
     }

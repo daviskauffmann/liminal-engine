@@ -10,7 +10,7 @@ struct directional_light *directional_light_create(
 
     if (!directional_light)
     {
-        error_set("Couldn't allocate directional light");
+        error("Couldn't allocate directional light");
 
         return NULL;
     }

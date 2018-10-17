@@ -12,7 +12,7 @@ struct material *material_create(
 
     if (!material)
     {
-        error_set("Couldn't allocate material");
+        error("Couldn't allocate material");
 
         return NULL;
     }

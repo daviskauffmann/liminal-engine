@@ -16,7 +16,7 @@ struct spot_light *spot_light_create(
 
     if (!spot_light)
     {
-        error_set("Couldn't allocate spot light");
+        error("Couldn't allocate spot light");
 
         return NULL;
     }

@@ -17,7 +17,7 @@ int window_sw_init(const char *title, int width, int height)
 
     if (!window)
     {
-        error_set(SDL_GetError());
+        error(SDL_GetError());
 
         return 1;
     }
@@ -27,7 +27,7 @@ int window_sw_init(const char *title, int width, int height)
 
     if (!renderer)
     {
-        error_set(SDL_GetError());
+        error(SDL_GetError());
 
         return 1;
     }
@@ -42,7 +42,7 @@ int window_sw_init(const char *title, int width, int height)
 
     if (!screen)
     {
-        printf("Error: %s\n", SDL_GetError());
+        error(SDL_GetError());
 
         return 1;
     }

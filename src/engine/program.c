@@ -8,7 +8,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
     if (!program)
     {
-        error_set("Couldn't allocate program");
+        error("Couldn't allocate program");
 
         return NULL;
     }
@@ -57,7 +57,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             GLchar info_log[512];
             glGetProgramInfoLog(program->program, sizeof(info_log), NULL, info_log);
 
-            error_set("Program linking failed\n%s", info_log);
+            error("Program linking failed\n%s", info_log);
 
             return NULL;
         }
@@ -85,7 +85,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             GLchar info_log[512];
             glGetProgramInfoLog(program->program, sizeof(info_log), NULL, info_log);
 
-            error_set("Program validation failed\n%s", info_log);
+            error("Program validation failed\n%s", info_log);
 
             return NULL;
         }
@@ -146,7 +146,7 @@ static GLuint shader_create(GLenum type, const char *file)
 
     if (!io)
     {
-        error_set("Couldn't open file %s", file);
+        error("Couldn't open file %s", file);
 
         return 0;
     }
@@ -161,7 +161,7 @@ static GLuint shader_create(GLenum type, const char *file)
 
     if (!source)
     {
-        error_set("Couldn't allocate size %ld", size);
+        error("Couldn't allocate size %ld", size);
 
         return 0;
     }
@@ -169,7 +169,7 @@ static GLuint shader_create(GLenum type, const char *file)
     // read the file into the buffer
     if (SDL_RWread(io, source, size, 1) <= 0)
     {
-        error_set("Couldn't read file %s", file);
+        error("Couldn't read file %s", file);
 
         return 0;
     }
@@ -196,7 +196,7 @@ static GLuint shader_create(GLenum type, const char *file)
         GLchar info_log[512];
         glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
 
-        error_set("Shader compilation failed\n%s", info_log);
+        error("Shader compilation failed\n%s", info_log);
 
         return 0;
     }

@@ -11,7 +11,7 @@ struct object *object_create(
 
     if (!object)
     {
-        error_set("Couldn't allocate object");
+        error("Couldn't allocate object");
 
         return NULL;
     }

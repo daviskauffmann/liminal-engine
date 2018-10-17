@@ -1,14 +1,10 @@
 #include <engine/engine.h>
 
-int audio_init(void)
+int audio_init(int frequency, unsigned short format, int channels, int chunk_size)
 {
-    if (Mix_OpenAudio(
-            MIX_DEFAULT_FREQUENCY,
-            MIX_DEFAULT_FORMAT,
-            MIX_DEFAULT_CHANNELS,
-            1024))
+    if (Mix_OpenAudio(frequency, format, channels, chunk_size))
     {
-        error_set(Mix_GetError());
+        error(Mix_GetError());
 
         return 1;
     }

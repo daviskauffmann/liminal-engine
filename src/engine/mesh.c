@@ -10,7 +10,7 @@ struct mesh *mesh_create(
 
     if (!mesh)
     {
-        error_set("Couldn't allocate mesh");
+        error("Couldn't allocate mesh");
 
         return NULL;
     }
@@ -47,7 +47,7 @@ struct mesh *mesh_create_obj(const char *file)
 
     if (!mesh)
     {
-        error_set("Couldn't allocate mesh");
+        error("Couldn't allocate mesh");
 
         return NULL;
     }
