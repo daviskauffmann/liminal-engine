@@ -106,6 +106,7 @@ int main(int argc, char *args[])
     bool quit = false;
     while (!quit)
     {
+        // start of frame activities
         time_frame_start();
 
         // handle network events
@@ -287,6 +288,7 @@ int main(int argc, char *args[])
             }
         }
 
+        // end of frame activities
         time_frame_end();
     }
 

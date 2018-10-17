@@ -22,8 +22,6 @@
 #include "camera.h"
 #include "directional_light.h"
 #include "error.h"
-#include "font.h"
-#include "io.h"
 #include "material.h"
 #include "mesh.h"
 #include "net.h"

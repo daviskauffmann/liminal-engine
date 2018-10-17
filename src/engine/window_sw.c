@@ -114,7 +114,7 @@ void window_sw_draw_text(TTF_Font *font, int px, int x, int y, SDL_Color fg, con
 
     va_end(ap);
 
-    SDL_Surface *text_surface = font_render_solid(font, text, fg);
+    SDL_Surface *text_surface = TTF_RenderText_Solid(font, text, fg);
 
     SDL_Texture *text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
 

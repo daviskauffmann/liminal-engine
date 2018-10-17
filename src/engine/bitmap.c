@@ -34,6 +34,7 @@ struct bitmap *bitmap_create(const char *file)
         return NULL;
     }
 
+    // copy the pixels from the surface to the bitmap
     for (int x = 0; x < bitmap->width; x++)
     {
         for (int y = 0; y < bitmap->height; y++)

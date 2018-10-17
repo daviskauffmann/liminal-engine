@@ -15,6 +15,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
     program->program = glCreateProgram();
 
+    // compile shaders
     GLuint vertex_shader = 0;
     if (vertex_file)
     {
@@ -45,6 +46,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
         glDeleteShader(fragment_shader);
     }
 
+    // link program
     glLinkProgram(program->program);
     {
         GLint success;
@@ -61,6 +63,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
         }
     }
 
+    // detach shaders, we're done with them now
     if (vertex_shader)
     {
         glDetachShader(program->program, vertex_shader);
@@ -71,6 +74,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
         glDetachShader(program->program, fragment_shader);
     }
 
+    // check for errors
     glValidateProgram(program->program);
     {
         GLint success;
@@ -134,8 +138,10 @@ void program_destroy(struct program *program)
 
 static GLuint shader_create(GLenum type, const char *file)
 {
+    // create shader
     GLuint shader = glCreateShader(type);
 
+    // open shader file
     SDL_RWops *io = SDL_RWFromFile(file, "rb");
 
     if (!io)
@@ -145,10 +151,12 @@ static GLuint shader_create(GLenum type, const char *file)
         return 0;
     }
 
+    // get file size
     SDL_RWseek(io, 0, RW_SEEK_END);
     size_t size = (size_t)SDL_RWtell(io);
     SDL_RWseek(io, 0, RW_SEEK_SET);
 
+    // file buffer
     char *source = malloc(size + 1);
 
     if (!source)
@@ -158,6 +166,7 @@ static GLuint shader_create(GLenum type, const char *file)
         return 0;
     }
 
+    // read the file into the buffer
     if (SDL_RWread(io, source, size, 1) <= 0)
     {
         error_set("Couldn't read file %s", file);
@@ -165,16 +174,20 @@ static GLuint shader_create(GLenum type, const char *file)
         return 0;
     }
 
+    // null terminate
     source[size] = '\0';
 
     SDL_RWclose(io);
 
+    // set the shader source
     glShaderSource(shader, 1, &source, NULL);
 
     free(source);
 
+    // compile the shader
     glCompileShader(shader);
 
+    // check errors
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 

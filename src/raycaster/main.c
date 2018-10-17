@@ -167,7 +167,7 @@ int main(int argc, char *args[])
 
     time_cap_fps(FPS_CAP);
 
-    io_set_relative_mouse(true);
+    SDL_SetRelativeMouseMode(true);
 
     // create textures
     struct bitmap *textures[NUM_TEXTURES];
@@ -188,17 +188,16 @@ int main(int argc, char *args[])
 
     // load music
     Mix_Music *tracks[NUM_TRACKS];
-    tracks[0] = audio_music_load("assets/audio/background.mp3");
+    tracks[0] = Mix_LoadMUS("assets/audio/background.mp3");
 
     // load sounds
     Mix_Chunk *sounds[NUM_SOUNDS];
-    sounds[0] = audio_chunk_load("assets/audio/shoot.wav");
+    sounds[0] = Mix_LoadWAV("assets/audio/shoot.wav");
 
     // load fonts
-    TTF_Font *font = font_open("assets/fonts/VeraMono.ttf", 24);
+    TTF_Font *font = TTF_OpenFont("assets/fonts/VeraMono.ttf", 24);
 
     // game settings
-    bool fps_cap = true;
     bool textured = true;
     bool draw_walls = true;
     bool draw_floor = true;
@@ -226,19 +225,20 @@ int main(int argc, char *args[])
     bool quit = false;
     while (!quit)
     {
+        // start of frame activities
         time_frame_start();
 
         // get keyboard input
         int num_keys;
-        const unsigned char *keys = io_keyboard(&num_keys);
+        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
 
         // get mouse input
         int mouse_x, mouse_y;
-        unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
+        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
 
         // handle events
         SDL_Event event;
-        while (io_event(&event))
+        while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
@@ -258,69 +258,64 @@ int main(int argc, char *args[])
                 {
                 case SDLK_F1:
                 {
-                    fps_cap = !fps_cap;
+                    textured = !textured;
                 }
                 break;
                 case SDLK_F2:
                 {
-                    textured = !textured;
+                    draw_walls = !draw_walls;
                 }
                 break;
                 case SDLK_F3:
                 {
-                    draw_walls = !draw_walls;
+                    draw_floor = !draw_floor;
                 }
                 break;
                 case SDLK_F4:
                 {
-                    draw_floor = !draw_floor;
+                    draw_billboards = !draw_billboards;
                 }
                 break;
                 case SDLK_F5:
                 {
-                    draw_billboards = !draw_billboards;
-                }
-                break;
-                case SDLK_F6:
-                {
                     shading = !shading;
                 }
                 break;
-                case SDLK_F7:
+                case SDLK_F6:
                 {
                     foggy = !foggy;
                 }
                 break;
                 case SDLK_1:
                 {
-                    if (audio_music_playing())
+                    if (Mix_PlayingMusic())
                     {
-                        audio_music_stop();
+                        Mix_HaltMusic();
                     }
                     else
                     {
-                        audio_music_play(tracks[0], -1);
+                        Mix_PlayMusic(tracks[0], -1);
                     }
                 }
                 break;
                 case SDLK_2:
                 {
-                    if (audio_music_playing())
+                    if (Mix_PlayingMusic())
                     {
-                        if (audio_music_paused())
+                        if (Mix_PausedMusic())
                         {
-                            audio_music_resume();
+                            Mix_ResumeMusic();
                         }
                         else
                         {
-                            audio_music_pause();
+                            Mix_PauseMusic();
                         }
                     }
                 }
                 break;
                 case SDLK_TAB:
                 {
-                    io_set_relative_mouse(!io_get_relative_mouse());
+                    SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
                 }
                 break;
                 case SDLK_RETURN:
@@ -423,7 +418,7 @@ int main(int argc, char *args[])
             {
                 shoot_timer = 0.0f;
 
-                audio_chunk_play(-1, sounds[0], 0);
+                Mix_PlayChannel(-1, sounds[0], 0);
             }
         }
 
@@ -943,6 +938,7 @@ int main(int argc, char *args[])
         // display the renderer
         window_sw_render();
 
+        // end of frame activities
         time_frame_end();
     }
 
@@ -952,15 +948,15 @@ int main(int argc, char *args[])
 
     free(player);
 
-    font_close(font);
+    TTF_CloseFont(font);
 
     for (int i = 0; i < NUM_TRACKS; i++)
     {
-        audio_music_free(tracks[i]);
+        Mix_FreeMusic(tracks[i]);
     }
     for (int i = 0; i < NUM_SOUNDS; i++)
     {
-        audio_chunk_free(sounds[i]);
+        Mix_FreeChunk(sounds[i]);
     }
 
     for (int i = 0; i < NUM_TEXTURES; i++)

@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
     time_cap_fps(FPS_CAP);
 
-    io_set_relative_mouse(true);
+    SDL_SetRelativeMouseMode(true);
 
     // create shader programs
     struct program *basic_program = program_create(
@@ -229,11 +229,11 @@ int main(int argc, char *argv[])
         (vec3){0.4f, 0.4f, 0.4f},
         (vec3){1.0f, 0.0f, 0.0f});
 
-    if (!directional_light) 
+    if (!directional_light)
     {
-            printf("Error: %s\n", error_get());
+        printf("Error: %s\n", error_get());
 
-            return 1;
+        return 1;
     }
 
     struct point_light *point_lights[] = {
@@ -297,12 +297,12 @@ int main(int argc, char *argv[])
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
 
-        if (!spot_light)
-        {
-            printf("Error: %s\n", error_get());
+    if (!spot_light)
+    {
+        printf("Error: %s\n", error_get());
 
-            return 1;
-        }
+        return 1;
+    }
 
     // create camera
     struct camera *camera = camera_create(
@@ -402,6 +402,7 @@ int main(int argc, char *argv[])
     bool quit = false;
     while (!quit)
     {
+        // start of frame activities
         time_frame_start();
 
         // update window title
@@ -411,15 +412,15 @@ int main(int argc, char *argv[])
 
         // get keyboard input
         int num_keys;
-        const unsigned char *keys = io_keyboard(&num_keys);
+        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
 
         // get mouse input
         int mouse_x, mouse_y;
-        unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
+        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
 
         // handle events
         SDL_Event event;
-        while (io_event(&event))
+        while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
@@ -455,7 +456,7 @@ int main(int argc, char *argv[])
                 break;
                 case SDLK_TAB:
                 {
-                    io_set_relative_mouse(!io_get_relative_mouse());
+                    SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
                 }
                 break;
                 }
@@ -687,6 +688,7 @@ int main(int argc, char *argv[])
         // display the window
         window_gl_render();
 
+        // end of frame activities
         time_frame_end();
     }
 

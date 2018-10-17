@@ -144,15 +144,15 @@ int main(int argc, char *argv[])
 
         // get keyboard input
         int num_keys;
-        const unsigned char *keys = io_keyboard(&num_keys);
+        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
 
         // get mouse input
         int mouse_x, mouse_y;
-        unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
+        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
 
         // handle events
         SDL_Event event;
-        while (io_event(&event))
+        while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
@@ -253,6 +253,7 @@ int main(int argc, char *argv[])
             }
         }
 
+        // end of frame activities
         time_frame_end();
     }
 
