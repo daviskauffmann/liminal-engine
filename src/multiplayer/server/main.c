@@ -9,7 +9,7 @@
 #define SERVER_PORT 1000
 #define MAX_CLIENTS 8
 
-#define FPS_CAP 60
+#define FPS_CAP 30
 
 // TODO: handle timeouts on clients to automatically disconnect them
 struct client

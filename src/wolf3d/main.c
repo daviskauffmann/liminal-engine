@@ -299,10 +299,6 @@ int main(int argc, char *argv[])
     {
         time_frame_start();
 
-        char title[256];
-        sprintf(title, "%s - FPS: %d", WINDOW_TITLE, time_fps());
-        window_set_title(title);
-
         int num_keys;
         const unsigned char *keys = window_keyboard(&num_keys);
 
