@@ -1,5 +1,6 @@
-#include <game/shared/data.h>
 #include <string.h>
+
+#include "data.h"
 
 struct data data_create(enum data_type type)
 {

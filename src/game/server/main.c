@@ -1,9 +1,10 @@
 #include <engine/engine.h>
-#include <game/shared/data.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_net.h>
 #include <stdbool.h>
 #include <stdio.h>
+
+#include "../shared/data.h"
 
 #define SERVER_PORT 1000
 #define MAX_CLIENTS 8

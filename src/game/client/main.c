@@ -1,17 +1,18 @@
 #include <cglm/cglm.h>
 #include <engine/engine.h>
-#include <game/shared/data.h>
 #include <GL/glew.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_net.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "../shared/data.h"
+
 #define WINDOW_TITLE "Test Game v0.1"
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-#define NETWORK 0
+#define NETWORK 1
 #define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 1000
 
