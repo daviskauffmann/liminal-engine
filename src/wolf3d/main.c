@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
             float y_low = 0.0f;
 
             int vi = (x + y * level_bitmap->width) * VERTICES_PER_PIXEL * FLOATS_PER_VERTEX;
-            int ii = (x + y * level_bitmap->width) * INDICES_PER_PIXEL * INTS_PER_INDEX;
 
             if (bitmap_get_pixel(level_bitmap, x, y) & 0x000000 == 0)
             {
@@ -87,16 +86,6 @@ int main(int argc, char *argv[])
                 vertices[vi + 31] = y_high;
             }
 
-            indices[ii + 0] = current_vertex + 2;
-            indices[ii + 1] = current_vertex + 1;
-            indices[ii + 2] = current_vertex + 0;
-
-            indices[ii + 3] = current_vertex + 3;
-            indices[ii + 4] = current_vertex + 2;
-            indices[ii + 5] = current_vertex + 0;
-
-            current_vertex += 4;
-
             vertices[vi + 32] = (float)x;
             vertices[vi + 33] = 1.0f;
             vertices[vi + 34] = (float)y;
@@ -133,15 +122,25 @@ int main(int argc, char *argv[])
             vertices[vi + 62] = x_low;
             vertices[vi + 63] = y_high;
 
-            indices[ii + 6] = current_vertex + 2;
-            indices[ii + 7] = current_vertex + 1;
-            indices[ii + 8] = current_vertex + 0;
+            int ii = (x + y * level_bitmap->width) * INDICES_PER_PIXEL * INTS_PER_INDEX;
 
-            indices[ii + 9] = current_vertex + 3;
-            indices[ii + 10] = current_vertex + 2;
-            indices[ii + 11] = current_vertex + 0;
+            indices[ii + 0] = current_vertex + 2;
+            indices[ii + 1] = current_vertex + 1;
+            indices[ii + 2] = current_vertex + 0;
 
-            current_vertex += 4;
+            indices[ii + 3] = current_vertex + 3;
+            indices[ii + 4] = current_vertex + 2;
+            indices[ii + 5] = current_vertex + 0;
+
+            indices[ii + 6] = current_vertex + 4;
+            indices[ii + 7] = current_vertex + 5;
+            indices[ii + 8] = current_vertex + 6;
+
+            indices[ii + 9] = current_vertex + 4;
+            indices[ii + 10] = current_vertex + 6;
+            indices[ii + 11] = current_vertex + 7;
+
+            current_vertex += VERTICES_PER_PIXEL;
         }
     }
 
