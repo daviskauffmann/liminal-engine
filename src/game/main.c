@@ -8,6 +8,7 @@
 
 int main(int argc, char *argv[])
 {
+    // setup engine
     if (engine_init())
     {
         printf("Error: %s\n", error_get());
@@ -29,6 +30,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    time_cap_fps(FPS_CAP);
+
+    io_set_relative_mouse(true);
+
+    // create shader programs
     struct program *basic_program = program_create(
         "assets/shaders/basic.vs",
         "assets/shaders/basic.fs");
@@ -50,6 +56,8 @@ int main(int argc, char *argv[])
 
         return 1;
     }
+
+    // create meshes
     float quad_vertices[] = {
         // position          // normal            // uv
         +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f, // top right
@@ -150,6 +158,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // create textures
     struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
 
     if (!box_diffuse_texture)
@@ -177,6 +186,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // create materials
     struct material *box_material = material_create(
         box_diffuse_texture,
         box_specular_texture,
@@ -192,6 +202,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // create objects
     struct object *objects[] = {
         object_create(
             cube_mesh,
@@ -211,11 +222,19 @@ int main(int argc, char *argv[])
         }
     }
 
+    // create lights
     struct directional_light *directional_light = directional_light_create(
         (vec3){-0.2f, -1.0f, -0.3f},
         (vec3){0.05f, 0.05f, 0.05f},
         (vec3){0.4f, 0.4f, 0.4f},
         (vec3){1.0f, 0.0f, 0.0f});
+
+    if (!directional_light) 
+    {
+            printf("Error: %s\n", error_get());
+
+            return 1;
+    }
 
     struct point_light *point_lights[] = {
         // red
@@ -278,6 +297,14 @@ int main(int argc, char *argv[])
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
 
+        if (!spot_light)
+        {
+            printf("Error: %s\n", error_get());
+
+            return 1;
+        }
+
+    // create camera
     struct camera *camera = camera_create(
         (vec3){0.0f, 0.0f, 3.0f},
         (vec3){0.0f, 0.0f, -1.0f},
@@ -294,10 +321,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    time_cap_fps(FPS_CAP);
-
-    io_set_relative_mouse(true);
-
+    // cache uniform locations
     GLint basic_program_time = program_get_location(basic_program, "time");
     GLint basic_program_material_diffuse = program_get_location(basic_program, "material.diffuse");
     GLint basic_program_material_color = program_get_location(basic_program, "material.color");
@@ -360,6 +384,7 @@ int main(int argc, char *argv[])
     GLint phong_program_spot_light_cutOff = program_get_location(phong_program, "spot_light.cutOff");
     GLint phong_program_spot_light_outerCutOff = program_get_location(phong_program, "spot_light.outerCutOff");
 
+    // setup shader samplers
     program_bind(basic_program);
     program_set_int(basic_program_material_diffuse, 0);
     program_unbind();
@@ -370,23 +395,29 @@ int main(int argc, char *argv[])
     program_set_int(phong_program_material_emission, 2);
     program_unbind();
 
+    // used for swiching shaders
     struct program *current_program = phong_program;
 
+    // main loop
     bool quit = false;
     while (!quit)
     {
         time_frame_start();
 
+        // update window title
         char title[256];
         sprintf(title, "%s - FPS: %d", WINDOW_TITLE, time_fps());
         window_gl_set_title(title);
 
+        // get keyboard input
         int num_keys;
         const unsigned char *keys = io_keyboard(&num_keys);
 
+        // get mouse input
         int mouse_x, mouse_y;
         unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
 
+        // handle events
         SDL_Event event;
         while (io_event(&event))
         {
@@ -432,6 +463,7 @@ int main(int argc, char *argv[])
             break;
             case SDL_MOUSEMOTION:
             {
+                // mouselook
                 camera->pitch -= event.motion.yrel * 0.1f;
                 camera->yaw += event.motion.xrel * 0.1f;
 
@@ -454,6 +486,7 @@ int main(int argc, char *argv[])
             break;
             case SDL_MOUSEWHEEL:
             {
+                // zoom
                 if (camera->fov >= 1.0f && camera->fov <= 90.0f)
                 {
                     camera->fov -= event.wheel.y;
@@ -491,21 +524,26 @@ int main(int argc, char *argv[])
             }
         }
 
+        // calculate movement speed
         float speed = 5.0f * time_delta();
 
+        // sprinting
         if (keys[SDL_SCANCODE_LSHIFT])
         {
             speed *= 2.0f;
         }
 
+        // slow movement speed when moving diagonally
         if ((keys[SDL_SCANCODE_W] && keys[SDL_SCANCODE_D]) ||
             (keys[SDL_SCANCODE_W] && keys[SDL_SCANCODE_A]) ||
             (keys[SDL_SCANCODE_S] && keys[SDL_SCANCODE_D]) ||
             (keys[SDL_SCANCODE_S] && keys[SDL_SCANCODE_A]))
         {
+            // precomputed 1 / sqrt(2)
             speed *= 0.71f;
         }
 
+        // move forward
         if (keys[SDL_SCANCODE_W])
         {
             vec3 movement;
@@ -513,6 +551,7 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
+        // strafe left
         if (keys[SDL_SCANCODE_A])
         {
             vec3 direction;
@@ -523,6 +562,7 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
+        // move backward
         if (keys[SDL_SCANCODE_S])
         {
             vec3 movement;
@@ -530,6 +570,7 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
+        // strafe right
         if (keys[SDL_SCANCODE_D])
         {
             vec3 direction;
@@ -540,15 +581,18 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
+        // update lights
         glm_vec_copy(camera->position, spot_light->position);
         glm_vec_copy(camera->front, spot_light->direction);
 
+        // calculate matrices
         mat4 camera_projection;
         camera_calc_projection(camera, window_gl_get_aspect(), camera_projection);
 
         mat4 camera_view;
         camera_calc_view(camera, camera_view);
 
+        // update shaders
         program_bind(basic_program);
         program_set_int(basic_program_time, time_current());
         program_set_mat4(basic_program_camera_projection, camera_projection);
@@ -605,6 +649,7 @@ int main(int argc, char *argv[])
         program_set_float(phong_program_spot_light_outerCutOff, spot_light->outerCutOff);
         program_unbind();
 
+        // update objects
         for (int i = 0; i < num_objects; i++)
         {
             float angle = time_current() * 0.001f;
@@ -613,8 +658,10 @@ int main(int argc, char *argv[])
             objects[i]->rotation[2] = angle;
         }
 
+        // clear the window
         window_gl_clear();
 
+        // draw objects
         for (int i = 0; i < num_objects; i++)
         {
             mat4 model = GLM_MAT4_IDENTITY_INIT;
@@ -637,11 +684,13 @@ int main(int argc, char *argv[])
             program_unbind();
         }
 
+        // display the window
         window_gl_render();
 
         time_frame_end();
     }
 
+    // free resources
     directional_light_destroy(directional_light);
     for (int i = 0; i < num_point_lights; i++)
     {
@@ -661,6 +710,8 @@ int main(int argc, char *argv[])
     mesh_destroy(quad_mesh);
     program_destroy(phong_program);
     program_destroy(basic_program);
+
+    // close engine
     audio_quit();
     window_gl_quit();
     engine_quit();

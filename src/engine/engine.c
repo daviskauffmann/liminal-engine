@@ -2,6 +2,7 @@
 
 int engine_init(void)
 {
+    // init SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
     {
         error_set(SDL_GetError());
@@ -15,6 +16,7 @@ int engine_init(void)
         printf("SDL %d.%d.%d.\n", version.major, version.minor, version.patch);
     }
 
+    // init SDL_image
     {
         int flags = IMG_INIT_JPG | IMG_INIT_PNG;
 
@@ -31,6 +33,7 @@ int engine_init(void)
         printf("SDL_image %d.%d.%d.\n", version->major, version->minor, version->patch);
     }
 
+    // init SDL_mixer
     {
         int flags = 0;
 
@@ -47,6 +50,7 @@ int engine_init(void)
         printf("SDL_mixer %d.%d.%d.\n", version->major, version->minor, version->patch);
     }
 
+    // init SDL_net
     if (SDLNet_Init())
     {
         error_set(SDLNet_GetError());
@@ -59,6 +63,7 @@ int engine_init(void)
         printf("SDL_net %d.%d.%d.\n", version->major, version->minor, version->patch);
     }
 
+    // init SDL_ttf
     if (TTF_Init())
     {
         error_set(TTF_GetError());

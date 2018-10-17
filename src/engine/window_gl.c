@@ -5,6 +5,7 @@ static SDL_GLContext context;
 
 int window_gl_init(const char *title, int width, int height)
 {
+    // create window
     window = SDL_CreateWindow(
         title,
         SDL_WINDOWPOS_CENTERED,
@@ -20,6 +21,7 @@ int window_gl_init(const char *title, int width, int height)
         return 1;
     }
 
+    // create OpenGL context
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -32,6 +34,7 @@ int window_gl_init(const char *title, int width, int height)
         return 1;
     }
 
+    // init GLEW
     {
         GLenum error = glewInit();
 
@@ -46,6 +49,7 @@ int window_gl_init(const char *title, int width, int height)
     printf("GLEW %s\n", glewGetString(GLEW_VERSION));
     printf("OpenGL %s\n", glGetString(GL_VERSION));
 
+    // configure OpenGL
     glViewport(0, 0, width, height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

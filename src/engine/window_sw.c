@@ -6,6 +6,7 @@ static SDL_Texture *screen;
 
 int window_sw_init(const char *title, int width, int height)
 {
+    // create window
     window = SDL_CreateWindow(
         title,
         SDL_WINDOWPOS_CENTERED,
@@ -21,6 +22,7 @@ int window_sw_init(const char *title, int width, int height)
         return 1;
     }
 
+    // create renderer
     renderer = SDL_CreateRenderer(window, -1, 0);
 
     if (!renderer)
@@ -30,6 +32,7 @@ int window_sw_init(const char *title, int width, int height)
         return 1;
     }
 
+    // create screen texture
     screen = SDL_CreateTexture(
         renderer,
         SDL_PIXELFORMAT_ABGR8888,

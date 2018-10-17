@@ -53,6 +53,7 @@ void comb_sort(int *order, float *dist, int amount);
 unsigned int color_darken(unsigned int color);
 unsigned int color_fog(unsigned int color, float distance);
 
+// wall texture indexes
 unsigned char wall_map[MAP_WIDTH][MAP_HEIGHT] = {
     {8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 4, 6, 4, 4, 6, 4, 6, 4, 4, 4, 6, 4},
     {8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4},
@@ -79,6 +80,7 @@ unsigned char wall_map[MAP_WIDTH][MAP_HEIGHT] = {
     {2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 5, 0, 5, 0, 0, 0, 5, 5},
     {2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5}};
 
+// floor texture indexes
 unsigned char floor_map[MAP_WIDTH][MAP_HEIGHT] = {
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
@@ -105,6 +107,7 @@ unsigned char floor_map[MAP_WIDTH][MAP_HEIGHT] = {
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}};
 
+// ceiling texture indexes
 unsigned char ceiling_map[MAP_WIDTH][MAP_HEIGHT] = {
     {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
     {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
@@ -155,12 +158,18 @@ struct billboard billboards[NUM_BILLBOARDS] = {
 
 int main(int argc, char *args[])
 {
+    // setup engine
     engine_init();
 
     window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     audio_init();
 
+    time_cap_fps(FPS_CAP);
+
+    io_set_relative_mouse(true);
+
+    // create textures
     struct bitmap *textures[NUM_TEXTURES];
     textures[0] = bitmap_create("assets/images/eagle.png");
     textures[1] = bitmap_create("assets/images/redbrick.png");
@@ -171,19 +180,24 @@ int main(int argc, char *args[])
     textures[6] = bitmap_create("assets/images/wood.png");
     textures[7] = bitmap_create("assets/images/colorstone.png");
 
+    // create sprites
     struct bitmap *sprites[NUM_SPRITES];
     sprites[0] = bitmap_create("assets/images/barrel.png");
     sprites[1] = bitmap_create("assets/images/pillar.png");
     sprites[2] = bitmap_create("assets/images/greenlight.png");
 
+    // load music
     Mix_Music *tracks[NUM_TRACKS];
     tracks[0] = audio_music_load("assets/audio/background.mp3");
 
+    // load sounds
     Mix_Chunk *sounds[NUM_SOUNDS];
     sounds[0] = audio_chunk_load("assets/audio/shoot.wav");
 
+    // load fonts
     TTF_Font *font = font_open("assets/fonts/VeraMono.ttf", 24);
 
+    // game settings
     bool fps_cap = true;
     bool textured = true;
     bool draw_walls = true;
@@ -192,6 +206,7 @@ int main(int argc, char *args[])
     bool shading = true;
     bool foggy = true;
 
+    // setup player
     struct player *player = malloc(sizeof(struct player));
 
     player->pos_x = 22.0f;
@@ -203,24 +218,25 @@ int main(int argc, char *args[])
 
     printf("FOV: %d\n", (int)(2 * atanf(player->plane_y) / M_PI * 180));
 
+    // render buffers
     unsigned int *pixel_buffer = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(unsigned int));
     float *depth_buffer = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(float));
 
-    time_cap_fps(FPS_CAP);
-
-    io_set_relative_mouse(true);
-
+    // main loop
     bool quit = false;
     while (!quit)
     {
         time_frame_start();
 
+        // get keyboard input
         int num_keys;
         const unsigned char *keys = io_keyboard(&num_keys);
 
+        // get mouse input
         int mouse_x, mouse_y;
         unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
 
+        // handle events
         SDL_Event event;
         while (io_event(&event))
         {
@@ -230,6 +246,7 @@ int main(int argc, char *args[])
             {
                 int mouse_dx = event.motion.xrel;
 
+                // calculate rotation angle
                 float angle = -mouse_dx / 1000.0f * MOUSE_SENSITIVITY;
 
                 player_rotate(player, angle);
@@ -325,21 +342,27 @@ int main(int argc, char *args[])
             }
         }
 
+        // calculate base movement speed
+        // the constant value is in squares/second
         float speed = MOVE_SPEED * time_delta();
 
+        // sprinting
         if (keys[SDL_SCANCODE_LSHIFT])
         {
             speed *= SPRINT_MULT;
         }
 
+        // slow movement speed when moving diagonally
         if ((keys[SDL_SCANCODE_W] && keys[SDL_SCANCODE_D]) ||
             (keys[SDL_SCANCODE_W] && keys[SDL_SCANCODE_A]) ||
             (keys[SDL_SCANCODE_S] && keys[SDL_SCANCODE_D]) ||
             (keys[SDL_SCANCODE_S] && keys[SDL_SCANCODE_A]))
         {
+            // precomputed 1 / sqrt(2)
             speed *= 0.71f;
         }
 
+        // move forward
         if (keys[SDL_SCANCODE_W])
         {
             float dx = player->dir_x * speed;
@@ -348,6 +371,7 @@ int main(int argc, char *args[])
             player_move(player, dx, dy);
         }
 
+        // strafe left
         if (keys[SDL_SCANCODE_A])
         {
             float dx = -player->dir_y * speed;
@@ -356,6 +380,7 @@ int main(int argc, char *args[])
             player_move(player, dx, dy);
         }
 
+        // move backward
         if (keys[SDL_SCANCODE_S])
         {
             float dx = -player->dir_x * speed;
@@ -364,6 +389,7 @@ int main(int argc, char *args[])
             player_move(player, dx, dy);
         }
 
+        // strafe right
         if (keys[SDL_SCANCODE_D])
         {
             float dx = player->dir_y * speed;
@@ -372,18 +398,23 @@ int main(int argc, char *args[])
             player_move(player, dx, dy);
         }
 
+        // calculate rotation angle
+        // the constant value is in radians/second
         float angle = ROTATE_SPEED * time_delta();
 
+        // rotate left
         if (keys[SDL_SCANCODE_Q])
         {
             player_rotate(player, angle);
         }
 
+        // rotate right
         if (keys[SDL_SCANCODE_E])
         {
             player_rotate(player, -angle);
         }
 
+        // shooting
         static float shoot_timer = 0.0f;
         shoot_timer += time_delta();
         if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -396,31 +427,41 @@ int main(int argc, char *args[])
             }
         }
 
+        // raycasting
+        // algorithm at https://lodev.org/cgtutor/raycasting.html
         for (int x = 0; x < WINDOW_WIDTH; x++)
         {
+            // clear the pixel and depth buffers
             for (int y = 0; y < WINDOW_HEIGHT; y++)
             {
                 pixel_buffer[x + y * WINDOW_WIDTH] = 0;
                 depth_buffer[x + y * WINDOW_WIDTH] = FLT_MAX;
             }
 
+            // calculate x-coordinate in camera space
             float camera_x = (2.0f * x / WINDOW_WIDTH) - 1;
 
+            // calculate ray position and direction
             float ray_dir_x = (camera_x * player->plane_x) + player->dir_x;
             float ray_dir_y = (camera_x * player->plane_y) + player->dir_y;
 
+            // which box of the map we're in
             int map_x = (int)player->pos_x;
             int map_y = (int)player->pos_y;
 
+            // length of ray from current position to next x or y-side
             float side_dist_x;
             float side_dist_y;
 
+            // length of ray from one x or y-side to next x or y-side
             float delta_dist_x = fabsf(1 / ray_dir_x);
             float delta_dist_y = fabsf(1 / ray_dir_y);
 
+            // what direction to step in x or y-direction (either +1 or -1)
             int step_x;
             int step_y;
 
+            // calculate step and initial side_dist
             if (ray_dir_x < 0)
             {
                 side_dist_x = (player->pos_x - map_x) * delta_dist_x;
@@ -442,10 +483,13 @@ int main(int argc, char *args[])
                 step_y = 1;
             }
 
+            // was a NS or a EW wall hit?
             int side;
 
+            // perform DDA
             while (true)
             {
+                // jump to next map square, OR in x-direction, OR in y-direction
                 if (side_dist_x < side_dist_y)
                 {
                     map_x += step_x;
@@ -459,19 +503,23 @@ int main(int argc, char *args[])
                     side = 1;
                 }
 
+                // check if ray has hit a wall
                 if (wall_map[map_x][map_y] > 0)
                 {
                     break;
                 }
             }
 
+            // calculate distance projected on camera direction (Euclidean distance will give fisheye effect!)
             float perp_wall_dist =
                 side == 0
                     ? (map_x - player->pos_x + (1 - step_x) / 2) / ray_dir_x
                     : (map_y - player->pos_y + (1 - step_y) / 2) / ray_dir_y;
 
+            // calculate height of line to draw on screen
             int line_height = (int)(WINDOW_HEIGHT / perp_wall_dist);
 
+            // calculate lowest and highest pixel to fill in current stripe
             int draw_start = -line_height / 2 + WINDOW_HEIGHT / 2;
             if (draw_start < 0)
             {
@@ -485,6 +533,7 @@ int main(int argc, char *args[])
 
             if (textured)
             {
+                // calculate where exactly the wall was hit
                 float wall_x;
                 if (side == 0)
                 {
@@ -498,9 +547,11 @@ int main(int argc, char *args[])
 
                 if (draw_walls)
                 {
+                    // choose a texture
                     int texture_index = wall_map[map_x][map_y] - 1;
                     struct bitmap *texture = textures[texture_index];
 
+                    // x coordinate on the texture
                     int texture_x = (int)(wall_x * texture->width);
                     if (side == 0 && ray_dir_x > 0)
                     {
@@ -513,20 +564,25 @@ int main(int argc, char *args[])
 
                     for (int y = draw_start; y <= draw_end; y++)
                     {
+                        // y coordinate on the texture
                         int texture_y = (((y * 256 - WINDOW_HEIGHT * 128 + line_height * 128) * texture->height) / line_height) / 256;
 
+                        // get the color on the texture
                         unsigned int color = bitmap_get_pixel(texture, texture_x, texture_y);
 
+                        // make color darker for y-sides
                         if (shading && side == 1)
                         {
                             color = color_darken(color);
                         }
 
+                        // apply fog
                         if (foggy)
                         {
                             color = color_fog(color, perp_wall_dist);
                         }
 
+                        // draw the pixel
                         pixel_buffer[x + y * WINDOW_WIDTH] = color;
                         depth_buffer[x + y * WINDOW_WIDTH] = perp_wall_dist;
                     }
@@ -534,9 +590,11 @@ int main(int argc, char *args[])
 
                 if (draw_floor)
                 {
+                    // x, y position of the floor texel at the bottom of the wall
                     float floor_x_wall;
                     float floor_y_wall;
 
+                    // 4 different wall directions possible
                     if (side == 0 && ray_dir_x > 0)
                     {
                         floor_x_wall = (float)map_x;
@@ -558,11 +616,13 @@ int main(int argc, char *args[])
                         floor_y_wall = (float)(map_y + 1);
                     }
 
+                    // becomes < 0 when the integer overflows
                     if (draw_end < 0)
                     {
                         draw_end = WINDOW_HEIGHT;
                     }
 
+                    // draw the floor from draw_end to the bottom of the screen
                     for (int y = draw_end + 1; y < WINDOW_HEIGHT; y++)
                     {
                         float current_dist = WINDOW_HEIGHT / (2.0f * y - WINDOW_HEIGHT);
@@ -571,43 +631,56 @@ int main(int argc, char *args[])
                         float current_x = weight * floor_x_wall + (1 - weight) * player->pos_x;
                         float current_y = weight * floor_y_wall + (1 - weight) * player->pos_y;
 
+                        // floor
                         {
+                            // choose a texture
                             int texture_index = floor_map[(int)current_x][(int)current_y];
                             struct bitmap *texture = textures[texture_index];
 
+                            // x, y coordinate of the texture
                             int texture_x = (int)(current_x * texture->width / FLOOR_TEXTURE_MULT) % texture->width;
                             int texture_y = (int)(current_y * texture->height / FLOOR_TEXTURE_MULT) % texture->height;
 
+                            // get the color on the texture
                             unsigned int color = bitmap_get_pixel(texture, texture_x, texture_y);
 
+                            // apply fog
                             if (foggy)
                             {
                                 color = color_fog(color, current_dist);
                             }
 
+                            // draw the pixel
                             pixel_buffer[x + y * WINDOW_WIDTH] = color;
                             depth_buffer[x + y * WINDOW_WIDTH] = current_dist;
                         }
 
+                        // ceiling
                         {
+                            // choose a texture
                             int texture_index = ceiling_map[(int)current_x][(int)current_y];
                             struct bitmap *texture = textures[texture_index];
 
+                            // x, y coordinate of the texture
                             int texture_x = (int)(current_x * texture->width / CEILING_TEXTURE_MULT) % texture->width;
                             int texture_y = (int)(current_y * texture->height / CEILING_TEXTURE_MULT) % texture->height;
 
+                            // get the color on the texture
                             unsigned int color = bitmap_get_pixel(texture, texture_x, texture_y);
 
+                            // apply fog
                             if (foggy)
                             {
                                 color = color_fog(color, current_dist);
                             }
 
+                            // darken the ceiling
                             if (shading)
                             {
                                 color = color_darken(color);
                             }
 
+                            // draw the pixel
                             pixel_buffer[x + (WINDOW_HEIGHT - y) * WINDOW_WIDTH] = color;
                             depth_buffer[x + (WINDOW_HEIGHT - y) * WINDOW_WIDTH] = current_dist;
                         }
@@ -618,42 +691,46 @@ int main(int argc, char *args[])
             {
                 if (draw_walls)
                 {
+                    // choose wall color
                     unsigned int color;
                     switch (wall_map[map_x][map_y])
                     {
                     case 0:
-                        color = 0xff00ffff;
+                        color = 0xff00ffff; // yellow
                         break;
                     case 1:
-                        color = 0xff0000ff;
+                        color = 0xff0000ff; // red
                         break;
                     case 2:
-                        color = 0xff00ff00;
+                        color = 0xff00ff00; // green
                         break;
                     case 3:
-                        color = 0xffff0000;
+                        color = 0xffff0000; // blue
                         break;
                     case 4:
-                        color = 0xffff00ff;
+                        color = 0xffff00ff; // purple
                         break;
                     case 5:
-                        color = 0xffffff00;
+                        color = 0xffffff00; // yellow
                         break;
                     default:
-                        color = 0xffffffff;
+                        color = 0xffffffff; // white
                         break;
                     }
 
+                    // make color darker for y-sides
                     if (shading && side == 1)
                     {
                         color = color_darken(color);
                     }
 
+                    // apply fog
                     if (foggy)
                     {
                         color = color_fog(color, perp_wall_dist);
                     }
 
+                    // draw the pixels of the stripe as a vertical line
                     for (int y = draw_start; y <= draw_end; y++)
                     {
                         pixel_buffer[x + y * WINDOW_WIDTH] = color;
@@ -663,20 +740,24 @@ int main(int argc, char *args[])
 
                 if (draw_floor)
                 {
+                    // choose floor and ceiling colors
                     unsigned int floor_color = 0xff646464;
                     unsigned int ceiling_color = floor_color;
 
+                    // darken the ceiling
                     if (shading)
                     {
                         ceiling_color = color_darken(ceiling_color);
                     }
 
+                    // draw the floor
                     for (int y = draw_end + 1; y < WINDOW_HEIGHT; y++)
                     {
                         pixel_buffer[x + y * WINDOW_WIDTH] = floor_color;
                         depth_buffer[x + y * WINDOW_WIDTH] = perp_wall_dist;
                     }
 
+                    // draw the ceiling
                     for (int y = 0; y < draw_start; y++)
                     {
                         pixel_buffer[x + y * WINDOW_WIDTH] = ceiling_color;
@@ -688,9 +769,11 @@ int main(int argc, char *args[])
 
         if (draw_billboards)
         {
+            // arrays used to sort the billboards
             int billboard_order[NUM_BILLBOARDS];
             float billboard_dist[NUM_BILLBOARDS];
 
+            // sort billboards from far to close
             for (int i = 0; i < NUM_BILLBOARDS; i++)
             {
                 billboard_order[i] = i;
@@ -698,72 +781,100 @@ int main(int argc, char *args[])
             }
             comb_sort(billboard_order, billboard_dist, NUM_BILLBOARDS);
 
+            // after sorting the billboards, do the projection and draw them
             for (int i = 0; i < NUM_BILLBOARDS; i++)
             {
                 struct billboard billboard = billboards[billboard_order[i]];
 
+                // translate billboard position to relative to camera
                 float billboard_x = billboard.x - player->pos_x;
                 float billboard_y = billboard.y - player->pos_y;
 
+                // transform billboard with the inverse camera matrix
+                // [ planeX   dirX ] -1                                       [ dirY      -dirX ]
+                // [               ]       =  1/(planeX*dirY-dirX*planeY) *   [                 ]
+                // [ planeY   dirY ]                                          [ -planeY  planeX ]
+                // required for correct matrix multiplication
                 float inv_det = 1 / (player->plane_x * player->dir_y - player->dir_x * player->plane_y);
 
+                // transform_y is actually the depth inside the screen, that what Z is in 3D
                 float transform_x = inv_det * (player->dir_y * billboard_x - player->dir_x * billboard_y);
                 float transform_y = inv_det * (-player->plane_y * billboard_x + player->plane_x * billboard_y);
 
-                int object_screen_x = (int)((WINDOW_WIDTH / 2) * (1 + transform_x / transform_y));
+                // where the billboard is on the screen
+                int billboard_screen_x = (int)((WINDOW_WIDTH / 2) * (1 + transform_x / transform_y));
 
-                int object_width = abs((int)(WINDOW_HEIGHT / transform_y * billboard.sprite_scale_x));
-                int object_height = abs((int)(WINDOW_HEIGHT / transform_y * billboard.sprite_scale_y));
+                // calculate width and height of the billboard on screen
+                // using transform_y instead of the real distance prevents fisheye
+                int billboard_width = abs((int)(WINDOW_HEIGHT / transform_y * billboard.sprite_scale_x));
+                int billboard_height = abs((int)(WINDOW_HEIGHT / transform_y * billboard.sprite_scale_y));
 
-                int draw_start_x = -object_width / 2 + object_screen_x;
+                // calculate the vertical stripes to draw the billboard
+                int draw_start_x = -billboard_width / 2 + billboard_screen_x;
                 if (draw_start_x < 0)
                 {
                     draw_start_x = 0;
                 }
-                int draw_end_x = object_width / 2 + object_screen_x;
+                int draw_end_x = billboard_width / 2 + billboard_screen_x;
                 if (draw_end_x >= WINDOW_WIDTH)
                 {
                     draw_end_x = WINDOW_WIDTH - 1;
                 }
 
+                // move the billboard on the screen
                 int translate_y = (int)(billboard.sprite_translate_y / transform_y);
 
-                int draw_start_y = -object_height / 2 + WINDOW_HEIGHT / 2 + translate_y;
+                // calculate lowest and highest pixel to fill in current stripe
+                int draw_start_y = -billboard_height / 2 + WINDOW_HEIGHT / 2 + translate_y;
                 if (draw_start_y < 0)
                 {
                     draw_start_y = 0;
                 }
-                int draw_end_y = object_height / 2 + WINDOW_HEIGHT / 2 + translate_y;
+                int draw_end_y = billboard_height / 2 + WINDOW_HEIGHT / 2 + translate_y;
                 if (draw_end_y >= WINDOW_HEIGHT)
                 {
                     draw_end_y = WINDOW_HEIGHT - 1;
                 }
 
+                // calculate angle of billboard to player
                 // float angle = atan2f(billboard_y, billboard_x);
 
+                // choose the sprite
                 struct bitmap *sprite = sprites[billboard.sprite_index];
 
+                // loop through every vertical stripe of the sprite on screen
                 for (int x = draw_start_x; x < draw_end_x; x++)
                 {
-                    int sprite_x = (256 * (x - (-object_width / 2 + object_screen_x)) * sprite->width / object_width) / 256;
+                    // x coordinate on the sprite
+                    int sprite_x = (256 * (x - (-billboard_width / 2 + billboard_screen_x)) * sprite->width / billboard_width) / 256;
 
+                    // the conditions in the if are:
+                    // 1) it's in front of camera plane so you don't see things behind you
+                    // 2) it's on the screen (left)
+                    // 3) it's on the screen (right)
                     if (transform_y > 0 && x > 0 && x < WINDOW_WIDTH)
                     {
                         for (int y = draw_start_y; y < draw_end_y; y++)
                         {
+                            // depth_buffer, with perpendicular distance
                             if (transform_y < depth_buffer[x + y * WINDOW_WIDTH])
                             {
-                                int sprite_y = ((((y - translate_y) * 256 - WINDOW_HEIGHT * 128 + object_height * 128) * sprite->height) / object_height) / 256;
+                                // y coordinate on the sprite
+                                int sprite_y = ((((y - translate_y) * 256 - WINDOW_HEIGHT * 128 + billboard_height * 128) * sprite->height) / billboard_height) / 256;
 
+                                // get current color on the sprite
                                 unsigned int color = bitmap_get_pixel(sprite, sprite_x, sprite_y);
 
+                                // apply fog
                                 if (foggy)
                                 {
                                     color = color_fog(color, transform_y);
                                 }
 
+                                // draw the pixel if it isnt't black, black is the invisible color
                                 if ((color & 0x00ffffff) != 0)
                                 {
+                                    // used for translucency
                                     // unsigned int previous_color = pixel_buffer[x + y * w];
 
                                     pixel_buffer[x + y * WINDOW_WIDTH] = color;
@@ -776,11 +887,16 @@ int main(int argc, char *args[])
             }
         }
 
+        // clear the renderer
+        window_sw_clear();
+
+        // display pixel buffer
         window_sw_draw_pixels(NULL, pixel_buffer, WINDOW_WIDTH * sizeof(unsigned int));
 
         {
             int line = 0;
 
+            // display FPS
             window_sw_draw_text(
                 font,
                 FONT_SIZE,
@@ -790,6 +906,7 @@ int main(int argc, char *args[])
                 "FPS: %d",
                 time_fps());
 
+            // display position
             window_sw_draw_text(
                 font,
                 FONT_SIZE,
@@ -800,6 +917,7 @@ int main(int argc, char *args[])
                 player->pos_x,
                 player->pos_y);
 
+            // display direction
             window_sw_draw_text(
                 font,
                 FONT_SIZE,
@@ -810,6 +928,7 @@ int main(int argc, char *args[])
                 player->dir_x,
                 player->dir_y);
 
+            // display camera plane
             window_sw_draw_text(
                 font,
                 FONT_SIZE,
@@ -821,6 +940,7 @@ int main(int argc, char *args[])
                 player->plane_y);
         }
 
+        // display the renderer
         window_sw_render();
 
         time_frame_end();
@@ -852,6 +972,7 @@ int main(int argc, char *args[])
         bitmap_destroy(sprites[i]);
     }
 
+    // close engine
     window_sw_quit();
     engine_quit();
 
@@ -875,6 +996,7 @@ void player_rotate(struct player *player, float angle)
     float rot_x = cosf(angle);
     float rot_y = sinf(angle);
 
+    // both camera direction and camera plane must be rotated
     float old_dir_x = player->dir_x;
     player->dir_x = player->dir_x * rot_x - player->dir_y * rot_y;
     player->dir_y = old_dir_x * rot_y + player->dir_y * rot_x;
@@ -890,6 +1012,7 @@ void comb_sort(int *order, float *dist, int amount)
     bool swapped = false;
     while (gap > 1 || swapped)
     {
+        // shrink factor 1.3
         gap = (gap * 10) / 13;
         if (gap == 9 || gap == 10)
         {
@@ -922,15 +1045,20 @@ void comb_sort(int *order, float *dist, int amount)
 
 unsigned int color_darken(unsigned int color)
 {
+    // R, G and B byte each divided through two with a "shift" and an "and"
     return (color >> 1) & 0x7f7f7f;
 }
 
+// TODO: optimize
+// this drops the framerate by about 20
 unsigned int color_fog(unsigned int color, float distance)
 {
+    // separate the colors
     int red = (color >> 16) & 0x0ff;
     int green = (color >> 8) & 0x0ff;
     int blue = color & 0x0ff;
 
+    // modify the colors
     float fog_intensity = distance * FOG_STRENGTH;
 
     if (fog_intensity > 1)
@@ -948,5 +1076,6 @@ unsigned int color_fog(unsigned int color, float distance)
         blue = (int)bluef;
     }
 
+    // recombine the colors
     return ((red & 0x0ff) << 16) | ((green & 0x0ff) << 8) | (blue & 0x0ff);
 }

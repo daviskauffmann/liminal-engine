@@ -13,6 +13,7 @@
 
 int main(int argc, char *argv[])
 {
+    // setup engine
     if (engine_init())
     {
         printf("Error: %s\n", error_get());
@@ -27,6 +28,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    time_cap_fps(FPS_CAP);
+
+    // setup server info
     IPaddress server_address;
 
     if (net_resolve_host(&server_address, SERVER_HOST, SERVER_PORT))
@@ -36,6 +40,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // open TCP socket
     TCPsocket tcp_socket = net_tcp_open(&server_address);
 
     if (!tcp_socket)
@@ -45,6 +50,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // allocate TCP packet
     TCPpacket *tcp_packet = net_tcp_alloc_packet(PACKET_SIZE);
 
     if (!tcp_packet)
@@ -54,6 +60,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // open UDP socket
     UDPsocket udp_socket = net_udp_open(0);
 
     if (!udp_socket)
@@ -63,6 +70,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // allocate UDP packet
     UDPpacket *udp_packet = net_udp_alloc_packet(PACKET_SIZE);
 
     if (!udp_packet)
@@ -72,6 +80,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // allocate socket set
     SDLNet_SocketSet socket_set = net_alloc_socket_set(2);
 
     if (!socket_set)
@@ -81,11 +90,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // add TCP and UDP sockets to socket set
     net_tcp_add_socket(socket_set, tcp_socket);
     net_udp_add_socket(socket_set, udp_socket);
 
+    // keep track of unique client ID given by server
     int client_id = -1;
 
+    // check the server's response to the connection
     if (net_tcp_recv(tcp_socket, tcp_packet) == 1)
     {
         struct data *data = (struct data *)tcp_packet->data;
@@ -118,24 +130,27 @@ int main(int argc, char *argv[])
         }
     }
 
+    // make a UDP "connection" to the server
     {
         struct id_data id_data = id_data_create(DATA_UDP_CONNECT_REQUEST, client_id);
         net_udp_send(udp_socket, udp_packet, server_address, &id_data, sizeof(id_data));
     }
 
-    time_cap_fps(FPS_CAP);
-
+    // main loop
     bool quit = false;
     while (!quit)
     {
         time_frame_start();
 
+        // get keyboard input
         int num_keys;
         const unsigned char *keys = io_keyboard(&num_keys);
 
+        // get mouse input
         int mouse_x, mouse_y;
         unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
 
+        // handle events
         SDL_Event event;
         while (io_event(&event))
         {
@@ -176,10 +191,13 @@ int main(int argc, char *argv[])
             }
         }
 
+        // handle network events
         while (SDLNet_CheckSockets(socket_set, 0) > 0)
         {
+            // handle TCP messages
             if (SDLNet_SocketReady(tcp_socket))
             {
+                // accept new clients
                 if (net_tcp_recv(tcp_socket, tcp_packet) == 1)
                 {
                     struct data *data = (struct data *)tcp_packet->data;
@@ -216,6 +234,7 @@ int main(int argc, char *argv[])
                 }
             }
 
+            // handle UDP messages
             if (SDLNet_SocketReady(udp_socket))
             {
                 if (net_udp_recv(udp_socket, udp_packet) == 1)
@@ -234,16 +253,16 @@ int main(int argc, char *argv[])
             }
         }
 
-        window_sw_render();
-
         time_frame_end();
     }
 
+    // send a disconnect message
     {
         struct data data = data_create(DATA_DISCONNECT_REQUEST);
         net_tcp_send(tcp_socket, &data, sizeof(data));
     }
 
+    // free resources
     SDLNet_UDP_DelSocket(socket_set, udp_socket);
     SDLNet_TCP_DelSocket(socket_set, tcp_socket);
     SDLNet_FreeSocketSet(socket_set);
@@ -251,6 +270,8 @@ int main(int argc, char *argv[])
     SDLNet_UDP_Close(udp_socket);
     net_tcp_free_packet(tcp_packet);
     SDLNet_TCP_Close(tcp_socket);
+
+    // close engine
     window_sw_quit();
     engine_quit();
 
