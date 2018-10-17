@@ -1,7 +1,4 @@
-#include <engine/error.h>
-#include <engine/object.h>
-#include <malloc.h>
-#include <SDL/SDL.h>
+#include <engine/engine.h>
 
 struct object *object_create(
     struct mesh *mesh,

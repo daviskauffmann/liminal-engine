@@ -1,10 +1,7 @@
-#include <engine/error.h>
-#include <engine/window_opengl.h>
-#include <GL/glew.h>
-#include <stdio.h>
+#include <engine/engine.h>
 
-SDL_Window *window;
-SDL_GLContext context;
+static SDL_Window *window;
+static SDL_GLContext context;
 
 int window_opengl_init(const char *title, int width, int height)
 {

@@ -1,8 +1,4 @@
-#include <engine/error.h>
-#include <engine/texture.h>
-#include <malloc.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <engine/engine.h>
 
 struct texture *texture_create(const char *file)
 {

@@ -1,6 +1,4 @@
-#include <engine/error.h>
-#include <engine/directional_light.h>
-#include <malloc.h>
+#include <engine/engine.h>
 
 struct directional_light *directional_light_create(
     vec3 direction,

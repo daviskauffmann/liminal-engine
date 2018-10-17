@@ -1,6 +1,4 @@
-#include <engine/error.h>
-#include <engine/point_light.h>
-#include <malloc.h>
+#include <engine/engine.h>
 
 struct point_light *point_light_create(
     vec3 position,

@@ -1,9 +1,4 @@
 #include <engine/engine.h>
-#include <float.h>
-#include <math.h>
-#include <SDL/SDL.h>
-#include <stdbool.h>
-#include <stdio.h>
 
 #define WINDOW_TITLE "Raycaster"
 #define WINDOW_WIDTH 320
@@ -760,7 +755,7 @@ int main(int argc, char *args[])
                             {
                                 int sprite_y = ((((y - translate_y) * 256 - WINDOW_HEIGHT * 128 + object_height * 128) * sprite->height) / object_height) / 256;
 
-                                unsigned int color = sprite->pixels[sprite_x + sprite_y * sprite->width];
+                                unsigned int color = bitmap_get_pixel(sprite, sprite_x, sprite_y);
 
                                 if (foggy)
                                 {

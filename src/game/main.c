@@ -1,9 +1,4 @@
-#include <cglm/cglm.h>
 #include <engine/engine.h>
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <stdbool.h>
-#include <stdio.h>
 
 #define WINDOW_TITLE "Example Game"
 #define WINDOW_WIDTH 800

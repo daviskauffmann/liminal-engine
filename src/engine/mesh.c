@@ -1,6 +1,4 @@
-#include <engine/error.h>
-#include <engine/mesh.h>
-#include <malloc.h>
+#include <engine/engine.h>
 
 struct mesh *mesh_create(
     float *vertices,

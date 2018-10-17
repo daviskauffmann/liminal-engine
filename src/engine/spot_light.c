@@ -1,6 +1,4 @@
-#include <engine/error.h>
-#include <engine/spot_light.h>
-#include <malloc.h>
+#include <engine/engine.h>
 
 struct spot_light *spot_light_create(
     vec3 position,

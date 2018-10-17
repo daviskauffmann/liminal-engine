@@ -1,8 +1,4 @@
-#include <engine/error.h>
-#include <engine/window_software.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <engine/engine.h>
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;

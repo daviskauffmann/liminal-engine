@@ -1,8 +1,4 @@
 #include <engine/engine.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_net.h>
-#include <stdbool.h>
-#include <stdio.h>
 
 #include "../shared/data.h"
 

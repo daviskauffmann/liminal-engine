@@ -1,7 +1,4 @@
-#include <engine/bitmap.h>
-#include <engine/error.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <engine/engine.h>
 
 static unsigned int get_pixel(SDL_Surface *surface, int x, int y);
 static void set_pixel(SDL_Surface *surface, int x, int y, unsigned int pixel);

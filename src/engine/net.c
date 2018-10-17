@@ -1,7 +1,4 @@
-#include <engine/error.h>
-#include <engine/net.h>
-#include <malloc.h>
-#include <stdio.h>
+#include <engine/engine.h>
 
 int net_resolve_host(IPaddress *address, const char *host, unsigned short port)
 {

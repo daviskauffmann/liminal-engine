@@ -1,5 +1,4 @@
-#include <engine/audio.h>
-#include <engine/error.h>
+#include <engine/engine.h>
 
 int audio_init(void)
 {
