@@ -841,6 +841,12 @@ int main(int argc, char *argv[])
     SDLNet_TCP_Close(tcp_socket);
 #endif
 
+    directional_light_destroy(directional_light);
+    for (int i = 0; i < num_point_lights; i++)
+    {
+        point_light_destroy(point_lights[i]);
+    }
+    spot_light_destroy(spot_light);
     for (int i = 0; i < num_objects; i++)
     {
         object_destroy(objects[i]);

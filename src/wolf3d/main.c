@@ -1,6 +1,7 @@
 #include <cglm/cglm.h>
 #include <engine/engine.h>
 #include <GL/glew.h>
+#include <malloc.h>
 #include <SDL/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,25 +12,30 @@
 
 #define FPS_CAP 60
 
-#define VERTICES_PER_PIXEL 4
+#define VERTICES_PER_PIXEL 8
 #define FLOATS_PER_VERTEX 8
-#define INDICES_PER_PIXEL 2
+#define INDICES_PER_PIXEL 4
 #define INTS_PER_INDEX 3
 
 int main(int argc, char *argv[])
 {
     engine_init();
+
     window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
-    audio_init();
+
     struct program *phong_program = program_create(
         "assets/shaders/phong.vs",
         "assets/shaders/phong.fs");
+
     struct bitmap *level_bitmap = bitmap_create("assets/images/level_bitmap.png");
-    const unsigned int num_vertices = level_bitmap->width * level_bitmap->height * VERTICES_PER_PIXEL * FLOATS_PER_VERTEX * sizeof(float);
-    float *vertices = malloc(num_vertices);
-    const unsigned int num_indices = level_bitmap->width * level_bitmap->height * INDICES_PER_PIXEL * INTS_PER_INDEX * sizeof(unsigned int);
-    unsigned int *indices = malloc(num_indices);
-    int i = 0;
+
+    unsigned int vertices_size = level_bitmap->width * level_bitmap->height * VERTICES_PER_PIXEL * FLOATS_PER_VERTEX * sizeof(float);
+    float *vertices = calloc(1, vertices_size);
+
+    unsigned int indices_size = level_bitmap->width * level_bitmap->height * INDICES_PER_PIXEL * INTS_PER_INDEX * sizeof(unsigned int);
+    unsigned int *indices = calloc(1, indices_size);
+
+    int current_vertex = 0;
     for (int x = 0; x < level_bitmap->width; x++)
     {
         for (int y = 0; y < level_bitmap->height; y++)
@@ -39,55 +45,113 @@ int main(int argc, char *argv[])
             float y_high = 1.0f;
             float y_low = 0.0f;
 
-            vertices[(x + y * level_bitmap->width) + 0] = x;
-            vertices[(x + y * level_bitmap->width) + 1] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 2] = y;
-            vertices[(x + y * level_bitmap->width) + 3] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 4] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 5] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 6] = x_low;
-            vertices[(x + y * level_bitmap->width) + 7] = y_low;
+            int vi = (x + y * level_bitmap->width) * VERTICES_PER_PIXEL * FLOATS_PER_VERTEX;
+            int ii = (x + y * level_bitmap->width) * INDICES_PER_PIXEL * INTS_PER_INDEX;
 
-            vertices[(x + y * level_bitmap->width) + 8] = x + 1;
-            vertices[(x + y * level_bitmap->width) + 9] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 10] = y;
-            vertices[(x + y * level_bitmap->width) + 11] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 12] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 13] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 14] = x_high;
-            vertices[(x + y * level_bitmap->width) + 15] = y_low;
+            if (bitmap_get_pixel(level_bitmap, x, y) & 0x000000 == 0)
+            {
+                vertices[vi + 0] = (float)x;
+                vertices[vi + 1] = 0.0f;
+                vertices[vi + 2] = (float)y;
+                vertices[vi + 3] = 0.0f;
+                vertices[vi + 4] = 1.0f;
+                vertices[vi + 5] = 0.0f;
+                vertices[vi + 6] = x_low;
+                vertices[vi + 7] = y_low;
 
-            vertices[(x + y * level_bitmap->width) + 16] = x + 1;
-            vertices[(x + y * level_bitmap->width) + 17] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 18] = y + 1;
-            vertices[(x + y * level_bitmap->width) + 19] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 20] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 21] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 22] = x_high;
-            vertices[(x + y * level_bitmap->width) + 23] = y_high;
+                vertices[vi + 8] = (float)(x + 1);
+                vertices[vi + 9] = 0.0f;
+                vertices[vi + 10] = (float)y;
+                vertices[vi + 11] = 0.0f;
+                vertices[vi + 12] = 1.0f;
+                vertices[vi + 13] = 0.0f;
+                vertices[vi + 14] = x_high;
+                vertices[vi + 15] = y_low;
 
-            vertices[(x + y * level_bitmap->width) + 24] = x;
-            vertices[(x + y * level_bitmap->width) + 25] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 26] = y + 1;
-            vertices[(x + y * level_bitmap->width) + 27] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 28] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 29] = 0.0f;
-            vertices[(x + y * level_bitmap->width) + 30] = x_low;
-            vertices[(x + y * level_bitmap->width) + 31] = y_high;
+                vertices[vi + 16] = (float)(x + 1);
+                vertices[vi + 17] = 0.0f;
+                vertices[vi + 18] = (float)(y + 1);
+                vertices[vi + 19] = 0.0f;
+                vertices[vi + 20] = 1.0f;
+                vertices[vi + 21] = 0.0f;
+                vertices[vi + 22] = x_high;
+                vertices[vi + 23] = y_high;
 
-            indices[(x + y * level_bitmap->width) + 0] = i + 2;
-            indices[(x + y * level_bitmap->width) + 1] = i + 1;
-            indices[(x + y * level_bitmap->width) + 2] = i + 0;
+                vertices[vi + 24] = (float)x;
+                vertices[vi + 25] = 0.0f;
+                vertices[vi + 26] = (float)(y + 1);
+                vertices[vi + 27] = 0.0f;
+                vertices[vi + 28] = 1.0f;
+                vertices[vi + 29] = 0.0f;
+                vertices[vi + 30] = x_low;
+                vertices[vi + 31] = y_high;
+            }
 
-            indices[(x + y * level_bitmap->width) + 3] = i + 3;
-            indices[(x + y * level_bitmap->width) + 4] = i + 2;
-            indices[(x + y * level_bitmap->width) + 5] = i + 0;
+            indices[ii + 0] = current_vertex + 2;
+            indices[ii + 1] = current_vertex + 1;
+            indices[ii + 2] = current_vertex + 0;
 
-            i += VERTICES_PER_PIXEL;
+            indices[ii + 3] = current_vertex + 3;
+            indices[ii + 4] = current_vertex + 2;
+            indices[ii + 5] = current_vertex + 0;
+
+            current_vertex += 4;
+
+            vertices[vi + 32] = (float)x;
+            vertices[vi + 33] = 1.0f;
+            vertices[vi + 34] = (float)y;
+            vertices[vi + 35] = 0.0f;
+            vertices[vi + 36] = 1.0f;
+            vertices[vi + 37] = 0.0f;
+            vertices[vi + 38] = x_low;
+            vertices[vi + 39] = y_low;
+
+            vertices[vi + 40] = (float)(x + 1);
+            vertices[vi + 41] = 1.0f;
+            vertices[vi + 42] = (float)y;
+            vertices[vi + 43] = 0.0f;
+            vertices[vi + 44] = 1.0f;
+            vertices[vi + 45] = 0.0f;
+            vertices[vi + 46] = x_high;
+            vertices[vi + 47] = y_low;
+
+            vertices[vi + 48] = (float)(x + 1);
+            vertices[vi + 49] = 1.0f;
+            vertices[vi + 50] = (float)(y + 1);
+            vertices[vi + 51] = 0.0f;
+            vertices[vi + 52] = 1.0f;
+            vertices[vi + 53] = 0.0f;
+            vertices[vi + 54] = x_high;
+            vertices[vi + 55] = y_high;
+
+            vertices[vi + 56] = (float)x;
+            vertices[vi + 57] = 1.0f;
+            vertices[vi + 58] = (float)(y + 1);
+            vertices[vi + 59] = 0.0f;
+            vertices[vi + 60] = 1.0f;
+            vertices[vi + 61] = 0.0f;
+            vertices[vi + 62] = x_low;
+            vertices[vi + 63] = y_high;
+
+            indices[ii + 6] = current_vertex + 2;
+            indices[ii + 7] = current_vertex + 1;
+            indices[ii + 8] = current_vertex + 0;
+
+            indices[ii + 9] = current_vertex + 3;
+            indices[ii + 10] = current_vertex + 2;
+            indices[ii + 11] = current_vertex + 0;
+
+            current_vertex += 4;
         }
     }
-    struct mesh *level_mesh = mesh_create(vertices, num_vertices, indices, num_indices);
+
+    struct mesh *level_mesh = mesh_create(vertices, vertices_size, indices, indices_size);
+
+    free(vertices);
+    free(indices);
+
     struct texture *level_texture = texture_create("assets/images/level_texture.png");
+
     struct material *level_material = material_create(
         level_texture,
         NULL,
@@ -95,6 +159,7 @@ int main(int argc, char *argv[])
         (vec3){1.0f, 1.0f, 1.0f},
         32.0f,
         1.0f);
+
     struct object *objects[] = {
         object_create(
             level_mesh,
@@ -103,11 +168,13 @@ int main(int argc, char *argv[])
             (vec3){0.0f, 0.0f, 0.0f},
             (vec3){1.0f, 1.0f, 1.0f})};
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
+
     struct directional_light *directional_light = directional_light_create(
         (vec3){-0.2f, -1.0f, -0.3f},
         (vec3){0.1f, 0.1f, 0.1f},
         (vec3){0.8f, 0.8f, 0.8f},
         (vec3){1.0f, 1.0f, 1.0f});
+
     struct point_light *point_lights[] = {
         point_light_create(
             (vec3){0.0f, 0.0f, 0.0f},
@@ -142,6 +209,7 @@ int main(int argc, char *argv[])
             0.09f,
             0.032f)};
     const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
+
     struct spot_light *spot_light = spot_light_create(
         (vec3){0.0f, 0.0f, 0.0f},
         (vec3){0.0f, 0.0f, 0.0f},
@@ -153,6 +221,7 @@ int main(int argc, char *argv[])
         0.032f,
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
+
     struct camera *camera = camera_create(
         (vec3){0.0f, 0.0f, 3.0f},
         (vec3){0.0f, 0.0f, -1.0f},
@@ -225,8 +294,6 @@ int main(int argc, char *argv[])
     program_set_int(phong_program_material_specular, 1);
     program_set_int(phong_program_material_emission, 2);
     program_unbind();
-
-    struct program *current_program = phong_program;
 
     bool quit = false;
     while (!quit)
@@ -458,7 +525,7 @@ int main(int argc, char *argv[])
             program_set_float(phong_program_material_glow, objects[i]->material->glow);
             program_unbind();
 
-            program_bind(current_program);
+            program_bind(phong_program);
             object_draw(objects[i]);
             program_unbind();
         }

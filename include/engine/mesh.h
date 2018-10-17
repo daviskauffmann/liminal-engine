@@ -8,15 +8,15 @@ struct mesh
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
-    int num_vertices;
-    int num_indices;
+    int vertices_size;
+    int indices_size;
 };
 
 struct mesh *mesh_create(
     float *vertices,
-    unsigned int num_vertices,
+    unsigned int vertices_size,
     unsigned int *indices,
-    unsigned int num_indices);
+    unsigned int indices_size);
 struct mesh *mesh_create_obj(const char *file);
 void mesh_draw(struct mesh *mesh);
 void mesh_destroy(struct mesh *mesh);
