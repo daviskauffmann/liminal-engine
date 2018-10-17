@@ -29,11 +29,11 @@ struct camera *camera_create(
     return camera;
 }
 
-void camera_calc_projection(struct camera *camera, vec4 *projection)
+void camera_calc_projection(struct camera *camera, float aspect, vec4 *projection)
 {
     glm_perspective(
         glm_rad(camera->fov),
-        window_opengl_aspect_ratio(),
+        aspect,
         0.01f,
         100.0f,
         projection);

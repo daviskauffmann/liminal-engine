@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_opengl_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_gl_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
         printf("Error: %s\n", error_get());
 
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 
         char title[256];
         sprintf(title, "%s - FPS: %d", WINDOW_TITLE, time_fps());
-        window_opengl_set_title(title);
+        window_gl_set_title(title);
 
         int num_keys;
         const unsigned char *keys = io_keyboard(&num_keys);
@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        window_opengl_toggle_fullscreen();
+                        window_gl_toggle_fullscreen();
                     }
                 }
                 break;
@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
 
-                    window_opengl_resize(width, height);
+                    window_gl_resize(width, height);
                 }
                 break;
                 }
@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
         glm_vec_copy(camera->front, spot_light->direction);
 
         mat4 camera_projection;
-        camera_calc_projection(camera, camera_projection);
+        camera_calc_projection(camera, window_gl_get_aspect(), camera_projection);
 
         mat4 camera_view;
         camera_calc_view(camera, camera_view);
@@ -613,7 +613,7 @@ int main(int argc, char *argv[])
             objects[i]->rotation[2] = angle;
         }
 
-        window_opengl_clear();
+        window_gl_clear();
 
         for (int i = 0; i < num_objects; i++)
         {
@@ -637,7 +637,7 @@ int main(int argc, char *argv[])
             program_unbind();
         }
 
-        window_opengl_render();
+        window_gl_render();
 
         time_frame_end();
     }
@@ -662,7 +662,7 @@ int main(int argc, char *argv[])
     program_destroy(phong_program);
     program_destroy(basic_program);
     audio_quit();
-    window_opengl_quit();
+    window_gl_quit();
     engine_quit();
 
     return 0;

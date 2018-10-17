@@ -4,7 +4,7 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *screen;
 
-int window_software_init(const char *title, int width, int height)
+int window_sw_init(const char *title, int width, int height)
 {
     window = SDL_CreateWindow(
         title,
@@ -47,17 +47,30 @@ int window_software_init(const char *title, int width, int height)
     return 0;
 }
 
-const char *window_software_get_title(void)
+const char *window_sw_get_title(void)
 {
     return SDL_GetWindowTitle(window);
 }
 
-void window_software_set_title(const char *title)
+void window_sw_set_title(const char *title)
 {
     SDL_SetWindowTitle(window, title);
 }
 
-void window_software_toggle_fullscreen(void)
+void window_sw_get_size(int *width, int *height)
+{
+    SDL_GetWindowSize(window, width, height);
+}
+
+float window_sw_get_aspect(void)
+{
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    return (float)width / (float)height;
+}
+
+void window_sw_toggle_fullscreen(void)
 {
     unsigned int flags = SDL_GetWindowFlags(window);
 
@@ -71,12 +84,12 @@ void window_software_toggle_fullscreen(void)
     }
 }
 
-void window_software_clear(void)
+void window_sw_clear(void)
 {
     SDL_RenderClear(renderer);
 }
 
-void window_software_draw_pixels(SDL_Rect *rect, const void *pixels, int pitch)
+void window_sw_draw_pixels(SDL_Rect *rect, const void *pixels, int pitch)
 {
     SDL_UpdateTexture(
         screen,
@@ -87,7 +100,7 @@ void window_software_draw_pixels(SDL_Rect *rect, const void *pixels, int pitch)
     SDL_RenderCopy(renderer, screen, NULL, NULL);
 }
 
-void window_software_draw_text(TTF_Font *font, int px, int x, int y, SDL_Color fg, const char *const fmt, ...)
+void window_sw_draw_text(TTF_Font *font, int px, int x, int y, SDL_Color fg, const char *const fmt, ...)
 {
     char text[256];
 
@@ -98,7 +111,7 @@ void window_software_draw_text(TTF_Font *font, int px, int x, int y, SDL_Color f
 
     va_end(ap);
 
-    SDL_Surface *text_surface = TTF_RenderText_Solid(font, text, fg);
+    SDL_Surface *text_surface = font_render_solid(font, text, fg);
 
     SDL_Texture *text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
 
@@ -115,12 +128,12 @@ void window_software_draw_text(TTF_Font *font, int px, int x, int y, SDL_Color f
     SDL_DestroyTexture(text_texture);
 }
 
-void window_software_render(void)
+void window_sw_render(void)
 {
     SDL_RenderPresent(renderer);
 }
 
-void window_software_quit(void)
+void window_sw_quit(void)
 {
     SDL_DestroyTexture(screen);
     SDL_DestroyRenderer(renderer);

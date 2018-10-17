@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_software_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
         printf("Error: %s\n", error_get());
 
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        window_software_render();
+        window_sw_render();
 
         time_frame_end();
     }
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
     SDLNet_UDP_Close(udp_socket);
     net_tcp_free_packet(tcp_packet);
     SDLNet_TCP_Close(tcp_socket);
-    window_software_quit();
+    window_sw_quit();
     engine_quit();
 
     return 0;

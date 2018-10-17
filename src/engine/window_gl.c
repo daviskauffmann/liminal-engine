@@ -3,7 +3,7 @@
 static SDL_Window *window;
 static SDL_GLContext context;
 
-int window_opengl_init(const char *title, int width, int height)
+int window_gl_init(const char *title, int width, int height)
 {
     window = SDL_CreateWindow(
         title,
@@ -57,17 +57,30 @@ int window_opengl_init(const char *title, int width, int height)
     return 0;
 }
 
-const char *window_opengl_get_title(void)
+const char *window_gl_get_title(void)
 {
     return SDL_GetWindowTitle(window);
 }
 
-void window_opengl_set_title(const char *title)
+void window_gl_set_title(const char *title)
 {
     SDL_SetWindowTitle(window, title);
 }
 
-void window_opengl_toggle_fullscreen(void)
+void window_gl_get_size(int *width, int *height)
+{
+    SDL_GetWindowSize(window, width, height);
+}
+
+float window_gl_get_aspect(void)
+{
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    return (float)width / (float)height;
+}
+
+void window_gl_toggle_fullscreen(void)
 {
     unsigned int flags = SDL_GetWindowFlags(window);
 
@@ -81,7 +94,7 @@ void window_opengl_toggle_fullscreen(void)
     }
 }
 
-void window_opengl_resize(int width, int height)
+void window_gl_resize(int width, int height)
 {
     SDL_SetWindowSize(window, width, height);
     glViewport(0, 0, width, height);
@@ -89,25 +102,17 @@ void window_opengl_resize(int width, int height)
     printf("Window resized to %dx%d\n", width, height);
 }
 
-float window_opengl_aspect_ratio(void)
-{
-    int width, height;
-    SDL_GetWindowSize(window, &width, &height);
-
-    return (float)width / (float)height;
-}
-
-void window_opengl_clear(void)
+void window_gl_clear(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void window_opengl_render(void)
+void window_gl_render(void)
 {
     SDL_GL_SwapWindow(window);
 }
 
-void window_opengl_quit(void)
+void window_gl_quit(void)
 {
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);

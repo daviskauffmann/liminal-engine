@@ -16,57 +16,57 @@ int audio_init(void)
     return 0;
 }
 
-Mix_Chunk *audio_load_chunk(const char *file)
+Mix_Chunk *audio_chunk_load(const char *file)
 {
     return Mix_LoadWAV(file);
 }
 
-void audio_play_chunk(int channel, Mix_Chunk *chunk, int loops)
+void audio_chunk_play(int channel, Mix_Chunk *chunk, int loops)
 {
     Mix_PlayChannel(channel, chunk, loops);
 }
 
-Mix_Music *audio_load_music(const char *file)
+Mix_Music *audio_music_load(const char *file)
 {
     return Mix_LoadMUS(file);
 }
 
-void audio_play_music(Mix_Music *music, int loops)
+void audio_music_play(Mix_Music *music, int loops)
 {
     Mix_PlayMusic(music, loops);
 }
 
-void audio_pause_music(void)
+void audio_music_pause(void)
 {
     Mix_PauseMusic();
 }
 
-void audio_resume_music(void)
+void audio_music_resume(void)
 {
     Mix_ResumeMusic();
 }
 
-void audio_stop_music(void)
+void audio_music_stop(void)
 {
     Mix_HaltMusic();
 }
 
-bool audio_playing_music(void)
+bool audio_music_playing(void)
 {
     return Mix_PlayingMusic();
 }
 
-bool audio_paused_music(void)
+bool audio_music_paused(void)
 {
     return Mix_PausedMusic();
 }
 
-void audio_free_music(Mix_Music *music)
+void audio_music_free(Mix_Music *music)
 {
     Mix_FreeMusic(music);
 }
 
-void audio_free_chunk(Mix_Chunk *chunk)
+void audio_chunk_free(Mix_Chunk *chunk)
 {
     Mix_FreeChunk(chunk);
 }

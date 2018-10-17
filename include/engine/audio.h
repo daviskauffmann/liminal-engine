@@ -5,17 +5,20 @@
 #include <stdbool.h>
 
 int audio_init(void);
-Mix_Chunk *audio_load_chunk(const char *file);
-void audio_play_chunk(int channel, Mix_Chunk *chunk, int loops);
-Mix_Music *audio_load_music(const char *file);
-void audio_play_music(Mix_Music *music, int loops);
-void audio_pause_music(void);
-void audio_resume_music(void);
-void audio_stop_music(void);
-bool audio_playing_music(void);
-bool audio_paused_music(void);
-void audio_free_music(Mix_Music *music);
-void audio_free_chunk(Mix_Chunk *chunk);
+
+Mix_Chunk *audio_chunk_load(const char *file);
+void audio_chunk_play(int channel, Mix_Chunk *chunk, int loops);
+void audio_chunk_free(Mix_Chunk *chunk);
+
+Mix_Music *audio_music_load(const char *file);
+void audio_music_play(Mix_Music *music, int loops);
+void audio_music_pause(void);
+void audio_music_resume(void);
+void audio_music_stop(void);
+bool audio_music_playing(void);
+bool audio_music_paused(void);
+void audio_music_free(Mix_Music *music);
+
 void audio_quit(void);
 
 #endif

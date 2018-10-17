@@ -33,8 +33,8 @@
 #include "spot_light.h"
 #include "texture.h"
 #include "time.h"
-#include "window_opengl.h"
-#include "window_software.h"
+#include "window_gl.h"
+#include "window_sw.h"
 
 int engine_init(void);
 void engine_quit(void);

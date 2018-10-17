@@ -157,7 +157,7 @@ int main(int argc, char *args[])
 {
     engine_init();
 
-    window_software_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+    window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     audio_init();
 
@@ -177,10 +177,10 @@ int main(int argc, char *args[])
     sprites[2] = bitmap_create("assets/images/greenlight.png");
 
     Mix_Music *tracks[NUM_TRACKS];
-    tracks[0] = audio_load_music("assets/audio/background.mp3");
+    tracks[0] = audio_music_load("assets/audio/background.mp3");
 
     Mix_Chunk *sounds[NUM_SOUNDS];
-    sounds[0] = audio_load_chunk("assets/audio/shoot.wav");
+    sounds[0] = audio_chunk_load("assets/audio/shoot.wav");
 
     TTF_Font *font = font_open("assets/fonts/VeraMono.ttf", 24);
 
@@ -276,27 +276,27 @@ int main(int argc, char *args[])
                 break;
                 case SDLK_1:
                 {
-                    if (audio_playing_music())
+                    if (audio_music_playing())
                     {
-                        audio_stop_music();
+                        audio_music_stop();
                     }
                     else
                     {
-                        audio_play_music(tracks[0], -1);
+                        audio_music_play(tracks[0], -1);
                     }
                 }
                 break;
                 case SDLK_2:
                 {
-                    if (audio_playing_music())
+                    if (audio_music_playing())
                     {
-                        if (audio_paused_music())
+                        if (audio_music_paused())
                         {
-                            audio_resume_music();
+                            audio_music_resume();
                         }
                         else
                         {
-                            audio_pause_music();
+                            audio_music_pause();
                         }
                     }
                 }
@@ -310,7 +310,7 @@ int main(int argc, char *args[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        window_software_toggle_fullscreen();
+                        window_sw_toggle_fullscreen();
                     }
                 }
                 break;
@@ -392,7 +392,7 @@ int main(int argc, char *args[])
             {
                 shoot_timer = 0.0f;
 
-                audio_play_chunk(-1, sounds[0], 0);
+                audio_chunk_play(-1, sounds[0], 0);
             }
         }
 
@@ -776,12 +776,12 @@ int main(int argc, char *args[])
             }
         }
 
-        window_software_draw_pixels(NULL, pixel_buffer, WINDOW_WIDTH * sizeof(unsigned int));
+        window_sw_draw_pixels(NULL, pixel_buffer, WINDOW_WIDTH * sizeof(unsigned int));
 
         {
             int line = 0;
 
-            window_software_draw_text(
+            window_sw_draw_text(
                 font,
                 FONT_SIZE,
                 0,
@@ -790,7 +790,7 @@ int main(int argc, char *args[])
                 "FPS: %d",
                 time_fps());
 
-            window_software_draw_text(
+            window_sw_draw_text(
                 font,
                 FONT_SIZE,
                 0,
@@ -800,7 +800,7 @@ int main(int argc, char *args[])
                 player->pos_x,
                 player->pos_y);
 
-            window_software_draw_text(
+            window_sw_draw_text(
                 font,
                 FONT_SIZE,
                 0,
@@ -810,7 +810,7 @@ int main(int argc, char *args[])
                 player->dir_x,
                 player->dir_y);
 
-            window_software_draw_text(
+            window_sw_draw_text(
                 font,
                 FONT_SIZE,
                 0,
@@ -821,7 +821,7 @@ int main(int argc, char *args[])
                 player->plane_y);
         }
 
-        window_software_render();
+        window_sw_render();
 
         time_frame_end();
     }
@@ -836,11 +836,11 @@ int main(int argc, char *args[])
 
     for (int i = 0; i < NUM_TRACKS; i++)
     {
-        audio_free_music(tracks[i]);
+        audio_music_free(tracks[i]);
     }
     for (int i = 0; i < NUM_SOUNDS; i++)
     {
-        audio_free_chunk(sounds[i]);
+        audio_chunk_free(sounds[i]);
     }
 
     for (int i = 0; i < NUM_TEXTURES; i++)
@@ -852,7 +852,7 @@ int main(int argc, char *args[])
         bitmap_destroy(sprites[i]);
     }
 
-    window_software_quit();
+    window_sw_quit();
     engine_quit();
 
     return 0;
