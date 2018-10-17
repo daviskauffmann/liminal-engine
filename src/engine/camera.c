@@ -1,6 +1,6 @@
 #include <engine/camera.h>
 #include <engine/error.h>
-#include <engine/window.h>
+#include <engine/window_opengl.h>
 #include <malloc.h>
 
 struct camera *camera_create(
@@ -36,7 +36,7 @@ void camera_calc_projection(struct camera *camera, vec4 *projection)
 {
     glm_perspective(
         glm_rad(camera->fov),
-        window_aspect_ratio(),
+        window_opengl_aspect_ratio(),
         0.01f,
         100.0f,
         projection);

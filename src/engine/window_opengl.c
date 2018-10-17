@@ -1,12 +1,12 @@
 #include <engine/error.h>
-#include <engine/window.h>
+#include <engine/window_opengl.h>
 #include <GL/glew.h>
 #include <stdio.h>
 
 SDL_Window *window;
 SDL_GLContext context;
 
-int window_init(const char *title, int width, int height)
+int window_opengl_init(const char *title, int width, int height)
 {
     window = SDL_CreateWindow(
         title,
@@ -60,37 +60,17 @@ int window_init(const char *title, int width, int height)
     return 0;
 }
 
-const unsigned char *window_keyboard(int *num_keys)
-{
-    return SDL_GetKeyboardState(num_keys);
-}
-
-unsigned int window_mouse(int *mouse_x, int *mouse_y)
-{
-    return SDL_GetMouseState(mouse_x, mouse_y);
-}
-
-int window_event(SDL_Event *event)
-{
-    return SDL_PollEvent(event);
-}
-
-const char *window_get_title(void)
+const char *window_opengl_get_title(void)
 {
     return SDL_GetWindowTitle(window);
 }
 
-void window_toggle_mouse()
-{
-    SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
-}
-
-void window_set_title(const char *title)
+void window_opengl_set_title(const char *title)
 {
     SDL_SetWindowTitle(window, title);
 }
 
-void window_toggle_fullscreen(void)
+void window_opengl_toggle_fullscreen(void)
 {
     unsigned int flags = SDL_GetWindowFlags(window);
 
@@ -104,7 +84,7 @@ void window_toggle_fullscreen(void)
     }
 }
 
-void window_resize(int width, int height)
+void window_opengl_resize(int width, int height)
 {
     SDL_SetWindowSize(window, width, height);
     glViewport(0, 0, width, height);
@@ -112,7 +92,7 @@ void window_resize(int width, int height)
     printf("Window resized to %dx%d\n", width, height);
 }
 
-float window_aspect_ratio(void)
+float window_opengl_aspect_ratio(void)
 {
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
@@ -120,17 +100,17 @@ float window_aspect_ratio(void)
     return (float)width / (float)height;
 }
 
-void window_clear(void)
+void window_opengl_clear(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void window_render(void)
+void window_opengl_render(void)
 {
     SDL_GL_SwapWindow(window);
 }
 
-void window_quit(void)
+void window_opengl_quit(void)
 {
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);

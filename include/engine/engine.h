@@ -6,6 +6,8 @@
 #include "camera.h"
 #include "directional_light.h"
 #include "error.h"
+#include "font.h"
+#include "io.h"
 #include "material.h"
 #include "mesh.h"
 #include "net.h"
@@ -15,7 +17,8 @@
 #include "spot_light.h"
 #include "texture.h"
 #include "time.h"
-#include "window.h"
+#include "window_opengl.h"
+#include "window_software.h"
 
 int engine_init(void);
 void engine_quit(void);

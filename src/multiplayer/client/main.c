@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_software_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
         printf("Error: %s\n", error_get());
 
@@ -135,13 +135,13 @@ int main(int argc, char *argv[])
         time_frame_start();
 
         int num_keys;
-        const unsigned char *keys = window_keyboard(&num_keys);
+        const unsigned char *keys = io_keyboard(&num_keys);
 
         int mouse_x, mouse_y;
-        unsigned int mouse = window_mouse(&mouse_x, &mouse_y);
+        unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
 
         SDL_Event event;
-        while (window_event(&event))
+        while (io_event(&event))
         {
             switch (event.type)
             {
@@ -159,15 +159,8 @@ int main(int argc, char *argv[])
                 break;
                 case SDLK_RETURN:
                 {
-                    if (keys[SDL_SCANCODE_LALT])
-                    {
-                        window_toggle_fullscreen();
-                    }
-                    else
-                    {
-                        struct chat_data chat_data = chat_data_create(DATA_CHAT_REQUEST, client_id, "Hello, World!");
-                        net_tcp_send(tcp_socket, &chat_data, sizeof(chat_data));
-                    }
+                    struct chat_data chat_data = chat_data_create(DATA_CHAT_REQUEST, client_id, "Hello, World!");
+                    net_tcp_send(tcp_socket, &chat_data, sizeof(chat_data));
                 }
                 break;
                 }
@@ -182,21 +175,6 @@ int main(int argc, char *argv[])
             case SDL_QUIT:
             {
                 quit = true;
-            }
-            break;
-            case SDL_WINDOWEVENT:
-            {
-                switch (event.window.event)
-                {
-                case SDL_WINDOWEVENT_RESIZED:
-                {
-                    int width = event.window.data1;
-                    int height = event.window.data2;
-
-                    window_resize(width, height);
-                }
-                break;
-                }
             }
             break;
             }
@@ -260,7 +238,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        window_render();
+        window_software_render();
 
         time_frame_end();
     }
@@ -277,7 +255,7 @@ int main(int argc, char *argv[])
     SDLNet_UDP_Close(udp_socket);
     net_tcp_free_packet(tcp_packet);
     SDLNet_TCP_Close(tcp_socket);
-    window_quit();
+    window_software_quit();
     engine_quit();
 
     return 0;

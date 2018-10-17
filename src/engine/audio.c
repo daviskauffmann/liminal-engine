@@ -62,6 +62,16 @@ bool audio_paused_music(void)
     return Mix_PausedMusic();
 }
 
+void audio_free_music(Mix_Music *music)
+{
+    Mix_FreeMusic(music);
+}
+
+void audio_free_chunk(Mix_Chunk *chunk)
+{
+    Mix_FreeChunk(chunk);
+}
+
 void audio_quit(void)
 {
     Mix_CloseAudio();

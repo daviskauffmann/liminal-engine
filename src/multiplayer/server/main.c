@@ -102,20 +102,6 @@ int main(int argc, char *args[])
     {
         time_frame_start();
 
-        // TODO: remove? this is a console application
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-            {
-                quit = true;
-            }
-            break;
-            }
-        }
-
         while (SDLNet_CheckSockets(socket_set, 0) > 0)
         {
             if (SDLNet_SocketReady(tcp_socket))

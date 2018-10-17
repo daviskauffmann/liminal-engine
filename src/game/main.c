@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_opengl_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
         printf("Error: %s\n", error_get());
 
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 
     time_cap_fps(FPS_CAP);
 
-    window_toggle_mouse();
+    io_set_relative_mouse(true);
 
     GLint basic_program_time = program_get_location(basic_program, "time");
     GLint basic_program_material_diffuse = program_get_location(basic_program, "material.diffuse");
@@ -384,16 +384,16 @@ int main(int argc, char *argv[])
 
         char title[256];
         sprintf(title, "%s - FPS: %d", WINDOW_TITLE, time_fps());
-        window_set_title(title);
+        window_opengl_set_title(title);
 
         int num_keys;
-        const unsigned char *keys = window_keyboard(&num_keys);
+        const unsigned char *keys = io_keyboard(&num_keys);
 
         int mouse_x, mouse_y;
-        unsigned int mouse = window_mouse(&mouse_x, &mouse_y);
+        unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
 
         SDL_Event event;
-        while (window_event(&event))
+        while (io_event(&event))
         {
             switch (event.type)
             {
@@ -423,13 +423,13 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        window_toggle_fullscreen();
+                        window_opengl_toggle_fullscreen();
                     }
                 }
                 break;
                 case SDLK_TAB:
                 {
-                    window_toggle_mouse();
+                    io_set_relative_mouse(!io_get_relative_mouse());
                 }
                 break;
                 }
@@ -487,7 +487,7 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
 
-                    window_resize(width, height);
+                    window_opengl_resize(width, height);
                 }
                 break;
                 }
@@ -618,7 +618,7 @@ int main(int argc, char *argv[])
             objects[i]->rotation[2] = angle;
         }
 
-        window_clear();
+        window_opengl_clear();
 
         for (int i = 0; i < num_objects; i++)
         {
@@ -642,7 +642,7 @@ int main(int argc, char *argv[])
             program_unbind();
         }
 
-        window_render();
+        window_opengl_render();
 
         time_frame_end();
     }
@@ -667,7 +667,7 @@ int main(int argc, char *argv[])
     program_destroy(phong_program);
     program_destroy(basic_program);
     audio_quit();
-    window_quit();
+    window_opengl_quit();
     engine_quit();
 
     return 0;

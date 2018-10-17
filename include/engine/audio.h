@@ -14,6 +14,8 @@ void audio_resume_music(void);
 void audio_stop_music(void);
 bool audio_playing_music(void);
 bool audio_paused_music(void);
+void audio_free_music(Mix_Music *music);
+void audio_free_chunk(Mix_Chunk *chunk);
 void audio_quit(void);
 
 #endif

@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 {
     engine_init();
 
-    window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+    window_opengl_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     struct program *phong_program = program_create(
         "assets/shaders/phong.vs",
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
 
     time_cap_fps(FPS_CAP);
 
-    window_toggle_mouse();
+    io_set_relative_mouse(true);
 
     GLint phong_program_time = program_get_location(phong_program, "time");
     GLint phong_program_material_diffuse = program_get_location(phong_program, "material.diffuse");
@@ -300,13 +300,13 @@ int main(int argc, char *argv[])
         time_frame_start();
 
         int num_keys;
-        const unsigned char *keys = window_keyboard(&num_keys);
+        const unsigned char *keys = io_keyboard(&num_keys);
 
         int mouse_x, mouse_y;
-        unsigned int mouse = window_mouse(&mouse_x, &mouse_y);
+        unsigned int mouse = io_mouse(&mouse_x, &mouse_y);
 
         SDL_Event event;
-        while (window_event(&event))
+        while (io_event(&event))
         {
             switch (event.type)
             {
@@ -326,13 +326,13 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        window_toggle_fullscreen();
+                        window_opengl_toggle_fullscreen();
                     }
                 }
                 break;
                 case SDLK_TAB:
                 {
-                    window_toggle_mouse();
+                    io_set_relative_mouse(!io_get_relative_mouse());
                 }
                 break;
                 }
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
 
-                    window_resize(width, height);
+                    window_opengl_resize(width, height);
                 }
                 break;
                 }
@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
         program_set_float(phong_program_spot_light_outerCutOff, spot_light->outerCutOff);
         program_unbind();
 
-        window_clear();
+        window_opengl_clear();
 
         for (int i = 0; i < num_objects; i++)
         {
@@ -525,7 +525,7 @@ int main(int argc, char *argv[])
             program_unbind();
         }
 
-        window_render();
+        window_opengl_render();
 
         time_frame_end();
     }
@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
     bitmap_destroy(level_bitmap);
     program_destroy(phong_program);
     audio_quit();
-    window_quit();
+    window_opengl_quit();
     engine_quit();
 
     return 0;
