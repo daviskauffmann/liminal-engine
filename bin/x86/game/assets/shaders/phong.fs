@@ -28,6 +28,8 @@ uniform struct Material
     float glow;
 } material;
 
+uniform vec3 ambient;
+
 uniform struct DirectionalLight
 {
     vec3 direction;
@@ -72,6 +74,12 @@ void main()
 
     vec3 color;
 
+    // ambient light
+    color += ambient * vec3(texture(material.diffuse, vertex.uv)) * material.color;
+
+    // emission
+    color += vec3(texture(material.emission, vertex.uv)) * material.glow;
+
     // directional light
     color += calc_directional_light(directional_light, normal, view_direction);
 
@@ -83,9 +91,6 @@ void main()
 
     // spot light
     color += calc_spot_light(spot_light, normal, view_direction);
-
-    // emission
-    color += vec3(texture(material.emission, vertex.uv)) * material.glow;
 
     gl_FragColor = vec4(color, 1.0);
 }

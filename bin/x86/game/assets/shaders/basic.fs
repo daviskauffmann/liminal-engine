@@ -3,10 +3,9 @@
 in struct Vertex
 {
     vec3 position;
+    vec3 normal;
     vec2 uv;
 } vertex;
-
-uniform int time;
 
 uniform struct Material
 {
@@ -16,5 +15,7 @@ uniform struct Material
 
 void main()
 {
-    gl_FragColor = vec4(vec3(texture(material.diffuse, vertex.uv)), 1.0) * vec4(material.color, 1.0);
+    vec3 color = vec3(texture(material.diffuse, vertex.uv)) * material.color;
+
+    gl_FragColor = vec4(color, 1.0);
 }
