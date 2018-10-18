@@ -32,8 +32,7 @@
 #include "texture.h"
 #include "time.h"
 #include "udp.h"
-#include "window_gl.h"
-#include "window_sw.h"
+#include "window.h"
 
 int engine_init(void);
 void engine_quit(void);

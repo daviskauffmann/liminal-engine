@@ -52,6 +52,7 @@ void player_rotate(struct player *player, float angle);
 void comb_sort(int *order, float *dist, int amount);
 unsigned int color_darken(unsigned int color);
 unsigned int color_fog(unsigned int color, float distance);
+void draw_text(SDL_Renderer *renderer, TTF_Font *font, int px, int x, int y, SDL_Color fg, const char *const fmt, ...);
 
 // wall texture indexes
 unsigned char wall_map[MAP_WIDTH][MAP_HEIGHT] = {
@@ -158,10 +159,60 @@ struct billboard billboards[NUM_BILLBOARDS] = {
 
 int main(int argc, char *args[])
 {
-    // setup engine
-    engine_init();
-    window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
-    audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+    if (engine_init())
+    {
+        return 1;
+    }
+
+    if (audio_init(
+            MIX_DEFAULT_FREQUENCY,
+            MIX_DEFAULT_FORMAT,
+            MIX_DEFAULT_CHANNELS,
+            1024))
+    {
+        return 1;
+    }
+
+    // create window
+    SDL_Window *window = SDL_CreateWindow(
+        WINDOW_TITLE,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        0);
+
+    if (!window)
+    {
+        error(SDL_GetError());
+
+        return 1;
+    }
+
+    // create renderer
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+
+    if (!renderer)
+    {
+        error(SDL_GetError());
+
+        return 1;
+    }
+
+    // create screen texture
+    SDL_Texture *screen = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_ABGR8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT);
+
+    if (!screen)
+    {
+        error(SDL_GetError());
+
+        return 1;
+    }
 
     time_cap_fps(FPS_CAP);
 
@@ -320,7 +371,16 @@ int main(int argc, char *args[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        window_sw_toggle_fullscreen();
+                        unsigned int flags = SDL_GetWindowFlags(window);
+
+                        if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
+                        {
+                            SDL_SetWindowFullscreen(window, 0);
+                        }
+                        else
+                        {
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                        }
                     }
                 }
                 break;
@@ -881,16 +941,22 @@ int main(int argc, char *args[])
         }
 
         // clear the renderer
-        window_sw_clear();
+        SDL_RenderClear(renderer);
 
         // display pixel buffer
-        window_sw_draw_pixels(NULL, pixel_buffer, WINDOW_WIDTH * sizeof(unsigned int));
+        SDL_UpdateTexture(
+            screen,
+            NULL,
+            pixel_buffer,
+            WINDOW_WIDTH * sizeof(unsigned int));
+        SDL_RenderCopy(renderer, screen, NULL, NULL);
 
         {
             int line = 0;
 
             // display FPS
-            window_sw_draw_text(
+            draw_text(
+                renderer,
                 font,
                 FONT_SIZE,
                 0,
@@ -900,7 +966,8 @@ int main(int argc, char *args[])
                 time_fps());
 
             // display position
-            window_sw_draw_text(
+            draw_text(
+                renderer,
                 font,
                 FONT_SIZE,
                 0,
@@ -911,7 +978,8 @@ int main(int argc, char *args[])
                 player->pos_y);
 
             // display direction
-            window_sw_draw_text(
+            draw_text(
+                renderer,
                 font,
                 FONT_SIZE,
                 0,
@@ -922,7 +990,8 @@ int main(int argc, char *args[])
                 player->dir_y);
 
             // display camera plane
-            window_sw_draw_text(
+            draw_text(
+                renderer,
                 font,
                 FONT_SIZE,
                 0,
@@ -934,7 +1003,7 @@ int main(int argc, char *args[])
         }
 
         // display the renderer
-        window_sw_render();
+        SDL_RenderPresent(renderer);
 
         // end of frame activities
         time_frame_end();
@@ -962,8 +1031,12 @@ int main(int argc, char *args[])
         bitmap_destroy(sprites[i]);
     }
 
+    // close window
+    SDL_DestroyTexture(screen);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
     // close engine
-    window_sw_quit();
     engine_quit();
 
     return 0;
@@ -1068,4 +1141,32 @@ unsigned int color_fog(unsigned int color, float distance)
 
     // recombine the colors
     return ((red & 0x0ff) << 16) | ((green & 0x0ff) << 8) | (blue & 0x0ff);
+}
+
+void draw_text(SDL_Renderer *renderer, TTF_Font *font, int px, int x, int y, SDL_Color fg, const char *const fmt, ...)
+{
+    char text[256];
+
+    va_list ap;
+    va_start(ap, fmt);
+
+    vsprintf_s(text, sizeof(text), fmt, ap);
+
+    va_end(ap);
+
+    SDL_Surface *text_surface = TTF_RenderText_Solid(font, text, fg);
+
+    SDL_Texture *text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
+
+    SDL_FreeSurface(text_surface);
+
+    SDL_Rect text_rect;
+    text_rect.x = x;
+    text_rect.y = y;
+    text_rect.w = px * strlen(text);
+    text_rect.h = px;
+
+    SDL_RenderCopy(renderer, text_texture, NULL, &text_rect);
+
+    SDL_DestroyTexture(text_texture);
 }

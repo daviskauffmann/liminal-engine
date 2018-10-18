@@ -2,7 +2,7 @@
 
 #include "../shared/data.h"
 
-#define WINDOW_TITLE "Multiplayer Test"
+#define WINDOW_TITLE "Client"
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
@@ -19,7 +19,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_sw_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_init(
+            WINDOW_TITLE,
+            WINDOW_WIDTH,
+            WINDOW_HEIGHT))
+    {
+        return 1;
+    }
+
+    if (audio_init(
+            MIX_DEFAULT_FREQUENCY,
+            MIX_DEFAULT_FORMAT,
+            MIX_DEFAULT_CHANNELS,
+            1024))
     {
         return 1;
     }
@@ -261,7 +273,8 @@ int main(int argc, char *argv[])
     SDLNet_TCP_Close(tcp_socket);
 
     // close engine
-    window_sw_quit();
+    audio_quit();
+    window_quit();
     engine_quit();
 
     return 0;

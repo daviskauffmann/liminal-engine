@@ -14,12 +14,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_gl_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_init(
+            WINDOW_TITLE,
+            WINDOW_WIDTH,
+            WINDOW_HEIGHT))
     {
         return 1;
     }
 
-    if (audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024))
+    if (audio_init(
+            MIX_DEFAULT_FREQUENCY,
+            MIX_DEFAULT_FORMAT,
+            MIX_DEFAULT_CHANNELS,
+            1024))
     {
         return 1;
     }
@@ -28,113 +35,7 @@ int main(int argc, char *argv[])
 
     SDL_SetRelativeMouseMode(true);
 
-    // create shader programs
-    struct program *basic_program = program_create(
-        "assets/shaders/basic.vs",
-        "assets/shaders/basic.fs");
-
-    if (!basic_program)
-    {
-        return 1;
-    }
-
-    struct program *phong_program = program_create(
-        "assets/shaders/phong.vs",
-        "assets/shaders/phong.fs");
-
-    if (!phong_program)
-    {
-        return 1;
-    }
-
     // create meshes
-    float quad_vertices[] = {
-        // position          // normal            // uv
-        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f, // top right
-        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f, // bottom left
-        -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f  // top left
-    };
-
-    unsigned int quad_indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
-
-    struct mesh *quad_mesh = mesh_create(
-        quad_vertices,
-        sizeof(quad_vertices),
-        quad_indices,
-        sizeof(quad_indices));
-
-    if (!quad_mesh)
-    {
-        return 1;
-    }
-
-    float cube_vertices[] = {
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f};
-
-    unsigned int cube_indices[] = {
-        0, 1, 2,
-        3, 4, 5,
-        6, 7, 8,
-        9, 10, 11,
-        12, 13, 14,
-        15, 16, 17,
-        18, 19, 20,
-        21, 22, 23,
-        24, 25, 26,
-        27, 28, 29,
-        30, 31, 32,
-        33, 34, 35};
-
-    struct mesh *cube_mesh = mesh_create(
-        cube_vertices,
-        sizeof(cube_vertices),
-        cube_indices,
-        sizeof(cube_indices));
-
-    if (!cube_mesh)
-    {
-        return 1;
-    }
-
     struct mesh *monkey_mesh = mesh_create_obj("assets/models/monkey.obj");
 
     if (!monkey_mesh)
@@ -287,6 +188,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // load music
+    Mix_Music *background_music = Mix_LoadMUS("assets/audio/background.mp3");
+
+    if (!background_music)
+    {
+        error(Mix_GetError());
+
+        return 1;
+    }
+
+    // load sounds
+    Mix_Chunk *shoot_sound = Mix_LoadWAV("assets/audio/shoot.wav");
+
+    if (!shoot_sound)
+    {
+        error(Mix_GetError());
+
+        return 1;
+    }
+
     // cache uniform locations
     GLint basic_program_time = program_get_location(basic_program, "time");
     GLint basic_program_material_diffuse = program_get_location(basic_program, "material.diffuse");
@@ -374,7 +295,7 @@ int main(int argc, char *argv[])
         // update window title
         char title[256];
         sprintf(title, "%s - FPS: %d", WINDOW_TITLE, time_fps());
-        window_gl_set_title(title);
+        window_set_title(title);
 
         // get keyboard input
         int num_keys;
@@ -394,6 +315,33 @@ int main(int argc, char *argv[])
             {
                 switch (event.key.keysym.sym)
                 {
+                case SDLK_1:
+                {
+                    if (Mix_PlayingMusic())
+                    {
+                        Mix_HaltMusic();
+                    }
+                    else
+                    {
+                        Mix_PlayMusic(background_music, -1);
+                    }
+                }
+                break;
+                case SDLK_2:
+                {
+                    if (Mix_PlayingMusic())
+                    {
+                        if (Mix_PausedMusic())
+                        {
+                            Mix_ResumeMusic();
+                        }
+                        else
+                        {
+                            Mix_PauseMusic();
+                        }
+                    }
+                }
+                break;
                 case SDLK_F1:
                 {
                     current_program = basic_program;
@@ -416,7 +364,7 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        window_gl_toggle_fullscreen();
+                        window_toggle_fullscreen();
                     }
                 }
                 break;
@@ -482,7 +430,7 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
 
-                    window_gl_resize(width, height);
+                    window_resize(width, height);
                 }
                 break;
                 }
@@ -548,13 +496,26 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
+        // shooting
+        static float shoot_timer = 0.0f;
+        shoot_timer += time_delta();
+        if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+        {
+            if (shoot_timer >= 0.25f)
+            {
+                shoot_timer = 0.0f;
+
+                Mix_PlayChannel(-1, shoot_sound, 0);
+            }
+        }
+
         // update lights
         glm_vec_copy(camera->position, spot_light->position);
         glm_vec_copy(camera->front, spot_light->direction);
 
         // calculate matrices
         mat4 camera_projection;
-        camera_calc_projection(camera, window_gl_get_aspect(), camera_projection);
+        camera_calc_projection(camera, camera_projection);
 
         mat4 camera_view;
         camera_calc_view(camera, camera_view);
@@ -626,7 +587,7 @@ int main(int argc, char *argv[])
         }
 
         // clear the window
-        window_gl_clear();
+        window_clear();
 
         // draw objects
         for (int i = 0; i < num_objects; i++)
@@ -652,13 +613,15 @@ int main(int argc, char *argv[])
         }
 
         // display the window
-        window_gl_render();
+        window_swap();
 
         // end of frame activities
         time_frame_end();
     }
 
     // free resources
+    Mix_FreeChunk(shoot_sound);
+    Mix_FreeMusic(background_music);
     directional_light_destroy(directional_light);
     for (int i = 0; i < num_point_lights; i++)
     {
@@ -674,14 +637,10 @@ int main(int argc, char *argv[])
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
     mesh_destroy(monkey_mesh);
-    mesh_destroy(cube_mesh);
-    mesh_destroy(quad_mesh);
-    program_destroy(phong_program);
-    program_destroy(basic_program);
 
     // close engine
     audio_quit();
-    window_gl_quit();
+    window_quit();
     engine_quit();
 
     return 0;

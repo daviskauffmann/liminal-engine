@@ -3,7 +3,7 @@
 int engine_init(void)
 {
     // init SDL
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
+    if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO))
     {
         error(SDL_GetError());
 
