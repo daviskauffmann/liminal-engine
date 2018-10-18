@@ -34,13 +34,24 @@ void object_calc_model(struct object *object, vec4 *model)
     glm_scale(model, object->scale);
 }
 
-void object_draw(struct object *object)
+void object_draw(struct object *object, struct program *program)
 {
+    mat4 model = GLM_MAT4_IDENTITY_INIT;
+    object_calc_model(object, model);
+
+    program_bind(program);
+
+    program_set_mat4(program_get_location(program, "object.model"), model);
+    program_set_vec3(program_get_location(program, "material.color"), object->material->color);
+    program_set_float(program_get_location(program, "material.shininess"), object->material->shininess);
+    program_set_float(program_get_location(program, "material.glow"), object->material->glow);
+
     material_bind(object->material);
 
     mesh_draw(object->mesh);
 
     material_unbind();
+    program_unbind();
 }
 
 void object_destroy(struct object *object)

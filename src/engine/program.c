@@ -96,6 +96,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
 GLint program_get_location(struct program *program, const char *name)
 {
+    // TODO: cache
     return glGetUniformLocation(program->program, name);
 }
 

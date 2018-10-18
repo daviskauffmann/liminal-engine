@@ -29,7 +29,7 @@ struct camera *camera_create(
     return camera;
 }
 
-void camera_calc_projection(struct camera *camera, vec4 *projection)
+void camera_calc_perspective(struct camera *camera, vec4 *projection)
 {
     glm_perspective(
         glm_rad(camera->fov),
@@ -37,6 +37,11 @@ void camera_calc_projection(struct camera *camera, vec4 *projection)
         0.01f,
         100.0f,
         projection);
+}
+
+void camera_calc_ortho(struct camera *camera, vec4 *projection)
+{
+    glm_ortho_default(window_get_aspect(), projection);
 }
 
 void camera_calc_view(struct camera *camera, vec4 *view)

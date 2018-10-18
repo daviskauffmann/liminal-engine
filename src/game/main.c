@@ -620,13 +620,22 @@ int main(int argc, char *argv[])
             }
         }
 
+        // update objects
+        for (int i = 0; i < num_objects; i++)
+        {
+            float angle = time_current() * 0.001f;
+            objects[i]->rotation[0] = angle;
+            objects[i]->rotation[1] = angle;
+            objects[i]->rotation[2] = angle;
+        }
+
         // update lights
         glm_vec_copy(camera->position, spot_light->position);
         glm_vec_copy(camera->front, spot_light->direction);
 
         // calculate matrices
         mat4 camera_projection;
-        camera_calc_projection(camera, camera_projection);
+        camera_calc_perspective(camera, camera_projection);
 
         mat4 camera_view;
         camera_calc_view(camera, camera_view);
@@ -688,39 +697,13 @@ int main(int argc, char *argv[])
         program_set_float(phong_program_spot_light_outerCutOff, spot_light->outerCutOff);
         program_unbind();
 
-        // update objects
-        for (int i = 0; i < num_objects; i++)
-        {
-            float angle = time_current() * 0.001f;
-            objects[i]->rotation[0] = angle;
-            objects[i]->rotation[1] = angle;
-            objects[i]->rotation[2] = angle;
-        }
-
         // clear the window
         window_clear();
 
         // draw objects
         for (int i = 0; i < num_objects; i++)
         {
-            mat4 model = GLM_MAT4_IDENTITY_INIT;
-            object_calc_model(objects[i], model);
-
-            program_bind(basic_program);
-            program_set_mat4(basic_program_object_model, model);
-            program_set_vec3(basic_program_material_color, objects[i]->material->color);
-            program_unbind();
-
-            program_bind(phong_program);
-            program_set_mat4(phong_program_object_model, model);
-            program_set_vec3(phong_program_material_color, objects[i]->material->color);
-            program_set_float(phong_program_material_shininess, objects[i]->material->shininess);
-            program_set_float(phong_program_material_glow, objects[i]->material->glow);
-            program_unbind();
-
-            program_bind(current_program);
-            object_draw(objects[i]);
-            program_unbind();
+            object_draw(objects[i], current_program);
         }
 
         // display the window
