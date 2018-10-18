@@ -14,7 +14,7 @@
 int main(int argc, char *argv[])
 {
     // setup engine
-    if (engine_init())
+    if (core_init())
     {
         return 1;
     }
@@ -32,6 +32,16 @@ int main(int argc, char *argv[])
             MIX_DEFAULT_FORMAT,
             MIX_DEFAULT_CHANNELS,
             1024))
+    {
+        return 1;
+    }
+
+    if (image_init())
+    {
+        return 1;
+    }
+
+    if (net_init())
     {
         return 1;
     }
@@ -273,9 +283,10 @@ int main(int argc, char *argv[])
     SDLNet_TCP_Close(tcp_socket);
 
     // close engine
+    image_quit();
     audio_quit();
     window_quit();
-    engine_quit();
+    core_quit();
 
     return 0;
 }

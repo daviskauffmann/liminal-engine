@@ -1,5 +1,5 @@
-#ifndef NET_H
-#define NET_H
+#ifndef UDP_H
+#define UDP_H
 
 #include <SDL/SDL_net.h>
 

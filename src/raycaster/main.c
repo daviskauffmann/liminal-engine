@@ -159,7 +159,7 @@ struct billboard billboards[NUM_BILLBOARDS] = {
 
 int main(int argc, char *args[])
 {
-    if (engine_init())
+    if (core_init())
     {
         return 1;
     }
@@ -169,6 +169,11 @@ int main(int argc, char *args[])
             MIX_DEFAULT_FORMAT,
             MIX_DEFAULT_CHANNELS,
             1024))
+    {
+        return 1;
+    }
+
+    if (image_init())
     {
         return 1;
     }
@@ -1037,7 +1042,9 @@ int main(int argc, char *args[])
     SDL_DestroyWindow(window);
 
     // close engine
-    engine_quit();
+    image_quit();
+    audio_quit();
+    core_quit();
 
     return 0;
 }

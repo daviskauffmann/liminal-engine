@@ -2,12 +2,6 @@
 
 static SDL_Window *window;
 static SDL_GLContext context;
-struct program *basic_program;
-struct program *phong_program;
-struct texture *default_texture;
-struct mesh *quad_mesh;
-struct mesh *cube_mesh;
-struct material *default_material;
 
 int window_init(const char *title, int width, int height)
 {
@@ -63,135 +57,6 @@ int window_init(const char *title, int width, int height)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_DEPTH_CLAMP);
     glEnable(GL_TEXTURE_2D);
-
-    // create shader programs
-    basic_program = program_create(
-        "../engine/assets/shaders/basic.vs",
-        "../engine/assets/shaders/basic.fs");
-
-    if (!basic_program)
-    {
-        return 1;
-    }
-
-    phong_program = program_create(
-        "../engine/assets/shaders/phong.vs",
-        "../engine/assets/shaders/phong.fs");
-
-    if (!phong_program)
-    {
-        return 1;
-    }
-
-    // create meshes
-    float quad_vertices[] = {
-        // position          // normal            // uv
-        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f, // top right
-        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f, // bottom left
-        -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f  // top left
-    };
-
-    unsigned int quad_indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
-
-    quad_mesh = mesh_create(
-        quad_vertices,
-        sizeof(quad_vertices),
-        quad_indices,
-        sizeof(quad_indices));
-
-    if (!quad_mesh)
-    {
-        return 1;
-    }
-
-    float cube_vertices[] = {
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f};
-
-    unsigned int cube_indices[] = {
-        0, 1, 2,
-        3, 4, 5,
-        6, 7, 8,
-        9, 10, 11,
-        12, 13, 14,
-        15, 16, 17,
-        18, 19, 20,
-        21, 22, 23,
-        24, 25, 26,
-        27, 28, 29,
-        30, 31, 32,
-        33, 34, 35};
-
-    cube_mesh = mesh_create(
-        cube_vertices,
-        sizeof(cube_vertices),
-        cube_indices,
-        sizeof(cube_indices));
-
-    if (!cube_mesh)
-    {
-        return 1;
-    }
-
-    // create textures
-    default_texture = texture_create("../engine/assets/images/default.png");
-
-    if (!default_texture)
-    {
-        return 1;
-    }
-
-    // create materials
-    default_material = material_create(
-        default_texture,
-        NULL,
-        NULL,
-        (vec3){1.0f, 1.0f, 1.0f},
-        32.0f,
-        1.0f);
-
-    if (!default_material)
-    {
-        return 1;
-    }
 
     return 0;
 }
@@ -258,12 +123,6 @@ void window_swap(void)
 
 void window_quit(void)
 {
-    material_destroy(default_material);
-    texture_destroy(default_texture);
-    mesh_destroy(cube_mesh);
-    mesh_destroy(quad_mesh);
-    program_destroy(phong_program);
-    program_destroy(basic_program);
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
 }
