@@ -22,7 +22,6 @@ struct object *object_create(
     vec3 rotation,
     vec3 scale);
 void object_calc_model(struct object *object, vec4 *model);
-void object_draw(struct object *object, struct program *program);
 void object_destroy(struct object *object);
 
 #endif
