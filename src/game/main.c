@@ -190,13 +190,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    struct mesh *monkey_mesh = mesh_create_obj("assets/models/monkey.obj");
-
-    if (!monkey_mesh)
-    {
-        return 1;
-    }
-
     // create textures
     struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
 
@@ -212,9 +205,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    struct texture *matrix_texture = texture_create("assets/images/matrix.jpg");
+    struct texture *cobble_diffuse_texture = texture_create("assets/images/cobble_diffuse.jpg");
 
-    if (!matrix_texture)
+    if (!cobble_diffuse_texture)
+    {
+        return 1;
+    }
+
+    struct texture *cobble_specular_texture = texture_create("assets/images/cobble_specular.jpg");
+
+    if (!cobble_specular_texture)
     {
         return 1;
     }
@@ -233,12 +233,31 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    struct material *cobble_material = material_create(
+        cobble_diffuse_texture,
+        cobble_specular_texture,
+        NULL,
+        (vec3){1.0f, 1.0f, 1.0f},
+        32.0f,
+        1.0f);
+
+    if (!cobble_material)
+    {
+        return 1;
+    }
+
     // create objects
     struct object *objects[] = {
         object_create(
             cube_mesh,
-            box_material,
+            cobble_material,
+            (vec3){0.0f, -2.0f, 0.0f},
             (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){10.0f, 1.0f, 10.0f}),
+        object_create(
+            cube_mesh,
+            box_material,
+            (vec3){0.0f, 1.0f, 0.0f},
             (vec3){0.0f, 0.0f, 0.0f},
             (vec3){1.0f, 1.0f, 1.0f})};
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
@@ -642,13 +661,10 @@ int main(int argc, char *argv[])
         }
 
         // update objects
-        for (int i = 0; i < num_objects; i++)
-        {
-            float angle = time_current() * 0.001f;
-            objects[i]->rotation[0] = angle;
-            objects[i]->rotation[1] = angle;
-            objects[i]->rotation[2] = angle;
-        }
+        float angle = time_current() * 0.001f;
+        objects[1]->rotation[0] = angle;
+        objects[1]->rotation[1] = angle;
+        objects[1]->rotation[2] = angle;
 
         // update lights
         glm_vec_copy(camera->position, spot_lights[0]->position);
@@ -679,9 +695,11 @@ int main(int argc, char *argv[])
                 program_bind(basic_program);
 
                 program_set_mat4(program_get_location(basic_program, "object.model"), model);
+
                 program_set_mat4(program_get_location(basic_program, "camera.projection"), camera_projection);
                 program_set_mat4(program_get_location(basic_program, "camera.view"), camera_view);
                 program_set_vec3(program_get_location(basic_program, "camera.position"), camera->position);
+
                 program_set_vec3(program_get_location(basic_program, "material.color"), objects[i]->material->color);
                 program_set_float(program_get_location(basic_program, "material.shininess"), objects[i]->material->shininess);
                 program_set_float(program_get_location(basic_program, "material.glow"), objects[i]->material->glow);
@@ -700,17 +718,22 @@ int main(int argc, char *argv[])
                 program_bind(phong_program);
 
                 program_set_mat4(program_get_location(phong_program, "object.model"), model);
+
                 program_set_mat4(program_get_location(phong_program, "camera.projection"), camera_projection);
                 program_set_mat4(program_get_location(phong_program, "camera.view"), camera_view);
                 program_set_vec3(program_get_location(phong_program, "camera.position"), camera->position);
+
                 program_set_vec3(program_get_location(phong_program, "material.color"), objects[i]->material->color);
                 program_set_float(program_get_location(phong_program, "material.shininess"), objects[i]->material->shininess);
                 program_set_float(program_get_location(phong_program, "material.glow"), objects[i]->material->glow);
+
                 program_set_vec3(program_get_location(phong_program, "ambient"), ambient);
+
                 program_set_vec3(program_get_location(phong_program, "directional_light.direction"), directional_lights[0]->direction);
                 program_set_vec3(program_get_location(phong_program, "directional_light.ambient"), directional_lights[0]->ambient);
                 program_set_vec3(program_get_location(phong_program, "directional_light.diffuse"), directional_lights[0]->diffuse);
                 program_set_vec3(program_get_location(phong_program, "directional_light.specular"), directional_lights[0]->specular);
+
                 program_set_vec3(program_get_location(phong_program, "point_lights[0].position"), point_lights[0]->position);
                 program_set_vec3(program_get_location(phong_program, "point_lights[0].ambient"), point_lights[0]->ambient);
                 program_set_vec3(program_get_location(phong_program, "point_lights[0].diffuse"), point_lights[0]->diffuse);
@@ -718,6 +741,7 @@ int main(int argc, char *argv[])
                 program_set_float(program_get_location(phong_program, "point_lights[0].constant"), point_lights[0]->constant);
                 program_set_float(program_get_location(phong_program, "point_lights[0].linear"), point_lights[0]->linear);
                 program_set_float(program_get_location(phong_program, "point_lights[0].quadratic"), point_lights[0]->quadratic);
+
                 program_set_vec3(program_get_location(phong_program, "point_lights[1].position"), point_lights[1]->position);
                 program_set_vec3(program_get_location(phong_program, "point_lights[1].ambient"), point_lights[1]->ambient);
                 program_set_vec3(program_get_location(phong_program, "point_lights[1].diffuse"), point_lights[1]->diffuse);
@@ -725,6 +749,7 @@ int main(int argc, char *argv[])
                 program_set_float(program_get_location(phong_program, "point_lights[1].constant"), point_lights[1]->constant);
                 program_set_float(program_get_location(phong_program, "point_lights[1].linear"), point_lights[1]->linear);
                 program_set_float(program_get_location(phong_program, "point_lights[1].quadratic"), point_lights[1]->quadratic);
+
                 program_set_vec3(program_get_location(phong_program, "point_lights[2].position"), point_lights[2]->position);
                 program_set_vec3(program_get_location(phong_program, "point_lights[2].ambient"), point_lights[2]->ambient);
                 program_set_vec3(program_get_location(phong_program, "point_lights[2].diffuse"), point_lights[2]->diffuse);
@@ -732,6 +757,7 @@ int main(int argc, char *argv[])
                 program_set_float(program_get_location(phong_program, "point_lights[2].constant"), point_lights[2]->constant);
                 program_set_float(program_get_location(phong_program, "point_lights[2].linear"), point_lights[2]->linear);
                 program_set_float(program_get_location(phong_program, "point_lights[2].quadratic"), point_lights[2]->quadratic);
+
                 program_set_vec3(program_get_location(phong_program, "point_lights[3].position"), point_lights[3]->position);
                 program_set_vec3(program_get_location(phong_program, "point_lights[3].ambient"), point_lights[3]->ambient);
                 program_set_vec3(program_get_location(phong_program, "point_lights[3].diffuse"), point_lights[3]->diffuse);
@@ -739,6 +765,7 @@ int main(int argc, char *argv[])
                 program_set_float(program_get_location(phong_program, "point_lights[3].constant"), point_lights[3]->constant);
                 program_set_float(program_get_location(phong_program, "point_lights[3].linear"), point_lights[3]->linear);
                 program_set_float(program_get_location(phong_program, "point_lights[3].quadratic"), point_lights[3]->quadratic);
+
                 program_set_vec3(program_get_location(phong_program, "spot_light.position"), spot_lights[0]->position);
                 program_set_vec3(program_get_location(phong_program, "spot_light.direction"), spot_lights[0]->direction);
                 program_set_vec3(program_get_location(phong_program, "spot_light.ambient"), spot_lights[0]->ambient);
@@ -764,12 +791,15 @@ int main(int argc, char *argv[])
                 program_bind(deferred_ambient_program);
 
                 program_set_mat4(program_get_location(deferred_ambient_program, "object.model"), model);
+
                 program_set_mat4(program_get_location(deferred_ambient_program, "camera.projection"), camera_projection);
                 program_set_mat4(program_get_location(deferred_ambient_program, "camera.view"), camera_view);
                 program_set_vec3(program_get_location(deferred_ambient_program, "camera.position"), camera->position);
+
                 program_set_vec3(program_get_location(deferred_ambient_program, "material.color"), objects[i]->material->color);
                 program_set_float(program_get_location(deferred_ambient_program, "material.shininess"), objects[i]->material->shininess);
                 program_set_float(program_get_location(deferred_ambient_program, "material.glow"), objects[i]->material->glow);
+
                 program_set_vec3(program_get_location(deferred_ambient_program, "ambient"), ambient);
 
                 material_bind(objects[i]->material);
@@ -790,12 +820,15 @@ int main(int argc, char *argv[])
                     program_bind(deferred_directional_program);
 
                     program_set_mat4(program_get_location(deferred_directional_program, "object.model"), model);
+
                     program_set_mat4(program_get_location(deferred_directional_program, "camera.projection"), camera_projection);
                     program_set_mat4(program_get_location(deferred_directional_program, "camera.view"), camera_view);
                     program_set_vec3(program_get_location(deferred_directional_program, "camera.position"), camera->position);
+
                     program_set_vec3(program_get_location(deferred_directional_program, "material.color"), objects[i]->material->color);
                     program_set_float(program_get_location(deferred_directional_program, "material.shininess"), objects[i]->material->shininess);
                     program_set_float(program_get_location(deferred_directional_program, "material.glow"), objects[i]->material->glow);
+
                     program_set_vec3(program_get_location(deferred_directional_program, "directional_light.direction"), directional_lights[j]->direction);
                     program_set_vec3(program_get_location(deferred_directional_program, "directional_light.ambient"), directional_lights[j]->ambient);
                     program_set_vec3(program_get_location(deferred_directional_program, "directional_light.diffuse"), directional_lights[j]->diffuse);
@@ -815,12 +848,15 @@ int main(int argc, char *argv[])
                     program_bind(deferred_point_program);
 
                     program_set_mat4(program_get_location(deferred_point_program, "object.model"), model);
+
                     program_set_mat4(program_get_location(deferred_point_program, "camera.projection"), camera_projection);
                     program_set_mat4(program_get_location(deferred_point_program, "camera.view"), camera_view);
                     program_set_vec3(program_get_location(deferred_point_program, "camera.position"), camera->position);
+
                     program_set_vec3(program_get_location(deferred_point_program, "material.color"), objects[i]->material->color);
                     program_set_float(program_get_location(deferred_point_program, "material.shininess"), objects[i]->material->shininess);
                     program_set_float(program_get_location(deferred_point_program, "material.glow"), objects[i]->material->glow);
+
                     program_set_vec3(program_get_location(deferred_point_program, "point_light.position"), point_lights[j]->position);
                     program_set_vec3(program_get_location(deferred_point_program, "point_light.ambient"), point_lights[j]->ambient);
                     program_set_vec3(program_get_location(deferred_point_program, "point_light.diffuse"), point_lights[j]->diffuse);
@@ -843,12 +879,15 @@ int main(int argc, char *argv[])
                     program_bind(deferred_spot_program);
 
                     program_set_mat4(program_get_location(deferred_spot_program, "object.model"), model);
+
                     program_set_mat4(program_get_location(deferred_spot_program, "camera.projection"), camera_projection);
                     program_set_mat4(program_get_location(deferred_spot_program, "camera.view"), camera_view);
                     program_set_vec3(program_get_location(deferred_spot_program, "camera.position"), camera->position);
+
                     program_set_vec3(program_get_location(deferred_spot_program, "material.color"), objects[i]->material->color);
                     program_set_float(program_get_location(deferred_spot_program, "material.shininess"), objects[i]->material->shininess);
                     program_set_float(program_get_location(deferred_spot_program, "material.glow"), objects[i]->material->glow);
+
                     program_set_vec3(program_get_location(deferred_spot_program, "spot_light.direction"), spot_lights[j]->direction);
                     program_set_vec3(program_get_location(deferred_spot_program, "spot_light.position"), spot_lights[j]->position);
                     program_set_vec3(program_get_location(deferred_spot_program, "spot_light.ambient"), spot_lights[j]->ambient);
@@ -859,6 +898,7 @@ int main(int argc, char *argv[])
                     program_set_float(program_get_location(deferred_spot_program, "spot_light.quadratic"), spot_lights[j]->quadratic);
                     program_set_float(program_get_location(deferred_spot_program, "spot_light.cutOff"), spot_lights[j]->cutOff);
                     program_set_float(program_get_location(deferred_spot_program, "spot_light.outerCutOff"), spot_lights[j]->outerCutOff);
+
                     material_bind(objects[i]->material);
 
                     mesh_draw(objects[i]->mesh);
@@ -903,10 +943,10 @@ int main(int argc, char *argv[])
         object_destroy(objects[i]);
     }
     material_destroy(box_material);
-    texture_destroy(matrix_texture);
+    texture_destroy(cobble_specular_texture);
+    texture_destroy(cobble_diffuse_texture);
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
-    mesh_destroy(monkey_mesh);
     mesh_destroy(cube_mesh);
     mesh_destroy(quad_mesh);
     program_destroy(deferred_spot_program);
