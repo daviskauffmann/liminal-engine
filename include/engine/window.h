@@ -12,7 +12,6 @@ float window_get_aspect(void);
 unsigned int window_get_flags(void);
 void window_toggle_fullscreen(void);
 void window_resize(int width, int height);
-void window_clear(void);
 void window_swap(void);
 void window_quit(void);
 

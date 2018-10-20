@@ -6,8 +6,6 @@
 
 #define NUM_TEXTURES 8
 #define NUM_SPRITES 3
-#define NUM_TRACKS 1
-#define NUM_SOUNDS 1
 
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
@@ -164,16 +162,12 @@ int main(int argc, char *args[])
         return 1;
     }
 
-    if (audio_init(
-            MIX_DEFAULT_FREQUENCY,
-            MIX_DEFAULT_FORMAT,
-            MIX_DEFAULT_CHANNELS,
-            1024))
+    if (image_init())
     {
         return 1;
     }
 
-    if (image_init())
+    if (font_init())
     {
         return 1;
     }
@@ -239,14 +233,6 @@ int main(int argc, char *args[])
     sprites[0] = bitmap_create("assets/images/barrel.png");
     sprites[1] = bitmap_create("assets/images/pillar.png");
     sprites[2] = bitmap_create("assets/images/greenlight.png");
-
-    // load music
-    Mix_Music *tracks[NUM_TRACKS];
-    tracks[0] = Mix_LoadMUS("assets/audio/background.mp3");
-
-    // load sounds
-    Mix_Chunk *sounds[NUM_SOUNDS];
-    sounds[0] = Mix_LoadWAV("assets/audio/shoot.wav");
 
     // load fonts
     TTF_Font *font = TTF_OpenFont("assets/fonts/VeraMono.ttf", 24);
@@ -338,33 +324,6 @@ int main(int argc, char *args[])
                 case SDLK_F6:
                 {
                     foggy = !foggy;
-                }
-                break;
-                case SDLK_1:
-                {
-                    if (Mix_PlayingMusic())
-                    {
-                        Mix_HaltMusic();
-                    }
-                    else
-                    {
-                        Mix_PlayMusic(tracks[0], -1);
-                    }
-                }
-                break;
-                case SDLK_2:
-                {
-                    if (Mix_PlayingMusic())
-                    {
-                        if (Mix_PausedMusic())
-                        {
-                            Mix_ResumeMusic();
-                        }
-                        else
-                        {
-                            Mix_PauseMusic();
-                        }
-                    }
                 }
                 break;
                 case SDLK_TAB:
@@ -470,19 +429,6 @@ int main(int argc, char *args[])
         if (keys[SDL_SCANCODE_E])
         {
             player_rotate(player, -angle);
-        }
-
-        // shooting
-        static float shoot_timer = 0.0f;
-        shoot_timer += time_delta();
-        if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
-        {
-            if (shoot_timer >= 0.25f)
-            {
-                shoot_timer = 0.0f;
-
-                Mix_PlayChannel(-1, sounds[0], 0);
-            }
         }
 
         // raycasting
@@ -1019,14 +965,6 @@ int main(int argc, char *args[])
     free(pixel_buffer);
     free(player);
     TTF_CloseFont(font);
-    for (int i = 0; i < NUM_TRACKS; i++)
-    {
-        Mix_FreeMusic(tracks[i]);
-    }
-    for (int i = 0; i < NUM_SOUNDS; i++)
-    {
-        Mix_FreeChunk(sounds[i]);
-    }
     for (int i = 0; i < NUM_TEXTURES; i++)
     {
         bitmap_destroy(textures[i]);
@@ -1043,7 +981,6 @@ int main(int argc, char *args[])
 
     // close engine
     image_quit();
-    audio_quit();
     core_quit();
 
     return 0;

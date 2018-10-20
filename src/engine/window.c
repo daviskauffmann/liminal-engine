@@ -49,15 +49,6 @@ int window_init(const char *title, int width, int height)
     info("GLEW %s", glewGetString(GLEW_VERSION));
     info("OpenGL %s", glGetString(GL_VERSION));
 
-    // configure OpenGL
-    glViewport(0, 0, width, height);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_DEPTH_CLAMP);
-    glEnable(GL_TEXTURE_2D);
-
     return 0;
 }
 
@@ -106,14 +97,8 @@ void window_toggle_fullscreen(void)
 void window_resize(int width, int height)
 {
     SDL_SetWindowSize(window, width, height);
-    glViewport(0, 0, width, height);
 
     info("Window resized to %dx%d", width, height);
-}
-
-void window_clear(void)
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void window_swap(void)
