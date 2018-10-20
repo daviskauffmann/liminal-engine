@@ -18,11 +18,15 @@ uniform struct Object
 
 out struct Vertex
 {
+    vec3 position;
+    vec3 normal;
     vec2 uv;
 } vertex;
 
 void main()
 {
     gl_Position = camera.projection * camera.view * object.model * vec4(position, 1.0);
+    vertex.position = vec3(object.model * vec4(position, 1.0));
+    vertex.normal = mat3(transpose(inverse(object.model))) * normal;
     vertex.uv = vec2(uv.x, 1 - uv.y);
 }
