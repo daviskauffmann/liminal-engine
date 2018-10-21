@@ -80,18 +80,9 @@ unsigned int window_get_flags(void)
     return SDL_GetWindowFlags(window);
 }
 
-void window_toggle_fullscreen(void)
+void window_set_fullscreen(unsigned int flags)
 {
-    unsigned int flags = SDL_GetWindowFlags(window);
-
-    if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
-    {
-        SDL_SetWindowFullscreen(window, 0);
-    }
-    else
-    {
-        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    }
+    SDL_SetWindowFullscreen(window, flags);
 }
 
 void window_resize(int width, int height)

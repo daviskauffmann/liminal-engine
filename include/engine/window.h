@@ -10,7 +10,7 @@ void window_set_title(const char *title);
 void window_get_size(int *width, int *height);
 float window_get_aspect(void);
 unsigned int window_get_flags(void);
-void window_toggle_fullscreen(void);
+void window_set_fullscreen(unsigned int flags);
 void window_resize(int width, int height);
 void window_swap(void);
 void window_quit(void);

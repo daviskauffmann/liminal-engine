@@ -9,7 +9,14 @@ static unsigned int fps = 0;
 
 void time_cap_fps(unsigned int fps_cap)
 {
-    frame_delay = 1000 / fps_cap;
+    if (fps_cap == 0)
+    {
+        frame_delay = 0;
+    }
+    else
+    {
+        frame_delay = 1000 / fps_cap;
+    }
 }
 
 void time_frame_start(void)
