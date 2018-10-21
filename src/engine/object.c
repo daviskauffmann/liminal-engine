@@ -34,15 +34,6 @@ void object_calc_model(struct object *object, vec4 *model)
     glm_scale(model, object->scale);
 }
 
-void object_draw(struct object *object)
-{
-    material_bind(object->material);
-
-    mesh_draw(object->mesh);
-
-    material_unbind();
-}
-
 void object_destroy(struct object *object)
 {
     free(object);

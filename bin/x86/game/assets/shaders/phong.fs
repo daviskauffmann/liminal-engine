@@ -21,6 +21,7 @@ uniform struct Material
 {
     sampler2D diffuse;
     sampler2D specular;
+    sampler2D normal;
     sampler2D emission;
     vec3 color;
     float shininess;

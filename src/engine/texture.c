@@ -56,18 +56,6 @@ struct texture *texture_create(const char *file)
     return texture;
 }
 
-void texture_bind(struct texture *texture, unsigned char num)
-{
-    glActiveTexture(GL_TEXTURE0 + num);
-    glBindTexture(GL_TEXTURE_2D, texture->texture);
-}
-
-void texture_unbind(unsigned char num)
-{
-    glActiveTexture(GL_TEXTURE0 + num);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 void texture_destroy(struct texture *texture)
 {
     glDeleteTextures(1, &texture->texture);

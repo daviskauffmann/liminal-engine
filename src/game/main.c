@@ -1,8 +1,8 @@
 #include <engine/engine.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1400
+#define WINDOW_HEIGHT 900
 
 #define SHADOW_WIDTH 1024
 #define SHADOW_HEIGHT 1024
@@ -198,6 +198,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    struct texture *box_normal_texture = texture_create("assets/images/box_normal.png");
+
+    if (!box_normal_texture)
+    {
+        return 1;
+    }
+
     struct texture *cobble_diffuse_texture = texture_create("assets/images/cobble_diffuse.jpg");
 
     if (!cobble_diffuse_texture)
@@ -216,6 +223,7 @@ int main(int argc, char *argv[])
     struct material *box_material = material_create(
         box_diffuse_texture,
         box_specular_texture,
+        box_normal_texture,
         NULL,
         (vec3){1.0f, 1.0f, 1.0f},
         32.0f,
@@ -229,6 +237,7 @@ int main(int argc, char *argv[])
     struct material *cobble_material = material_create(
         cobble_diffuse_texture,
         cobble_specular_texture,
+        NULL,
         NULL,
         (vec3){1.0f, 1.0f, 1.0f},
         32.0f,
@@ -736,12 +745,12 @@ int main(int argc, char *argv[])
 
             program_bind(depth_program);
 
-            program_set_mat4(program_get_location(depth_program, "sun.projection"), sun_projection);
-            program_set_mat4(program_get_location(depth_program, "sun.view"), sun_view);
+            program_set_mat4(depth_program, "sun.projection", sun_projection);
+            program_set_mat4(depth_program, "sun.view", sun_view);
 
-            program_set_mat4(program_get_location(depth_program, "object.model"), model);
+            program_set_mat4(depth_program, "object.model", model);
 
-            object_draw(objects[i]);
+            mesh_draw(objects[i]->mesh);
 
             program_unbind();
         }
@@ -779,15 +788,15 @@ int main(int argc, char *argv[])
             {
                 program_bind(basic_program);
 
-                program_set_mat4(program_get_location(basic_program, "camera.projection"), camera_projection);
-                program_set_mat4(program_get_location(basic_program, "camera.view"), camera_view);
-                program_set_vec3(program_get_location(basic_program, "camera.position"), camera->position);
+                program_set_mat4(basic_program, "camera.projection", camera_projection);
+                program_set_mat4(basic_program, "camera.view", camera_view);
+                program_set_vec3(basic_program, "camera.position", camera->position);
 
-                program_set_mat4(program_get_location(basic_program, "object.model"), model);
+                program_set_mat4(basic_program, "object.model", model);
 
-                program_set_vec3(program_get_location(basic_program, "material.color"), objects[i]->material->color);
+                program_set_vec3(basic_program, "material.color", objects[i]->material->color);
 
-                object_draw(objects[i]);
+                mesh_draw(objects[i]->mesh);
 
                 program_unbind();
             }
@@ -796,16 +805,16 @@ int main(int argc, char *argv[])
             {
                 program_bind(textured_program);
 
-                program_set_mat4(program_get_location(textured_program, "camera.projection"), camera_projection);
-                program_set_mat4(program_get_location(textured_program, "camera.view"), camera_view);
-                program_set_vec3(program_get_location(textured_program, "camera.position"), camera->position);
+                program_set_mat4(textured_program, "camera.projection", camera_projection);
+                program_set_mat4(textured_program, "camera.view", camera_view);
+                program_set_vec3(textured_program, "camera.position", camera->position);
 
-                program_set_mat4(program_get_location(textured_program, "object.model"), model);
+                program_set_mat4(textured_program, "object.model", model);
 
-                program_set_int(program_get_location(textured_program, "material.diffuse"), 0);
-                program_set_vec3(program_get_location(textured_program, "material.color"), objects[i]->material->color);
+                program_set_texture(textured_program, "material.diffuse", 0, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
+                program_set_vec3(textured_program, "material.color", objects[i]->material->color);
 
-                object_draw(objects[i]);
+                mesh_draw(objects[i]->mesh);
 
                 program_unbind();
             }
@@ -814,78 +823,76 @@ int main(int argc, char *argv[])
             {
                 program_bind(phong_program);
 
-                program_set_mat4(program_get_location(phong_program, "camera.projection"), camera_projection);
-                program_set_mat4(program_get_location(phong_program, "camera.view"), camera_view);
-                program_set_vec3(program_get_location(phong_program, "camera.position"), camera->position);
+                program_set_mat4(phong_program, "camera.projection", camera_projection);
+                program_set_mat4(phong_program, "camera.view", camera_view);
+                program_set_vec3(phong_program, "camera.position", camera->position);
 
-                program_set_mat4(program_get_location(phong_program, "object.model"), model);
+                program_set_mat4(phong_program, "object.model", model);
 
-                program_set_int(program_get_location(phong_program, "material.diffuse"), 0);
-                program_set_int(program_get_location(phong_program, "material.specular"), 1);
-                program_set_int(program_get_location(phong_program, "material.emission"), 2);
-                program_set_vec3(program_get_location(phong_program, "material.color"), objects[i]->material->color);
-                program_set_float(program_get_location(phong_program, "material.shininess"), objects[i]->material->shininess);
-                program_set_float(program_get_location(phong_program, "material.glow"), objects[i]->material->glow);
+                program_set_texture(phong_program, "material.diffuse", 0, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
+                program_set_texture(phong_program, "material.specular", 1, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
+                program_set_texture(phong_program, "material.normal", 2, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
+                program_set_texture(phong_program, "material.emission", 3, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
+                program_set_vec3(phong_program, "material.color", objects[i]->material->color);
+                program_set_float(phong_program, "material.shininess", objects[i]->material->shininess);
+                program_set_float(phong_program, "material.glow", objects[i]->material->glow);
 
-                program_set_mat4(program_get_location(phong_program, "sun.projection"), sun_projection);
-                program_set_mat4(program_get_location(phong_program, "sun.view"), sun_view);
+                program_set_mat4(phong_program, "sun.projection", sun_projection);
+                program_set_mat4(phong_program, "sun.view", sun_view);
 
-                program_set_vec3(program_get_location(phong_program, "ambient"), ambient);
+                program_set_vec3(phong_program, "ambient", ambient);
 
-                program_set_vec3(program_get_location(phong_program, "directional_light.direction"), directional_light->direction);
-                program_set_vec3(program_get_location(phong_program, "directional_light.ambient"), directional_light->ambient);
-                program_set_vec3(program_get_location(phong_program, "directional_light.diffuse"), directional_light->diffuse);
-                program_set_vec3(program_get_location(phong_program, "directional_light.specular"), directional_light->specular);
+                program_set_vec3(phong_program, "directional_light.direction", directional_light->direction);
+                program_set_vec3(phong_program, "directional_light.ambient", directional_light->ambient);
+                program_set_vec3(phong_program, "directional_light.diffuse", directional_light->diffuse);
+                program_set_vec3(phong_program, "directional_light.specular", directional_light->specular);
 
-                program_set_vec3(program_get_location(phong_program, "point_lights[0].position"), point_lights[0]->position);
-                program_set_vec3(program_get_location(phong_program, "point_lights[0].ambient"), point_lights[0]->ambient);
-                program_set_vec3(program_get_location(phong_program, "point_lights[0].diffuse"), point_lights[0]->diffuse);
-                program_set_vec3(program_get_location(phong_program, "point_lights[0].specular"), point_lights[0]->specular);
-                program_set_float(program_get_location(phong_program, "point_lights[0].constant"), point_lights[0]->constant);
-                program_set_float(program_get_location(phong_program, "point_lights[0].linear"), point_lights[0]->linear);
-                program_set_float(program_get_location(phong_program, "point_lights[0].quadratic"), point_lights[0]->quadratic);
+                program_set_vec3(phong_program, "point_lights[0].position", point_lights[0]->position);
+                program_set_vec3(phong_program, "point_lights[0].ambient", point_lights[0]->ambient);
+                program_set_vec3(phong_program, "point_lights[0].diffuse", point_lights[0]->diffuse);
+                program_set_vec3(phong_program, "point_lights[0].specular", point_lights[0]->specular);
+                program_set_float(phong_program, "point_lights[0].constant", point_lights[0]->constant);
+                program_set_float(phong_program, "point_lights[0].linear", point_lights[0]->linear);
+                program_set_float(phong_program, "point_lights[0].quadratic", point_lights[0]->quadratic);
 
-                program_set_vec3(program_get_location(phong_program, "point_lights[1].position"), point_lights[1]->position);
-                program_set_vec3(program_get_location(phong_program, "point_lights[1].ambient"), point_lights[1]->ambient);
-                program_set_vec3(program_get_location(phong_program, "point_lights[1].diffuse"), point_lights[1]->diffuse);
-                program_set_vec3(program_get_location(phong_program, "point_lights[1].specular"), point_lights[1]->specular);
-                program_set_float(program_get_location(phong_program, "point_lights[1].constant"), point_lights[1]->constant);
-                program_set_float(program_get_location(phong_program, "point_lights[1].linear"), point_lights[1]->linear);
-                program_set_float(program_get_location(phong_program, "point_lights[1].quadratic"), point_lights[1]->quadratic);
+                program_set_vec3(phong_program, "point_lights[1].position", point_lights[1]->position);
+                program_set_vec3(phong_program, "point_lights[1].ambient", point_lights[1]->ambient);
+                program_set_vec3(phong_program, "point_lights[1].diffuse", point_lights[1]->diffuse);
+                program_set_vec3(phong_program, "point_lights[1].specular", point_lights[1]->specular);
+                program_set_float(phong_program, "point_lights[1].constant", point_lights[1]->constant);
+                program_set_float(phong_program, "point_lights[1].linear", point_lights[1]->linear);
+                program_set_float(phong_program, "point_lights[1].quadratic", point_lights[1]->quadratic);
 
-                program_set_vec3(program_get_location(phong_program, "point_lights[2].position"), point_lights[2]->position);
-                program_set_vec3(program_get_location(phong_program, "point_lights[2].ambient"), point_lights[2]->ambient);
-                program_set_vec3(program_get_location(phong_program, "point_lights[2].diffuse"), point_lights[2]->diffuse);
-                program_set_vec3(program_get_location(phong_program, "point_lights[2].specular"), point_lights[2]->specular);
-                program_set_float(program_get_location(phong_program, "point_lights[2].constant"), point_lights[2]->constant);
-                program_set_float(program_get_location(phong_program, "point_lights[2].linear"), point_lights[2]->linear);
-                program_set_float(program_get_location(phong_program, "point_lights[2].quadratic"), point_lights[2]->quadratic);
+                program_set_vec3(phong_program, "point_lights[2].position", point_lights[2]->position);
+                program_set_vec3(phong_program, "point_lights[2].ambient", point_lights[2]->ambient);
+                program_set_vec3(phong_program, "point_lights[2].diffuse", point_lights[2]->diffuse);
+                program_set_vec3(phong_program, "point_lights[2].specular", point_lights[2]->specular);
+                program_set_float(phong_program, "point_lights[2].constant", point_lights[2]->constant);
+                program_set_float(phong_program, "point_lights[2].linear", point_lights[2]->linear);
+                program_set_float(phong_program, "point_lights[2].quadratic", point_lights[2]->quadratic);
 
-                program_set_vec3(program_get_location(phong_program, "point_lights[3].position"), point_lights[3]->position);
-                program_set_vec3(program_get_location(phong_program, "point_lights[3].ambient"), point_lights[3]->ambient);
-                program_set_vec3(program_get_location(phong_program, "point_lights[3].diffuse"), point_lights[3]->diffuse);
-                program_set_vec3(program_get_location(phong_program, "point_lights[3].specular"), point_lights[3]->specular);
-                program_set_float(program_get_location(phong_program, "point_lights[3].constant"), point_lights[3]->constant);
-                program_set_float(program_get_location(phong_program, "point_lights[3].linear"), point_lights[3]->linear);
-                program_set_float(program_get_location(phong_program, "point_lights[3].quadratic"), point_lights[3]->quadratic);
+                program_set_vec3(phong_program, "point_lights[3].position", point_lights[3]->position);
+                program_set_vec3(phong_program, "point_lights[3].ambient", point_lights[3]->ambient);
+                program_set_vec3(phong_program, "point_lights[3].diffuse", point_lights[3]->diffuse);
+                program_set_vec3(phong_program, "point_lights[3].specular", point_lights[3]->specular);
+                program_set_float(phong_program, "point_lights[3].constant", point_lights[3]->constant);
+                program_set_float(phong_program, "point_lights[3].linear", point_lights[3]->linear);
+                program_set_float(phong_program, "point_lights[3].quadratic", point_lights[3]->quadratic);
 
-                program_set_vec3(program_get_location(phong_program, "spot_light.position"), spot_light->position);
-                program_set_vec3(program_get_location(phong_program, "spot_light.direction"), spot_light->direction);
-                program_set_vec3(program_get_location(phong_program, "spot_light.ambient"), spot_light->ambient);
-                program_set_vec3(program_get_location(phong_program, "spot_light.diffuse"), spot_light->diffuse);
-                program_set_vec3(program_get_location(phong_program, "spot_light.specular"), spot_light->specular);
-                program_set_float(program_get_location(phong_program, "spot_light.constant"), spot_light->constant);
-                program_set_float(program_get_location(phong_program, "spot_light.linear"), spot_light->linear);
-                program_set_float(program_get_location(phong_program, "spot_light.quadratic"), spot_light->quadratic);
-                program_set_float(program_get_location(phong_program, "spot_light.cutOff"), spot_light->cutOff);
-                program_set_float(program_get_location(phong_program, "spot_light.outerCutOff"), spot_light->outerCutOff);
+                program_set_vec3(phong_program, "spot_light.position", spot_light->position);
+                program_set_vec3(phong_program, "spot_light.direction", spot_light->direction);
+                program_set_vec3(phong_program, "spot_light.ambient", spot_light->ambient);
+                program_set_vec3(phong_program, "spot_light.diffuse", spot_light->diffuse);
+                program_set_vec3(phong_program, "spot_light.specular", spot_light->specular);
+                program_set_float(phong_program, "spot_light.constant", spot_light->constant);
+                program_set_float(phong_program, "spot_light.linear", spot_light->linear);
+                program_set_float(phong_program, "spot_light.quadratic", spot_light->quadratic);
+                program_set_float(phong_program, "spot_light.cutOff", spot_light->cutOff);
+                program_set_float(phong_program, "spot_light.outerCutOff", spot_light->outerCutOff);
 
-                program_set_int(program_get_location(phong_program, "depthmap.texture"), 3);
+                program_set_texture(phong_program, "depthmap.texture", 4, depthmap_texture);
 
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, depthmap_texture);
-
-                object_draw(objects[i]);
+                mesh_draw(objects[i]->mesh);
 
                 program_unbind();
             }
@@ -904,14 +911,9 @@ int main(int argc, char *argv[])
 
         program_bind(post_program);
 
-        program_set_int(program_get_location(post_program, "screen.texture"), 0);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, screen_texture);
+        program_set_texture(post_program, "screen.texture", 0, screen_texture);
 
         mesh_draw(quad_mesh);
-
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         program_unbind();
 
@@ -921,6 +923,9 @@ int main(int argc, char *argv[])
         // end of frame activities
         time_frame_end();
     }
+
+    glDeleteTextures(1, &depthmap_texture);
+    glDeleteFramebuffers(1, &depthmap_fbo);
 
     glDeleteRenderbuffers(1, &screen_rbo);
     glDeleteTextures(1, &screen_texture);
@@ -942,6 +947,7 @@ int main(int argc, char *argv[])
     material_destroy(box_material);
     texture_destroy(cobble_specular_texture);
     texture_destroy(cobble_diffuse_texture);
+    texture_destroy(box_normal_texture);
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
     mesh_destroy(cube_mesh);

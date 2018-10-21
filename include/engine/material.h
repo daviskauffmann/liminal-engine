@@ -9,6 +9,7 @@ struct material
 {
     struct texture *diffuse;
     struct texture *specular;
+    struct texture *normal;
     struct texture *emission;
     vec3 color;
     float shininess;
@@ -18,12 +19,11 @@ struct material
 struct material *material_create(
     struct texture *diffuse,
     struct texture *specular,
+    struct texture *normal,
     struct texture *emission,
     vec3 color,
     float shininess,
     float glow);
-void material_bind(struct material *material);
-void material_unbind(void);
 void material_destroy(struct material *material);
 
 #endif
