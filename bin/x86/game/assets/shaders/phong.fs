@@ -7,6 +7,7 @@ in struct Vertex
     vec3 position;
     vec3 normal;
     vec2 uv;
+    vec4 light_space_position;
 } vertex;
 
 uniform struct Camera
@@ -61,6 +62,10 @@ uniform struct SpotLight
     float outerCutOff;
 } spot_light;
 
+uniform struct Depthmap {
+    sampler2D texture;
+} depthmap;
+
 vec3 calc_directional_light(DirectionalLight light, vec3 normal, vec3 view_direction);
 vec3 calc_point_light(PointLight light, vec3 normal, vec3 view_direction);
 vec3 calc_spot_light(SpotLight light, vec3 normal, vec3 view_direction);
@@ -108,7 +113,17 @@ vec3 calc_directional_light(DirectionalLight light, vec3 normal, vec3 view_direc
     float spec = pow(max(dot(view_direction, reflect_direction), 0.0), material.shininess);
     vec3 specular = light.specular * spec * vec3(texture(material.specular, vertex.uv)) * material.color;
 
-    return ambient + diffuse + specular;
+    // shadow
+    vec3 proj_coords = (vertex.light_space_position.xyz / vertex.light_space_position.w) * 0.5 + 0.5;
+    float current_depth = proj_coords.z;
+    float closest_depth = texture(depthmap.texture, proj_coords.xy).r;
+    float bias = max(0.05 * (1.0 - dot(vertex.normal, light_direction)), 0.005); 
+    float shadow = current_depth - bias > closest_depth  ? 1.0 : 0.0;
+    if (proj_coords.z > 1.0) shadow = 0.0;
+
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular));
+
+    return lighting;
 }
 
 vec3 calc_point_light(PointLight light, vec3 normal, vec3 view_direction)

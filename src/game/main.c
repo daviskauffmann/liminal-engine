@@ -12,6 +12,7 @@
 enum lighting
 {
     LIGHTING_BASIC,
+    LIGHTING_TEXTURED,
     LIGHTING_PHONG
 };
 
@@ -55,6 +56,14 @@ int main(int argc, char *argv[])
         "assets/shaders/basic.fs");
 
     if (!basic_program)
+    {
+        return 1;
+    }
+    struct program *textured_program = program_create(
+        "assets/shaders/textured.vs",
+        "assets/shaders/textured.fs");
+
+    if (!textured_program)
     {
         return 1;
     }
@@ -243,7 +252,31 @@ int main(int argc, char *argv[])
             box_material,
             (vec3){0.0f, 1.0f, 0.0f},
             (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f})};
+            (vec3){1.0f, 1.0f, 1.0f}),
+        object_create(
+            cube_mesh,
+            box_material,
+            (vec3){2.0f, -0.5f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.5f, 0.5f, 0.5f}),
+        object_create(
+            cube_mesh,
+            box_material,
+            (vec3){0.0f, -0.5f, 2.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.5f, 0.5f, 0.5f}),
+        object_create(
+            cube_mesh,
+            box_material,
+            (vec3){-2.0f, -0.5f, 0.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.5f, 0.5f, 0.5f}),
+        object_create(
+            cube_mesh,
+            box_material,
+            (vec3){0.0f, -0.5f, -2.0f},
+            (vec3){0.0f, 0.0f, 0.0f},
+            (vec3){0.5f, 0.5f, 0.5f})};
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
 
     for (int i = 0; i < num_objects; i++)
@@ -257,20 +290,15 @@ int main(int argc, char *argv[])
     // create lights
     vec3 ambient = {0.1f, 0.1f, 0.1f};
 
-    struct directional_light *directional_lights[] = {
-        directional_light_create(
-            (vec3){-0.2f, -1.0f, -0.3f},
-            (vec3){0.05f, 0.05f, 0.05f},
-            (vec3){0.4f, 0.4f, 0.4f},
-            (vec3){1.0f, 1.0f, 1.0f})};
-    const unsigned int num_directional_lights = sizeof(directional_lights) / sizeof(struct directional_light *);
+    struct directional_light *directional_light = directional_light_create(
+        (vec3){-0.2f, -1.0f, -0.3f},
+        (vec3){0.05f, 0.05f, 0.05f},
+        (vec3){0.4f, 0.4f, 0.4f},
+        (vec3){1.0f, 1.0f, 1.0f});
 
-    for (int i = 0; i < num_directional_lights; i++)
+    if (!directional_light)
     {
-        if (!directional_lights[i])
-        {
-            return 1;
-        }
+        return 1;
     }
 
     struct point_light *point_lights[] = {
@@ -320,26 +348,21 @@ int main(int argc, char *argv[])
         }
     }
 
-    struct spot_light *spot_lights[] = {
-        spot_light_create(
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            1.0f,
-            0.09f,
-            0.032f,
-            cosf(glm_rad(12.5f)),
-            cosf(glm_rad(15.0f)))};
-    const unsigned int num_spot_lights = sizeof(spot_lights) / sizeof(struct spot_light *);
+    struct spot_light *spot_light = spot_light_create(
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        (vec3){0.0f, 0.0f, 0.0f},
+        1.0f,
+        0.09f,
+        0.032f,
+        cosf(glm_rad(12.5f)),
+        cosf(glm_rad(15.0f)));
 
-    for (int i = 0; i < num_spot_lights; i++)
+    if (!spot_light)
     {
-        if (!spot_lights[i])
-        {
-            return 1;
-        }
+        return 1;
     }
 
     // create camera
@@ -427,8 +450,9 @@ int main(int argc, char *argv[])
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, (GLfloat[4]){1.0f, 1.0f, 1.0f, 1.0f});
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthmap_texture, 0);
     glDrawBuffer(GL_NONE);
@@ -511,6 +535,11 @@ int main(int argc, char *argv[])
                 }
                 break;
                 case SDLK_F2:
+                {
+                    lighting = LIGHTING_TEXTURED;
+                }
+                break;
+                case SDLK_F3:
                 {
                     lighting = LIGHTING_PHONG;
                 }
@@ -679,8 +708,8 @@ int main(int argc, char *argv[])
         objects[1]->rotation[2] = angle;
 
         // update lights
-        glm_vec_copy(camera->position, spot_lights[0]->position);
-        glm_vec_copy(camera->front, spot_lights[0]->direction);
+        glm_vec_copy(camera->position, spot_light->position);
+        glm_vec_copy(camera->front, spot_light->direction);
 
         // bind depthmap fbo
         glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo);
@@ -688,6 +717,7 @@ int main(int argc, char *argv[])
         // draw scene
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         // calculate sun projection matrix
         mat4 sun_projection;
@@ -706,10 +736,10 @@ int main(int argc, char *argv[])
 
             program_bind(depth_program);
 
-            program_set_mat4(program_get_location(basic_program, "sun.projection"), sun_projection);
-            program_set_mat4(program_get_location(basic_program, "sun.view"), sun_view);
+            program_set_mat4(program_get_location(depth_program, "sun.projection"), sun_projection);
+            program_set_mat4(program_get_location(depth_program, "sun.view"), sun_view);
 
-            program_set_mat4(program_get_location(basic_program, "object.model"), model);
+            program_set_mat4(program_get_location(depth_program, "object.model"), model);
 
             object_draw(objects[i]);
 
@@ -755,8 +785,25 @@ int main(int argc, char *argv[])
 
                 program_set_mat4(program_get_location(basic_program, "object.model"), model);
 
-                program_set_int(program_get_location(basic_program, "material.diffuse"), 0);
                 program_set_vec3(program_get_location(basic_program, "material.color"), objects[i]->material->color);
+
+                object_draw(objects[i]);
+
+                program_unbind();
+            }
+            break;
+            case LIGHTING_TEXTURED:
+            {
+                program_bind(textured_program);
+
+                program_set_mat4(program_get_location(textured_program, "camera.projection"), camera_projection);
+                program_set_mat4(program_get_location(textured_program, "camera.view"), camera_view);
+                program_set_vec3(program_get_location(textured_program, "camera.position"), camera->position);
+
+                program_set_mat4(program_get_location(textured_program, "object.model"), model);
+
+                program_set_int(program_get_location(textured_program, "material.diffuse"), 0);
+                program_set_vec3(program_get_location(textured_program, "material.color"), objects[i]->material->color);
 
                 object_draw(objects[i]);
 
@@ -780,12 +827,15 @@ int main(int argc, char *argv[])
                 program_set_float(program_get_location(phong_program, "material.shininess"), objects[i]->material->shininess);
                 program_set_float(program_get_location(phong_program, "material.glow"), objects[i]->material->glow);
 
+                program_set_mat4(program_get_location(phong_program, "sun.projection"), sun_projection);
+                program_set_mat4(program_get_location(phong_program, "sun.view"), sun_view);
+
                 program_set_vec3(program_get_location(phong_program, "ambient"), ambient);
 
-                program_set_vec3(program_get_location(phong_program, "directional_light.direction"), directional_lights[0]->direction);
-                program_set_vec3(program_get_location(phong_program, "directional_light.ambient"), directional_lights[0]->ambient);
-                program_set_vec3(program_get_location(phong_program, "directional_light.diffuse"), directional_lights[0]->diffuse);
-                program_set_vec3(program_get_location(phong_program, "directional_light.specular"), directional_lights[0]->specular);
+                program_set_vec3(program_get_location(phong_program, "directional_light.direction"), directional_light->direction);
+                program_set_vec3(program_get_location(phong_program, "directional_light.ambient"), directional_light->ambient);
+                program_set_vec3(program_get_location(phong_program, "directional_light.diffuse"), directional_light->diffuse);
+                program_set_vec3(program_get_location(phong_program, "directional_light.specular"), directional_light->specular);
 
                 program_set_vec3(program_get_location(phong_program, "point_lights[0].position"), point_lights[0]->position);
                 program_set_vec3(program_get_location(phong_program, "point_lights[0].ambient"), point_lights[0]->ambient);
@@ -819,16 +869,21 @@ int main(int argc, char *argv[])
                 program_set_float(program_get_location(phong_program, "point_lights[3].linear"), point_lights[3]->linear);
                 program_set_float(program_get_location(phong_program, "point_lights[3].quadratic"), point_lights[3]->quadratic);
 
-                program_set_vec3(program_get_location(phong_program, "spot_light.position"), spot_lights[0]->position);
-                program_set_vec3(program_get_location(phong_program, "spot_light.direction"), spot_lights[0]->direction);
-                program_set_vec3(program_get_location(phong_program, "spot_light.ambient"), spot_lights[0]->ambient);
-                program_set_vec3(program_get_location(phong_program, "spot_light.diffuse"), spot_lights[0]->diffuse);
-                program_set_vec3(program_get_location(phong_program, "spot_light.specular"), spot_lights[0]->specular);
-                program_set_float(program_get_location(phong_program, "spot_light.constant"), spot_lights[0]->constant);
-                program_set_float(program_get_location(phong_program, "spot_light.linear"), spot_lights[0]->linear);
-                program_set_float(program_get_location(phong_program, "spot_light.quadratic"), spot_lights[0]->quadratic);
-                program_set_float(program_get_location(phong_program, "spot_light.cutOff"), spot_lights[0]->cutOff);
-                program_set_float(program_get_location(phong_program, "spot_light.outerCutOff"), spot_lights[0]->outerCutOff);
+                program_set_vec3(program_get_location(phong_program, "spot_light.position"), spot_light->position);
+                program_set_vec3(program_get_location(phong_program, "spot_light.direction"), spot_light->direction);
+                program_set_vec3(program_get_location(phong_program, "spot_light.ambient"), spot_light->ambient);
+                program_set_vec3(program_get_location(phong_program, "spot_light.diffuse"), spot_light->diffuse);
+                program_set_vec3(program_get_location(phong_program, "spot_light.specular"), spot_light->specular);
+                program_set_float(program_get_location(phong_program, "spot_light.constant"), spot_light->constant);
+                program_set_float(program_get_location(phong_program, "spot_light.linear"), spot_light->linear);
+                program_set_float(program_get_location(phong_program, "spot_light.quadratic"), spot_light->quadratic);
+                program_set_float(program_get_location(phong_program, "spot_light.cutOff"), spot_light->cutOff);
+                program_set_float(program_get_location(phong_program, "spot_light.outerCutOff"), spot_light->outerCutOff);
+
+                program_set_int(program_get_location(phong_program, "depthmap.texture"), 3);
+
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, depthmap_texture);
 
                 object_draw(objects[i]);
 
@@ -874,18 +929,12 @@ int main(int argc, char *argv[])
     // free resources
     Mix_FreeChunk(shoot_sound);
     Mix_FreeMusic(background_music);
-    for (int i = 0; i < num_spot_lights; i++)
-    {
-        spot_light_destroy(spot_lights[i]);
-    }
+    spot_light_destroy(spot_light);
     for (int i = 0; i < num_point_lights; i++)
     {
         point_light_destroy(point_lights[i]);
     }
-    for (int i = 0; i < num_directional_lights; i++)
-    {
-        directional_light_destroy(directional_lights[i]);
-    }
+    directional_light_destroy(directional_light);
     for (int i = 0; i < num_objects; i++)
     {
         object_destroy(objects[i]);
