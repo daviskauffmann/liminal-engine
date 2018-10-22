@@ -12,13 +12,13 @@ struct mesh
     int indices_size;
 };
 
-struct mesh *mesh_create(
+struct mesh ENGINE_API *mesh_create(
     float *vertices,
     unsigned int vertices_size,
     unsigned int *indices,
     unsigned int indices_size);
-struct mesh *mesh_create_obj(const char *file);
-void mesh_draw(struct mesh *mesh);
-void mesh_destroy(struct mesh *mesh);
+struct mesh ENGINE_API *mesh_create_obj(const char *file);
+void ENGINE_API mesh_draw(struct mesh *mesh);
+void ENGINE_API mesh_destroy(struct mesh *mesh);
 
 #endif

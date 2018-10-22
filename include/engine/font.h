@@ -1,7 +1,7 @@
 #ifndef FONT_H
 #define FONT_H
 
-int font_init(void);
-void font_quit(void);
+int ENGINE_API font_init(void);
+void ENGINE_API font_quit(void);
 
 #endif

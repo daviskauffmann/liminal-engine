@@ -8,9 +8,9 @@ struct bitmap
     unsigned int *pixels;
 };
 
-struct bitmap *bitmap_create(const char *file);
-unsigned int bitmap_get_pixel(struct bitmap *bitmap, int x, int y);
-void bitmap_set_pixel(struct bitmap *bitmap, int x, int y, unsigned int color);
-void bitmap_destroy(struct bitmap *bitmap);
+struct bitmap ENGINE_API *bitmap_create(const char *file);
+unsigned int ENGINE_API bitmap_get_pixel(struct bitmap *bitmap, int x, int y);
+void ENGINE_API bitmap_set_pixel(struct bitmap *bitmap, int x, int y, unsigned int color);
+void ENGINE_API bitmap_destroy(struct bitmap *bitmap);
 
 #endif

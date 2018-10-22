@@ -8,7 +8,7 @@ struct texture
     GLuint texture;
 };
 
-struct texture *texture_create(const char *file);
-void texture_destroy(struct texture *texture);
+struct texture ENGINE_API *texture_create(const char *file);
+void ENGINE_API texture_destroy(struct texture *texture);
 
 #endif

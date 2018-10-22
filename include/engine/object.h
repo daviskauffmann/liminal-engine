@@ -15,13 +15,13 @@ struct object
     vec3 scale;
 };
 
-struct object *object_create(
+struct object ENGINE_API *object_create(
     struct mesh *mesh,
     struct material *material,
     vec3 position,
     vec3 rotation,
     vec3 scale);
-void object_calc_model(struct object *object, vec4 *model);
-void object_destroy(struct object *object);
+void ENGINE_API object_calc_model(struct object *object, vec4 *model);
+void ENGINE_API object_destroy(struct object *object);
 
 #endif

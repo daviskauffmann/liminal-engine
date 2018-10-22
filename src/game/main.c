@@ -1,17 +1,19 @@
 #include <engine/engine.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
+
+#define RENDER_SCALE 0.5f
 
 #define SHADOW_WIDTH 1024
 #define SHADOW_HEIGHT 1024
 
-#define FPS_CAP 60
+#define FPS_CAP 120
 
 enum lighting
 {
-    LIGHTING_TEXTURED,
+    LIGHTING_DIFFUSE,
     LIGHTING_PHONG
 };
 
@@ -47,14 +49,16 @@ int main(int argc, char *argv[])
 
     time_cap_fps(FPS_CAP);
 
+    window_set_fullscreen(SDL_WINDOW_FULLSCREEN_DESKTOP);
+
     SDL_SetRelativeMouseMode(true);
 
     // create programs
-    struct program *textured_program = program_create(
-        "assets/shaders/textured.vs",
-        "assets/shaders/textured.fs");
+    struct program *diffuse_program = program_create(
+        "assets/shaders/diffuse.vs",
+        "assets/shaders/diffuse.fs");
 
-    if (!textured_program)
+    if (!diffuse_program)
     {
         return 1;
     }
@@ -194,13 +198,6 @@ int main(int argc, char *argv[])
     struct texture *box_specular_texture = texture_create("assets/images/box_specular.png");
 
     if (!box_specular_texture)
-    {
-        return 1;
-    }
-
-    struct texture *box_normal_texture = texture_create("assets/images/box_normal.png");
-
-    if (!box_normal_texture)
     {
         return 1;
     }
@@ -487,7 +484,7 @@ int main(int argc, char *argv[])
     glGenTextures(1, &geometry_position_texture);
     glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -500,7 +497,7 @@ int main(int argc, char *argv[])
     glGenTextures(1, &geometry_normal_texture);
     glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -509,26 +506,39 @@ int main(int argc, char *argv[])
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    GLuint geometry_albedospecular_texture;
-    glGenTextures(1, &geometry_albedospecular_texture);
-    glBindTexture(GL_TEXTURE_2D, geometry_albedospecular_texture);
+    GLuint geometry_albedo_texture;
+    glGenTextures(1, &geometry_albedo_texture);
+    glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, geometry_albedospecular_texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, geometry_albedo_texture, 0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glDrawBuffers(3, (GLenum[3]){GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2});
+    GLuint geometry_specular_texture;
+    glGenTextures(1, &geometry_specular_texture);
+    glBindTexture(GL_TEXTURE_2D, geometry_specular_texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, geometry_specular_texture, 0);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glDrawBuffers(4, (GLenum[4]){GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
 
     GLuint geometry_rbo;
     glGenRenderbuffers(1, &geometry_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo);
 
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, geometry_rbo);
 
@@ -603,7 +613,7 @@ int main(int argc, char *argv[])
                 break;
                 case SDLK_F1:
                 {
-                    lighting = LIGHTING_TEXTURED;
+                    lighting = LIGHTING_DIFFUSE;
                 }
                 break;
                 case SDLK_F2:
@@ -783,6 +793,9 @@ int main(int argc, char *argv[])
         objects[1]->rotation[1] = angle;
         objects[1]->rotation[2] = angle;
 
+        directional_light->direction[0] = sinf(angle);
+        directional_light->direction[2] = cosf(angle);
+
         // update lights
         glm_vec_copy(camera->position, spot_light->position);
         glm_vec_copy(camera->front, spot_light->direction);
@@ -797,32 +810,34 @@ int main(int argc, char *argv[])
 
         // calculate sun projection matrix
         mat4 sun_projection;
-        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f, sun_projection);
+        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
 
         // calculate sun view matrix
+        vec3 directional_light_position;
+        glm_vec_sub((vec3){0.0f, 0.0f, 0.0f}, directional_light->direction, directional_light_position);
         mat4 sun_view;
-        glm_lookat((vec3){-2.0f, 4.0f, -1.0f}, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 1.0f, 0.0f}, sun_view);
+        glm_lookat(directional_light_position, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 1.0f, 0.0f}, sun_view);
 
         // bind geometry fbo
         glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo);
 
         // geometry pass
-        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+        glViewport(0, 0, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
+
+        program_bind(geometry_program);
+
+        program_set_mat4(geometry_program, "camera.projection", camera_projection);
+        program_set_mat4(geometry_program, "camera.view", camera_view);
+        program_set_vec3(geometry_program, "camera.position", camera->position);
 
         for (int i = 0; i < num_objects; i++)
         {
             // calculate model matrix
             mat4 model = GLM_MAT4_IDENTITY_INIT;
             object_calc_model(objects[i], model);
-
-            program_bind(geometry_program);
-
-            program_set_mat4(geometry_program, "camera.projection", camera_projection);
-            program_set_mat4(geometry_program, "camera.view", camera_view);
-            program_set_vec3(geometry_program, "camera.position", camera->position);
 
             program_set_mat4(geometry_program, "object.model", model);
 
@@ -835,9 +850,9 @@ int main(int argc, char *argv[])
             program_set_float(geometry_program, "material.glow", objects[i]->material->glow);
 
             mesh_draw(objects[i]->mesh);
-
-            program_unbind();
         }
+
+        program_unbind();
 
         // unbind geometry fbo
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -851,23 +866,23 @@ int main(int argc, char *argv[])
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
+        program_bind(depth_program);
+
+        program_set_mat4(depth_program, "sun.projection", sun_projection);
+        program_set_mat4(depth_program, "sun.view", sun_view);
+
         for (int i = 0; i < num_objects; i++)
         {
             // calculate model matrix
             mat4 model = GLM_MAT4_IDENTITY_INIT;
             object_calc_model(objects[i], model);
 
-            program_bind(depth_program);
-
-            program_set_mat4(depth_program, "sun.projection", sun_projection);
-            program_set_mat4(depth_program, "sun.view", sun_view);
-
             program_set_mat4(depth_program, "object.model", model);
 
             mesh_draw(objects[i]->mesh);
-
-            program_unbind();
         }
+
+        program_unbind();
 
         // unbind depthmap fbo
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -883,15 +898,15 @@ int main(int argc, char *argv[])
 
         switch (lighting)
         {
-        case LIGHTING_TEXTURED:
+        case LIGHTING_DIFFUSE:
         {
-            program_bind(textured_program);
+            program_bind(diffuse_program);
 
-            program_set_mat4(textured_program, "camera.projection", camera_projection);
-            program_set_mat4(textured_program, "camera.view", camera_view);
-            program_set_vec3(textured_program, "camera.position", camera->position);
+            program_set_mat4(diffuse_program, "camera.projection", camera_projection);
+            program_set_mat4(diffuse_program, "camera.view", camera_view);
+            program_set_vec3(diffuse_program, "camera.position", camera->position);
 
-            program_set_texture(phong_program, "geometry.albedospecular", 0, geometry_albedospecular_texture);
+            program_set_texture(diffuse_program, "geometry.albedo", 0, geometry_albedo_texture);
 
             mesh_draw(quad_mesh);
 
@@ -908,7 +923,8 @@ int main(int argc, char *argv[])
 
             program_set_texture(phong_program, "geometry.position", 0, geometry_position_texture);
             program_set_texture(phong_program, "geometry.normal", 1, geometry_normal_texture);
-            program_set_texture(phong_program, "geometry.albedospecular", 2, geometry_albedospecular_texture);
+            program_set_texture(phong_program, "geometry.albedo", 2, geometry_albedo_texture);
+            program_set_texture(phong_program, "geometry.specular", 3, geometry_specular_texture);
 
             program_set_mat4(phong_program, "sun.projection", sun_projection);
             program_set_mat4(phong_program, "sun.view", sun_view);
@@ -963,7 +979,7 @@ int main(int argc, char *argv[])
             program_set_float(phong_program, "spot_light.cutOff", spot_light->cutOff);
             program_set_float(phong_program, "spot_light.outerCutOff", spot_light->outerCutOff);
 
-            program_set_texture(phong_program, "depthmap.texture", 3, depthmap_texture);
+            program_set_texture(phong_program, "depthmap.texture", 4, depthmap_texture);
 
             mesh_draw(quad_mesh);
 
@@ -997,7 +1013,8 @@ int main(int argc, char *argv[])
     }
 
     glDeleteRenderbuffers(1, &geometry_rbo);
-    glDeleteTextures(1, &geometry_albedospecular_texture);
+    glDeleteTextures(1, &geometry_specular_texture);
+    glDeleteTextures(1, &geometry_albedo_texture);
     glDeleteTextures(1, &geometry_normal_texture);
     glDeleteTextures(1, &geometry_position_texture);
     glDeleteFramebuffers(1, &geometry_fbo);
@@ -1025,7 +1042,6 @@ int main(int argc, char *argv[])
     material_destroy(box_material);
     texture_destroy(cobble_specular_texture);
     texture_destroy(cobble_diffuse_texture);
-    texture_destroy(box_normal_texture);
     texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
     mesh_destroy(cube_mesh);
@@ -1034,7 +1050,7 @@ int main(int argc, char *argv[])
     program_destroy(post_program);
     program_destroy(geometry_program);
     program_destroy(phong_program);
-    program_destroy(textured_program);
+    program_destroy(diffuse_program);
 
     // close engine
     image_quit();

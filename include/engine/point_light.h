@@ -14,7 +14,7 @@ struct point_light
     float quadratic;
 };
 
-struct point_light *point_light_create(
+struct point_light ENGINE_API *point_light_create(
     vec3 position,
     vec3 ambient,
     vec3 diffuse,
@@ -22,6 +22,6 @@ struct point_light *point_light_create(
     float constant,
     float linear,
     float quadratic);
-void point_light_destroy(struct point_light *point_light);
+void ENGINE_API point_light_destroy(struct point_light *point_light);
 
 #endif

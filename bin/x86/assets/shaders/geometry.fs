@@ -1,9 +1,5 @@
 #version 330 core
 
-layout (location = 0) out vec3 position;
-layout (location = 1) out vec3 normal;
-layout (location = 2) out vec4 albedospec;
-
 in struct Vertex
 {
     vec3 position;
@@ -22,11 +18,16 @@ uniform struct Material
     float glow;
 } material;
 
+layout (location = 0) out vec3 position;
+layout (location = 1) out vec3 normal;
+layout (location = 2) out vec3 albedo;
+layout (location = 3) out vec3 specular;
+
 void main()
 {
     position = vertex.position;
-    normal = normalize(vertex.normal);
-    albedospec.rgb = texture(material.diffuse, vertex.uv).rgb * material.color;
-    albedospec.a = texture(material.specular, vertex.uv).r;
+    normal = normalize(vertex.normal); // TODO: normal map
+    albedo = texture(material.diffuse, vertex.uv).rgb * material.color;
+    specular = texture(material.specular, vertex.uv).rgb;
     // emission = texture(material.emission) * material.glow;
 }

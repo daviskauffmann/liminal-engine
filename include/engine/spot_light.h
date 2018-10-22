@@ -17,7 +17,7 @@ struct spot_light
     float outerCutOff;
 };
 
-struct spot_light *spot_light_create(
+struct spot_light ENGINE_API *spot_light_create(
     vec3 position,
     vec3 direction,
     vec3 ambient,
@@ -28,6 +28,6 @@ struct spot_light *spot_light_create(
     float quadratic,
     float cutOff,
     float outerCutOff);
-void spot_light_destroy(struct spot_light *spot_light);
+void ENGINE_API spot_light_destroy(struct spot_light *spot_light);
 
 #endif

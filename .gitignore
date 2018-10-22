@@ -5,6 +5,24 @@ Thumbs.db
 
 build
 
-bin/**/*.exe
-bin/**/*.ilk
-bin/**/*.pdb
+client.exe
+client.ilk
+client.pdb
+
+engine.exp
+engine.ilk
+engine.dll
+engine.lib
+engine.pdb
+
+game.exe
+game.ilk
+game.pdb
+
+raycaster.exe
+raycaster.ilk
+raycaster.pdb
+
+server.exe
+server.ilk
+server.pdb

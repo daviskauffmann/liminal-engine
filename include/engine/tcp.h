@@ -10,10 +10,10 @@ typedef struct
     int maxlen;
 } TCPpacket;
 
-TCPsocket tcp_open(IPaddress *address);
-TCPpacket *tcp_alloc_packet(int size);
-int tcp_send(TCPsocket socket, void *data, int len);
-int tcp_recv(TCPsocket socket, TCPpacket *packet);
-void tcp_free_packet(TCPpacket *packet);
+TCPsocket ENGINE_API tcp_open(IPaddress *address);
+TCPpacket ENGINE_API *tcp_alloc_packet(int size);
+int ENGINE_API tcp_send(TCPsocket socket, void *data, int len);
+int ENGINE_API tcp_recv(TCPsocket socket, TCPpacket *packet);
+void ENGINE_API tcp_free_packet(TCPpacket *packet);
 
 #endif

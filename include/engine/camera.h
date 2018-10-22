@@ -14,7 +14,7 @@ struct camera
     float fov;
 };
 
-struct camera *camera_create(
+struct camera ENGINE_API *camera_create(
     vec3 position,
     vec3 front,
     vec3 up,
@@ -22,9 +22,9 @@ struct camera *camera_create(
     float yaw,
     float roll,
     float fov);
-void camera_calc_perspective(struct camera *camera, vec4 *projection);
-void camera_calc_ortho(struct camera *camera, vec4 *projection);
-void camera_calc_view(struct camera *camera, vec4 *view);
-void camera_destroy(struct camera *camera);
+void ENGINE_API camera_calc_perspective(struct camera *camera, vec4 *projection);
+void ENGINE_API camera_calc_ortho(struct camera *camera, vec4 *projection);
+void ENGINE_API camera_calc_view(struct camera *camera, vec4 *view);
+void ENGINE_API camera_destroy(struct camera *camera);
 
 #endif
