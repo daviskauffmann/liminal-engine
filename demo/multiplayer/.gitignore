@@ -1,0 +1,17 @@
+.vs
+.vscode
+
+Thumbs.db
+
+build
+
+engine.dll
+engine.lib
+
+client.exe
+client.ilk
+client.pdb
+
+server.exe
+server.ilk
+server.pdb

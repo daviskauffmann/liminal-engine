@@ -5,8 +5,9 @@ Thumbs.db
 
 build
 
-engine.exp
-engine.ilk
 engine.dll
 engine.lib
-engine.pdb
+
+game.exe
+game.ilk
+game.pdb
