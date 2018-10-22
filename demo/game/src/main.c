@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
 
     SDL_SetRelativeMouseMode(true);
 
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     // create programs
     struct program *diffuse_program = program_create(
         "../../assets/shaders/diffuse.vs",
@@ -823,7 +825,6 @@ int main(int argc, char *argv[])
 
         // geometry pass
         glViewport(0, 0, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -862,7 +863,6 @@ int main(int argc, char *argv[])
 
         // shadow pass
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -892,7 +892,6 @@ int main(int argc, char *argv[])
 
         // lighting pass
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
@@ -993,7 +992,6 @@ int main(int argc, char *argv[])
 
         // post processing pass
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
