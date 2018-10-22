@@ -2,7 +2,7 @@
 
 set SRC_DIR=src\raycaster\*.c
 
-set COMPILER_OPTS=/Fdbuild\x86\raycaster\ /Febin\x86\raycaster /Fobuild\x86\raycaster\ /Iinclude /Zi
+set COMPILER_OPTS=/Fdbuild\x86\raycaster\ /Febin\x86\raycaster.exe /Fobuild\x86\raycaster\ /Iinclude /Zi
 set LINKER_OPTS=/libpath:lib\x86\ /subsystem:console
 set LIBS=lib\x86\*.lib opengl32.lib
 

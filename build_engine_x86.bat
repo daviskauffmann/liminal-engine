@@ -2,7 +2,7 @@
 
 set SRC_DIR=src\engine\*.c
 
-set COMPILER_OPTS=/DENGINE_EXPORTS /Fdbuild\x86\engine\ /Febin\x86\engine /Fobuild\x86\engine\ /LD /Iinclude /Zi
+set COMPILER_OPTS=/DENGINE_EXPORTS /Fdbuild\x86\engine\ /Febin\x86\engine.dll /Fobuild\x86\engine\ /LD /Iinclude /Zi
 set LINKER_OPTS=/libpath:lib\x86\
 set LIBS=lib\x86\*.lib opengl32.lib
 

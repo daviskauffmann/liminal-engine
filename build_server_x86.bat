@@ -2,7 +2,7 @@
 
 set SRC_DIR=src\server\*.c src\shared\*.c
 
-set COMPILER_OPTS=/Fdbuild\x86\server\ /Febin\x86\server /Fobuild\x86\server\ /Iinclude /Zi
+set COMPILER_OPTS=/Fdbuild\x86\server\ /Febin\x86\server.exe /Fobuild\x86\server\ /Iinclude /Zi
 set LINKER_OPTS=/libpath:lib\x86\ /subsystem:console
 set LIBS=lib\x86\*.lib opengl32.lib
 

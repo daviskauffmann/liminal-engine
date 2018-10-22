@@ -2,7 +2,7 @@
 
 set SRC_DIR=src\game\*.c
 
-set COMPILER_OPTS=/Fdbuild\x86\game\ /Febin\x86\game /Fobuild\x86\game\ /Iinclude /Zi
+set COMPILER_OPTS=/Fdbuild\x86\game\ /Febin\x86\game.exe /Fobuild\x86\game\ /Iinclude /Zi
 set LINKER_OPTS=/libpath:lib\x86\ /subsystem:console
 set LIBS=lib\x86\*.lib opengl32.lib
 
