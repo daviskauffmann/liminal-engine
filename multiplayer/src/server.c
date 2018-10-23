@@ -1,5 +1,6 @@
 #include <engine/engine.h>
 #include <shared/data.h>
+#include <shared/server.h>
 
 #define SERVER_PORT 1000
 #define MAX_CLIENTS 8
@@ -19,7 +20,7 @@ void broadcast(void *data, int len, int exclude_id);
 
 static struct client clients[MAX_CLIENTS];
 
-int main(int argc, char *args[])
+int server_start(void)
 {
     // setup engine
     if (core_init())

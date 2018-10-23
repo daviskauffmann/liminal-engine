@@ -1,4 +1,5 @@
 #include <engine/engine.h>
+#include <shared/client.h>
 #include <shared/data.h>
 
 #define WINDOW_TITLE "Client"
@@ -10,7 +11,7 @@
 
 #define FPS_CAP 30
 
-int main(int argc, char *argv[])
+int client_start(void)
 {
     // setup engine
     if (core_init())
