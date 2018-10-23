@@ -13,6 +13,7 @@ uniform struct Geometry
     sampler2D normal;
     sampler2D albedo;
     sampler2D specular;
+    sampler2D emission;
 } geometry;
 
 uniform struct Camera
@@ -77,6 +78,7 @@ void main()
     vec3 normal = texture(geometry.normal, vertex.uv).rgb;
     vec3 diffuse = texture(geometry.albedo, vertex.uv).rgb;
     vec3 specular = texture(geometry.specular, vertex.uv).rgb;
+    vec3 emission = texture(geometry.emission, vertex.uv).rgb;
     vec4 shadow_position = sun.projection * sun.view * vec4(position, 1.0);
     vec3 view_direction = normalize(camera.position - position);
 
@@ -97,8 +99,8 @@ void main()
     // spot light
     color += calc_spot_light(spot_light, position, normal, diffuse, specular, shadow_position, view_direction);
 
-    // emission
-    // color += vec3(texture(material.emission, vertex.uv)) * material.glow;
+    // emissive light
+    color += emission;
 
     gl_FragColor = vec4(color, 1.0);
 }

@@ -22,12 +22,15 @@ layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec3 albedo;
 layout (location = 3) out vec3 specular;
+layout (location = 4) out vec3 emission;
 
 void main()
 {
+    // TODO: use normal map
+    // TODO: use shininess
     position = vertex.position;
-    normal = normalize(vertex.normal); // TODO: normal map
+    normal = normalize(vertex.normal);
     albedo = texture(material.diffuse, vertex.uv).rgb * material.color;
     specular = texture(material.specular, vertex.uv).rgb;
-    // emission = texture(material.emission) * material.glow;
+    emission = texture(material.emission, vertex.uv).rgb * material.glow;
 }

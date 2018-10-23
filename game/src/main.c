@@ -534,7 +534,18 @@ int main(int argc, char *argv[])
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glDrawBuffers(4, (GLenum[4]){GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
+    GLuint geometry_emission_texture;
+    glGenTextures(1, &geometry_emission_texture);
+    glBindTexture(GL_TEXTURE_2D, geometry_emission_texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, geometry_emission_texture, 0);
+
+    glDrawBuffers(5, (GLenum[5]){GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4});
 
     GLuint geometry_rbo;
     glGenRenderbuffers(1, &geometry_rbo);
@@ -924,6 +935,7 @@ int main(int argc, char *argv[])
             program_set_texture(phong_program, "geometry.normal", 1, geometry_normal_texture);
             program_set_texture(phong_program, "geometry.albedo", 2, geometry_albedo_texture);
             program_set_texture(phong_program, "geometry.specular", 3, geometry_specular_texture);
+            program_set_texture(phong_program, "geometry.emission", 4, geometry_emission_texture);
 
             program_set_mat4(phong_program, "sun.projection", sun_projection);
             program_set_mat4(phong_program, "sun.view", sun_view);
@@ -978,7 +990,7 @@ int main(int argc, char *argv[])
             program_set_float(phong_program, "spot_light.cutOff", spot_light->cutOff);
             program_set_float(phong_program, "spot_light.outerCutOff", spot_light->outerCutOff);
 
-            program_set_texture(phong_program, "depthmap.texture", 4, depthmap_texture);
+            program_set_texture(phong_program, "depthmap.texture", 5, depthmap_texture);
 
             mesh_draw(quad_mesh);
 
