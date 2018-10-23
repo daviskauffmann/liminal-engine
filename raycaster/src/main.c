@@ -219,23 +219,23 @@ int main(int argc, char *args[])
 
     // create textures
     struct bitmap *textures[NUM_TEXTURES];
-    textures[0] = bitmap_create("../../assets/images/eagle.png");
-    textures[1] = bitmap_create("../../assets/images/redbrick.png");
-    textures[2] = bitmap_create("../../assets/images/purplestone.png");
-    textures[3] = bitmap_create("../../assets/images/greystone.png");
-    textures[4] = bitmap_create("../../assets/images/bluestone.png");
-    textures[5] = bitmap_create("../../assets/images/mossy.png");
-    textures[6] = bitmap_create("../../assets/images/wood.png");
-    textures[7] = bitmap_create("../../assets/images/colorstone.png");
+    textures[0] = bitmap_create("assets/images/eagle.png");
+    textures[1] = bitmap_create("assets/images/redbrick.png");
+    textures[2] = bitmap_create("assets/images/purplestone.png");
+    textures[3] = bitmap_create("assets/images/greystone.png");
+    textures[4] = bitmap_create("assets/images/bluestone.png");
+    textures[5] = bitmap_create("assets/images/mossy.png");
+    textures[6] = bitmap_create("assets/images/wood.png");
+    textures[7] = bitmap_create("assets/images/colorstone.png");
 
     // create sprites
     struct bitmap *sprites[NUM_SPRITES];
-    sprites[0] = bitmap_create("../../assets/images/barrel.png");
-    sprites[1] = bitmap_create("../../assets/images/pillar.png");
-    sprites[2] = bitmap_create("../../assets/images/greenlight.png");
+    sprites[0] = bitmap_create("assets/images/barrel.png");
+    sprites[1] = bitmap_create("assets/images/pillar.png");
+    sprites[2] = bitmap_create("assets/images/greenlight.png");
 
     // load fonts
-    TTF_Font *font = TTF_OpenFont("../../assets/fonts/VeraMono.ttf", 24);
+    TTF_Font *font = TTF_OpenFont("assets/fonts/VeraMono.ttf", 24);
 
     // game settings
     bool textured = true;
