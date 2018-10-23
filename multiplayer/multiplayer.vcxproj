@@ -103,7 +103,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\*.dll" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.lib" "$(ProjectDir)lib\$(Platform)\" /Y</Command>
@@ -127,7 +127,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\*.dll" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.lib" "$(ProjectDir)lib\$(Platform)\" /Y</Command>
@@ -155,7 +155,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\*.dll" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.lib" "$(ProjectDir)lib\$(Platform)\" /Y</Command>
@@ -183,7 +183,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\*.dll" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>xcopy "$(SolutionDir)engine\bin\$(Platform)\$(Configuration)\engine.lib" "$(ProjectDir)lib\$(Platform)\" /Y</Command>
