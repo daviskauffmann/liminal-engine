@@ -201,7 +201,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\shared\client.h" />
     <ClInclude Include="include\shared\data.h" />
+    <ClInclude Include="include\shared\server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

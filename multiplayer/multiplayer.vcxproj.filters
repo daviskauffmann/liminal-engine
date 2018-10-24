@@ -32,5 +32,11 @@
     <ClInclude Include="include\shared\data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\shared\client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\shared\server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

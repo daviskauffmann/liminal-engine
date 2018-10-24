@@ -29,7 +29,10 @@ uniform struct Sun
     mat4 view;
 } sun;
 
-uniform vec3 ambient;
+uniform struct Scene
+{
+	vec3 ambient;
+} scene;
 
 uniform struct DirectionalLight
 {
@@ -85,7 +88,7 @@ void main()
     vec3 color;
 
     // ambient light
-    color += ambient * diffuse;
+    color += scene.ambient * diffuse;
 
     // directional light
     color += calc_directional_light(directional_light, position, normal, diffuse, specular, shadow_position, view_direction);
@@ -122,10 +125,19 @@ vec3 calc_directional_light(DirectionalLight light, vec3 position, vec3 normal, 
 
     // shadow
     vec3 proj_coords = (shadow_position.xyz / shadow_position.w) * 0.5 + 0.5;
-    float closest_depth = texture(depthmap.texture, proj_coords.xy).r;
     float current_depth = proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
-    float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+    float shadow = 0.0;
+    vec2 texel_size = 1.0 / textureSize(depthmap.texture, 0);
+    for (int x = -1; x <= 1; x++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            float pcf_depth = texture(depthmap.texture, proj_coords.xy + vec2(x, y) * texel_size).r;
+            shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
     if (proj_coords.z > 1.0) shadow = 0.0;
 
     return (final_ambient + (1.0 - shadow) * (final_diffuse + final_specular));

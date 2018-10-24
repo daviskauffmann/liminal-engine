@@ -6,8 +6,8 @@
 
 #define RENDER_SCALE 0.5f
 
-#define SHADOW_WIDTH 1024
-#define SHADOW_HEIGHT 1024
+#define SHADOW_WIDTH 4096
+#define SHADOW_HEIGHT 4096
 
 #define FPS_CAP 120
 
@@ -25,19 +25,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (window_init(
-            WINDOW_TITLE,
-            WINDOW_WIDTH,
-            WINDOW_HEIGHT))
+    if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
         return 1;
     }
 
-    if (audio_init(
-            MIX_DEFAULT_FREQUENCY,
-            MIX_DEFAULT_FORMAT,
-            MIX_DEFAULT_CHANNELS,
-            1024))
+    if (audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024))
     {
         return 1;
     }
@@ -57,8 +50,8 @@ int main(int argc, char *argv[])
 
     // create programs
     struct program *diffuse_program = program_create(
-        "assets/shaders/diffuse.vs",
-        "assets/shaders/diffuse.fs");
+        "assets/shaders/diffuse.vert",
+        "assets/shaders/diffuse.frag");
 
     if (!diffuse_program)
     {
@@ -66,8 +59,8 @@ int main(int argc, char *argv[])
     }
 
     struct program *phong_program = program_create(
-        "assets/shaders/phong.vs",
-        "assets/shaders/phong.fs");
+        "assets/shaders/phong.vert",
+        "assets/shaders/phong.frag");
 
     if (!phong_program)
     {
@@ -75,8 +68,8 @@ int main(int argc, char *argv[])
     }
 
     struct program *geometry_program = program_create(
-        "assets/shaders/geometry.vs",
-        "assets/shaders/geometry.fs");
+        "assets/shaders/geometry.vert",
+        "assets/shaders/geometry.frag");
 
     if (!geometry_program)
     {
@@ -84,8 +77,8 @@ int main(int argc, char *argv[])
     }
 
     struct program *post_program = program_create(
-        "assets/shaders/post.vs",
-        "assets/shaders/post.fs");
+        "assets/shaders/post.vert",
+        "assets/shaders/post.frag");
 
     if (!post_program)
     {
@@ -93,8 +86,8 @@ int main(int argc, char *argv[])
     }
 
     struct program *depth_program = program_create(
-        "assets/shaders/depth.vs",
-        "assets/shaders/depth.fs");
+        "assets/shaders/depth.vert",
+        "assets/shaders/depth.frag");
 
     if (!depth_program)
     {
@@ -127,42 +120,50 @@ int main(int argc, char *argv[])
     }
 
     float cube_vertices[] = {
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 1.0f, 1.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, -1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 0.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +1.0f, +0.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, +1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f, +0.0f, -1.0f, +0.0f, 0.0f, 1.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f,
-        +1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        +1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f,
-        -1.0f, +1.0f, +1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f,
-        -1.0f, +1.0f, -1.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f};
+        // position          // normal            // uv
+        // back face
+        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+        // front face
+        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+        // left face
+        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        // right face
+         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+         1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+         1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+        // bottom face
+        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+        // top face
+        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+         1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left   
+    };
 
     unsigned int cube_indices[] = {
         0, 1, 2,
@@ -176,7 +177,7 @@ int main(int argc, char *argv[])
         24, 25, 26,
         27, 28, 29,
         30, 31, 32,
-        33, 34, 35};
+        33, 34, 35 };
 
     struct mesh *cube_mesh = mesh_create(
         cube_vertices,
@@ -219,12 +220,14 @@ int main(int argc, char *argv[])
     }
 
     // create materials
+    vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
+
     struct material *box_material = material_create(
         box_diffuse_texture,
         box_specular_texture,
         NULL,
         NULL,
-        (vec3){1.0f, 1.0f, 1.0f},
+        box_material_color,
         32.0f,
         1.0f);
 
@@ -233,12 +236,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    vec3 cobble_material_color = { 1.0f, 1.0f, 1.0f };
+
     struct material *cobble_material = material_create(
         cobble_diffuse_texture,
         cobble_specular_texture,
         NULL,
         NULL,
-        (vec3){1.0f, 1.0f, 1.0f},
+        cobble_material_color,
         32.0f,
         1.0f);
 
@@ -248,120 +253,225 @@ int main(int argc, char *argv[])
     }
 
     // create objects
-    struct object *objects[] = {
-        object_create(
-            cube_mesh,
-            cobble_material,
-            (vec3){0.0f, -2.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){10.0f, 1.0f, 10.0f}),
-        object_create(
-            cube_mesh,
-            box_material,
-            (vec3){0.0f, 1.0f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){1.0f, 1.0f, 1.0f}),
-        object_create(
-            cube_mesh,
-            box_material,
-            (vec3){2.0f, -0.5f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.5f, 0.5f, 0.5f}),
-        object_create(
-            cube_mesh,
-            box_material,
-            (vec3){0.0f, -0.5f, 2.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.5f, 0.5f, 0.5f}),
-        object_create(
-            cube_mesh,
-            box_material,
-            (vec3){-2.0f, -0.5f, 0.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.5f, 0.5f, 0.5f}),
-        object_create(
-            cube_mesh,
-            box_material,
-            (vec3){0.0f, -0.5f, -2.0f},
-            (vec3){0.0f, 0.0f, 0.0f},
-            (vec3){0.5f, 0.5f, 0.5f})};
-    const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
+    vec3 floor_object_position = { 0.0f, -2.0f, 0.0f };
+    vec3 floor_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 floor_object_scale = { 10.0f, 1.0f, 10.0f };
 
-    for (int i = 0; i < num_objects; i++)
+    struct object *floor_object = object_create(
+        cube_mesh,
+        cobble_material,
+        floor_object_position,
+        floor_object_rotation,
+        floor_object_scale);
+
+    if (!floor_object)
     {
-        if (!objects[i])
-        {
-            return 1;
-        }
+        return 1;
     }
 
+    vec3 box_1_object_position = { 0.0f, 1.0f, 0.0f };
+    vec3 box_1_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_1_object_scale = { 1.0f, 1.0f, 1.0f };
+
+    struct object *box_1_object = object_create(
+        cube_mesh,
+        box_material,
+        box_1_object_position,
+        box_1_object_rotation,
+        box_1_object_scale);
+
+    if (!box_1_object)
+    {
+        return 1;
+    }
+
+    vec3 box_2_object_position = { 2.0f, -0.5f, 0.0f };
+    vec3 box_2_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_2_object_scale = { 0.5f, 0.5f, 0.5f };
+
+    struct object *box_2_object = object_create(
+        cube_mesh,
+        box_material,
+        box_2_object_position,
+        box_2_object_rotation,
+        box_2_object_scale);
+
+    if (!box_2_object)
+    {
+        return 1;
+    }
+
+    vec3 box_3_object_position = { 0.0f, -0.5f, 2.0f };
+    vec3 box_3_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_3_object_scale = { 0.5f, 0.5f, 0.5f };
+
+    struct object *box_3_object = object_create(
+        cube_mesh,
+        box_material,
+        box_3_object_position,
+        box_3_object_rotation,
+        box_3_object_scale);
+
+    if (!box_3_object)
+    {
+        return 1;
+    }
+
+    vec3 box_4_object_position = { -2.0f, -0.5f, 0.0f };
+    vec3 box_4_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_4_object_scale = { 0.5f, 0.5f, 0.5f };
+
+    struct object *box_4_object = object_create(
+        cube_mesh,
+        box_material,
+        box_4_object_position,
+        box_4_object_rotation,
+        box_4_object_scale);
+
+    if (!box_4_object)
+    {
+        return 1;
+    }
+
+    vec3 box_5_object_position = { 0.0f, -0.5f, -2.0f };
+    vec3 box_5_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_5_object_scale = { 0.5f, 0.5f, 0.5f };
+
+    struct object *box_5_object = object_create(
+        cube_mesh,
+        box_material,
+        box_5_object_position,
+        box_5_object_rotation,
+        box_5_object_scale);
+
+    if (!box_5_object)
+    {
+        return 1;
+    }
+
+    struct object *objects[] = {
+        floor_object,
+        box_1_object,
+        box_2_object,
+        box_3_object,
+        box_4_object,
+        box_5_object
+    };
+    const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
+
     // create lights
-    vec3 ambient = {0.1f, 0.1f, 0.1f};
+    vec3 scene_ambient = { 0.1f, 0.1f, 0.1f };
+
+    vec3 directional_light_direction = { -0.2f, -1.0f, -0.3f };
+    vec3 directional_light_ambient = { 0.05f, 0.05f, 0.05f };
+    vec3 directional_light_diffuse = { 0.4f, 0.4f, 0.4f };
+    vec3 directional_light_specular = { 1.0f, 1.0f, 1.0f };
 
     struct directional_light *directional_light = directional_light_create(
-        (vec3){-0.2f, -1.0f, -0.3f},
-        (vec3){0.05f, 0.05f, 0.05f},
-        (vec3){0.4f, 0.4f, 0.4f},
-        (vec3){1.0f, 1.0f, 1.0f});
+        directional_light_direction,
+        directional_light_ambient,
+        directional_light_diffuse,
+        directional_light_specular);
 
     if (!directional_light)
     {
         return 1;
     }
 
-    struct point_light *point_lights[] = {
-        // red
-        point_light_create(
-            (vec3){2.0f, 0.0f, 2.0f},
-            (vec3){0.1f, 0.0f, 0.0f},
-            (vec3){0.8f, 0.0f, 0.0f},
-            (vec3){1.0f, 0.0f, 0.0f},
-            1.0f,
-            0.09f,
-            0.032f),
-        // yellow
-        point_light_create(
-            (vec3){-2.0f, 0.0f, -2.0f},
-            (vec3){0.1f, 0.1f, 0.0f},
-            (vec3){0.8f, 0.8f, 0.0f},
-            (vec3){1.0f, 1.0f, 0.0f},
-            1.0f,
-            0.09f,
-            0.032f),
-        // green
-        point_light_create(
-            (vec3){2.0f, 0.0f, -2.0f},
-            (vec3){0.0f, 0.1f, 0.0f},
-            (vec3){0.0f, 0.8f, 0.0f},
-            (vec3){0.0f, 1.0f, 0.0f},
-            1.0f,
-            0.09f,
-            0.032f),
-        // blue
-        point_light_create(
-            (vec3){-2.0f, 0.0f, 2.0f},
-            (vec3){0.0f, 0.0f, 0.1f},
-            (vec3){0.0f, 0.0f, 0.8f},
-            (vec3){0.0f, 0.0f, 1.0f},
-            1.0f,
-            0.09f,
-            0.032f)};
-    const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
+    vec3 red_point_light_position = { 2.0f, 0.0f, 2.0f };
+    vec3 red_point_light_ambient = { 0.1f, 0.0f, 0.0f };
+    vec3 red_point_light_diffuse = { 0.8f, 0.0f, 0.0f };
+    vec3 red_point_light_specular = { 1.0f, 0.0f, 0.0f };
 
-    for (int i = 0; i < num_point_lights; i++)
+    struct point_light *red_point_light = point_light_create(
+        red_point_light_position,
+        red_point_light_ambient,
+        red_point_light_diffuse,
+        red_point_light_specular,
+        1.0f,
+        0.09f,
+        0.032f);
+
+    if (!red_point_light)
     {
-        if (!point_lights[i])
-        {
-            return 1;
-        }
+        return 1;
     }
 
+    vec3 yellow_point_light_position = { -2.0f, 0.0f, -2.0f };
+    vec3 yellow_point_light_ambient = { 0.1f, 0.1f, 0.0f };
+    vec3 yellow_point_light_diffuse = { 0.8f, 0.8f, 0.0f };
+    vec3 yellow_point_light_specular = { 1.0f, 1.0f, 0.0f };
+
+    struct point_light *yellow_point_light = point_light_create(
+        yellow_point_light_position,
+        yellow_point_light_ambient,
+        yellow_point_light_diffuse,
+        yellow_point_light_specular,
+        1.0f,
+        0.09f,
+        0.032f);
+    if (!yellow_point_light)
+    {
+        return 1;
+    }
+
+    vec3 green_point_light_position = { 2.0f, 0.0f, -2.0f };
+    vec3 green_point_light_ambient = { 0.0f, 0.1f, 0.0f };
+    vec3 green_point_light_diffuse = { 0.0f, 0.8f, 0.0f };
+    vec3 green_point_light_specular = { 0.0f, 1.0f, 0.0f };
+
+    struct point_light *green_point_light = point_light_create(
+        green_point_light_position,
+        green_point_light_ambient,
+        green_point_light_diffuse,
+        green_point_light_specular,
+        1.0f,
+        0.09f,
+        0.032f);
+
+    if (!green_point_light)
+    {
+        return 1;
+    }
+
+    vec3 blue_point_light_position = { -2.0f, 0.0f, 2.0f };
+    vec3 blue_point_light_ambient = { 0.0f, 0.0f, 0.1f };
+    vec3 blue_point_light_diffuse = { 0.0f, 0.0f, 0.8f };
+    vec3 blue_point_light_specular = { 0.0f, 0.0f, 1.0f };
+
+    struct point_light *blue_point_light = point_light_create(
+        blue_point_light_position,
+        blue_point_light_ambient,
+        blue_point_light_diffuse,
+        blue_point_light_specular,
+        1.0f,
+        0.09f,
+        0.032f);
+
+    if (!blue_point_light)
+    {
+        return 1;
+    }
+
+    struct point_light *point_lights[] = {
+        red_point_light,
+        yellow_point_light,
+        green_point_light,
+        blue_point_light };
+    const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
+
+    vec3 spot_light_position = { 0.0f, 0.0f, 0.0f };
+    vec3 spot_light_direction = { 0.0f, 0.0f, 0.0f };
+    vec3 spot_light_ambient = { 0.0f, 0.0f, 0.0f };
+    vec3 spot_light_diffuse = { 0.0f, 0.0f, 0.0f };
+    vec3 spot_light_specular = { 0.0f, 0.0f, 0.0f };
+
     struct spot_light *spot_light = spot_light_create(
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){0.0f, 0.0f, 0.0f},
-        (vec3){0.0f, 0.0f, 0.0f},
+        spot_light_position,
+        spot_light_direction,
+        spot_light_ambient,
+        spot_light_diffuse,
+        spot_light_specular,
         1.0f,
         0.09f,
         0.032f,
@@ -374,10 +484,14 @@ int main(int argc, char *argv[])
     }
 
     // create camera
+    vec3 camera_position = { 0.0f, 0.0f, 3.0f };
+    vec3 camera_front = { 0.0f, 0.0f, -1.0f };
+    vec3 camera_up = { 0.0f, 1.0f, 0.0f };
+
     struct camera *camera = camera_create(
-        (vec3){0.0f, 0.0f, 3.0f},
-        (vec3){0.0f, 0.0f, -1.0f},
-        (vec3){0.0f, 1.0f, 0.0f},
+        camera_position,
+        camera_front,
+        camera_up,
         0.0f,
         -90.0f,
         0.0f,
@@ -460,7 +574,7 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, (GLfloat[4]){1.0f, 1.0f, 1.0f, 1.0f});
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthmap_texture, 0);
     glDrawBuffer(GL_NONE);
@@ -545,7 +659,7 @@ int main(int argc, char *argv[])
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, geometry_emission_texture, 0);
 
-    glDrawBuffers(5, (GLenum[5]){GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4});
+    glDrawBuffers(5, (GLenum[5]) { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 
     GLuint geometry_rbo;
     glGenRenderbuffers(1, &geometry_rbo);
@@ -685,7 +799,7 @@ int main(int argc, char *argv[])
                 vec3 front = {
                     cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch)),
                     sinf(glm_rad(camera->pitch)),
-                    sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch))};
+                    sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch)) };
                 glm_normalize(front);
                 glm_vec_copy(front, camera->front);
             }
@@ -826,10 +940,11 @@ int main(int argc, char *argv[])
         glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
 
         // calculate sun view matrix
+        // use the directional light to provide position/direction
         vec3 directional_light_position;
-        glm_vec_sub((vec3){0.0f, 0.0f, 0.0f}, directional_light->direction, directional_light_position);
+        glm_vec_sub((vec3) { 0.0f, 0.0f, 0.0f }, directional_light->direction, directional_light_position);
         mat4 sun_view;
-        glm_lookat(directional_light_position, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 1.0f, 0.0f}, sun_view);
+        glm_lookat(directional_light_position, (vec3) { 0.0f, 0.0f, 0.0f }, (vec3) { 0.0f, 1.0f, 0.0f }, sun_view);
 
         // bind geometry fbo
         glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo);
@@ -940,7 +1055,7 @@ int main(int argc, char *argv[])
             program_set_mat4(phong_program, "sun.projection", sun_projection);
             program_set_mat4(phong_program, "sun.view", sun_view);
 
-            program_set_vec3(phong_program, "ambient", ambient);
+            program_set_vec3(phong_program, "scene.ambient", scene_ambient);
 
             program_set_vec3(phong_program, "directional_light.direction", directional_light->direction);
             program_set_vec3(phong_program, "directional_light.ambient", directional_light->ambient);
@@ -1049,6 +1164,7 @@ int main(int argc, char *argv[])
     {
         object_destroy(objects[i]);
     }
+    material_destroy(cobble_material);
     material_destroy(box_material);
     texture_destroy(cobble_specular_texture);
     texture_destroy(cobble_diffuse_texture);

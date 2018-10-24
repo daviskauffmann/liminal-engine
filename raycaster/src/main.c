@@ -77,7 +77,7 @@ unsigned char wall_map[MAP_WIDTH][MAP_HEIGHT] = {
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5},
     {2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 5, 0, 5, 0, 5, 0, 5, 0, 5},
     {2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 5, 0, 5, 0, 0, 0, 5, 5},
-    {2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5}};
+    {2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5} };
 
 // floor texture indexes
 unsigned char floor_map[MAP_WIDTH][MAP_HEIGHT] = {
@@ -104,7 +104,7 @@ unsigned char floor_map[MAP_WIDTH][MAP_HEIGHT] = {
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
     {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}};
+    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3} };
 
 // ceiling texture indexes
 unsigned char ceiling_map[MAP_WIDTH][MAP_HEIGHT] = {
@@ -131,7 +131,7 @@ unsigned char ceiling_map[MAP_WIDTH][MAP_HEIGHT] = {
     {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
     {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
     {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
-    {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}};
+    {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6} };
 
 struct billboard billboards[NUM_BILLBOARDS] = {
     {20.5f, 11.5f, 2, 1.0f, 1.0f, 0.0f},
@@ -517,8 +517,8 @@ int main(int argc, char *args[])
             // calculate distance projected on camera direction (Euclidean distance will give fisheye effect!)
             float perp_wall_dist =
                 side == 0
-                    ? (map_x - player->pos_x + (1 - step_x) / 2) / ray_dir_x
-                    : (map_y - player->pos_y + (1 - step_y) / 2) / ray_dir_y;
+                ? (map_x - player->pos_x + (1 - step_x) / 2) / ray_dir_x
+                : (map_y - player->pos_y + (1 - step_y) / 2) / ray_dir_y;
 
             // calculate height of line to draw on screen
             int line_height = (int)(WINDOW_HEIGHT / perp_wall_dist);
@@ -795,9 +795,9 @@ int main(int argc, char *args[])
                 float billboard_y = billboard.y - player->pos_y;
 
                 // transform billboard with the inverse camera matrix
-                // [ planeX   dirX ] -1                                       [ dirY      -dirX ]
-                // [               ]       =  1/(planeX*dirY-dirX*planeY) *   [                 ]
-                // [ planeY   dirY ]                                          [ -planeY  planeX ]
+                // [ planeX   dirX ] -1                                         [ dirY      -dirX ]
+                // [               ]    = 1 / (planeX * dirY - dirX * planeY) * [                 ]
+                // [ planeY   dirY ]                                            [ -planeY  planeX ]
                 // required for correct matrix multiplication
                 float inv_det = 1 / (player->plane_x * player->dir_y - player->dir_x * player->plane_y);
 
@@ -906,13 +906,15 @@ int main(int argc, char *args[])
             int line = 0;
 
             // display FPS
+            SDL_Color white_color = { 255, 255, 255, 255 };
+
             draw_text(
                 renderer,
                 font,
                 FONT_SIZE,
                 0,
                 FONT_SIZE * line++,
-                (SDL_Color){255, 255, 255, 255},
+                white_color,
                 "FPS: %d",
                 time_fps());
 
@@ -923,7 +925,7 @@ int main(int argc, char *args[])
                 FONT_SIZE,
                 0,
                 FONT_SIZE * line++,
-                (SDL_Color){255, 255, 255, 255},
+                white_color,
                 "Pos: (%f, %f)",
                 player->pos_x,
                 player->pos_y);
@@ -935,7 +937,7 @@ int main(int argc, char *args[])
                 FONT_SIZE,
                 0,
                 FONT_SIZE * line++,
-                (SDL_Color){255, 255, 255, 255},
+                white_color,
                 "Dir: (%f, %f)",
                 player->dir_x,
                 player->dir_y);
@@ -947,7 +949,7 @@ int main(int argc, char *args[])
                 FONT_SIZE,
                 0,
                 FONT_SIZE * line++,
-                (SDL_Color){255, 255, 255, 255},
+                white_color,
                 "Plane: (%f, %f)",
                 player->plane_x,
                 player->plane_y);

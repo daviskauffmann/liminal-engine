@@ -1,7 +1,3 @@
 # TEMPORARY
-
-[Bb]in/
-
-engine.dll
-engine.exp
+*.dll
 engine.lib

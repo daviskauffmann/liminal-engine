@@ -19,10 +19,7 @@ int client_start(void)
         return 1;
     }
 
-    if (window_init(
-            WINDOW_TITLE,
-            WINDOW_WIDTH,
-            WINDOW_HEIGHT))
+    if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
     {
         return 1;
     }
