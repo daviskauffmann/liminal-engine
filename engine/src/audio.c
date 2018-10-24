@@ -5,7 +5,7 @@ int audio_init(int frequency, unsigned short format, int channels, int chunk_siz
     // init SDL_mixer
     int flags = 0;
 
-    if (Mix_Init(flags) & flags != flags)
+    if ((Mix_Init(flags) & flags) != flags)
     {
         error(Mix_GetError());
 

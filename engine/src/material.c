@@ -5,9 +5,7 @@ struct material *material_create(
     struct texture *specular,
     struct texture *normal,
     struct texture *emission,
-    vec3 color,
-    float shininess,
-    float glow)
+    vec3 color)
 {
     struct material *material = malloc(sizeof(struct material));
 
@@ -23,8 +21,6 @@ struct material *material_create(
     material->normal = normal;
     material->emission = emission;
     glm_vec_copy(color, material->color);
-    material->shininess = shininess;
-    material->glow = glow;
 
     return material;
 }

@@ -227,9 +227,7 @@ int main(int argc, char *argv[])
         box_specular_texture,
         NULL,
         NULL,
-        box_material_color,
-        32.0f,
-        1.0f);
+        box_material_color);
 
     if (!box_material)
     {
@@ -243,9 +241,7 @@ int main(int argc, char *argv[])
         cobble_specular_texture,
         NULL,
         NULL,
-        cobble_material_color,
-        32.0f,
-        1.0f);
+        cobble_material_color);
 
     if (!cobble_material)
     {
@@ -382,15 +378,14 @@ int main(int argc, char *argv[])
     vec3 red_point_light_ambient = { 0.1f, 0.0f, 0.0f };
     vec3 red_point_light_diffuse = { 0.8f, 0.0f, 0.0f };
     vec3 red_point_light_specular = { 1.0f, 0.0f, 0.0f };
+    vec3 red_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
     struct point_light *red_point_light = point_light_create(
         red_point_light_position,
         red_point_light_ambient,
         red_point_light_diffuse,
         red_point_light_specular,
-        1.0f,
-        0.09f,
-        0.032f);
+        red_point_light_attenuation);
 
     if (!red_point_light)
     {
@@ -401,15 +396,15 @@ int main(int argc, char *argv[])
     vec3 yellow_point_light_ambient = { 0.1f, 0.1f, 0.0f };
     vec3 yellow_point_light_diffuse = { 0.8f, 0.8f, 0.0f };
     vec3 yellow_point_light_specular = { 1.0f, 1.0f, 0.0f };
+    vec3 yellow_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
     struct point_light *yellow_point_light = point_light_create(
         yellow_point_light_position,
         yellow_point_light_ambient,
         yellow_point_light_diffuse,
         yellow_point_light_specular,
-        1.0f,
-        0.09f,
-        0.032f);
+        yellow_point_light_attenuation);
+
     if (!yellow_point_light)
     {
         return 1;
@@ -419,15 +414,14 @@ int main(int argc, char *argv[])
     vec3 green_point_light_ambient = { 0.0f, 0.1f, 0.0f };
     vec3 green_point_light_diffuse = { 0.0f, 0.8f, 0.0f };
     vec3 green_point_light_specular = { 0.0f, 1.0f, 0.0f };
+    vec3 green_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
     struct point_light *green_point_light = point_light_create(
         green_point_light_position,
         green_point_light_ambient,
         green_point_light_diffuse,
-        green_point_light_specular,
-        1.0f,
-        0.09f,
-        0.032f);
+        green_point_light_specular, 
+        green_point_light_attenuation);
 
     if (!green_point_light)
     {
@@ -438,15 +432,14 @@ int main(int argc, char *argv[])
     vec3 blue_point_light_ambient = { 0.0f, 0.0f, 0.1f };
     vec3 blue_point_light_diffuse = { 0.0f, 0.0f, 0.8f };
     vec3 blue_point_light_specular = { 0.0f, 0.0f, 1.0f };
+    vec3 blue_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
     struct point_light *blue_point_light = point_light_create(
         blue_point_light_position,
         blue_point_light_ambient,
         blue_point_light_diffuse,
         blue_point_light_specular,
-        1.0f,
-        0.09f,
-        0.032f);
+        blue_point_light_attenuation);
 
     if (!blue_point_light)
     {
@@ -465,6 +458,7 @@ int main(int argc, char *argv[])
     vec3 spot_light_ambient = { 0.0f, 0.0f, 0.0f };
     vec3 spot_light_diffuse = { 0.0f, 0.0f, 0.0f };
     vec3 spot_light_specular = { 0.0f, 0.0f, 0.0f };
+    vec3 spot_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
     struct spot_light *spot_light = spot_light_create(
         spot_light_position,
@@ -472,9 +466,7 @@ int main(int argc, char *argv[])
         spot_light_ambient,
         spot_light_diffuse,
         spot_light_specular,
-        1.0f,
-        0.09f,
-        0.032f,
+        spot_light_attenuation,
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
 
@@ -531,12 +523,26 @@ int main(int argc, char *argv[])
     glGenTextures(1, &screen_texture);
     glBindTexture(GL_TEXTURE_2D, screen_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture, 0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        screen_texture,
+        0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -544,9 +550,17 @@ int main(int argc, char *argv[])
     glGenRenderbuffers(1, &screen_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo);
 
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH24_STENCIL8,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT);
 
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screen_rbo);
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_STENCIL_ATTACHMENT,
+        GL_RENDERBUFFER,
+        screen_rbo);
 
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -568,15 +582,33 @@ int main(int argc, char *argv[])
     glGenTextures(1, &depthmap_texture);
     glBindTexture(GL_TEXTURE_2D, depthmap_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH,
+        SHADOW_HEIGHT,
+        0,
+        GL_DEPTH_COMPONENT,
+        GL_FLOAT,
+        NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, (GLfloat[4]) { 1.0f, 1.0f, 1.0f, 1.0f });
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthmap_texture, 0);
+    GLfloat border_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        GL_TEXTURE_2D,
+        depthmap_texture,
+        0);
+
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
@@ -600,12 +632,26 @@ int main(int argc, char *argv[])
     glGenTextures(1, &geometry_position_texture);
     glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB16F,
+        (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
+        (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, geometry_position_texture, 0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        geometry_position_texture,
+        0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -613,12 +659,26 @@ int main(int argc, char *argv[])
     glGenTextures(1, &geometry_normal_texture);
     glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB16F,
+        (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
+        (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, geometry_normal_texture, 0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT1,
+        GL_TEXTURE_2D,
+        geometry_normal_texture,
+        0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -626,12 +686,26 @@ int main(int argc, char *argv[])
     glGenTextures(1, &geometry_albedo_texture);
     glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
+        (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, geometry_albedo_texture, 0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT2,
+        GL_TEXTURE_2D,
+        geometry_albedo_texture,
+        0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -639,35 +713,46 @@ int main(int argc, char *argv[])
     glGenTextures(1, &geometry_specular_texture);
     glBindTexture(GL_TEXTURE_2D, geometry_specular_texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
+        (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, geometry_specular_texture, 0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D,
+        geometry_specular_texture,
+        0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    GLuint geometry_emission_texture;
-    glGenTextures(1, &geometry_emission_texture);
-    glBindTexture(GL_TEXTURE_2D, geometry_emission_texture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, geometry_emission_texture, 0);
-
-    glDrawBuffers(5, (GLenum[5]) { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
+    GLenum attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(sizeof(attachments) / sizeof(GLenum), attachments);
 
     GLuint geometry_rbo;
     glGenRenderbuffers(1, &geometry_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo);
 
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH_COMPONENT,
+        (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
+        (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE));
 
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, geometry_rbo);
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        GL_RENDERBUFFER,
+        geometry_rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -950,7 +1035,7 @@ int main(int argc, char *argv[])
         glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo);
 
         // geometry pass
-        glViewport(0, 0, WINDOW_WIDTH * RENDER_SCALE, WINDOW_HEIGHT * RENDER_SCALE);
+        glViewport(0, 0, (GLsizei)(WINDOW_WIDTH * RENDER_SCALE), (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -960,7 +1045,7 @@ int main(int argc, char *argv[])
         program_set_mat4(geometry_program, "camera.view", camera_view);
         program_set_vec3(geometry_program, "camera.position", camera->position);
 
-        for (int i = 0; i < num_objects; i++)
+        for (unsigned int i = 0; i < num_objects; i++)
         {
             // calculate model matrix
             mat4 model = GLM_MAT4_IDENTITY_INIT;
@@ -973,8 +1058,6 @@ int main(int argc, char *argv[])
             program_set_texture(geometry_program, "material.normal", 2, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
             program_set_texture(geometry_program, "material.emission", 3, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
             program_set_vec3(geometry_program, "material.color", objects[i]->material->color);
-            program_set_float(geometry_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(geometry_program, "material.glow", objects[i]->material->glow);
 
             mesh_draw(objects[i]->mesh);
         }
@@ -997,7 +1080,7 @@ int main(int argc, char *argv[])
         program_set_mat4(depth_program, "sun.projection", sun_projection);
         program_set_mat4(depth_program, "sun.view", sun_view);
 
-        for (int i = 0; i < num_objects; i++)
+        for (unsigned int i = 0; i < num_objects; i++)
         {
             // calculate model matrix
             mat4 model = GLM_MAT4_IDENTITY_INIT;
@@ -1050,7 +1133,6 @@ int main(int argc, char *argv[])
             program_set_texture(phong_program, "geometry.normal", 1, geometry_normal_texture);
             program_set_texture(phong_program, "geometry.albedo", 2, geometry_albedo_texture);
             program_set_texture(phong_program, "geometry.specular", 3, geometry_specular_texture);
-            program_set_texture(phong_program, "geometry.emission", 4, geometry_emission_texture);
 
             program_set_mat4(phong_program, "sun.projection", sun_projection);
             program_set_mat4(phong_program, "sun.view", sun_view);
@@ -1066,46 +1148,36 @@ int main(int argc, char *argv[])
             program_set_vec3(phong_program, "point_lights[0].ambient", point_lights[0]->ambient);
             program_set_vec3(phong_program, "point_lights[0].diffuse", point_lights[0]->diffuse);
             program_set_vec3(phong_program, "point_lights[0].specular", point_lights[0]->specular);
-            program_set_float(phong_program, "point_lights[0].constant", point_lights[0]->constant);
-            program_set_float(phong_program, "point_lights[0].linear", point_lights[0]->linear);
-            program_set_float(phong_program, "point_lights[0].quadratic", point_lights[0]->quadratic);
+            program_set_vec3(phong_program, "point_lights[0].attenuation", point_lights[0]->attenuation);
 
             program_set_vec3(phong_program, "point_lights[1].position", point_lights[1]->position);
             program_set_vec3(phong_program, "point_lights[1].ambient", point_lights[1]->ambient);
             program_set_vec3(phong_program, "point_lights[1].diffuse", point_lights[1]->diffuse);
             program_set_vec3(phong_program, "point_lights[1].specular", point_lights[1]->specular);
-            program_set_float(phong_program, "point_lights[1].constant", point_lights[1]->constant);
-            program_set_float(phong_program, "point_lights[1].linear", point_lights[1]->linear);
-            program_set_float(phong_program, "point_lights[1].quadratic", point_lights[1]->quadratic);
+            program_set_vec3(phong_program, "point_lights[1].attenuation", point_lights[1]->attenuation);
 
             program_set_vec3(phong_program, "point_lights[2].position", point_lights[2]->position);
             program_set_vec3(phong_program, "point_lights[2].ambient", point_lights[2]->ambient);
             program_set_vec3(phong_program, "point_lights[2].diffuse", point_lights[2]->diffuse);
             program_set_vec3(phong_program, "point_lights[2].specular", point_lights[2]->specular);
-            program_set_float(phong_program, "point_lights[2].constant", point_lights[2]->constant);
-            program_set_float(phong_program, "point_lights[2].linear", point_lights[2]->linear);
-            program_set_float(phong_program, "point_lights[2].quadratic", point_lights[2]->quadratic);
+            program_set_vec3(phong_program, "point_lights[2].attenuation", point_lights[2]->attenuation);
 
             program_set_vec3(phong_program, "point_lights[3].position", point_lights[3]->position);
             program_set_vec3(phong_program, "point_lights[3].ambient", point_lights[3]->ambient);
             program_set_vec3(phong_program, "point_lights[3].diffuse", point_lights[3]->diffuse);
             program_set_vec3(phong_program, "point_lights[3].specular", point_lights[3]->specular);
-            program_set_float(phong_program, "point_lights[3].constant", point_lights[3]->constant);
-            program_set_float(phong_program, "point_lights[3].linear", point_lights[3]->linear);
-            program_set_float(phong_program, "point_lights[3].quadratic", point_lights[3]->quadratic);
+            program_set_vec3(phong_program, "point_lights[3].attenuation", point_lights[3]->attenuation);
 
             program_set_vec3(phong_program, "spot_light.position", spot_light->position);
             program_set_vec3(phong_program, "spot_light.direction", spot_light->direction);
             program_set_vec3(phong_program, "spot_light.ambient", spot_light->ambient);
             program_set_vec3(phong_program, "spot_light.diffuse", spot_light->diffuse);
             program_set_vec3(phong_program, "spot_light.specular", spot_light->specular);
-            program_set_float(phong_program, "spot_light.constant", spot_light->constant);
-            program_set_float(phong_program, "spot_light.linear", spot_light->linear);
-            program_set_float(phong_program, "spot_light.quadratic", spot_light->quadratic);
-            program_set_float(phong_program, "spot_light.cutOff", spot_light->cutOff);
-            program_set_float(phong_program, "spot_light.outerCutOff", spot_light->outerCutOff);
+            program_set_vec3(phong_program, "spot_light.attenuation", spot_light->attenuation);
+            program_set_float(phong_program, "spot_light.inner_cutoff", spot_light->inner_cutoff);
+            program_set_float(phong_program, "spot_light.outer_cutoff", spot_light->outer_cutoff);
 
-            program_set_texture(phong_program, "depthmap.texture", 5, depthmap_texture);
+            program_set_texture(phong_program, "depthmap.texture", 4, depthmap_texture);
 
             mesh_draw(quad_mesh);
 
@@ -1155,12 +1227,12 @@ int main(int argc, char *argv[])
     Mix_FreeChunk(shoot_sound);
     Mix_FreeMusic(background_music);
     spot_light_destroy(spot_light);
-    for (int i = 0; i < num_point_lights; i++)
+    for (unsigned int i = 0; i < num_point_lights; i++)
     {
         point_light_destroy(point_lights[i]);
     }
     directional_light_destroy(directional_light);
-    for (int i = 0; i < num_objects; i++)
+    for (unsigned int i = 0; i < num_objects; i++)
     {
         object_destroy(objects[i]);
     }

@@ -4,7 +4,8 @@ int image_init(void)
 {
     // init SDL_image
     int flags = IMG_INIT_JPG | IMG_INIT_PNG;
-    if (IMG_Init(flags) & flags != flags)
+
+    if ((IMG_Init(flags) & flags) != flags)
     {
         error(IMG_GetError());
 

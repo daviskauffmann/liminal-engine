@@ -6,11 +6,9 @@ struct spot_light *spot_light_create(
     vec3 ambient,
     vec3 diffuse,
     vec3 specular,
-    float constant,
-    float linear,
-    float quadratic,
-    float cutOff,
-    float outerCutOff)
+    vec3 attenuation,
+    float inner_cutoff,
+    float outer_cutoff)
 {
     struct spot_light *spot_light = malloc(sizeof(struct spot_light));
 
@@ -26,11 +24,9 @@ struct spot_light *spot_light_create(
     glm_vec_copy(ambient, spot_light->ambient);
     glm_vec_copy(diffuse, spot_light->diffuse);
     glm_vec_copy(specular, spot_light->specular);
-    spot_light->constant = constant;
-    spot_light->linear = linear;
-    spot_light->quadratic = quadratic;
-    spot_light->cutOff = cutOff;
-    spot_light->outerCutOff = outerCutOff;
+    glm_vec_copy(attenuation, spot_light->attenuation);
+    spot_light->inner_cutoff = inner_cutoff;
+    spot_light->outer_cutoff = outer_cutoff;
 
     return spot_light;
 }

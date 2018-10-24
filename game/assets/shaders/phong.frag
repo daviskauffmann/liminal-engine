@@ -48,9 +48,7 @@ uniform struct PointLight
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
-    float constant;
-    float linear;
-    float quadratic;
+	vec3 attenuation;
 } point_lights[NUM_POINT_LIGHTS];
 
 uniform struct SpotLight
@@ -60,11 +58,9 @@ uniform struct SpotLight
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
-    float constant;
-    float linear;
-    float quadratic;    
-    float cutOff;
-    float outerCutOff;
+	vec3 attenuation;  
+    float inner_cutoff;
+    float outer_cutoff;
 } spot_light;
 
 uniform struct Depthmap {
@@ -101,9 +97,6 @@ void main()
 
     // spot light
     color += calc_spot_light(spot_light, position, normal, diffuse, specular, shadow_position, view_direction);
-
-    // emissive light
-    color += emission;
 
     gl_FragColor = vec4(color, 1.0);
 }
@@ -160,7 +153,10 @@ vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse
 
     // attenuation
     float light_distance = length(light.position - position);
-    float attenuation = 1.0 / (light.constant + light.linear * light_distance + light.quadratic * pow(light_distance, 2));
+	float constant = light.attenuation[0];
+	float linear = light.attenuation[1];
+	float quadratic = light.attenuation[2];
+    float attenuation = 1.0 / (constant + linear * light_distance + quadratic * pow(light_distance, 2));
 
     return (final_ambient + final_diffuse + final_specular) * attenuation;
 }
@@ -182,12 +178,15 @@ vec3 calc_spot_light(SpotLight light, vec3 position, vec3 normal, vec3 diffuse, 
 
     // attenuation
     float light_distance = length(light.position - position);
-    float attenuation = 1.0 / (light.constant + light.linear * light_distance + light.quadratic * pow(light_distance, 2));
+	float constant = light.attenuation[0];
+	float linear = light.attenuation[1];
+	float quadratic = light.attenuation[2];
+    float attenuation = 1.0 / (constant + linear * light_distance + quadratic * pow(light_distance, 2));
 
     // intensity
     float theta = dot(light_direction, normalize(-light.direction));
-    float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    float epsilon = light.inner_cutoff - light.outer_cutoff;
+    float intensity = clamp((theta - light.outer_cutoff) / epsilon, 0.0, 1.0);
 
     return (final_ambient + final_diffuse + final_specular) * attenuation * intensity;
 }

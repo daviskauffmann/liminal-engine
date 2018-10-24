@@ -10,11 +10,9 @@ struct spot_light
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
-    float constant;
-    float linear;
-    float quadratic;
-    float cutOff;
-    float outerCutOff;
+    vec3 attenuation;
+    float inner_cutoff;
+    float outer_cutoff;
 };
 
 struct spot_light ENGINE_API *spot_light_create(
@@ -23,11 +21,9 @@ struct spot_light ENGINE_API *spot_light_create(
     vec3 ambient,
     vec3 diffuse,
     vec3 specular,
-    float constant,
-    float linear,
-    float quadratic,
-    float cutOff,
-    float outerCutOff);
+    vec3 attenuation,
+    float inner_cutoff,
+    float outer_cutoff);
 void ENGINE_API spot_light_destroy(struct spot_light *spot_light);
 
 #endif

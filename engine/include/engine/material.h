@@ -12,8 +12,6 @@ struct material
     struct texture *normal;
     struct texture *emission;
     vec3 color;
-    float shininess;
-    float glow;
 };
 
 struct material ENGINE_API *material_create(
@@ -21,9 +19,7 @@ struct material ENGINE_API *material_create(
     struct texture *specular,
     struct texture *normal,
     struct texture *emission,
-    vec3 color,
-    float shininess,
-    float glow);
+    vec3 color);
 void ENGINE_API material_destroy(struct material *material);
 
 #endif
