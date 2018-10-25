@@ -7,19 +7,23 @@
 
 struct material
 {
+    vec3 color;
     struct texture *diffuse;
     struct texture *specular;
+    float shininess;
     struct texture *normal;
     struct texture *emission;
-    vec3 color;
+    float glow;
 };
 
 struct material ENGINE_API *material_create(
+    vec3 color,
     struct texture *diffuse,
     struct texture *specular,
+    float shininess,
     struct texture *normal,
     struct texture *emission,
-    vec3 color);
+    float glow);
 void ENGINE_API material_destroy(struct material *material);
 
 #endif

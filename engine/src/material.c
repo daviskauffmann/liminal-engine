@@ -1,11 +1,13 @@
 #include <engine/engine.h>
 
-struct material *material_create(
+struct material ENGINE_API *material_create(
+    vec3 color,
     struct texture *diffuse,
     struct texture *specular,
+    float shininess,
     struct texture *normal,
     struct texture *emission,
-    vec3 color)
+    float glow)
 {
     struct material *material = malloc(sizeof(struct material));
 
@@ -16,11 +18,13 @@ struct material *material_create(
         return NULL;
     }
 
+    glm_vec_copy(color, material->color);
     material->diffuse = diffuse;
     material->specular = specular;
+    material->shininess = shininess;
     material->normal = normal;
     material->emission = emission;
-    glm_vec_copy(color, material->color);
+    material->glow = glow;
 
     return material;
 }

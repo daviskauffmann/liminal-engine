@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024))
+    if (audio_init(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096))
     {
         return 1;
     }
@@ -223,11 +223,13 @@ int main(int argc, char *argv[])
     vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
 
     struct material *box_material = material_create(
+        box_material_color,
         box_diffuse_texture,
         box_specular_texture,
+        16.0f,
         NULL,
         NULL,
-        box_material_color);
+        1.0f);
 
     if (!box_material)
     {
@@ -237,13 +239,32 @@ int main(int argc, char *argv[])
     vec3 cobble_material_color = { 1.0f, 1.0f, 1.0f };
 
     struct material *cobble_material = material_create(
+        cobble_material_color,
         cobble_diffuse_texture,
         cobble_specular_texture,
+        16.0f,
         NULL,
         NULL,
-        cobble_material_color);
+        1.0f);
 
     if (!cobble_material)
+    {
+        return 1;
+    }
+
+    // create scene
+    vec3 scene_sun_direction = { -0.2f, -1.0f, -0.3f };
+    vec3 scene_sun_ambient = { 0.1f, 0.1f, 0.1f };
+    vec3 scene_sun_diffuse = { 0.8f, 0.8f, 0.8f };
+    vec3 scene_sun_specular = { 1.0f, 1.0f, 1.0f };
+
+    struct scene *scene = scene_create(
+        scene_sun_direction,
+        scene_sun_ambient,
+        scene_sun_diffuse,
+        scene_sun_specular);
+
+    if (!scene)
     {
         return 1;
     }
@@ -356,12 +377,10 @@ int main(int argc, char *argv[])
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
 
     // create lights
-    vec3 scene_ambient = { 0.1f, 0.1f, 0.1f };
-
-    vec3 directional_light_direction = { -0.2f, -1.0f, -0.3f };
-    vec3 directional_light_ambient = { 0.05f, 0.05f, 0.05f };
-    vec3 directional_light_diffuse = { 0.4f, 0.4f, 0.4f };
-    vec3 directional_light_specular = { 1.0f, 1.0f, 1.0f };
+    vec3 directional_light_direction = { 0.0f, 0.0f, 0.0f };
+    vec3 directional_light_ambient = { 0.0f, 0.0f, 0.0f };
+    vec3 directional_light_diffuse = { 0.0f, 0.0f, 0.0f };
+    vec3 directional_light_specular = { 0.0f, 0.0f, 0.0f };
 
     struct directional_light *directional_light = directional_light_create(
         directional_light_direction,
@@ -420,7 +439,7 @@ int main(int argc, char *argv[])
         green_point_light_position,
         green_point_light_ambient,
         green_point_light_diffuse,
-        green_point_light_specular, 
+        green_point_light_specular,
         green_point_light_attenuation);
 
     if (!green_point_light)
@@ -694,7 +713,7 @@ int main(int argc, char *argv[])
         (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
         0,
         GL_RGB,
-        GL_FLOAT,
+        GL_UNSIGNED_BYTE,
         NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -716,11 +735,11 @@ int main(int argc, char *argv[])
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB,
+        GL_RGBA16F, // TODO: move shininess from alpha channel to somewhere else so this can be GL_RGB + GL_UNSIGNED_BYTE
         (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
         (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
         0,
-        GL_RGB,
+        GL_RGBA,
         GL_FLOAT,
         NULL);
 
@@ -729,13 +748,41 @@ int main(int argc, char *argv[])
 
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D,
+        GL_COLOR_ATTACHMENT3,
+        GL_TEXTURE_2D,
         geometry_specular_texture,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    GLenum attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    GLuint geometry_emission_texture;
+    glGenTextures(1, &geometry_emission_texture);
+    glBindTexture(GL_TEXTURE_2D, geometry_emission_texture);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
+        (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT4,
+        GL_TEXTURE_2D,
+        geometry_emission_texture,
+        0);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLenum attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
     glDrawBuffers(sizeof(attachments) / sizeof(GLenum), attachments);
 
     GLuint geometry_rbo;
@@ -962,6 +1009,7 @@ int main(int argc, char *argv[])
             vec3 direction;
             glm_cross(camera->front, camera->up, direction);
             glm_normalize(direction);
+
             vec3 movement;
             glm_vec_scale(direction, -speed, movement);
             glm_vec_add(camera->position, movement, camera->position);
@@ -981,6 +1029,7 @@ int main(int argc, char *argv[])
             vec3 direction;
             glm_cross(camera->front, camera->up, direction);
             glm_normalize(direction);
+
             vec3 movement;
             glm_vec_scale(direction, speed, movement);
             glm_vec_add(camera->position, movement, camera->position);
@@ -1005,8 +1054,8 @@ int main(int argc, char *argv[])
         objects[1]->rotation[1] = angle;
         objects[1]->rotation[2] = angle;
 
-        directional_light->direction[0] = sinf(angle);
-        directional_light->direction[2] = cosf(angle);
+        scene->sun_direction[0] = sinf(angle);
+        scene->sun_direction[2] = cosf(angle);
 
         // update lights
         glm_vec_copy(camera->position, spot_light->position);
@@ -1014,22 +1063,19 @@ int main(int argc, char *argv[])
 
         // calculate camera projection matrix
         mat4 camera_projection;
-        camera_calc_perspective(camera, camera_projection);
+        camera_calc_projection_perspective(camera, camera_projection);
 
         // calculate camera view matrix
         mat4 camera_view;
         camera_calc_view(camera, camera_view);
 
         // calculate sun projection matrix
-        mat4 sun_projection;
-        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+        mat4 scene_sun_projection;
+        scene_calc_sun_projection(scene, scene_sun_projection);
 
         // calculate sun view matrix
-        // use the directional light to provide position/direction
-        vec3 directional_light_position;
-        glm_vec_sub((vec3) { 0.0f, 0.0f, 0.0f }, directional_light->direction, directional_light_position);
-        mat4 sun_view;
-        glm_lookat(directional_light_position, (vec3) { 0.0f, 0.0f, 0.0f }, (vec3) { 0.0f, 1.0f, 0.0f }, sun_view);
+        mat4 scene_sun_view;
+        scene_calc_sun_view(scene, scene_sun_view);
 
         // bind geometry fbo
         glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo);
@@ -1053,11 +1099,13 @@ int main(int argc, char *argv[])
 
             program_set_mat4(geometry_program, "object.model", model);
 
+            program_set_vec3(geometry_program, "material.color", objects[i]->material->color);
             program_set_texture(geometry_program, "material.diffuse", 0, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
             program_set_texture(geometry_program, "material.specular", 1, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
+            program_set_float(geometry_program, "material.shininess", objects[i]->material->shininess);
             program_set_texture(geometry_program, "material.normal", 2, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
             program_set_texture(geometry_program, "material.emission", 3, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
-            program_set_vec3(geometry_program, "material.color", objects[i]->material->color);
+            program_set_float(geometry_program, "material.glow", objects[i]->material->glow);
 
             mesh_draw(objects[i]->mesh);
         }
@@ -1077,8 +1125,8 @@ int main(int argc, char *argv[])
 
         program_bind(depth_program);
 
-        program_set_mat4(depth_program, "sun.projection", sun_projection);
-        program_set_mat4(depth_program, "sun.view", sun_view);
+        program_set_mat4(depth_program, "scene.sun_projection", scene_sun_projection);
+        program_set_mat4(depth_program, "scene.sun_view", scene_sun_view);
 
         for (unsigned int i = 0; i < num_objects; i++)
         {
@@ -1123,6 +1171,8 @@ int main(int argc, char *argv[])
         break;
         case LIGHTING_PHONG:
         {
+            // TODO: blend mode for lighting so we can have unlimited lights
+            // so we need a separate program for scene/directional/point/spot lighting
             program_bind(phong_program);
 
             program_set_mat4(phong_program, "camera.projection", camera_projection);
@@ -1133,11 +1183,14 @@ int main(int argc, char *argv[])
             program_set_texture(phong_program, "geometry.normal", 1, geometry_normal_texture);
             program_set_texture(phong_program, "geometry.albedo", 2, geometry_albedo_texture);
             program_set_texture(phong_program, "geometry.specular", 3, geometry_specular_texture);
+            program_set_texture(phong_program, "geometry.emission", 4, geometry_emission_texture);
 
-            program_set_mat4(phong_program, "sun.projection", sun_projection);
-            program_set_mat4(phong_program, "sun.view", sun_view);
-
-            program_set_vec3(phong_program, "scene.ambient", scene_ambient);
+            program_set_vec3(phong_program, "scene.sun_direction", scene->sun_direction);
+            program_set_vec3(phong_program, "scene.sun_ambient", scene->sun_ambient);
+            program_set_vec3(phong_program, "scene.sun_diffuse", scene->sun_diffuse);
+            program_set_vec3(phong_program, "scene.sun_specular", scene->sun_specular);
+            program_set_mat4(phong_program, "scene.sun_projection", scene_sun_projection);
+            program_set_mat4(phong_program, "scene.sun_view", scene_sun_view);
 
             program_set_vec3(phong_program, "directional_light.direction", directional_light->direction);
             program_set_vec3(phong_program, "directional_light.ambient", directional_light->ambient);
@@ -1177,7 +1230,7 @@ int main(int argc, char *argv[])
             program_set_float(phong_program, "spot_light.inner_cutoff", spot_light->inner_cutoff);
             program_set_float(phong_program, "spot_light.outer_cutoff", spot_light->outer_cutoff);
 
-            program_set_texture(phong_program, "depthmap.texture", 4, depthmap_texture);
+            program_set_texture(phong_program, "depthmap.texture", 5, depthmap_texture);
 
             mesh_draw(quad_mesh);
 
@@ -1210,6 +1263,7 @@ int main(int argc, char *argv[])
     }
 
     glDeleteRenderbuffers(1, &geometry_rbo);
+    glDeleteTextures(1, &geometry_emission_texture);
     glDeleteTextures(1, &geometry_specular_texture);
     glDeleteTextures(1, &geometry_albedo_texture);
     glDeleteTextures(1, &geometry_normal_texture);

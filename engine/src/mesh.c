@@ -41,20 +41,6 @@ struct mesh *mesh_create(
     return mesh;
 }
 
-struct mesh *mesh_create_obj(const char *file)
-{
-    struct mesh *mesh = malloc(sizeof(struct mesh));
-
-    if (!mesh)
-    {
-        error("Couldn't allocate mesh");
-
-        return NULL;
-    }
-
-    return mesh;
-}
-
 void mesh_draw(struct mesh *mesh)
 {
     glBindVertexArray(mesh->vao);

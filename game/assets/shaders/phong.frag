@@ -18,20 +18,17 @@ uniform struct Geometry
 
 uniform struct Camera
 {
-    mat4 projection;
-    mat4 view;
     vec3 position;
 } camera;
 
-uniform struct Sun
-{
-    mat4 projection;
-    mat4 view;
-} sun;
-
 uniform struct Scene
 {
-	vec3 ambient;
+	vec3 sun_direction;
+	vec3 sun_ambient;
+	vec3 sun_diffuse;
+	vec3 sun_specular;
+	mat4 sun_projection;
+	mat4 sun_view;
 } scene;
 
 uniform struct DirectionalLight
@@ -67,9 +64,10 @@ uniform struct Depthmap {
     sampler2D texture;
 } depthmap;
 
-vec3 calc_directional_light(DirectionalLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, vec4 shadow_position, vec3 view_direction);
-vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, vec4 shadow_position, vec3 view_direction);
-vec3 calc_spot_light(SpotLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, vec4 shadow_position, vec3 view_direction);
+vec3 calc_scene_lighting(vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction);
+vec3 calc_directional_light(DirectionalLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction);
+vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction);
+vec3 calc_spot_light(SpotLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction);
 
 void main()
 {
@@ -77,46 +75,51 @@ void main()
     vec3 normal = texture(geometry.normal, vertex.uv).rgb;
     vec3 diffuse = texture(geometry.albedo, vertex.uv).rgb;
     vec3 specular = texture(geometry.specular, vertex.uv).rgb;
+	float shininess = texture(geometry.specular, vertex.uv).a;
     vec3 emission = texture(geometry.emission, vertex.uv).rgb;
-    vec4 shadow_position = sun.projection * sun.view * vec4(position, 1.0);
     vec3 view_direction = normalize(camera.position - position);
 
     vec3 color;
-
-    // ambient light
-    color += scene.ambient * diffuse;
+	
+	// scene lighting
+	color += calc_scene_lighting(position, normal, diffuse, specular, shininess, view_direction);
 
     // directional light
-    color += calc_directional_light(directional_light, position, normal, diffuse, specular, shadow_position, view_direction);
+    color += calc_directional_light(directional_light, position, normal, diffuse, specular, shininess, view_direction);
 
     // point lights
     for (int i = 0; i < NUM_POINT_LIGHTS; i++)
     {
-        color += calc_point_light(point_lights[i], position, normal, diffuse, specular, shadow_position, view_direction);
+        color += calc_point_light(point_lights[i], position, normal, diffuse, specular, shininess, view_direction);
     }
 
     // spot light
-    color += calc_spot_light(spot_light, position, normal, diffuse, specular, shadow_position, view_direction);
+    color += calc_spot_light(spot_light, position, normal, diffuse, specular, shininess, view_direction);
+
+	// emissive light
+	color += emission;
 
     gl_FragColor = vec4(color, 1.0);
 }
 
-vec3 calc_directional_light(DirectionalLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, vec4 shadow_position, vec3 view_direction)
+vec3 calc_scene_lighting(vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction)
 {
-    // ambient
-    vec3 final_ambient = light.ambient * diffuse;
+	// ambient
+	vec3 final_ambient = scene.sun_ambient * diffuse;
 
     // diffuse
-    vec3 light_direction = normalize(-light.direction);
+    vec3 light_direction = normalize(-scene.sun_direction);
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
-    vec3 final_diffuse = light.diffuse * diffuse * diffuse_factor;
+    vec3 final_diffuse = scene.sun_diffuse * diffuse * diffuse_factor;
 
     // specular
     vec3 halfway_direction = normalize(light_direction + view_direction);
-    float specular_factor = pow(max(dot(normal, halfway_direction), 0.0), 16.0);
-    vec3 final_specular = light.specular * specular * specular_factor;
+	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+    float specular_factor = pow(specular_angle, shininess);
+    vec3 final_specular = scene.sun_specular * specular * specular_factor;
 
     // shadow
+    vec4 shadow_position = scene.sun_projection * scene.sun_view * vec4(position, 1.0);
     vec3 proj_coords = (shadow_position.xyz / shadow_position.w) * 0.5 + 0.5;
     float current_depth = proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
@@ -136,7 +139,26 @@ vec3 calc_directional_light(DirectionalLight light, vec3 position, vec3 normal, 
     return (final_ambient + (1.0 - shadow) * (final_diffuse + final_specular));
 }
 
-vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, vec4 shadow_position, vec3 view_direction)
+vec3 calc_directional_light(DirectionalLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction)
+{
+    // ambient
+    vec3 final_ambient = light.ambient * diffuse;
+
+    // diffuse
+    vec3 light_direction = normalize(-light.direction);
+    float diffuse_factor = max(dot(normal, light_direction), 0.0);
+    vec3 final_diffuse = light.diffuse * diffuse * diffuse_factor;
+
+    // specular
+    vec3 halfway_direction = normalize(light_direction + view_direction);
+	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+    float specular_factor = pow(specular_angle, shininess);
+    vec3 final_specular = light.specular * specular * specular_factor;
+
+    return final_ambient + final_diffuse + final_specular;
+}
+
+vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction)
 {
     // ambient
     vec3 final_ambient = light.ambient * diffuse;
@@ -148,7 +170,8 @@ vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse
 
     // specular
     vec3 halfway_direction = normalize(light_direction + view_direction);
-    float specular_factor = pow(max(dot(normal, halfway_direction), 0.0), 16.0);
+	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+    float specular_factor = pow(specular_angle, shininess);
     vec3 final_specular = light.specular * specular * specular_factor;
 
     // attenuation
@@ -161,7 +184,7 @@ vec3 calc_point_light(PointLight light, vec3 position, vec3 normal, vec3 diffuse
     return (final_ambient + final_diffuse + final_specular) * attenuation;
 }
 
-vec3 calc_spot_light(SpotLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, vec4 shadow_position, vec3 view_direction)
+vec3 calc_spot_light(SpotLight light, vec3 position, vec3 normal, vec3 diffuse, vec3 specular, float shininess, vec3 view_direction)
 {
     // ambient
     vec3 final_ambient = light.ambient * diffuse;
@@ -173,7 +196,8 @@ vec3 calc_spot_light(SpotLight light, vec3 position, vec3 normal, vec3 diffuse, 
 
     // specular
     vec3 halfway_direction = normalize(light_direction + view_direction);
-    float specular_factor = pow(max(dot(normal, halfway_direction), 0.0), 16.0);
+	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+    float specular_factor = pow(specular_angle, shininess);
     vec3 final_specular = light.specular * specular * specular_factor;
 
     // attenuation

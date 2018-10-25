@@ -17,7 +17,6 @@ struct mesh ENGINE_API *mesh_create(
     unsigned int vertices_size,
     unsigned int *indices,
     unsigned int indices_size);
-struct mesh ENGINE_API *mesh_create_obj(const char *file);
 void ENGINE_API mesh_draw(struct mesh *mesh);
 void ENGINE_API mesh_destroy(struct mesh *mesh);
 

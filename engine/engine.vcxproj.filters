@@ -78,6 +78,9 @@
     <ClCompile Include="src\window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\SDL\SDL_vulkan.h">
@@ -546,6 +549,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\cglm\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

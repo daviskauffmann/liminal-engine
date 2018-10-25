@@ -38,6 +38,7 @@
 #include "point_light.h"
 #include "program.h"
 #include "renderer.h"
+#include "scene.h"
 #include "spot_light.h"
 #include "tcp.h"
 #include "texture.h"

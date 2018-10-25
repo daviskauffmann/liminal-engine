@@ -2,11 +2,11 @@
 
 layout (location = 0) in vec3 position;
 
-uniform struct Sun
+uniform struct Scene
 {
-    mat4 projection;
-    mat4 view;
-} sun;
+    mat4 sun_projection;
+    mat4 sun_view;
+} scene;
 
 uniform struct Object
 {
@@ -15,5 +15,5 @@ uniform struct Object
 
 void main()
 {
-    gl_Position = sun.projection * sun.view * object.model * vec4(position, 1.0);
+    gl_Position = scene.sun_projection * scene.sun_view * object.model * vec4(position, 1.0);
 }

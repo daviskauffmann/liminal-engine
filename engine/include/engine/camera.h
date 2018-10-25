@@ -22,8 +22,8 @@ struct camera ENGINE_API *camera_create(
     float yaw,
     float roll,
     float fov);
-void ENGINE_API camera_calc_perspective(struct camera *camera, vec4 *projection);
-void ENGINE_API camera_calc_ortho(struct camera *camera, vec4 *projection);
+void ENGINE_API camera_calc_projection_perspective(struct camera *camera, vec4 *projection);
+void ENGINE_API camera_calc_projection_ortho(struct camera *camera, vec4 *projection);
 void ENGINE_API camera_calc_view(struct camera *camera, vec4 *view);
 void ENGINE_API camera_destroy(struct camera *camera);
 
