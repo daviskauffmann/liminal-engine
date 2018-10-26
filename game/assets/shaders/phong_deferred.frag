@@ -13,7 +13,6 @@ uniform struct Geometry
     sampler2D normal;
     sampler2D albedo;
     sampler2D specular;
-    sampler2D emission;
 } geometry;
 
 uniform struct Camera
@@ -75,8 +74,7 @@ void main()
     vec3 normal = texture(geometry.normal, vertex.uv).rgb;
     vec3 diffuse = texture(geometry.albedo, vertex.uv).rgb;
     vec3 specular = texture(geometry.specular, vertex.uv).rgb;
-	float shininess = texture(geometry.specular, vertex.uv).a;
-    vec3 emission = texture(geometry.emission, vertex.uv).rgb;
+	float shininess = 16.0; // TODO: find a place in gbuffer to put material shininess
     vec3 view_direction = normalize(camera.position - position);
 
     vec3 color;
@@ -95,9 +93,6 @@ void main()
 
     // spot light
     color += calc_spot_light(spot_light, position, normal, diffuse, specular, shininess, view_direction);
-
-	// emissive light
-	color += emission;
 
     gl_FragColor = vec4(color, 1.0);
 }

@@ -21,15 +21,12 @@ uniform struct Material
 layout (location = 0) out vec3 position;
 layout (location = 1) out vec3 normal;
 layout (location = 2) out vec3 albedo;
-layout (location = 3) out vec4 specular;
-layout (location = 4) out vec3 emission;
+layout (location = 3) out vec3 specular;
 
 void main()
 {
     position = vertex.position;
     normal = normalize(vertex.normal);
     albedo = texture(material.diffuse, vertex.uv).rgb * material.color;
-    specular.rgb = texture(material.specular, vertex.uv).rgb;
-	specular.a = material.shininess;
-	emission = texture(material.emission, vertex.uv).rgb * material.glow;
+    specular = texture(material.specular, vertex.uv).rgb;
 }
