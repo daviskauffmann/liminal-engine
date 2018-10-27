@@ -1,8 +1,8 @@
 #include <engine/engine.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 1920
-#define WINDOW_HEIGHT 1080
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 
 #define RENDER_SCALE 1.0f
 
@@ -42,11 +42,14 @@ int main(int argc, char *argv[])
 
     time_cap_fps(FPS_CAP);
 
-    window_set_fullscreen(SDL_WINDOW_FULLSCREEN_DESKTOP);
+    // window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
 
     SDL_SetRelativeMouseMode(true);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    // glFrontFace(GL_CW);
 
     // create programs
     struct program *depth_program = program_create(
@@ -891,7 +894,7 @@ int main(int argc, char *argv[])
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA,
+        GL_RGBA8,
         (GLsizei)(WINDOW_WIDTH * RENDER_SCALE),
         (GLsizei)(WINDOW_HEIGHT * RENDER_SCALE),
         0,
@@ -1601,17 +1604,19 @@ int main(int argc, char *argv[])
 
     spot_light_destroy(spot_light);
 
-    for (unsigned int i = 0; i < num_point_lights; i++)
-    {
-        point_light_destroy(point_lights[i]);
-    }
+    point_light_destroy(red_point_light);
+    point_light_destroy(green_point_light);
+    point_light_destroy(blue_point_light);
+    point_light_destroy(yellow_point_light);
 
     directional_light_destroy(directional_light);
 
-    for (unsigned int i = 0; i < num_objects; i++)
-    {
-        object_destroy(objects[i]);
-    }
+    object_destroy(floor_object);
+    object_destroy(box_1_object);
+    object_destroy(box_2_object);
+    object_destroy(box_3_object);
+    object_destroy(box_4_object);
+    object_destroy(box_5_object);
 
     material_destroy(cobble_material);
     material_destroy(box_material);

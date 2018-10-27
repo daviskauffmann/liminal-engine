@@ -164,9 +164,9 @@
     <ClCompile Include="src\object.c" />
     <ClCompile Include="src\point_light.c" />
     <ClCompile Include="src\program.c" />
-    <ClCompile Include="src\renderer.c" />
     <ClCompile Include="src\scene.c" />
     <ClCompile Include="src\spot_light.c" />
+    <ClCompile Include="src\sprite.c" />
     <ClCompile Include="src\tcp.c" />
     <ClCompile Include="src\texture.c" />
     <ClCompile Include="src\time.c" />
@@ -233,9 +233,9 @@
     <ClInclude Include="include\engine\object.h" />
     <ClInclude Include="include\engine\point_light.h" />
     <ClInclude Include="include\engine\program.h" />
-    <ClInclude Include="include\engine\renderer.h" />
     <ClInclude Include="include\engine\scene.h" />
     <ClInclude Include="include\engine\spot_light.h" />
+    <ClInclude Include="include\engine\sprite.h" />
     <ClInclude Include="include\engine\tcp.h" />
     <ClInclude Include="include\engine\texture.h" />
     <ClInclude Include="include\engine\time.h" />

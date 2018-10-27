@@ -57,9 +57,6 @@
     <ClCompile Include="src\program.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\spot_light.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -79,6 +76,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\scene.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sprite.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -398,9 +398,6 @@
     <ClInclude Include="include\engine\program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\spot_light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -552,6 +549,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
