@@ -1109,7 +1109,7 @@ void draw_text(SDL_Renderer *renderer, TTF_Font *font, int px, int x, int y, SDL
     SDL_Rect text_rect;
     text_rect.x = x;
     text_rect.y = y;
-    text_rect.w = px * strlen(text);
+    text_rect.w = px * (int)strlen(text);
     text_rect.h = px;
 
     SDL_RenderCopy(renderer, text_texture, NULL, &text_rect);
