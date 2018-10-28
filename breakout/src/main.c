@@ -160,11 +160,11 @@ int main(int argc, char *argv[])
         mat4 camera_projection;
         glm_ortho_default(window_get_aspect(), camera_projection);
 
+        // TEST: draw awesomeface sprite
+
         // calculate sprite model
         mat4 awesomeface_sprite_model = GLM_MAT4_IDENTITY_INIT;
         sprite_calc_model(awesomeface_sprite, awesomeface_sprite_model);
-
-        // TEST: draw awesomeface sprite
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT);
 
