@@ -61,7 +61,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>glew32.lib;opengl32.lib;SDL2.lib;SDL2_mixer.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\;$(SolutionDir)engine\lib\$(Platform)\</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
@@ -90,7 +90,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>glew32.lib;opengl32.lib;SDL2.lib;SDL2_mixer.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\;$(SolutionDir)engine\lib\$(Platform)\</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
