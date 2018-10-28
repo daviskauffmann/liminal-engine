@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in struct Vertex
 {
@@ -9,7 +9,9 @@ uniform struct Screen {
     sampler2D texture;
 } screen;
 
+out vec4 frag_color;
+
 void main()
 {
-    gl_FragColor = texture(screen.texture, vertex.uv);
+    frag_color = texture(screen.texture, vertex.uv);
 }

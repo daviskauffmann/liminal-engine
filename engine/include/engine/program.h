@@ -7,6 +7,7 @@
 struct program
 {
     GLuint program;
+    // TODO: cache uniforms in a hashmap or something
 };
 
 struct program ENGINE_API *program_create(const char *vertex_file, const char *fragment_file);

@@ -22,9 +22,6 @@ int window_init(const char *title, int width, int height)
     }
 
     // create OpenGL context
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     context = SDL_GL_CreateContext(window);
 
     if (!context)
@@ -48,6 +45,9 @@ int window_init(const char *title, int width, int height)
 
     info("GLEW %s", glewGetString(GLEW_VERSION));
     info("OpenGL %s", glGetString(GL_VERSION));
+    info("Vendor %s", glGetString(GL_VENDOR));
+    info("Renderer %s", glGetString(GL_RENDERER));
+    info("GLSL %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     return 0;
 }

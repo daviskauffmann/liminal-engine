@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in struct Vertex
 {
@@ -25,6 +25,8 @@ uniform struct DirectionalLight
     vec3 specular;
 } directional_light;
 
+out vec4 frag_color;
+
 void main()
 {
     vec3 position = texture(geometry.position, vertex.uv).rgb;
@@ -48,5 +50,5 @@ void main()
     float specular_factor = pow(specular_angle, shininess);
     vec3 final_specular = directional_light.specular * specular * specular_factor;
 
-    gl_FragColor = vec4(final_ambient + final_diffuse + final_specular, 1.0);
+    frag_color = vec4(final_ambient + final_diffuse + final_specular, 1.0);
 }

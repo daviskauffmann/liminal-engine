@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in struct Vertex
 {
@@ -38,6 +38,8 @@ uniform struct Scene
 uniform struct Depthmap {
     sampler2D texture;
 } depthmap;
+
+out vec4 frag_color;
 
 void main()
 {
@@ -82,5 +84,5 @@ void main()
     shadow /= 9.0;
     if (proj_coords.z > 1.0) shadow = 0.0;
 
-    gl_FragColor = vec4((final_ambient + (1.0 - shadow) * (final_diffuse + final_specular)), 1.0);
+    frag_color = vec4((final_ambient + (1.0 - shadow) * (final_diffuse + final_specular)), 1.0);
 }

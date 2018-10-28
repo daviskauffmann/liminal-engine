@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in struct Vertex
 {
@@ -9,6 +9,7 @@ uniform struct Sprite
 {
 	vec3 color;
 	sampler2D image;
+	mat4 model;
 } sprite;
 
 void main()

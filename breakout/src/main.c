@@ -11,7 +11,7 @@ enum game_state
     GAME_STATE_WIN
 };
 
-static enum game_state game_stage;
+static enum game_state game_state;
 
 int main(int argc, char *argv[])
 {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
     // cache uniform locations
     GLint basic_program_camera_projection = program_get_location(basic_program, "camera.projection");
-    GLint basic_program_object_model = program_get_location(basic_program, "object.model");
+    GLint basic_program_sprite_model = program_get_location(basic_program, "sprite.model");
     GLint basic_program_sprite_color = program_get_location(basic_program, "sprite.color");
     GLint basic_program_sprite_image = program_get_location(basic_program, "sprite.image");
 
@@ -60,8 +60,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // sprite stuff
-    vec3 sprite_color = { 1.0f, 1.0f, 1.0f };
+    // create sprites
+    vec3 awesomeface_sprite_color = { 1.0f, 1.0f, 1.0f };
+    vec2 awesomeface_sprite_position = { 0.0f, 0.0f };
+    float awesomeface_sprite_rotation = 0.0f;
+    vec2 awesomeface_sprite_scale = { 1.0f, 1.0f };
+
+    struct sprite *awesomeface_sprite = sprite_create(
+        awesomeface_sprite_color,
+        awesomeface_texture,
+        awesomeface_sprite_position,
+        awesomeface_sprite_rotation,
+        awesomeface_sprite_scale);
+
+    if (!awesomeface_sprite)
+    {
+        return 1;
+    }
 
     // main loop
     bool quit = false;
@@ -139,23 +154,30 @@ int main(int argc, char *argv[])
             }
         }
 
+        awesomeface_sprite->rotation += time_delta();
+
         // calculate camera projection
         mat4 camera_projection;
         glm_ortho_default(window_get_aspect(), camera_projection);
 
-        // calculate object model
-        mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+        // calculate sprite model
+        mat4 awesomeface_sprite_model = GLM_MAT4_IDENTITY_INIT;
+        sprite_calc_model(awesomeface_sprite, awesomeface_sprite_model);
+
+        // TEST: draw awesomeface sprite
+        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         program_bind(basic_program);
 
         program_set_mat4(basic_program_camera_projection, camera_projection);
-        program_set_mat4(basic_program_object_model, object_model);
-        program_set_vec3(basic_program_sprite_color, sprite_color);
+        program_set_mat4(basic_program_sprite_model, awesomeface_sprite_model);
+        program_set_vec3(basic_program_sprite_color, awesomeface_sprite->color);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, awesomeface_texture->texture);
+        glBindTexture(GL_TEXTURE_2D, awesomeface_sprite->image->texture);
 
-        sprite_draw();
+        sprite_draw(awesomeface_sprite);
 
         program_unbind();
 

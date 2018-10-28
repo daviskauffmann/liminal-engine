@@ -1,8 +1,8 @@
 #include <engine/engine.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 #define RENDER_SCALE 1.0f
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     time_cap_fps(FPS_CAP);
 
-    // window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
+    window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
 
     SDL_SetRelativeMouseMode(true);
 
@@ -427,18 +427,20 @@ int main(int argc, char *argv[])
     }
 
     // create scene
-    vec3 scene_sun_direction = { -0.2f, -1.0f, -0.3f };
-    vec3 scene_sun_ambient = { 0.1f, 0.1f, 0.1f };
-    vec3 scene_sun_diffuse = { 0.8f, 0.8f, 0.8f };
-    vec3 scene_sun_specular = { 1.0f, 1.0f, 1.0f };
+    // TODO: the scene should hold and manage all the objects and lights
+    // this would allow for instanced rendering
+    vec3 main_scene_sun_direction = { -0.2f, -1.0f, -0.3f };
+    vec3 main_scene_sun_ambient = { 0.1f, 0.1f, 0.1f };
+    vec3 main_scene_sun_diffuse = { 0.8f, 0.8f, 0.8f };
+    vec3 main_scene_sun_specular = { 1.0f, 1.0f, 1.0f };
 
-    struct scene *scene = scene_create(
-        scene_sun_direction,
-        scene_sun_ambient,
-        scene_sun_diffuse,
-        scene_sun_specular);
+    struct scene *main_scene = scene_create(
+        main_scene_sun_direction,
+        main_scene_sun_ambient,
+        main_scene_sun_diffuse,
+        main_scene_sun_specular);
 
-    if (!scene)
+    if (!main_scene)
     {
         return 1;
     }
@@ -1186,8 +1188,8 @@ int main(int argc, char *argv[])
         objects[1]->rotation[1] = angle;
         objects[1]->rotation[2] = angle;
 
-        scene->sun_direction[0] = sinf(angle);
-        scene->sun_direction[2] = cosf(angle);
+        main_scene->sun_direction[0] = sinf(angle);
+        main_scene->sun_direction[2] = cosf(angle);
 
         // update lights
         glm_vec_copy(camera->position, spot_lights[0]->position);
@@ -1202,12 +1204,12 @@ int main(int argc, char *argv[])
         camera_calc_view(camera, camera_view);
 
         // calculate sun projection matrix
-        mat4 scene_sun_projection;
-        scene_calc_sun_projection(scene, scene_sun_projection);
+        mat4 main_scene_sun_projection;
+        scene_calc_sun_projection(main_scene, main_scene_sun_projection);
 
         // calculate sun view matrix
-        mat4 scene_sun_view;
-        scene_calc_sun_view(scene, scene_sun_view);
+        mat4 main_scene_sun_view;
+        scene_calc_sun_view(main_scene, main_scene_sun_view);
 
         // bind depthmap fbo
         glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo);
@@ -1219,16 +1221,16 @@ int main(int argc, char *argv[])
 
         program_bind(depth_program);
 
-        program_set_mat4(depth_program_scene_sun_projection, scene_sun_projection);
-        program_set_mat4(depth_program_scene_sun_view, scene_sun_view);
+        program_set_mat4(depth_program_scene_sun_projection, main_scene_sun_projection);
+        program_set_mat4(depth_program_scene_sun_view, main_scene_sun_view);
 
         for (unsigned int i = 0; i < num_objects; i++)
         {
             // calculate model matrix
-            mat4 model = GLM_MAT4_IDENTITY_INIT;
-            object_calc_model(objects[i], model);
+            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+            object_calc_model(objects[i], object_model);
 
-            program_set_mat4(depth_program_object_model, model);
+            program_set_mat4(depth_program_object_model, object_model);
 
             mesh_draw(objects[i]->mesh);
         }
@@ -1269,12 +1271,12 @@ int main(int argc, char *argv[])
                     program_set_float(forward_scene_program_material_shininess, objects[i]->material->shininess);
                     program_set_float(forward_scene_program_material_glow, objects[i]->material->glow);
 
-                    program_set_vec3(forward_scene_program_scene_sun_direction, scene->sun_direction);
-                    program_set_vec3(forward_scene_program_scene_sun_ambient, scene->sun_ambient);
-                    program_set_vec3(forward_scene_program_scene_sun_diffuse, scene->sun_diffuse);
-                    program_set_vec3(forward_scene_program_scene_sun_specular, scene->sun_specular);
-                    program_set_mat4(forward_scene_program_scene_sun_projection, scene_sun_projection);
-                    program_set_mat4(forward_scene_program_scene_sun_view, scene_sun_view);
+                    program_set_vec3(forward_scene_program_scene_sun_direction, main_scene->sun_direction);
+                    program_set_vec3(forward_scene_program_scene_sun_ambient, main_scene->sun_ambient);
+                    program_set_vec3(forward_scene_program_scene_sun_diffuse, main_scene->sun_diffuse);
+                    program_set_vec3(forward_scene_program_scene_sun_specular, main_scene->sun_specular);
+                    program_set_mat4(forward_scene_program_scene_sun_projection, main_scene_sun_projection);
+                    program_set_mat4(forward_scene_program_scene_sun_view, main_scene_sun_view);
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
@@ -1458,12 +1460,12 @@ int main(int argc, char *argv[])
 
                 program_set_vec3(deferred_scene_program_camera_position, camera->position);
 
-                program_set_vec3(deferred_scene_program_scene_sun_direction, scene->sun_direction);
-                program_set_vec3(deferred_scene_program_scene_sun_ambient, scene->sun_ambient);
-                program_set_vec3(deferred_scene_program_scene_sun_diffuse, scene->sun_diffuse);
-                program_set_vec3(deferred_scene_program_scene_sun_specular, scene->sun_specular);
-                program_set_mat4(deferred_scene_program_scene_sun_projection, scene_sun_projection);
-                program_set_mat4(deferred_scene_program_scene_sun_view, scene_sun_view);
+                program_set_vec3(deferred_scene_program_scene_sun_direction, main_scene->sun_direction);
+                program_set_vec3(deferred_scene_program_scene_sun_ambient, main_scene->sun_ambient);
+                program_set_vec3(deferred_scene_program_scene_sun_diffuse, main_scene->sun_diffuse);
+                program_set_vec3(deferred_scene_program_scene_sun_specular, main_scene->sun_specular);
+                program_set_mat4(deferred_scene_program_scene_sun_projection, main_scene_sun_projection);
+                program_set_mat4(deferred_scene_program_scene_sun_view, main_scene_sun_view);
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
@@ -1617,6 +1619,8 @@ int main(int argc, char *argv[])
     object_destroy(box_3_object);
     object_destroy(box_4_object);
     object_destroy(box_5_object);
+
+    scene_destroy(main_scene);
 
     material_destroy(cobble_material);
     material_destroy(box_material);

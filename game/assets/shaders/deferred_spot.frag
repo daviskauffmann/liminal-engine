@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in struct Vertex
 {
@@ -28,6 +28,8 @@ uniform struct SpotLight
     float inner_cutoff;
     float outer_cutoff;
 } spot_light;
+
+out vec4 frag_color;
 
 void main()
 {
@@ -64,5 +66,5 @@ void main()
     float epsilon = spot_light.inner_cutoff - spot_light.outer_cutoff;
     float intensity = clamp((theta - spot_light.outer_cutoff) / epsilon, 0.0, 1.0);
 
-    gl_FragColor = vec4((final_ambient + final_diffuse + final_specular) * attenuation * intensity, 1.0);
+    frag_color = vec4((final_ambient + final_diffuse + final_specular) * attenuation * intensity, 1.0);
 }

@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in struct Vertex
 {
@@ -25,6 +25,8 @@ uniform struct PointLight
     vec3 specular;
 	vec3 attenuation;
 } point_light;
+
+out vec4 frag_color;
 
 void main()
 {
@@ -56,5 +58,5 @@ void main()
 	float quadratic = point_light.attenuation[2];
     float attenuation = 1.0 / (constant + linear * light_distance + quadratic * pow(light_distance, 2));
 
-    gl_FragColor = vec4((final_ambient + final_diffuse + final_specular) * attenuation, 1.0);
+    frag_color = vec4((final_ambient + final_diffuse + final_specular) * attenuation, 1.0);
 }
