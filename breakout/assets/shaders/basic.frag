@@ -12,7 +12,9 @@ uniform struct Sprite
 	mat4 model;
 } sprite;
 
+out vec4 frag_color;
+
 void main()
 {    
-    gl_FragColor = vec4(sprite.color, 1.0) * texture(sprite.image, vertex.uv);
+    frag_color = vec4(sprite.color, 1.0) * texture(sprite.image, vertex.uv);
 }

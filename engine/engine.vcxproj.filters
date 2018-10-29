@@ -24,16 +24,7 @@
     <ClCompile Include="src\camera.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\directional_light.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\font.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\image.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\log.c">
@@ -43,9 +34,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mesh.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\object.c">
@@ -79,6 +67,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\sprite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -362,19 +359,10 @@
     <ClInclude Include="include\engine\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\directional_light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\font.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\log.h">
@@ -384,9 +372,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\net.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\object.h">
@@ -552,6 +537,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\sprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\http.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

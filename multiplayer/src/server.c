@@ -23,12 +23,7 @@ static struct client clients[MAX_CLIENTS];
 int server_start(void)
 {
     // setup engine
-    if (core_init())
-    {
-        return 1;
-    }
-
-    if (net_init())
+    if (engine_init())
     {
         return 1;
     }
@@ -293,8 +288,7 @@ int server_start(void)
     SDLNet_TCP_Close(tcp_socket);
 
     // close engine
-    net_quit();
-    core_quit();
+    engine_quit();
 
     return 0;
 }

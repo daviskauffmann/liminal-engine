@@ -104,24 +104,24 @@ void program_bind(struct program *program)
     glUseProgram(program->program);
 }
 
-void program_set_int(GLint location, int value)
+void program_set_int(struct program *program, const char *name, int value)
 {
-    glUniform1i(location, value);
+    glUniform1i(program_get_location(program, name), value);
 }
 
-void program_set_float(GLint location, float value)
+void program_set_float(struct program *program, const char *name, float value)
 {
-    glUniform1f(location, value);
+    glUniform1f(program_get_location(program, name), value);
 }
 
-void program_set_vec3(GLint location, vec3 vec)
+void program_set_vec3(struct program *program, const char *name, vec3 vec)
 {
-    glUniform3f(location, vec[0], vec[1], vec[2]);
+    glUniform3f(program_get_location(program, name), vec[0], vec[1], vec[2]);
 }
 
-void program_set_mat4(GLint location, mat4 mat)
+void program_set_mat4(struct program *program, const char *name, mat4 mat)
 {
-    glUniformMatrix4fv(location, 1, GL_FALSE, (GLfloat *)mat);
+    glUniformMatrix4fv(program_get_location(program, name), 1, GL_FALSE, (GLfloat *)mat);
 }
 
 void program_unbind(void)

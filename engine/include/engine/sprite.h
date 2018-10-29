@@ -1,6 +1,11 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
+// TODO: find a way to incorporate this into the renderer
+// either that or have a separate sprite_renderer module
+// basically, we need somewhere to put the sprite VAO
+// this module should be for individual instances
+
 #include <cglm/cglm.h>
 
 struct sprite

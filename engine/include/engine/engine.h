@@ -25,17 +25,15 @@
 #include "audio.h"
 #include "bitmap.h"
 #include "camera.h"
-#include "core.h"
 #include "directional_light.h"
-#include "font.h"
-#include "image.h"
+#include "http.h"
 #include "log.h"
 #include "material.h"
 #include "mesh.h"
-#include "net.h"
 #include "object.h"
 #include "point_light.h"
 #include "program.h"
+#include "renderer.h"
 #include "scene.h"
 #include "spot_light.h"
 #include "sprite.h"
@@ -44,5 +42,8 @@
 #include "time.h"
 #include "udp.h"
 #include "window.h"
+
+int ENGINE_API engine_init(void);
+void ENGINE_API engine_quit(void);
 
 #endif

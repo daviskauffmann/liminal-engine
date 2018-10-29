@@ -16,12 +16,15 @@ static enum game_state game_state;
 int main(int argc, char *argv[])
 {
     // init engine
-    if (core_init())
+    if (engine_init())
     {
         return 1;
     }
 
-    if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
+    if (window_init(
+        WINDOW_TITLE,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT))
     {
         return 1;
     }
@@ -41,15 +44,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // cache uniform locations
-    GLint basic_program_camera_projection = program_get_location(basic_program, "camera.projection");
-    GLint basic_program_sprite_model = program_get_location(basic_program, "sprite.model");
-    GLint basic_program_sprite_color = program_get_location(basic_program, "sprite.color");
-    GLint basic_program_sprite_image = program_get_location(basic_program, "sprite.image");
-
     // setup shader samplers
     program_bind(basic_program);
-    program_set_int(basic_program_sprite_image, 0);
+    program_set_int(basic_program, "sprite.image", 0);
     program_unbind();
 
     // create textures
@@ -165,14 +162,15 @@ int main(int argc, char *argv[])
         // calculate sprite model
         mat4 awesomeface_sprite_model = GLM_MAT4_IDENTITY_INIT;
         sprite_calc_model(awesomeface_sprite, awesomeface_sprite_model);
+
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT);
 
         program_bind(basic_program);
 
-        program_set_mat4(basic_program_camera_projection, camera_projection);
-        program_set_mat4(basic_program_sprite_model, awesomeface_sprite_model);
-        program_set_vec3(basic_program_sprite_color, awesomeface_sprite->color);
+        program_set_mat4(basic_program, "camera.projection", camera_projection);
+        program_set_mat4(basic_program, "sprite.model", awesomeface_sprite_model);
+        program_set_vec3(basic_program, "sprite.color", awesomeface_sprite->color);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, awesomeface_sprite->image->texture);
@@ -194,7 +192,7 @@ int main(int argc, char *argv[])
     // close engine
     sprite_quit();
     window_quit();
-    core_quit();
+    engine_quit();
 
     return 0;
 }

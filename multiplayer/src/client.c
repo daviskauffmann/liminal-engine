@@ -14,17 +14,12 @@
 int client_start(void)
 {
     // setup engine
-    if (core_init())
+    if (engine_init())
     {
         return 1;
     }
 
     if (window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT))
-    {
-        return 1;
-    }
-
-    if (net_init())
     {
         return 1;
     }
@@ -266,10 +261,8 @@ int client_start(void)
     SDLNet_TCP_Close(tcp_socket);
 
     // close engine
-    image_quit();
-    audio_quit();
     window_quit();
-    core_quit();
+    engine_quit();
 
     return 0;
 }
