@@ -8,7 +8,6 @@
 #endif
 
 #include <cglm/cglm.h>
-#include <float.h>
 #include <GL/glew.h>
 #include <malloc.h>
 #include <math.h>
