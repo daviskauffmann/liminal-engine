@@ -33,6 +33,7 @@
 #include "log.h"
 #include "material.h"
 #include "mesh.h"
+#include "music.h"
 #include "object.h"
 #include "point_light.h"
 #include "program.h"

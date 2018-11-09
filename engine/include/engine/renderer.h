@@ -21,7 +21,8 @@ void ENGINE_API renderer_add_directional_light(struct directional_light *directi
 void ENGINE_API renderer_add_point_light(struct point_light *point_light);
 void ENGINE_API renderer_add_spot_light(struct spot_light *spot_light);
 void ENGINE_API renderer_add_water(struct water *water);
-void ENGINE_API renderer_draw(void);
+void ENGINE_API renderer_add_sprite(struct sprite *sprite);
+void ENGINE_API renderer_draw(bool ortho);
 void ENGINE_API renderer_quit(void);
 
 #endif

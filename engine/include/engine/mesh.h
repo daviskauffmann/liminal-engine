@@ -1,6 +1,8 @@
 #ifndef MESH_H
 #define MESH_H
 
+// TODO: perhaps separate into mesh and indexed_mesh structs?
+
 #include <GL/glew.h>
 
 struct mesh

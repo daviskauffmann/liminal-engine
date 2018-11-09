@@ -95,6 +95,7 @@
     <ClCompile Include="src\log.c" />
     <ClCompile Include="src\material.c" />
     <ClCompile Include="src\mesh.c" />
+    <ClCompile Include="src\music.c" />
     <ClCompile Include="src\object.c" />
     <ClCompile Include="src\point_light.c" />
     <ClCompile Include="src\program.c" />
@@ -122,6 +123,7 @@
     <ClInclude Include="include\engine\log.h" />
     <ClInclude Include="include\engine\material.h" />
     <ClInclude Include="include\engine\mesh.h" />
+    <ClInclude Include="include\engine\music.h" />
     <ClInclude Include="include\engine\object.h" />
     <ClInclude Include="include\engine\point_light.h" />
     <ClInclude Include="include\engine\program.h" />

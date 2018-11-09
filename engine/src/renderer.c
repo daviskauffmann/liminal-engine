@@ -1,5 +1,6 @@
 #include <engine/engine.h>
 
+// TODO: move standard assets?
 // TODO: create a way to specify paths for engine assets and game assets separately
 
 static int render_width;
@@ -32,6 +33,7 @@ static struct program *deferred_point_program;
 static struct program *deferred_spot_program;
 static struct program *skybox_program;
 static struct program *water_program;
+static struct program *sprite_program;
 static struct program *post_program;
 
 // framebuffers
@@ -62,6 +64,11 @@ unsigned int num_skybox_vertices;
 GLuint skybox_vao_id;
 GLuint skybox_vbo_id;
 
+// sprite
+unsigned int num_sprite_vertices;
+GLuint sprite_vao_id;
+GLuint sprite_vbo_id;
+
 // renderables
 static struct camera *camera;
 static struct scene *scene;
@@ -80,6 +87,9 @@ static unsigned int num_spot_lights;
 
 static struct water **waters;
 static unsigned int num_waters;
+
+static struct sprite **sprites;
+static unsigned int num_sprites;
 
 int renderer_init(int _render_width, int _render_height, float _render_scale, int _shadow_width, int _shadow_height)
 {
@@ -100,11 +110,11 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     // create default meshes
     float quad_vertices[] = {
-        // position          // normal            // uv
-        +1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 1.0f, // top right
-        +1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 0.0f, // bottom left
-        -1.0f, +1.0f, +0.0f, +0.0f, +1.0f, +0.0f, 0.0f, 1.0f  // top left
+        // position           // normal            // uv
+         1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top right
+         1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom right
+        -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f, // bottom left
+        -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f  // top left
     };
 
     unsigned int quad_indices[] = {
@@ -120,53 +130,55 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!quad_mesh)
     {
+        error("Couldn't create quad mesh");
+
         return 1;
     }
 
     float cube_vertices[] = {
-        // position          // normal            // uv
+        // position           // normal            // uv
         // back face
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, // bottom-left
+         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f, // top-right
+         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f, // bottom-right         
+         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f, // top-right
+        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, // bottom-left
+        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f, // top-left
         // front face
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // bottom-left
+         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f, // bottom-right
+         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // top-right
+         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // top-right
+        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f, // top-left
+        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // bottom-left
         // left face
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-right
+        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // top-left
+        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-left
+        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-left
+        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // bottom-right
+        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-right
         // right face
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-         1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-left
+         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-right
+         1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // top-right         
+         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-right
+         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-left
+         1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // bottom-left     
         // bottom face
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f, // top-right
+         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f, // top-left
+         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, // bottom-left
+         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, // bottom-left
+        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f, // bottom-right
+        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f, // top-right
         // top face
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-         1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left   
+        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
+         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
+         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top-right     
+         1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
+        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
+        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f  // bottom-left   
     };
 
     unsigned int cube_indices[] = {
@@ -191,6 +203,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!cube_mesh)
     {
+        error("Couldn't create cube mesh");
+
         return 1;
     }
 
@@ -199,6 +213,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!default_diffuse_texture)
     {
+        error("Couldn't create default diffuse texture");
+
         return 1;
     }
 
@@ -206,6 +222,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!default_specular_texture)
     {
+        error("Couldn't create default specular texture");
+
         return 1;
     }
 
@@ -233,6 +251,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!depth_program)
     {
+        error("Couldn't create depth program");
+
         return 1;
     }
 
@@ -242,6 +262,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_color_program)
     {
+        error("Couldn't create forward color program");
+
         return 1;
     }
 
@@ -251,6 +273,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_scene_program)
     {
+        error("Couldn't create forward scene program");
+
         return 1;
     }
 
@@ -260,6 +284,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_directional_program)
     {
+        error("Couldn't create forward directional program");
+
         return 1;
     }
 
@@ -269,6 +295,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_point_program)
     {
+        error("Couldn't create forward point program");
+
         return 1;
     }
 
@@ -278,6 +306,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_spot_program)
     {
+        error("Couldn't create forward spot program");
+
         return 1;
     }
 
@@ -287,6 +317,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!geometry_program)
     {
+        error("Couldn't create geometry program");
+
         return 1;
     }
 
@@ -296,6 +328,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_scene_program)
     {
+        error("Couldn't create deferred scene program");
+
         return 1;
     }
 
@@ -305,6 +339,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_directional_program)
     {
+        error("Couldn't create deferred directional program");
+
         return 1;
     }
 
@@ -314,6 +350,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_point_program)
     {
+        error("Couldn't create deferred point program");
+
         return 1;
     }
 
@@ -323,6 +361,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_spot_program)
     {
+        error("Couldn't create deferred spot program");
+
         return 1;
     }
 
@@ -332,6 +372,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!skybox_program)
     {
+        error("Couldn't create skybox program");
+
         return 1;
     }
 
@@ -341,6 +383,19 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!water_program)
     {
+        error("Couldn't create water program");
+
+        return 1;
+    }
+
+    sprite_program = program_create(
+        "../engine/assets/shaders/sprite.vert",
+        "../engine/assets/shaders/sprite.frag");
+
+    if (!sprite_program)
+    {
+        error("Couldn't create sprite program");
+
         return 1;
     }
 
@@ -350,6 +405,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!post_program)
     {
+        error("Couldn't create post program");
+
         return 1;
     }
 
@@ -417,6 +474,10 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     program_bind(skybox_program);
     program_set_int(skybox_program, "skybox.texture", 0);
+    program_unbind();
+
+    program_bind(sprite_program);
+    program_set_int(sprite_program, "sprite.image", 0);
     program_unbind();
 
     program_bind(post_program);
@@ -611,8 +672,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    GLenum attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-    glDrawBuffers(sizeof(attachments) / sizeof(GLenum), attachments);
+    GLenum geometry_fbo_attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(sizeof(geometry_fbo_attachments) / sizeof(GLenum), geometry_fbo_attachments);
 
     glGenRenderbuffers(1, &geometry_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo);
@@ -638,76 +699,77 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    //// setup water fbo
-    //glGenFramebuffers(1, &water_fbo_id);
-    //glBindFramebuffer(GL_FRAMEBUFFER, water_fbo_id);
-    //
-    //glGenTextures(1, &water_color_texture_id);
-    //glBindTexture(GL_TEXTURE_2D, water_color_texture_id);
-    //
-    //glTexImage2D(
-    //    GL_TEXTURE_2D,
-    //    0,
-    //    GL_RGB8,
-    //    render_width, // TODO: specific water texture sizes?
-    //    render_height,
-    //    0,
-    //    GL_RGB,
-    //    GL_UNSIGNED_BYTE,
-    //    NULL);
-    //
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //
-    //glFramebufferTexture2D(
-    //    GL_FRAMEBUFFER,
-    //    GL_COLOR_ATTACHMENT0,
-    //    GL_TEXTURE_2D,
-    //    water_color_texture_id,
-    //    0);
-    //
-    //glBindTexture(GL_TEXTURE_2D, 0);
-    //
-    //GLenum waterFboAttachments[] = { GL_COLOR_ATTACHMENT0 };
-    //glDrawBuffers(sizeof(waterFboAttachments) / sizeof(GLenum), waterFboAttachments);
-    //
-    //glGenTextures(1, &this->waterDepthTextureId);
-    //glBindTexture(GL_TEXTURE_2D, this->waterDepthTextureId);
-    //
-    //glTexImage2D(
-    //    GL_TEXTURE_2D,
-    //    0,
-    //    GL_DEPTH_COMPONENT32,
-    //    this->renderWidth,
-    //    this->renderHeight,
-    //    0,
-    //    GL_DEPTH_COMPONENT,
-    //    GL_FLOAT,
-    //    NULL);
-    //
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //
-    //glFramebufferTexture2D(
-    //    GL_FRAMEBUFFER,
-    //    GL_DEPTH_ATTACHMENT,
-    //    GL_TEXTURE_2D,
-    //    this->waterDepthTextureId,
-    //    0);
-    //
-    //glBindTexture(GL_TEXTURE_2D, 0);
-    //
-    //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    //{
-    //    engine::log::error("Couldn't complete water framebuffer");
-    //
-    //    throw std::exception();
-    //}
-    //
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // setup water fbo
+    glGenFramebuffers(1, &water_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, water_fbo_id);
 
-   // create water mesh
+    glGenTextures(1, &water_color_texture_id);
+    glBindTexture(GL_TEXTURE_2D, water_color_texture_id);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB8,
+        render_width, // TODO: specific water texture sizes?
+        render_height,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        water_color_texture_id,
+        0);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLenum water_fbo_attachments[] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(sizeof(water_fbo_attachments) / sizeof(GLenum), water_fbo_attachments);
+
+    glGenTextures(1, &water_depth_texture_id);
+    glBindTexture(GL_TEXTURE_2D, water_depth_texture_id);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_DEPTH_COMPONENT32,
+        render_width,
+        render_height,
+        0,
+        GL_DEPTH_COMPONENT,
+        GL_FLOAT,
+        NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        GL_TEXTURE_2D,
+        water_depth_texture_id,
+        0);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        error("Couldn't complete water framebuffer");
+
+        return 1;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // create water mesh
     float water_vertices[] = {
+        // position
         -1.0f, -1.0f,
         -1.0f,  1.0f,
          1.0f, -1.0f,
@@ -723,13 +785,14 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glGenBuffers(1, &water_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(water_vertices), &water_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0); // position
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
 
     // create skybox mesh
     float skybox_vertices[] = {
+        // position
         -1.0f,  1.0f, -1.0f,
         -1.0f, -1.0f, -1.0f,
          1.0f, -1.0f, -1.0f,
@@ -780,7 +843,32 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glGenBuffers(1, &skybox_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0); // position
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    // create sprite mesh
+    static float sprite_vertices[] = {
+        // position // uv
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f
+    };
+    num_sprite_vertices = sizeof(sprite_vertices) / sizeof(float) / 4;
+
+    glGenVertexArrays(1, &sprite_vao_id);
+    glBindVertexArray(sprite_vao_id);
+
+    glGenBuffers(1, &sprite_vbo_id);
+    glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), sprite_vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);                     // position
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
@@ -833,11 +921,24 @@ void renderer_add_water(struct water *water)
     waters[num_waters++] = water;
 }
 
-void renderer_draw(void)
+void renderer_add_sprite(struct sprite *sprite)
+{
+    sprites = realloc(sprites, sizeof(struct sprite *) * (num_sprites + 1));
+    sprites[num_sprites++] = sprite;
+}
+
+void renderer_draw(bool ortho)
 {
     // calculate camera projection matrix
     mat4 camera_projection;
-    camera_calc_projection_perspective(camera, camera_projection);
+    if (ortho)
+    {
+        camera_calc_projection_ortho(camera, camera_projection);
+    }
+    else
+    {
+        camera_calc_projection_perspective(camera, camera_projection);
+    }
 
     // calculate camera view matrix
     mat4 camera_view;
@@ -1277,7 +1378,6 @@ void renderer_draw(void)
 
     for (unsigned int i = 0; i < num_waters; i++)
     {
-
         // calculate model matrix
         mat4 water_model = GLM_MAT4_IDENTITY_INIT;
         glm_translate(water_model, waters[i]->position);
@@ -1304,24 +1404,25 @@ void renderer_draw(void)
 
     if (scene->skybox)
     {
-        mat4 new_camera_view;
-        glm_mat4_copy(camera_view, new_camera_view);
-        new_camera_view[3][0] = 0.0f;
-        new_camera_view[3][1] = 0.0f;
-        new_camera_view[3][2] = 0.0f;
-        new_camera_view[3][3] = 0.0f;
-
         // start skybox pass
         glViewport(0, 0, render_width, render_height);
         glDepthFunc(GL_LEQUAL);
 
+        mat4 camera_view_no_translate;
+        glm_mat4_copy(camera_view, camera_view_no_translate);
+        camera_view_no_translate[3][0] = 0.0f;
+        camera_view_no_translate[3][1] = 0.0f;
+        camera_view_no_translate[3][2] = 0.0f;
+        camera_view_no_translate[3][3] = 0.0f;
+
         program_bind(skybox_program);
 
         program_set_mat4(skybox_program, "camera.projection", camera_projection);
-        program_set_mat4(skybox_program, "camera.view", new_camera_view);
+        program_set_mat4(skybox_program, "camera.view", camera_view_no_translate);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox->texture_id);
+
         glBindVertexArray(skybox_vao_id);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
@@ -1335,6 +1436,40 @@ void renderer_draw(void)
         // end skybox pass
         glDepthFunc(GL_LESS);
     }
+
+    // start sprite pass
+    glViewport(0, 0, render_width, render_height);
+
+    program_bind(sprite_program);
+
+    program_set_mat4(sprite_program, "camera.projection", camera_projection);
+
+    for (unsigned int i = 0; i < num_sprites; i++)
+    {
+        // calculate model matrix
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        sprite_calc_model(sprites[i], sprite_model);
+
+        program_set_mat4(sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(sprite_program, "sprite.color", sprites[i]->color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sprites[i]->image->texture);
+
+        glBindVertexArray(sprite_vao_id);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
+        glDrawArrays(GL_TRIANGLES, 0, num_sprite_vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glBindVertexArray(0);
+    }
+
+    program_unbind();
+
+    // end sprite pass
 
     // unbind screen fbo
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1362,6 +1497,9 @@ void renderer_draw(void)
 // TODO: delete all resources
 void renderer_quit(void)
 {
+    glDeleteBuffers(1, &sprite_vbo_id);
+    glDeleteVertexArrays(1, &sprite_vao_id);
+
     free(spot_lights);
     free(point_lights);
     free(directional_lights);

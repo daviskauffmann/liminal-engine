@@ -12,42 +12,30 @@
 #define SHADOW_WIDTH 4096
 #define SHADOW_HEIGHT 4096
 
-#define FPS_CAP 120
+#define FPS_CAP 120u
 
 int main(int argc, char *argv[])
 {
     // setup engine
-    if (core_init())
-    {
-        return 1;
-    }
+    core_init();
 
-    if (window_init(
+    window_init(
         WINDOW_TITLE,
         WINDOW_WIDTH,
-        WINDOW_HEIGHT))
-    {
-        return 1;
-    }
+        WINDOW_HEIGHT);
 
-    if (audio_init(
+    audio_init(
         MIX_DEFAULT_FREQUENCY,
         MIX_DEFAULT_FORMAT,
         MIX_DEFAULT_CHANNELS,
-        1024))
-    {
-        return 1;
-    }
+        1024);
 
-    if (renderer_init(
+    renderer_init(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         RENDER_SCALE,
         SHADOW_WIDTH,
-        SHADOW_HEIGHT))
-    {
-        return 1;
-    }
+        SHADOW_HEIGHT);
 
     time_cap_fps(FPS_CAP);
     // window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
@@ -56,35 +44,13 @@ int main(int argc, char *argv[])
 
     // create textures
     struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
-
-    if (!box_diffuse_texture)
-    {
-        return 1;
-    }
-
     struct texture *box_specular_texture = texture_create("assets/images/box_specular.png");
-
-    if (!box_specular_texture)
-    {
-        return 1;
-    }
-
     struct texture *cobble_diffuse_texture = texture_create("assets/images/cobble_diffuse.jpg");
-
-    if (!cobble_diffuse_texture)
-    {
-        return 1;
-    }
-
     struct texture *cobble_specular_texture = texture_create("assets/images/cobble_specular.jpg");
-
-    if (!cobble_specular_texture)
-    {
-        return 1;
-    }
 
     // create materials
     vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
+    vec3 cobble_material_color = { 1.0f, 1.0f, 1.0f };
 
     struct material *box_material = material_create(
         box_material_color,
@@ -94,14 +60,6 @@ int main(int argc, char *argv[])
         NULL,
         NULL,
         1.0f);
-
-    if (!box_material)
-    {
-        return 1;
-    }
-
-    vec3 cobble_material_color = { 1.0f, 1.0f, 1.0f };
-
     struct material *cobble_material = material_create(
         cobble_material_color,
         cobble_diffuse_texture,
@@ -110,11 +68,6 @@ int main(int argc, char *argv[])
         NULL,
         NULL,
         1.0f);
-
-    if (!cobble_material)
-    {
-        return 1;
-    }
 
     // create skybox
     const char *skybox_cubemap_files[] = {
@@ -141,15 +94,27 @@ int main(int argc, char *argv[])
         main_scene_sun_diffuse,
         main_scene_sun_specular);
 
-    if (!main_scene)
-    {
-        return 1;
-    }
-
     // create objects
     vec3 floor_object_position = { 0.0f, -2.0f, 0.0f };
+    vec3 box_1_object_position = { 0.0f, 1.0f, 0.0f };
+    vec3 box_2_object_position = { 2.0f, -0.5f, 0.0f };
+    vec3 box_3_object_position = { 0.0f, -0.5f, 2.0f };
+    vec3 box_4_object_position = { -2.0f, -0.5f, 0.0f };
+    vec3 box_5_object_position = { 0.0f, -0.5f, -2.0f };
+
     vec3 floor_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_1_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_2_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_3_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_4_object_rotation = { 0.0f, 0.0f, 0.0f };
+    vec3 box_5_object_rotation = { 0.0f, 0.0f, 0.0f };
+
     vec3 floor_object_scale = { 10.0f, 1.0f, 10.0f };
+    vec3 box_1_object_scale = { 1.0f, 1.0f, 1.0f };
+    vec3 box_2_object_scale = { 0.5f, 0.5f, 0.5f };
+    vec3 box_3_object_scale = { 0.5f, 0.5f, 0.5f };
+    vec3 box_4_object_scale = { 0.5f, 0.5f, 0.5f };
+    vec3 box_5_object_scale = { 0.5f, 0.5f, 0.5f };
 
     struct object *floor_object = object_create(
         cube_mesh,
@@ -157,91 +122,36 @@ int main(int argc, char *argv[])
         floor_object_position,
         floor_object_rotation,
         floor_object_scale);
-
-    if (!floor_object)
-    {
-        return 1;
-    }
-
-    vec3 box_1_object_position = { 0.0f, 1.0f, 0.0f };
-    vec3 box_1_object_rotation = { 0.0f, 0.0f, 0.0f };
-    vec3 box_1_object_scale = { 1.0f, 1.0f, 1.0f };
-
     struct object *box_1_object = object_create(
         cube_mesh,
         box_material,
         box_1_object_position,
         box_1_object_rotation,
         box_1_object_scale);
-
-    if (!box_1_object)
-    {
-        return 1;
-    }
-
-    vec3 box_2_object_position = { 2.0f, -0.5f, 0.0f };
-    vec3 box_2_object_rotation = { 0.0f, 0.0f, 0.0f };
-    vec3 box_2_object_scale = { 0.5f, 0.5f, 0.5f };
-
     struct object *box_2_object = object_create(
         cube_mesh,
         box_material,
         box_2_object_position,
         box_2_object_rotation,
         box_2_object_scale);
-
-    if (!box_2_object)
-    {
-        return 1;
-    }
-
-    vec3 box_3_object_position = { 0.0f, -0.5f, 2.0f };
-    vec3 box_3_object_rotation = { 0.0f, 0.0f, 0.0f };
-    vec3 box_3_object_scale = { 0.5f, 0.5f, 0.5f };
-
     struct object *box_3_object = object_create(
         cube_mesh,
         box_material,
         box_3_object_position,
         box_3_object_rotation,
         box_3_object_scale);
-
-    if (!box_3_object)
-    {
-        return 1;
-    }
-
-    vec3 box_4_object_position = { -2.0f, -0.5f, 0.0f };
-    vec3 box_4_object_rotation = { 0.0f, 0.0f, 0.0f };
-    vec3 box_4_object_scale = { 0.5f, 0.5f, 0.5f };
-
     struct object *box_4_object = object_create(
         cube_mesh,
         box_material,
         box_4_object_position,
         box_4_object_rotation,
         box_4_object_scale);
-
-    if (!box_4_object)
-    {
-        return 1;
-    }
-
-    vec3 box_5_object_position = { 0.0f, -0.5f, -2.0f };
-    vec3 box_5_object_rotation = { 0.0f, 0.0f, 0.0f };
-    vec3 box_5_object_scale = { 0.5f, 0.5f, 0.5f };
-
     struct object *box_5_object = object_create(
         cube_mesh,
         box_material,
         box_5_object_position,
         box_5_object_rotation,
         box_5_object_scale);
-
-    if (!box_5_object)
-    {
-        return 1;
-    }
 
     struct object *objects[] = {
         floor_object,
@@ -253,12 +163,31 @@ int main(int argc, char *argv[])
     };
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
 
-    // create lights
+    // create point lights
     vec3 red_point_light_position = { 2.0f, 0.0f, 2.0f };
+    vec3 yellow_point_light_position = { -2.0f, 0.0f, -2.0f };
+    vec3 green_point_light_position = { 2.0f, 0.0f, -2.0f };
+    vec3 blue_point_light_position = { -2.0f, 0.0f, 2.0f };
+
     vec3 red_point_light_ambient = { 0.1f, 0.0f, 0.0f };
+    vec3 yellow_point_light_ambient = { 0.1f, 0.1f, 0.0f };
+    vec3 green_point_light_ambient = { 0.0f, 0.1f, 0.0f };
+    vec3 blue_point_light_ambient = { 0.0f, 0.0f, 0.1f };
+
     vec3 red_point_light_diffuse = { 0.8f, 0.0f, 0.0f };
+    vec3 yellow_point_light_diffuse = { 0.8f, 0.8f, 0.0f };
+    vec3 green_point_light_diffuse = { 0.0f, 0.8f, 0.0f };
+    vec3 blue_point_light_diffuse = { 0.0f, 0.0f, 0.8f };
+
     vec3 red_point_light_specular = { 1.0f, 0.0f, 0.0f };
+    vec3 yellow_point_light_specular = { 1.0f, 1.0f, 0.0f };
+    vec3 green_point_light_specular = { 0.0f, 1.0f, 0.0f };
+    vec3 blue_point_light_specular = { 0.0f, 0.0f, 1.0f };
+
     vec3 red_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
+    vec3 yellow_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
+    vec3 green_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
+    vec3 blue_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
     struct point_light *red_point_light = point_light_create(
         red_point_light_position,
@@ -266,65 +195,24 @@ int main(int argc, char *argv[])
         red_point_light_diffuse,
         red_point_light_specular,
         red_point_light_attenuation);
-
-    if (!red_point_light)
-    {
-        return 1;
-    }
-
-    vec3 yellow_point_light_position = { -2.0f, 0.0f, -2.0f };
-    vec3 yellow_point_light_ambient = { 0.1f, 0.1f, 0.0f };
-    vec3 yellow_point_light_diffuse = { 0.8f, 0.8f, 0.0f };
-    vec3 yellow_point_light_specular = { 1.0f, 1.0f, 0.0f };
-    vec3 yellow_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
-
     struct point_light *yellow_point_light = point_light_create(
         yellow_point_light_position,
         yellow_point_light_ambient,
         yellow_point_light_diffuse,
         yellow_point_light_specular,
         yellow_point_light_attenuation);
-
-    if (!yellow_point_light)
-    {
-        return 1;
-    }
-
-    vec3 green_point_light_position = { 2.0f, 0.0f, -2.0f };
-    vec3 green_point_light_ambient = { 0.0f, 0.1f, 0.0f };
-    vec3 green_point_light_diffuse = { 0.0f, 0.8f, 0.0f };
-    vec3 green_point_light_specular = { 0.0f, 1.0f, 0.0f };
-    vec3 green_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
-
     struct point_light *green_point_light = point_light_create(
         green_point_light_position,
         green_point_light_ambient,
         green_point_light_diffuse,
         green_point_light_specular,
         green_point_light_attenuation);
-
-    if (!green_point_light)
-    {
-        return 1;
-    }
-
-    vec3 blue_point_light_position = { -2.0f, 0.0f, 2.0f };
-    vec3 blue_point_light_ambient = { 0.0f, 0.0f, 0.1f };
-    vec3 blue_point_light_diffuse = { 0.0f, 0.0f, 0.8f };
-    vec3 blue_point_light_specular = { 0.0f, 0.0f, 1.0f };
-    vec3 blue_point_light_attenuation = { 1.0f, 0.09f, 0.32f };
-
     struct point_light *blue_point_light = point_light_create(
         blue_point_light_position,
         blue_point_light_ambient,
         blue_point_light_diffuse,
         blue_point_light_specular,
         blue_point_light_attenuation);
-
-    if (!blue_point_light)
-    {
-        return 1;
-    }
 
     struct point_light *point_lights[] = {
         red_point_light,
@@ -333,6 +221,7 @@ int main(int argc, char *argv[])
         blue_point_light };
     const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
 
+    // create spot lights
     vec3 flashlight_spot_light_position = { 0.0f, 0.0f, 0.0f };
     vec3 flashlight_spot_light_direction = { 0.0f, 0.0f, 0.0f };
     vec3 flashlight_spot_light_ambient = { 0.5f, 0.5f, 0.5f };
@@ -350,11 +239,6 @@ int main(int argc, char *argv[])
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
 
-    if (!flashlight_spot_light)
-    {
-        return 1;
-    }
-
     // create water
     vec3 water_position = { 0.0f, -2.0f, 0.0f };
     vec2 water_scale = { 20.0f, 20.0f };
@@ -362,11 +246,6 @@ int main(int argc, char *argv[])
     struct water *water = water_create(
         water_position,
         water_scale);
-
-    if (!water)
-    {
-        return 1;
-    }
 
     // create camera
     vec3 camera_position = { 0.0f, 0.0f, 3.0f };
@@ -382,33 +261,15 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    if (!camera)
-    {
-        return 1;
-    }
-
     // load music
-    Mix_Music *background_music = Mix_LoadMUS("assets/audio/background.mp3");
-
-    if (!background_music)
-    {
-        error(Mix_GetError());
-
-        return 1;
-    }
+    struct music *background_music = music_create("assets/audio/background.mp3");
 
     // load sounds
-    Mix_Chunk *shoot_sound = Mix_LoadWAV("assets/audio/shoot.wav");
-
-    if (!shoot_sound)
-    {
-        error(Mix_GetError());
-
-        return 1;
-    }
+    struct chunk *shoot_chunk = chunk_create("assets/audio/shoot.wav");
 
     // game settings
     bool flashlight = true;
+    float fps_update_timer = 0.0f;
 
     // main loop
     bool quit = false;
@@ -418,9 +279,16 @@ int main(int argc, char *argv[])
         time_frame_start();
 
         // update window title
-        char title[256];
-        sprintf_s(title, sizeof(title), "%s - FPS: %d", WINDOW_TITLE, time_fps());
-        window_set_title(title);
+        fps_update_timer += time_delta();
+
+        if (fps_update_timer > 0.25f)
+        {
+            fps_update_timer = 0.0f;
+
+            char title[256];
+            sprintf_s(title, sizeof(title), "%s - FPS: %d", WINDOW_TITLE, time_fps());
+            window_set_title(title);
+        }
 
         // get keyboard input
         int num_keys;
@@ -448,8 +316,7 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
-                        // music_play(background_music, -1);
-                        Mix_PlayMusic(background_music, -1);
+                        music_play(background_music, -1);
                     }
                 }
                 break;
@@ -647,8 +514,7 @@ int main(int argc, char *argv[])
             {
                 shoot_timer = 0.0f;
 
-                // chunk_play(shoot_sound, -1, 0);
-                Mix_PlayChannel(-1, shoot_sound, 0);
+                chunk_play(shoot_chunk, -1, 0);
             }
         }
 
@@ -687,7 +553,7 @@ int main(int argc, char *argv[])
         renderer_add_water(water);
 
         // render everything
-        renderer_draw();
+        renderer_draw(false);
 
         // display the window
         window_swap();
@@ -697,17 +563,18 @@ int main(int argc, char *argv[])
     }
 
     // free resources
-    Mix_FreeChunk(shoot_sound);
-    Mix_FreeMusic(background_music);
+    chunk_destroy(shoot_chunk);
+
+    music_destroy(background_music);
 
     water_destroy(water);
 
     spot_light_destroy(flashlight_spot_light);
 
     point_light_destroy(red_point_light);
+    point_light_destroy(yellow_point_light);
     point_light_destroy(green_point_light);
     point_light_destroy(blue_point_light);
-    point_light_destroy(yellow_point_light);
 
     object_destroy(floor_object);
     object_destroy(box_1_object);
@@ -720,13 +587,13 @@ int main(int argc, char *argv[])
 
     cubemap_destroy(skybox_cubemap);
 
-    material_destroy(cobble_material);
     material_destroy(box_material);
+    material_destroy(cobble_material);
 
-    texture_destroy(cobble_specular_texture);
-    texture_destroy(cobble_diffuse_texture);
-    texture_destroy(box_specular_texture);
     texture_destroy(box_diffuse_texture);
+    texture_destroy(box_specular_texture);
+    texture_destroy(cobble_diffuse_texture);
+    texture_destroy(cobble_specular_texture);
 
     // close engine
     renderer_quit();

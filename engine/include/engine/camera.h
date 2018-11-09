@@ -1,6 +1,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+// TODO: perhaps separate into different ortho and perspective camera structs?
+
 #include <cglm/cglm.h>
 
 struct camera

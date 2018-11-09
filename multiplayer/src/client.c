@@ -14,7 +14,7 @@
 int client_start(void)
 {
     // setup engine
-    if (engine_init())
+    if (core_init())
     {
         return 1;
     }
@@ -262,7 +262,7 @@ int client_start(void)
 
     // close engine
     window_quit();
-    engine_quit();
+    core_quit();
 
     return 0;
 }

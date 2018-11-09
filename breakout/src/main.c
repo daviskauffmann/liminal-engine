@@ -4,6 +4,11 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
+#define RENDER_SCALE 1.0f
+
+#define SHADOW_WIDTH 4096
+#define SHADOW_HEIGHT 4096
+
 enum game_state
 {
     GAME_STATE_ACTIVE,
@@ -16,46 +21,22 @@ static enum game_state game_state;
 int main(int argc, char *argv[])
 {
     // init engine
-    if (engine_init())
-    {
-        return 1;
-    }
+    core_init();
 
-    if (window_init(
+    window_init(
         WINDOW_TITLE,
         WINDOW_WIDTH,
-        WINDOW_HEIGHT))
-    {
-        return 1;
-    }
+        WINDOW_HEIGHT);
 
-    if (sprite_init())
-    {
-        return 1;
-    }
-
-    // create programs
-    struct program *basic_program = program_create(
-        "assets/shaders/basic.vert",
-        "assets/shaders/basic.frag");
-
-    if (!basic_program)
-    {
-        return 1;
-    }
-
-    // setup shader samplers
-    program_bind(basic_program);
-    program_set_int(basic_program, "sprite.image", 0);
-    program_unbind();
+    renderer_init(
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        RENDER_SCALE,
+        SHADOW_WIDTH,
+        SHADOW_HEIGHT);
 
     // create textures
     struct texture *awesomeface_texture = texture_create("assets/images/awesomeface.png");
-
-    if (!awesomeface_texture)
-    {
-        return 1;
-    }
 
     // create sprites
     vec3 awesomeface_sprite_color = { 1.0f, 1.0f, 1.0f };
@@ -70,10 +51,19 @@ int main(int argc, char *argv[])
         awesomeface_sprite_rotation,
         awesomeface_sprite_scale);
 
-    if (!awesomeface_sprite)
-    {
-        return 1;
-    }
+    // create camera
+    vec3 camera_position = { 0.0f, 0.0f, 3.0f };
+    vec3 camera_front = { 0.0f, 0.0f, -1.0f };
+    vec3 camera_up = { 0.0f, 1.0f, 0.0f };
+
+    struct camera *camera = camera_create(
+        camera_position,
+        camera_front,
+        camera_up,
+        0.0f,
+        -90.0f,
+        0.0f,
+        45.0f);
 
     // main loop
     bool quit = false;
@@ -151,33 +141,14 @@ int main(int argc, char *argv[])
             }
         }
 
+        // update sprite
         awesomeface_sprite->rotation += time_delta();
 
-        // calculate camera projection
-        mat4 camera_projection;
-        glm_ortho_default(window_get_aspect(), camera_projection);
+        // setup renderer
+        renderer_add_sprite(awesomeface_sprite);
 
-        // TEST: draw awesomeface sprite
-
-        // calculate sprite model
-        mat4 awesomeface_sprite_model = GLM_MAT4_IDENTITY_INIT;
-        sprite_calc_model(awesomeface_sprite, awesomeface_sprite_model);
-
-        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        program_bind(basic_program);
-
-        program_set_mat4(basic_program, "camera.projection", camera_projection);
-        program_set_mat4(basic_program, "sprite.model", awesomeface_sprite_model);
-        program_set_vec3(basic_program, "sprite.color", awesomeface_sprite->color);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, awesomeface_sprite->image->texture);
-
-        sprite_draw(awesomeface_sprite);
-
-        program_unbind();
+        // draw everything
+        renderer_draw(true);
 
         // display the window
         window_swap();
@@ -187,12 +158,12 @@ int main(int argc, char *argv[])
     }
 
     // free resources
-    program_destroy(basic_program);
+    sprite_destroy(awesomeface_sprite);
 
     // close engine
-    sprite_quit();
+    renderer_quit();
     window_quit();
-    engine_quit();
+    core_quit();
 
     return 0;
 }

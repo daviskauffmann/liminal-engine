@@ -23,6 +23,8 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
         if (!vertex_shader)
         {
+            error("Couldn't compile vertex shader");
+
             return NULL;
         }
 
@@ -38,6 +40,8 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
         if (!fragment_shader)
         {
+            error("Couldn't compile fragment shader");
+
             return NULL;
         }
 
