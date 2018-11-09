@@ -5,6 +5,7 @@
 
 struct scene
 {
+    struct cubemap *skybox;
     vec3 sun_direction;
     vec3 sun_ambient;
     vec3 sun_specular;
@@ -12,6 +13,7 @@ struct scene
 };
 
 struct scene ENGINE_API *scene_create(
+    struct cubemap *skybox,
     vec3 sun_direction,
     vec3 sun_ambient,
     vec3 sun_diffuse,

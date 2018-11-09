@@ -1,6 +1,7 @@
 #include <engine/engine.h>
 
 struct scene *scene_create(
+    struct cubemap *skybox,
     vec3 sun_direction,
     vec3 sun_ambient,
     vec3 sun_diffuse,
@@ -15,6 +16,7 @@ struct scene *scene_create(
         return NULL;
     }
 
+    scene->skybox = skybox;
     glm_vec_copy(sun_direction, scene->sun_direction);
     glm_vec_copy(sun_ambient, scene->sun_ambient);
     glm_vec_copy(sun_diffuse, scene->sun_diffuse);

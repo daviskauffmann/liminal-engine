@@ -87,7 +87,9 @@
     <ClCompile Include="src\audio.c" />
     <ClCompile Include="src\bitmap.c" />
     <ClCompile Include="src\camera.c" />
-    <ClCompile Include="src\engine.c" />
+    <ClCompile Include="src\chunk.c" />
+    <ClCompile Include="src\cubemap.c" />
+    <ClCompile Include="src\core.c" />
     <ClCompile Include="src\directional_light.c" />
     <ClCompile Include="src\http.c" />
     <ClCompile Include="src\log.c" />
@@ -104,6 +106,7 @@
     <ClCompile Include="src\texture.c" />
     <ClCompile Include="src\time.c" />
     <ClCompile Include="src\udp.c" />
+    <ClCompile Include="src\water.c" />
     <ClCompile Include="src\window.c" />
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +157,9 @@
     <ClInclude Include="include\engine\audio.h" />
     <ClInclude Include="include\engine\bitmap.h" />
     <ClInclude Include="include\engine\camera.h" />
+    <ClInclude Include="include\engine\chunk.h" />
+    <ClInclude Include="include\engine\core.h" />
+    <ClInclude Include="include\engine\cubemap.h" />
     <ClInclude Include="include\engine\directional_light.h" />
     <ClInclude Include="include\engine\engine.h" />
     <ClInclude Include="include\engine\http.h" />
@@ -171,6 +177,7 @@
     <ClInclude Include="include\engine\texture.h" />
     <ClInclude Include="include\engine\time.h" />
     <ClInclude Include="include\engine\udp.h" />
+    <ClInclude Include="include\engine\water.h" />
     <ClInclude Include="include\engine\window.h" />
     <ClInclude Include="include\GL\eglew.h" />
     <ClInclude Include="include\GL\glew.h" />

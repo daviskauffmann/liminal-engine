@@ -25,6 +25,9 @@
 #include "audio.h"
 #include "bitmap.h"
 #include "camera.h"
+#include "chunk.h"
+#include "core.h"
+#include "cubemap.h"
 #include "directional_light.h"
 #include "http.h"
 #include "log.h"
@@ -41,6 +44,7 @@
 #include "texture.h"
 #include "time.h"
 #include "udp.h"
+#include "water.h"
 #include "window.h"
 
 int ENGINE_API engine_init(void);

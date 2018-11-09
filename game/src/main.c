@@ -1,8 +1,11 @@
+// TODO: make a pass through all code and clean up names and whatnot
+// TODO: further namespace header guards
+
 #include <engine/engine.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 1920
-#define WINDOW_HEIGHT 1080
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 
 #define RENDER_SCALE 1.0f
 
@@ -14,7 +17,7 @@
 int main(int argc, char *argv[])
 {
     // setup engine
-    if (engine_init())
+    if (core_init())
     {
         return 1;
     }
@@ -47,7 +50,7 @@ int main(int argc, char *argv[])
     }
 
     time_cap_fps(FPS_CAP);
-    window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
+    // window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
     renderer_set_mode(RENDER_MODE_FORWARD);
     SDL_SetRelativeMouseMode(true);
 
@@ -113,15 +116,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // create skybox
+    const char *skybox_cubemap_files[] = {
+        "assets/images/sky/right.jpg",
+        "assets/images/sky/left.jpg",
+        "assets/images/sky/top.jpg",
+        "assets/images/sky/bottom.jpg",
+        "assets/images/sky/front.jpg",
+        "assets/images/sky/back.jpg",
+    };
+
+    struct cubemap *skybox_cubemap = cubemap_create(skybox_cubemap_files);
+
     // create scene
-    // TODO: the scene should hold and manage all the objects and lights
-    // this would allow for instanced rendering
     vec3 main_scene_sun_direction = { -0.2f, -1.0f, -0.3f };
     vec3 main_scene_sun_ambient = { 0.1f, 0.1f, 0.1f };
     vec3 main_scene_sun_diffuse = { 0.8f, 0.8f, 0.8f };
     vec3 main_scene_sun_specular = { 1.0f, 1.0f, 1.0f };
 
     struct scene *main_scene = scene_create(
+        skybox_cubemap,
         main_scene_sun_direction,
         main_scene_sun_ambient,
         main_scene_sun_diffuse,
@@ -341,6 +355,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // create water
+    vec3 water_position = { 0.0f, -2.0f, 0.0f };
+    vec2 water_scale = { 20.0f, 20.0f };
+
+    struct water *water = water_create(
+        water_position,
+        water_scale);
+
+    if (!water)
+    {
+        return 1;
+    }
+
     // create camera
     vec3 camera_position = { 0.0f, 0.0f, 3.0f };
     vec3 camera_front = { 0.0f, 0.0f, -1.0f };
@@ -415,27 +442,28 @@ int main(int argc, char *argv[])
                 {
                 case SDLK_1:
                 {
-                    if (Mix_PlayingMusic())
+                    if (audio_playing_music())
                     {
-                        Mix_HaltMusic();
+                        audio_stop_music();
                     }
                     else
                     {
+                        // music_play(background_music, -1);
                         Mix_PlayMusic(background_music, -1);
                     }
                 }
                 break;
                 case SDLK_2:
                 {
-                    if (Mix_PlayingMusic())
+                    if (audio_playing_music())
                     {
-                        if (Mix_PausedMusic())
+                        if (audio_paused_music())
                         {
-                            Mix_ResumeMusic();
+                            audio_resume_music();
                         }
                         else
                         {
-                            Mix_PauseMusic();
+                            audio_pause_music();
                         }
                     }
                 }
@@ -619,6 +647,7 @@ int main(int argc, char *argv[])
             {
                 shoot_timer = 0.0f;
 
+                // chunk_play(shoot_sound, -1, 0);
                 Mix_PlayChannel(-1, shoot_sound, 0);
             }
         }
@@ -655,6 +684,8 @@ int main(int argc, char *argv[])
             renderer_add_spot_light(flashlight_spot_light);
         }
 
+        renderer_add_water(water);
+
         // render everything
         renderer_draw();
 
@@ -668,6 +699,8 @@ int main(int argc, char *argv[])
     // free resources
     Mix_FreeChunk(shoot_sound);
     Mix_FreeMusic(background_music);
+
+    water_destroy(water);
 
     spot_light_destroy(flashlight_spot_light);
 
@@ -685,6 +718,8 @@ int main(int argc, char *argv[])
 
     scene_destroy(main_scene);
 
+    cubemap_destroy(skybox_cubemap);
+
     material_destroy(cobble_material);
     material_destroy(box_material);
 
@@ -697,7 +732,7 @@ int main(int argc, char *argv[])
     renderer_quit();
     audio_quit();
     window_quit();
-    engine_quit();
+    core_quit();
 
     return 0;
 }

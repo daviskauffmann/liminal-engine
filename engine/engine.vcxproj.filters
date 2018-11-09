@@ -75,7 +75,16 @@
     <ClCompile Include="src\renderer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine.c">
+    <ClCompile Include="src\cubemap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\water.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chunk.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -543,6 +552,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\cubemap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\water.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

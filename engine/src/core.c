@@ -1,10 +1,10 @@
 #include <engine/engine.h>
 
-#define SDL_FLAGS SDL_INIT_AUDIO | SDL_INIT_VIDEO
-#define IMG_FLAGS IMG_INIT_JPG | IMG_INIT_PNG
+#define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
+#define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
 #define MIX_FLAGS 0
 
-int engine_init(void)
+int core_init(void)
 {
     // init SDL
     if (SDL_Init(SDL_FLAGS))
@@ -22,7 +22,7 @@ int engine_init(void)
     }
 
     // init SDL_image
-    if ((IMG_Init(IMG_FLAGS) & (IMG_FLAGS)) != (IMG_FLAGS))
+    if ((IMG_Init(IMG_FLAGS) & IMG_FLAGS) != IMG_FLAGS)
     {
         error(IMG_GetError());
 
@@ -36,7 +36,7 @@ int engine_init(void)
     }
 
     // init SDL_mixer
-    if ((Mix_Init(MIX_FLAGS) & (MIX_FLAGS)) != (MIX_FLAGS))
+    if ((Mix_Init(MIX_FLAGS) & MIX_FLAGS) != MIX_FLAGS)
     {
         error(Mix_GetError());
 
@@ -80,7 +80,7 @@ int engine_init(void)
     return 0;
 }
 
-void engine_quit(void)
+void core_quit(void)
 {
     SDLNet_Quit();
     TTF_Quit();
