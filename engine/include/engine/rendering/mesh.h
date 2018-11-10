@@ -3,8 +3,6 @@
 
 // TODO: perhaps separate into mesh and indexed_mesh structs?
 
-#include <GL/glew.h>
-
 struct mesh
 {
     GLuint vao;

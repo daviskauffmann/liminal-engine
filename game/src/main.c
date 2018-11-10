@@ -1,4 +1,5 @@
-// TODO: make a pass through all code and clean up names and whatnot
+// TODO: come up with a name for this library
+// TODO: make a pass through all code and clean up names and whatnot (such as using _id for opengl handles)
 // TODO: further namespace header guards
 
 #include <engine/engine.h>
@@ -18,18 +19,15 @@ int main(int argc, char *argv[])
 {
     // setup engine
     core_init();
-
     window_init(
         WINDOW_TITLE,
         WINDOW_WIDTH,
         WINDOW_HEIGHT);
-
     audio_init(
         MIX_DEFAULT_FREQUENCY,
         MIX_DEFAULT_FORMAT,
         MIX_DEFAULT_CHANNELS,
         1024);
-
     renderer_init(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
@@ -40,7 +38,7 @@ int main(int argc, char *argv[])
     time_cap_fps(FPS_CAP);
     // window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
     renderer_set_mode(RENDER_MODE_FORWARD);
-    SDL_SetRelativeMouseMode(true);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // create textures
     struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
@@ -80,19 +78,6 @@ int main(int argc, char *argv[])
     };
 
     struct cubemap *skybox_cubemap = cubemap_create(skybox_cubemap_files);
-
-    // create scene
-    vec3 main_scene_sun_direction = { -0.2f, -1.0f, -0.3f };
-    vec3 main_scene_sun_ambient = { 0.1f, 0.1f, 0.1f };
-    vec3 main_scene_sun_diffuse = { 0.8f, 0.8f, 0.8f };
-    vec3 main_scene_sun_specular = { 1.0f, 1.0f, 1.0f };
-
-    struct scene *main_scene = scene_create(
-        skybox_cubemap,
-        main_scene_sun_direction,
-        main_scene_sun_ambient,
-        main_scene_sun_diffuse,
-        main_scene_sun_specular);
 
     // create objects
     vec3 floor_object_position = { 0.0f, -2.0f, 0.0f };
@@ -162,6 +147,18 @@ int main(int argc, char *argv[])
         box_5_object
     };
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
+
+    // create directional light
+    vec3 directional_light_direction = { -0.2f, -1.0f, -0.3f };
+    vec3 directional_light_ambient = { 0.1f, 0.1f, 0.1f };
+    vec3 directional_light_diffuse = { 0.8f, 0.8f, 0.8f };
+    vec3 directional_light_specular = { 1.0f, 1.0f, 1.0f };
+
+    struct directional_light *directional_light = directional_light_create(
+        directional_light_direction,
+        directional_light_ambient,
+        directional_light_diffuse,
+        directional_light_specular);
 
     // create point lights
     vec3 red_point_light_position = { 2.0f, 0.0f, 2.0f };
@@ -524,8 +521,8 @@ int main(int argc, char *argv[])
         objects[1]->rotation[1] = angle;
         objects[1]->rotation[2] = angle;
 
-        main_scene->sun_direction[0] = sinf(angle);
-        main_scene->sun_direction[2] = cosf(angle);
+        directional_light->direction[0] = sinf(angle);
+        directional_light->direction[2] = cosf(angle);
 
         // update lights
         glm_vec_copy(camera->position, flashlight_spot_light->position);
@@ -533,12 +530,13 @@ int main(int argc, char *argv[])
 
         // setup renderer
         renderer_set_camera(camera);
-        renderer_set_scene(main_scene);
 
         for (unsigned int i = 0; i < num_objects; i++)
         {
             renderer_add_object(objects[i]);
         }
+
+        renderer_set_directional_light(directional_light);
 
         for (unsigned int i = 0; i < num_point_lights; i++)
         {
@@ -549,6 +547,8 @@ int main(int argc, char *argv[])
         {
             renderer_add_spot_light(flashlight_spot_light);
         }
+
+        renderer_set_skybox(skybox_cubemap);
 
         renderer_add_water(water);
 
@@ -576,14 +576,14 @@ int main(int argc, char *argv[])
     point_light_destroy(green_point_light);
     point_light_destroy(blue_point_light);
 
+    directional_light_destroy(directional_light);
+
     object_destroy(floor_object);
     object_destroy(box_1_object);
     object_destroy(box_2_object);
     object_destroy(box_3_object);
     object_destroy(box_4_object);
     object_destroy(box_5_object);
-
-    scene_destroy(main_scene);
 
     cubemap_destroy(skybox_cubemap);
 

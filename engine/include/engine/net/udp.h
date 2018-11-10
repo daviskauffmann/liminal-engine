@@ -1,8 +1,6 @@
 #ifndef UDP_H
 #define UDP_H
 
-#include <SDL/SDL_net.h>
-
 UDPsocket ENGINE_API udp_open(unsigned short port);
 UDPpacket ENGINE_API *udp_alloc_packet(int size);
 int ENGINE_API udp_send(UDPsocket socket, UDPpacket *packet, IPaddress address, void *data, int len);

@@ -22,12 +22,10 @@ struct material *default_material;
 // programs
 static struct program *depth_program;
 static struct program *forward_color_program;
-static struct program *forward_scene_program;
 static struct program *forward_directional_program;
 static struct program *forward_point_program;
 static struct program *forward_spot_program;
 static struct program *geometry_program;
-static struct program *deferred_scene_program;
 static struct program *deferred_directional_program;
 static struct program *deferred_point_program;
 static struct program *deferred_spot_program;
@@ -71,19 +69,19 @@ GLuint sprite_vbo_id;
 
 // renderables
 static struct camera *camera;
-static struct scene *scene;
 
 static struct object **objects;
 static unsigned int num_objects;
 
-static struct directional_light **directional_lights;
-static unsigned int num_directional_lights;
+static struct directional_light *directional_light;
 
 static struct point_light **point_lights;
 static unsigned int num_point_lights;
 
 static struct spot_light **spot_lights;
 static unsigned int num_spot_lights;
+
+static struct cubemap *skybox;
 
 static struct water **waters;
 static unsigned int num_waters;
@@ -267,17 +265,6 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         return 1;
     }
 
-    forward_scene_program = program_create(
-        "../engine/assets/shaders/forward.vert",
-        "../engine/assets/shaders/forward_scene.frag");
-
-    if (!forward_scene_program)
-    {
-        error("Couldn't create forward scene program");
-
-        return 1;
-    }
-
     forward_directional_program = program_create(
         "../engine/assets/shaders/forward.vert",
         "../engine/assets/shaders/forward_directional.frag");
@@ -318,17 +305,6 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     if (!geometry_program)
     {
         error("Couldn't create geometry program");
-
-        return 1;
-    }
-
-    deferred_scene_program = program_create(
-        "../engine/assets/shaders/deferred.vert",
-        "../engine/assets/shaders/deferred_scene.frag");
-
-    if (!deferred_scene_program)
-    {
-        error("Couldn't create deferred scene program");
 
         return 1;
     }
@@ -411,19 +387,12 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     }
 
     // setup shader samplers
-    program_bind(forward_scene_program);
-    program_set_int(forward_scene_program, "material.diffuse", 0);
-    program_set_int(forward_scene_program, "material.specular", 1);
-    program_set_int(forward_scene_program, "material.normal", 2);
-    program_set_int(forward_scene_program, "material.emission", 3);
-    program_set_int(forward_scene_program, "depthmap.texture", 4);
-    program_unbind();
-
     program_bind(forward_directional_program);
     program_set_int(forward_directional_program, "material.diffuse", 0);
     program_set_int(forward_directional_program, "material.specular", 1);
     program_set_int(forward_directional_program, "material.normal", 2);
     program_set_int(forward_directional_program, "material.emission", 3);
+    program_set_int(forward_directional_program, "depthmap.texture", 4);
     program_unbind();
 
     program_bind(forward_point_program);
@@ -447,17 +416,11 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     program_set_int(geometry_program, "material.emission", 3);
     program_unbind();
 
-    program_bind(deferred_scene_program);
-    program_set_int(deferred_scene_program, "geometry.normal", 1);
-    program_set_int(deferred_scene_program, "geometry.position", 0);
-    program_set_int(deferred_scene_program, "geometry.albedo_specular", 2);
-    program_set_int(deferred_scene_program, "depthmap.texture", 3);
-    program_unbind();
-
     program_bind(deferred_directional_program);
     program_set_int(deferred_directional_program, "geometry.position", 0);
     program_set_int(deferred_directional_program, "geometry.normal", 1);
     program_set_int(deferred_directional_program, "geometry.albedo_specular", 2);
+    program_set_int(deferred_directional_program, "depthmap.texture", 3);
     program_unbind();
 
     program_bind(deferred_point_program);
@@ -886,21 +849,15 @@ void renderer_set_camera(struct camera *_camera)
     camera = _camera;
 }
 
-void renderer_set_scene(struct scene *_scene)
-{
-    scene = _scene;
-}
-
 void renderer_add_object(struct object *object)
 {
     objects = realloc(objects, sizeof(struct object *) * (num_objects + 1));
     objects[num_objects++] = object;
 }
 
-void renderer_add_directional_light(struct directional_light *directional_light)
+void renderer_set_directional_light(struct directional_light *_directional_light)
 {
-    directional_lights = realloc(directional_lights, sizeof(struct directional_light *) * (num_directional_lights + 1));
-    directional_lights[num_directional_lights++] = directional_light;
+    directional_light = _directional_light;
 }
 
 void renderer_add_point_light(struct point_light *point_light)
@@ -913,6 +870,11 @@ void renderer_add_spot_light(struct spot_light *spot_light)
 {
     spot_lights = realloc(spot_lights, sizeof(struct spot_light *) * (num_spot_lights + 1));
     spot_lights[num_spot_lights++] = spot_light;
+}
+
+void renderer_set_skybox(struct cubemap *_skybox)
+{
+    skybox = _skybox;
 }
 
 void renderer_add_water(struct water *water)
@@ -944,13 +906,13 @@ void renderer_draw(bool ortho)
     mat4 camera_view;
     camera_calc_view(camera, camera_view);
 
-    // calculate sun projection matrix
-    mat4 scene_sun_projection;
-    scene_calc_sun_projection(scene, scene_sun_projection);
+    // calculate directional light projection matrix
+    mat4 directional_light_projection;
+    directional_light_calc_projection(directional_light, directional_light_projection);
 
-    // calculate sun view matrix
-    mat4 scene_sun_view;
-    scene_calc_sun_view(scene, scene_sun_view);
+    // calculate directional light view matrix
+    mat4 directional_light_view;
+    directional_light_calc_view(directional_light, directional_light_view);
 
     // bind depthmap fbo
     glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo);
@@ -962,8 +924,8 @@ void renderer_draw(bool ortho)
 
     program_bind(depth_program);
 
-    program_set_mat4(depth_program, "scene.sun_projection", scene_sun_projection);
-    program_set_mat4(depth_program, "scene.sun_view", scene_sun_view);
+    program_set_mat4(depth_program, "directional_light.projection", directional_light_projection);
+    program_set_mat4(depth_program, "directional_light.view", directional_light_view);
 
     for (unsigned int i = 0; i < num_objects; i++)
     {
@@ -1000,25 +962,25 @@ void renderer_draw(bool ortho)
             mat4 object_model = GLM_MAT4_IDENTITY_INIT;
             object_calc_model(objects[i], object_model);
 
-            // scene lighting
-            program_bind(forward_scene_program);
+            // directional light
+            program_bind(forward_directional_program);
 
-            program_set_mat4(forward_scene_program, "camera.projection", camera_projection);
-            program_set_mat4(forward_scene_program, "camera.view", camera_view);
-            program_set_vec3(forward_scene_program, "camera.position", camera->position);
+            program_set_mat4(forward_directional_program, "camera.projection", camera_projection);
+            program_set_mat4(forward_directional_program, "camera.view", camera_view);
+            program_set_vec3(forward_directional_program, "camera.position", camera->position);
 
-            program_set_mat4(forward_scene_program, "object.model", object_model);
+            program_set_mat4(forward_directional_program, "object.model", object_model);
 
-            program_set_vec3(forward_scene_program, "material.color", objects[i]->material->color);
-            program_set_float(forward_scene_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(forward_scene_program, "material.glow", objects[i]->material->glow);
+            program_set_vec3(forward_directional_program, "material.color", objects[i]->material->color);
+            program_set_float(forward_directional_program, "material.shininess", objects[i]->material->shininess);
+            program_set_float(forward_directional_program, "material.glow", objects[i]->material->glow);
 
-            program_set_vec3(forward_scene_program, "scene.sun_direction", scene->sun_direction);
-            program_set_vec3(forward_scene_program, "scene.sun_ambient", scene->sun_ambient);
-            program_set_vec3(forward_scene_program, "scene.sun_diffuse", scene->sun_diffuse);
-            program_set_vec3(forward_scene_program, "scene.sun_specular", scene->sun_specular);
-            program_set_mat4(forward_scene_program, "scene.sun_projection", scene_sun_projection);
-            program_set_mat4(forward_scene_program, "scene.sun_view", scene_sun_view);
+            program_set_vec3(forward_directional_program, "directional_light.direction", directional_light->direction);
+            program_set_vec3(forward_directional_program, "directional_light.ambient", directional_light->ambient);
+            program_set_vec3(forward_directional_program, "directional_light.diffuse", directional_light->diffuse);
+            program_set_vec3(forward_directional_program, "directional_light.specular", directional_light->specular);
+            program_set_mat4(forward_directional_program, "directional_light.projection", directional_light_projection);
+            program_set_mat4(forward_directional_program, "directional_light.view", directional_light_view);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
@@ -1040,40 +1002,6 @@ void renderer_draw(bool ortho)
             glBlendFunc(GL_ONE, GL_ONE);
             glDepthMask(GL_FALSE);
             glDepthFunc(GL_EQUAL);
-
-            // directional lights
-            program_bind(forward_directional_program);
-
-            program_set_mat4(forward_directional_program, "camera.projection", camera_projection);
-            program_set_mat4(forward_directional_program, "camera.view", camera_view);
-            program_set_vec3(forward_directional_program, "camera.position", camera->position);
-
-            program_set_mat4(forward_directional_program, "object.model", object_model);
-
-            program_set_vec3(forward_directional_program, "material.color", objects[i]->material->color);
-            program_set_float(forward_directional_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(forward_directional_program, "material.glow", objects[i]->material->glow);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
-
-            for (unsigned int j = 0; j < num_directional_lights; j++)
-            {
-                program_set_vec3(forward_directional_program, "directional_light.direction", directional_lights[j]->direction);
-                program_set_vec3(forward_directional_program, "directional_light.ambient", directional_lights[j]->ambient);
-                program_set_vec3(forward_directional_program, "directional_light.diffuse", directional_lights[j]->diffuse);
-                program_set_vec3(forward_directional_program, "directional_light.specular", directional_lights[j]->specular);
-
-                mesh_draw(objects[i]->mesh);
-            }
-
-            program_unbind();
 
             // point lights
             program_bind(forward_point_program);
@@ -1210,17 +1138,17 @@ void renderer_draw(bool ortho)
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
-        // scene lighting
-        program_bind(deferred_scene_program);
+        // directional light
+        program_bind(deferred_directional_program);
 
-        program_set_vec3(deferred_scene_program, "camera.position", camera->position);
+        program_set_vec3(deferred_directional_program, "camera.position", camera->position);
 
-        program_set_vec3(deferred_scene_program, "scene.sun_direction", scene->sun_direction);
-        program_set_vec3(deferred_scene_program, "scene.sun_ambient", scene->sun_ambient);
-        program_set_vec3(deferred_scene_program, "scene.sun_diffuse", scene->sun_diffuse);
-        program_set_vec3(deferred_scene_program, "scene.sun_specular", scene->sun_specular);
-        program_set_mat4(deferred_scene_program, "scene.sun_projection", scene_sun_projection);
-        program_set_mat4(deferred_scene_program, "scene.sun_view", scene_sun_view);
+        program_set_vec3(deferred_directional_program, "directional_light.direction", directional_light->direction);
+        program_set_vec3(deferred_directional_program, "directional_light.ambient", directional_light->ambient);
+        program_set_vec3(deferred_directional_program, "directional_light.diffuse", directional_light->diffuse);
+        program_set_vec3(deferred_directional_program, "directional_light.specular", directional_light->specular);
+        program_set_mat4(deferred_directional_program, "directional_light.projection", directional_light_projection);
+        program_set_mat4(deferred_directional_program, "directional_light.view", directional_light_view);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
@@ -1240,30 +1168,6 @@ void renderer_draw(bool ortho)
         glBlendFunc(GL_ONE, GL_ONE);
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_EQUAL);
-
-        // directional lights
-        program_bind(deferred_directional_program);
-
-        program_set_vec3(deferred_directional_program, "camera.position", camera->position);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture);
-
-        for (unsigned int i = 0; i < num_directional_lights; i++)
-        {
-            program_set_vec3(deferred_directional_program, "directional_light.direction", directional_lights[i]->direction);
-            program_set_vec3(deferred_directional_program, "directional_light.ambient", directional_lights[i]->ambient);
-            program_set_vec3(deferred_directional_program, "directional_light.diffuse", directional_lights[i]->diffuse);
-            program_set_vec3(deferred_directional_program, "directional_light.specular", directional_lights[i]->specular);
-
-            mesh_draw(quad_mesh);
-        }
-
-        program_unbind();
 
         // point lights
         program_bind(deferred_point_program);
@@ -1389,6 +1293,7 @@ void renderer_draw(bool ortho)
 
         program_set_mat4(water_program, "water.model", water_model);
 
+        // draw water mesh
         glBindVertexArray(water_vao_id);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
@@ -1402,40 +1307,38 @@ void renderer_draw(bool ortho)
 
     // end water pass
 
-    if (scene->skybox)
-    {
-        // start skybox pass
-        glViewport(0, 0, render_width, render_height);
-        glDepthFunc(GL_LEQUAL);
+    // start skybox pass
+    glViewport(0, 0, render_width, render_height);
+    glDepthFunc(GL_LEQUAL);
 
-        mat4 camera_view_no_translate;
-        glm_mat4_copy(camera_view, camera_view_no_translate);
-        camera_view_no_translate[3][0] = 0.0f;
-        camera_view_no_translate[3][1] = 0.0f;
-        camera_view_no_translate[3][2] = 0.0f;
-        camera_view_no_translate[3][3] = 0.0f;
+    mat4 camera_view_no_translate;
+    glm_mat4_copy(camera_view, camera_view_no_translate);
+    camera_view_no_translate[3][0] = 0.0f;
+    camera_view_no_translate[3][1] = 0.0f;
+    camera_view_no_translate[3][2] = 0.0f;
+    camera_view_no_translate[3][3] = 0.0f;
 
-        program_bind(skybox_program);
+    program_bind(skybox_program);
 
-        program_set_mat4(skybox_program, "camera.projection", camera_projection);
-        program_set_mat4(skybox_program, "camera.view", camera_view_no_translate);
+    program_set_mat4(skybox_program, "camera.projection", camera_projection);
+    program_set_mat4(skybox_program, "camera.view", camera_view_no_translate);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox->texture_id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
 
-        glBindVertexArray(skybox_vao_id);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
-        glDrawArrays(GL_TRIANGLES, 0, num_skybox_vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
+    // draw sprite mesh
+    glBindVertexArray(skybox_vao_id);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
+    glDrawArrays(GL_TRIANGLES, 0, num_skybox_vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glBindVertexArray(0);
 
-        program_unbind();
+    program_unbind();
 
-        // end skybox pass
-        glDepthFunc(GL_LESS);
-    }
+    // end skybox pass
+    glDepthFunc(GL_LESS);
 
     // start sprite pass
     glViewport(0, 0, render_width, render_height);
@@ -1489,7 +1392,6 @@ void renderer_draw(bool ortho)
     program_unbind();
 
     num_objects = 0;
-    num_directional_lights = 0;
     num_point_lights = 0;
     num_spot_lights = 0;
 }
@@ -1502,7 +1404,6 @@ void renderer_quit(void)
 
     free(spot_lights);
     free(point_lights);
-    free(directional_lights);
     free(objects);
 
     glDeleteRenderbuffers(1, &geometry_rbo);
@@ -1524,11 +1425,10 @@ void renderer_quit(void)
     program_destroy(deferred_spot_program);
     program_destroy(deferred_point_program);
     program_destroy(deferred_directional_program);
-    program_destroy(deferred_scene_program);
     program_destroy(forward_spot_program);
     program_destroy(forward_point_program);
     program_destroy(forward_directional_program);
-    program_destroy(forward_scene_program);
+    program_destroy(forward_color_program);
 
     material_destroy(default_material);
 

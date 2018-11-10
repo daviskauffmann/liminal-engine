@@ -1,9 +1,6 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include <cglm/cglm.h>
-#include <GL/glew.h>
-
 struct program
 {
     GLuint program;

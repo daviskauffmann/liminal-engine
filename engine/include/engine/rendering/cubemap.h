@@ -1,8 +1,6 @@
 #ifndef CUBEMAP_H
 #define CUBEMAP_H
 
-#include <GL/glew.h>
-
 struct cubemap
 {
     GLuint texture_id;

@@ -1,10 +1,6 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include <cglm/cglm.h>
-
-#include "texture.h"
-
 struct material
 {
     vec3 color;

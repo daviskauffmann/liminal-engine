@@ -1,8 +1,6 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include <cglm/cglm.h>
-
 struct sprite
 {
     vec3 color;

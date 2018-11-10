@@ -1,8 +1,6 @@
 #ifndef POINT_LIGHT_H
 #define POINT_LIGHT_H
 
-#include <cglm/cglm.h>
-
 struct point_light
 {
     vec3 position;

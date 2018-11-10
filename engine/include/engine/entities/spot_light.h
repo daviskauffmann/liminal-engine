@@ -1,8 +1,6 @@
 #ifndef SPOT_LIGHT_H
 #define SPOT_LIGHT_H
 
-#include <cglm/cglm.h>
-
 struct spot_light
 {
     vec3 position;

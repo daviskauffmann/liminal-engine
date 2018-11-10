@@ -100,6 +100,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
 GLint program_get_location(struct program *program, const char *name)
 {
+    // TODO: cache in a hashmap or something
     return glGetUniformLocation(program->program, name);
 }
 
@@ -120,7 +121,7 @@ void program_set_float(struct program *program, const char *name, float value)
 
 void program_set_vec3(struct program *program, const char *name, vec3 vec)
 {
-    glUniform3f(program_get_location(program, name), vec[0], vec[1], vec[2]);
+    glUniform3fv(program_get_location(program, name), 1, (GLfloat *)vec);
 }
 
 void program_set_mat4(struct program *program, const char *name, mat4 mat)

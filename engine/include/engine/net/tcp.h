@@ -1,8 +1,6 @@
 #ifndef TCP_H
 #define TCP_H
 
-#include <SDL/SDL_net.h>
-
 typedef struct
 {
     Uint8 *data;

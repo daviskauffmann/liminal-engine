@@ -15,159 +15,153 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\audio.c">
+    <ClCompile Include="src\audio\audio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\bitmap.c">
+    <ClCompile Include="src\audio\chunk.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\camera.c">
+    <ClCompile Include="src\audio\music.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\directional_light.c">
+    <ClCompile Include="src\rendering\mesh.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\log.c">
+    <ClCompile Include="src\rendering\material.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\material.c">
+    <ClCompile Include="src\rendering\texture.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mesh.c">
+    <ClCompile Include="src\rendering\cubemap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\object.c">
+    <ClCompile Include="src\core\core.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\point_light.c">
+    <ClCompile Include="src\core\bitmap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\program.c">
+    <ClCompile Include="src\core\time.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\spot_light.c">
+    <ClCompile Include="src\core\log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tcp.c">
+    <ClCompile Include="src\rendering\window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\texture.c">
+    <ClCompile Include="src\rendering\renderer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\time.c">
+    <ClCompile Include="src\rendering\program.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\udp.c">
+    <ClCompile Include="src\net\http.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\window.c">
+    <ClCompile Include="src\net\tcp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\scene.c">
+    <ClCompile Include="src\net\udp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\sprite.c">
+    <ClCompile Include="src\entities\camera.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\http.c">
+    <ClCompile Include="src\entities\directional_light.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer.c">
+    <ClCompile Include="src\entities\object.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cubemap.c">
+    <ClCompile Include="src\entities\point_light.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\water.c">
+    <ClCompile Include="src\entities\spot_light.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core.c">
+    <ClCompile Include="src\entities\sprite.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\chunk.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\music.c">
+    <ClCompile Include="src\entities\water.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\engine\audio.h">
+    <ClInclude Include="include\engine\audio\audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\bitmap.h">
+    <ClInclude Include="include\engine\core\bitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\camera.h">
+    <ClInclude Include="include\engine\audio\chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\directional_light.h">
+    <ClInclude Include="include\engine\core\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\rendering\cubemap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\log.h">
+    <ClInclude Include="include\engine\net\http.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\material.h">
+    <ClInclude Include="include\engine\core\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\mesh.h">
+    <ClInclude Include="include\engine\rendering\material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\object.h">
+    <ClInclude Include="include\engine\rendering\mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\point_light.h">
+    <ClInclude Include="include\engine\audio\music.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\program.h">
+    <ClInclude Include="include\engine\rendering\program.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\spot_light.h">
+    <ClInclude Include="include\engine\rendering\renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\tcp.h">
+    <ClInclude Include="include\engine\rendering\texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\texture.h">
+    <ClInclude Include="include\engine\rendering\window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\time.h">
+    <ClInclude Include="include\engine\net\tcp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\udp.h">
+    <ClInclude Include="include\engine\net\udp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\window.h">
+    <ClInclude Include="include\engine\core\time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\scene.h">
+    <ClInclude Include="include\engine\entities\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\sprite.h">
+    <ClInclude Include="include\engine\entities\directional_light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\http.h">
+    <ClInclude Include="include\engine\entities\object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\renderer.h">
+    <ClInclude Include="include\engine\entities\point_light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\cubemap.h">
+    <ClInclude Include="include\engine\entities\spot_light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\water.h">
+    <ClInclude Include="include\engine\entities\water.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\chunk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\music.h">
+    <ClInclude Include="include\engine\entities\sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

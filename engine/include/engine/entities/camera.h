@@ -3,8 +3,6 @@
 
 // TODO: perhaps separate into different ortho and perspective camera structs?
 
-#include <cglm/cglm.h>
-
 struct camera
 {
     vec3 position;

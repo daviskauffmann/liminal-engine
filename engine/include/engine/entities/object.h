@@ -1,11 +1,6 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include <cglm/cglm.h>
-
-#include "material.h"
-#include "mesh.h"
-
 struct object
 {
     struct mesh *mesh;

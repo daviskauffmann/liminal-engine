@@ -1,9 +1,6 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_ttf.h>
-
 int ENGINE_API window_init(const char *title, int width, int height);
 const char ENGINE_API *window_get_title(void);
 void ENGINE_API window_set_title(const char *title);

@@ -1,8 +1,6 @@
 #ifndef WATER_H
 #define WATER_H
 
-#include <cglm/cglm.h>
-
 struct water
 {
     vec3 position;
