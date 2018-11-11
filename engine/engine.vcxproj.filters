@@ -18,12 +18,6 @@
     <ClCompile Include="src\audio\audio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\audio\chunk.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\audio\music.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\rendering\mesh.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -87,15 +81,18 @@
     <ClCompile Include="src\net\udp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\audio\sound.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\source.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\engine\audio\audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\core\bitmap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\audio\chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\core\core.h">
@@ -117,9 +114,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\rendering\mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\audio\music.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\rendering\program.h">
@@ -162,6 +156,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\entities\sprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\audio\sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\engine\audio\source.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

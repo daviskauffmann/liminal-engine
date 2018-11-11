@@ -8,9 +8,7 @@
 // we probably need an io module
 // i want to eliminate the need for the client to call SDL/OpenGL stuff directly
 
-// TODO: OpenAL integration
-// use SDL_mixer to load sound files into a buffer, and OpenAL for everything after that
-// which means no more Mix_OpenAudio(), the engine will manage the sound state itself
+// TODO: scene management
 
 #include <engine/engine.h>
 
@@ -67,6 +65,10 @@ int main(int argc, char *argv[])
     };
 
     struct cubemap *skybox_cubemap = cubemap_create(skybox_cubemap_files);
+
+    // create sounds
+    struct sound *bounce_sound = sound_create("assets/audio/bounce.wav");
+    struct sound *shoot_sound = sound_create("assets/audio/shoot.wav");
 
     // create materials
     vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
@@ -268,15 +270,14 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    // load music
-    struct music *background_music = music_create("assets/audio/background.mp3");
-
-    // load sounds
-    struct chunk *shoot_chunk = chunk_create("assets/audio/shoot.wav");
+    // create sources
+    struct source *origin_source = source_create();
+    struct source *camera_source = source_create();
 
     // game settings
     float fps_update_timer = 0.0f;
     bool flashlight = true;
+    float bounce_timer = 0.0f;
     float shoot_timer = 0.0f;
 
     // main loop
@@ -316,33 +317,6 @@ int main(int argc, char *argv[])
             {
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_1:
-                {
-                    if (audio_playing_music())
-                    {
-                        audio_stop_music();
-                    }
-                    else
-                    {
-                        music_play(background_music, -1);
-                    }
-                }
-                break;
-                case SDLK_2:
-                {
-                    if (audio_playing_music())
-                    {
-                        if (audio_paused_music())
-                        {
-                            audio_resume_music();
-                        }
-                        else
-                        {
-                            audio_pause_music();
-                        }
-                    }
-                }
-                break;
                 case SDLK_F1:
                 {
                     renderer_set_mode(RENDER_MODE_FORWARD);
@@ -513,19 +487,6 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
-        // shooting
-        shoot_timer += time_delta();
-
-        if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
-        {
-            if (shoot_timer >= 0.25f)
-            {
-                shoot_timer = 0.0f;
-
-                chunk_play(shoot_chunk, -1, 0);
-            }
-        }
-
         // update objects
         float angle = time_current() * 0.001f;
         objects[1]->rotation[0] = angle;
@@ -538,6 +499,36 @@ int main(int argc, char *argv[])
         // update lights
         glm_vec_copy(camera->position, flashlight_spot_light->position);
         glm_vec_copy(camera->front, flashlight_spot_light->direction);
+
+        // update audio
+        audio_set_listener(camera->position);
+        source_set_position(camera_source, camera->position);
+
+        // shooting
+        shoot_timer += time_delta();
+
+        if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+        {
+            if (shoot_timer >= 0.25f)
+            {
+                shoot_timer = 0.0f;
+
+                source_play(camera_source, shoot_sound);
+            }
+        }
+
+        // 3d audio test
+        bounce_timer += time_delta();
+
+        if (keys[SDL_SCANCODE_SPACE])
+        {
+            if (bounce_timer >= 0.25f)
+            {
+                bounce_timer = 0.0f;
+
+                source_play(origin_source, bounce_sound);
+            }
+        }
 
         // setup renderer
         renderer_set_camera(camera);
@@ -574,37 +565,38 @@ int main(int argc, char *argv[])
     }
 
     // free resources
-    chunk_destroy(shoot_chunk);
-
-    music_destroy(background_music);
+    source_destroy(camera_source);
+    source_destroy(origin_source);
 
     water_destroy(water);
 
     spot_light_destroy(flashlight_spot_light);
 
-    point_light_destroy(red_point_light);
-    point_light_destroy(yellow_point_light);
-    point_light_destroy(green_point_light);
     point_light_destroy(blue_point_light);
+    point_light_destroy(green_point_light);
+    point_light_destroy(yellow_point_light);
+    point_light_destroy(red_point_light);
 
     directional_light_destroy(directional_light);
 
-    object_destroy(floor_object);
-    object_destroy(box_1_object);
-    object_destroy(box_2_object);
-    object_destroy(box_3_object);
-    object_destroy(box_4_object);
     object_destroy(box_5_object);
+    object_destroy(box_4_object);
+    object_destroy(box_3_object);
+    object_destroy(box_2_object);
+    object_destroy(box_1_object);
+    object_destroy(floor_object);
 
     cubemap_destroy(skybox_cubemap);
 
-    material_destroy(box_material);
     material_destroy(cobble_material);
+    material_destroy(box_material);
 
-    texture_destroy(box_diffuse_texture);
-    texture_destroy(box_specular_texture);
-    texture_destroy(cobble_diffuse_texture);
+    sound_destroy(shoot_sound);
+
     texture_destroy(cobble_specular_texture);
+    texture_destroy(cobble_diffuse_texture);
+    texture_destroy(box_specular_texture);
+    texture_destroy(box_diffuse_texture);
 
     // close engine
     renderer_quit();

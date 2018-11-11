@@ -1,8 +1,31 @@
 #include <engine/engine.h>
 
+static ALCdevice *device;
+static ALCcontext *context;
+
 int audio_init(int frequency, unsigned short format, int channels, int chunk_size)
 {
-    // setup audio
+    // setup OpenAL
+    device = alcOpenDevice(NULL);
+
+    if (!device)
+    {
+        return 1;
+    }
+
+    context = alcCreateContext(device, NULL);
+
+    if (!context)
+    {
+        return 1;
+    }
+
+    if (!alcMakeContextCurrent(context))
+    {
+        return 1;
+    }
+
+    // setup SDL_mixer
     if (Mix_OpenAudio(frequency, format, channels, chunk_size))
     {
         error(Mix_GetError());
@@ -13,32 +36,16 @@ int audio_init(int frequency, unsigned short format, int channels, int chunk_siz
     return 0;
 }
 
-bool ENGINE_API audio_playing_music(void)
+void ENGINE_API audio_set_listener(vec3 position)
 {
-    return Mix_PlayingMusic();
-}
-
-bool ENGINE_API audio_paused_music(void)
-{
-    return Mix_PausedMusic();
-}
-
-void ENGINE_API audio_pause_music(void)
-{
-    Mix_PauseMusic();
-}
-
-void ENGINE_API audio_resume_music(void)
-{
-    Mix_ResumeMusic();
-}
-
-void ENGINE_API audio_stop_music(void)
-{
-    Mix_HaltMusic();
+    alListener3f(AL_POSITION, position[0], position[1], position[2]);
+    alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 }
 
 void audio_quit(void)
 {
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
     Mix_CloseAudio();
 }
