@@ -48,24 +48,29 @@ static GLuint geometry_normal_texture;
 static GLuint geometry_albedo_specular_texture;
 static GLuint geometry_rbo;
 
-GLuint water_fbo_id;
-GLuint water_color_texture_id;
-GLuint water_depth_texture_id;
+static GLuint water_fbo_id;
+static water_color_texture_id;
+static water_depth_texture_id;
 
 // water
-unsigned int num_water_vertices;
-GLuint water_vao_id;
-GLuint water_vbo_id;
+static unsigned int num_water_vertices;
+static GLuint water_vao_id;
+static GLuint water_vbo_id;
 
 // skybox
-unsigned int num_skybox_vertices;
-GLuint skybox_vao_id;
-GLuint skybox_vbo_id;
+static unsigned int num_skybox_vertices;
+static GLuint skybox_vao_id;
+static GLuint skybox_vbo_id;
 
 // sprite
-unsigned int num_sprite_vertices;
-GLuint sprite_vao_id;
-GLuint sprite_vbo_id;
+static unsigned int num_sprite_vertices;
+static GLuint sprite_vao_id;
+static GLuint sprite_vbo_id;
+
+// screen
+static unsigned int num_screen_vertices;
+static GLuint screen_vao_id;
+static GLuint screen_vbo_id;
 
 // renderables
 static struct camera *camera;
@@ -97,6 +102,24 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     shadow_width = _shadow_width;
     shadow_height = _shadow_height;
     render_mode = RENDER_MODE_FORWARD;
+
+    // init GLEW
+    {
+        GLenum glewError = glewInit();
+
+        if (glewError != GLEW_OK)
+        {
+            error(glewGetErrorString(glewError));
+
+            return 1;
+        }
+    }
+
+    info("GLEW %s", glewGetString(GLEW_VERSION));
+    info("OpenGL %s", glGetString(GL_VERSION));
+    info("Vendor %s", glGetString(GL_VENDOR));
+    info("Renderer %s", glGetString(GL_RENDERER));
+    info("GLSL %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     // setup opengl
     // TODO: face culling
@@ -812,7 +835,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glBindVertexArray(0);
 
     // create sprite mesh
-    static float sprite_vertices[] = {
+    float sprite_vertices[] = {
         // position // uv
         0.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f,
@@ -829,9 +852,33 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     glGenBuffers(1, &sprite_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), sprite_vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), & sprite_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);                     // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    // create screen mesh
+    float screen_vertices[] = {
+        // position    // uv
+        -1.0f, -1.0f,  0.0f,  0.0f,
+        -1.0f,  1.0f,  0.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,  0.0f,
+         1.0f, -1.0f,  1.0f,  0.0f,
+        -1.0f,  1.0f,  0.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,  1.0f,
+    };
+    num_screen_vertices = sizeof(screen_vertices) / sizeof(float) / 4;
+
+    glGenVertexArrays(1, &screen_vao_id);
+    glBindVertexArray(screen_vao_id);
+
+    glGenBuffers(1, &screen_vbo_id);
+    glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(screen_vertices), &screen_vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0); // position
+    glVertexAttribPointer(1 , 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
@@ -889,6 +936,7 @@ void renderer_add_sprite(struct sprite *sprite)
     sprites[num_sprites++] = sprite;
 }
 
+// TODO: split this up into sub functions, just for organization
 void renderer_draw(bool ortho)
 {
     // calculate camera projection matrix
@@ -1159,7 +1207,16 @@ void renderer_draw(bool ortho)
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, depthmap_texture);
 
-        mesh_draw(quad_mesh);
+        // draw screen mesh
+        glBindVertexArray(screen_vao_id);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+        glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glBindVertexArray(0);
 
         program_unbind();
 
@@ -1189,7 +1246,16 @@ void renderer_draw(bool ortho)
             program_set_vec3(deferred_point_program, "point_light.specular", point_lights[i]->specular);
             program_set_vec3(deferred_point_program, "point_light.attenuation", point_lights[i]->attenuation);
 
-            mesh_draw(quad_mesh);
+            // draw screen mesh
+            glBindVertexArray(screen_vao_id);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+            glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glBindVertexArray(0);
         }
 
         program_unbind();
@@ -1217,7 +1283,16 @@ void renderer_draw(bool ortho)
             program_set_float(deferred_spot_program, "spot_light.inner_cutoff", spot_lights[i]->inner_cutoff);
             program_set_float(deferred_spot_program, "spot_light.outer_cutoff", spot_lights[i]->outer_cutoff);
 
-            mesh_draw(quad_mesh);
+            // draw screen mesh
+            glBindVertexArray(screen_vao_id);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+            glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glBindVertexArray(0);
         }
 
         program_unbind();
@@ -1387,7 +1462,16 @@ void renderer_draw(bool ortho)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, screen_texture);
 
-    mesh_draw(quad_mesh);
+    // draw screen mesh
+    glBindVertexArray(screen_vao_id);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+    glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glBindVertexArray(0);
 
     program_unbind();
 

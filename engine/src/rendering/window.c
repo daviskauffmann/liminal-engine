@@ -31,24 +31,6 @@ int window_init(const char *title, int width, int height)
         return 1;
     }
 
-    // init GLEW
-    {
-        GLenum glewError = glewInit();
-
-        if (glewError != GLEW_OK)
-        {
-            error(glewGetErrorString(glewError));
-
-            return 1;
-        }
-    }
-
-    info("GLEW %s", glewGetString(GLEW_VERSION));
-    info("OpenGL %s", glGetString(GL_VERSION));
-    info("Vendor %s", glGetString(GL_VENDOR));
-    info("Renderer %s", glGetString(GL_RENDERER));
-    info("GLSL %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
     return 0;
 }
 

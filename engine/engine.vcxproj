@@ -94,19 +94,19 @@
     <ClCompile Include="src\entities\spot_light.c" />
     <ClCompile Include="src\entities\sprite.c" />
     <ClCompile Include="src\entities\water.c" />
+    <ClCompile Include="src\net\http.c" />
+    <ClCompile Include="src\net\tcp.c" />
+    <ClCompile Include="src\net\udp.c" />
     <ClCompile Include="src\rendering\cubemap.c" />
     <ClCompile Include="src\core\core.c" />
-    <ClCompile Include="src\net\http.c" />
     <ClCompile Include="src\core\log.c" />
     <ClCompile Include="src\rendering\material.c" />
     <ClCompile Include="src\rendering\mesh.c" />
     <ClCompile Include="src\audio\music.c" />
     <ClCompile Include="src\rendering\program.c" />
     <ClCompile Include="src\rendering\renderer.c" />
-    <ClCompile Include="src\net\tcp.c" />
     <ClCompile Include="src\rendering\texture.c" />
     <ClCompile Include="src\core\time.c" />
-    <ClCompile Include="src\net\udp.c" />
     <ClCompile Include="src\rendering\window.c" />
   </ItemGroup>
   <ItemGroup>

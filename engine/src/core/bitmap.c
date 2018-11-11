@@ -5,15 +5,6 @@ static void set_pixel(SDL_Surface *surface, int x, int y, unsigned int pixel);
 
 struct bitmap *bitmap_create(const char *file)
 {
-    SDL_Surface *surface = IMG_Load(file);
-
-    if (!surface)
-    {
-        error(IMG_GetError());
-
-        return NULL;
-    }
-
     struct bitmap *bitmap = malloc(sizeof(struct bitmap));
 
     if (!bitmap)
@@ -23,8 +14,20 @@ struct bitmap *bitmap_create(const char *file)
         return NULL;
     }
 
+    SDL_Surface *surface = IMG_Load(file);
+
+    if (!surface)
+    {
+        error(IMG_GetError());
+
+        return NULL;
+    }
+
     bitmap->width = surface->w;
     bitmap->height = surface->h;
+
+    SDL_FreeSurface(surface);
+
     bitmap->pixels = malloc(bitmap->width * bitmap->height * sizeof(unsigned int));
 
     if (!bitmap->pixels)
@@ -42,8 +45,6 @@ struct bitmap *bitmap_create(const char *file)
             bitmap->pixels[x + y * bitmap->width] = get_pixel(surface, x, y);
         }
     }
-
-    SDL_FreeSurface(surface);
 
     return bitmap;
 }
@@ -102,7 +103,7 @@ static unsigned int get_pixel(SDL_Surface *surface, int x, int y)
         return 0; // shouldn't happen, but avoids warnings
     }
     break;
-    }
+}
 }
 
 static void set_pixel(SDL_Surface *surface, int x, int y, unsigned int pixel)
@@ -142,5 +143,5 @@ static void set_pixel(SDL_Surface *surface, int x, int y, unsigned int pixel)
         *(unsigned int *)p = pixel;
     }
     break;
-    }
+}
 }

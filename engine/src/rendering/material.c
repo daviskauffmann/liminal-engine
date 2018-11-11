@@ -1,6 +1,6 @@
 #include <engine/engine.h>
 
-struct material ENGINE_API *material_create(
+struct material *material_create(
     vec3 color,
     struct texture *diffuse,
     struct texture *specular,

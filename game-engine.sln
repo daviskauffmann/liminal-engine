@@ -7,9 +7,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "game\game.vcxproj", "{F426B80B-F9C4-4552-9790-D24DE2E23081}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multiplayer", "multiplayer\multiplayer.vcxproj", "{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "breakout", "breakout\breakout.vcxproj", "{06D22BBA-CB26-4E48-A916-451EEAC977CB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multiplayer", "multiplayer\multiplayer.vcxproj", "{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +25,14 @@ Global
 		{F426B80B-F9C4-4552-9790-D24DE2E23081}.Debug|x64.Build.0 = Debug|x64
 		{F426B80B-F9C4-4552-9790-D24DE2E23081}.Release|x64.ActiveCfg = Release|x64
 		{F426B80B-F9C4-4552-9790-D24DE2E23081}.Release|x64.Build.0 = Release|x64
-		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Debug|x64.ActiveCfg = Debug|x64
-		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Debug|x64.Build.0 = Debug|x64
-		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Release|x64.ActiveCfg = Release|x64
-		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Release|x64.Build.0 = Release|x64
 		{06D22BBA-CB26-4E48-A916-451EEAC977CB}.Debug|x64.ActiveCfg = Debug|x64
 		{06D22BBA-CB26-4E48-A916-451EEAC977CB}.Debug|x64.Build.0 = Debug|x64
 		{06D22BBA-CB26-4E48-A916-451EEAC977CB}.Release|x64.ActiveCfg = Release|x64
 		{06D22BBA-CB26-4E48-A916-451EEAC977CB}.Release|x64.Build.0 = Release|x64
+		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Debug|x64.ActiveCfg = Debug|x64
+		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Debug|x64.Build.0 = Debug|x64
+		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Release|x64.ActiveCfg = Release|x64
+		{E251210C-AC3B-4EDD-AF62-AEB7A5408F96}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

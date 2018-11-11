@@ -1,6 +1,16 @@
-// TODO: come up with a name for this library
-// TODO: make a pass through all code and clean up names and whatnot (such as using _id for opengl handles)
+// TODO: come up with a name for this engine
+
+// TODO: make a pass through all code and clean up names and whatnot (such as using _id for OpenGL handles)
+
 // TODO: further namespace header guards
+
+// TODO: redo input
+// we probably need an io module
+// i want to eliminate the need for the client to call SDL/OpenGL stuff directly
+
+// TODO: OpenAL integration
+// use SDL_mixer to load sound files into a buffer, and OpenAL for everything after that
+// which means no more Mix_OpenAudio(), the engine will manage the sound state itself
 
 #include <engine/engine.h>
 
@@ -46,6 +56,18 @@ int main(int argc, char *argv[])
     struct texture *cobble_diffuse_texture = texture_create("assets/images/cobble_diffuse.jpg");
     struct texture *cobble_specular_texture = texture_create("assets/images/cobble_specular.jpg");
 
+    // create cubemaps
+    const char *skybox_cubemap_files[] = {
+        "assets/images/sky/right.jpg",
+        "assets/images/sky/left.jpg",
+        "assets/images/sky/top.jpg",
+        "assets/images/sky/bottom.jpg",
+        "assets/images/sky/front.jpg",
+        "assets/images/sky/back.jpg",
+    };
+
+    struct cubemap *skybox_cubemap = cubemap_create(skybox_cubemap_files);
+
     // create materials
     vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
     vec3 cobble_material_color = { 1.0f, 1.0f, 1.0f };
@@ -66,18 +88,6 @@ int main(int argc, char *argv[])
         NULL,
         NULL,
         1.0f);
-
-    // create skybox
-    const char *skybox_cubemap_files[] = {
-        "assets/images/sky/right.jpg",
-        "assets/images/sky/left.jpg",
-        "assets/images/sky/top.jpg",
-        "assets/images/sky/bottom.jpg",
-        "assets/images/sky/front.jpg",
-        "assets/images/sky/back.jpg",
-    };
-
-    struct cubemap *skybox_cubemap = cubemap_create(skybox_cubemap_files);
 
     // create objects
     vec3 floor_object_position = { 0.0f, -2.0f, 0.0f };
@@ -265,8 +275,9 @@ int main(int argc, char *argv[])
     struct chunk *shoot_chunk = chunk_create("assets/audio/shoot.wav");
 
     // game settings
-    bool flashlight = true;
     float fps_update_timer = 0.0f;
+    bool flashlight = true;
+    float shoot_timer = 0.0f;
 
     // main loop
     bool quit = false;
@@ -503,8 +514,8 @@ int main(int argc, char *argv[])
         }
 
         // shooting
-        static float shoot_timer = 0.0f;
         shoot_timer += time_delta();
+
         if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
             if (shoot_timer >= 0.25f)
