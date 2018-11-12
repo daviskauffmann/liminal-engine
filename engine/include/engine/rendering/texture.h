@@ -3,7 +3,7 @@
 
 struct texture
 {
-    GLuint texture;
+    GLuint texture_id;
 };
 
 struct texture ENGINE_API *texture_create(const char *file);

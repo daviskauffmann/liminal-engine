@@ -3,7 +3,7 @@
 
 struct program
 {
-    GLuint program;
+    GLuint program_id;
     // TODO: cache uniforms in a hashmap or something
 };
 

@@ -11,9 +11,9 @@ struct texture *texture_create(const char *file)
         return NULL;
     }
 
-    glGenTextures(1, &texture->texture);
+    glGenTextures(1, &texture->texture_id);
 
-    glBindTexture(GL_TEXTURE_2D, texture->texture);
+    glBindTexture(GL_TEXTURE_2D, texture->texture_id);
 
     SDL_Surface *surface = IMG_Load(file);
 
@@ -58,7 +58,7 @@ struct texture *texture_create(const char *file)
 
 void texture_destroy(struct texture *texture)
 {
-    glDeleteTextures(1, &texture->texture);
+    glDeleteTextures(1, &texture->texture_id);
 
     free(texture);
 }

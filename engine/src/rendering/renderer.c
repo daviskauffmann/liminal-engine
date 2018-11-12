@@ -35,22 +35,22 @@ static struct program *sprite_program;
 static struct program *post_program;
 
 // framebuffers
-static GLuint screen_fbo;
-static GLuint screen_texture;
-static GLuint screen_rbo;
+static GLuint screen_fbo_id;
+static GLuint screen_texture_id;
+static GLuint screen_rbo_id;
 
-static GLuint depthmap_fbo;
-static GLuint depthmap_texture;
+static GLuint depthmap_fbo_id;
+static GLuint depthmap_texture_id;
 
-static GLuint geometry_fbo;
-static GLuint geometry_position_texture;
-static GLuint geometry_normal_texture;
-static GLuint geometry_albedo_specular_texture;
-static GLuint geometry_rbo;
+static GLuint geometry_fbo_id;
+static GLuint geometry_position_texture_id;
+static GLuint geometry_normal_texture_id;
+static GLuint geometry_albedo_specular_texture_id;
+static GLuint geometry_rbo_id;
 
 static GLuint water_fbo_id;
-static water_color_texture_id;
-static water_depth_texture_id;
+static GLuint water_color_texture_id;
+static GLuint water_depth_texture_id;
 
 // water
 static unsigned int num_water_vertices;
@@ -471,11 +471,11 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     program_unbind();
 
     // setup screen fbo
-    glGenFramebuffers(1, &screen_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo);
+    glGenFramebuffers(1, &screen_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
-    glGenTextures(1, &screen_texture);
-    glBindTexture(GL_TEXTURE_2D, screen_texture);
+    glGenTextures(1, &screen_texture_id);
+    glBindTexture(GL_TEXTURE_2D, screen_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -495,13 +495,13 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
-        screen_texture,
+        screen_texture_id,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenRenderbuffers(1, &screen_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo);
+    glGenRenderbuffers(1, &screen_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo_id);
 
     glRenderbufferStorage(
         GL_RENDERBUFFER,
@@ -513,7 +513,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_DEPTH_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER,
-        screen_rbo);
+        screen_rbo_id);
 
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -527,11 +527,11 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup depthmap fbo
-    glGenFramebuffers(1, &depthmap_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo);
+    glGenFramebuffers(1, &depthmap_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo_id);
 
-    glGenTextures(1, &depthmap_texture);
-    glBindTexture(GL_TEXTURE_2D, depthmap_texture);
+    glGenTextures(1, &depthmap_texture_id);
+    glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -557,7 +557,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
-        depthmap_texture,
+        depthmap_texture_id,
         0);
 
     glDrawBuffer(GL_NONE);
@@ -575,12 +575,12 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup geometry fbo
-    glGenFramebuffers(1, &geometry_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo);
+    glGenFramebuffers(1, &geometry_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
 
     // TODO: dont store position because it can be recreated in the fragment shader from depth
-    glGenTextures(1, &geometry_position_texture);
-    glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
+    glGenTextures(1, &geometry_position_texture_id);
+    glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -600,14 +600,14 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
-        geometry_position_texture,
+        geometry_position_texture_id,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // TODO: find a way to optimize this
-    glGenTextures(1, &geometry_normal_texture);
-    glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
+    glGenTextures(1, &geometry_normal_texture_id);
+    glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -627,13 +627,13 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT1,
         GL_TEXTURE_2D,
-        geometry_normal_texture,
+        geometry_normal_texture_id,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenTextures(1, &geometry_albedo_specular_texture);
-    glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture);
+    glGenTextures(1, &geometry_albedo_specular_texture_id);
+    glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -653,7 +653,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT2,
         GL_TEXTURE_2D,
-        geometry_albedo_specular_texture,
+        geometry_albedo_specular_texture_id,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -661,8 +661,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     GLenum geometry_fbo_attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
     glDrawBuffers(sizeof(geometry_fbo_attachments) / sizeof(GLenum), geometry_fbo_attachments);
 
-    glGenRenderbuffers(1, &geometry_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo);
+    glGenRenderbuffers(1, &geometry_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo_id);
 
     glRenderbufferStorage(
         GL_RENDERBUFFER,
@@ -674,7 +674,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
-        geometry_rbo);
+        geometry_rbo_id);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -963,7 +963,7 @@ void renderer_draw(bool ortho)
     directional_light_calc_view(directional_light, directional_light_view);
 
     // bind depthmap fbo
-    glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo_id);
 
     // start shadow pass
     glViewport(0, 0, shadow_width, shadow_height);
@@ -998,7 +998,7 @@ void renderer_draw(bool ortho)
     case RENDER_MODE_FORWARD:
     {
         // bind screen fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
         // forward rendering
         glViewport(0, 0, render_width, render_height);
@@ -1031,15 +1031,15 @@ void renderer_draw(bool ortho)
             program_set_mat4(forward_directional_program, "directional_light.view", directional_light_view);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
             glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, depthmap_texture);
+            glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
 
             mesh_draw(objects[i]->mesh);
 
@@ -1065,13 +1065,13 @@ void renderer_draw(bool ortho)
             program_set_float(forward_point_program, "material.glow", objects[i]->material->glow);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
 
             for (unsigned int j = 0; j < num_point_lights; j++)
             {
@@ -1100,13 +1100,13 @@ void renderer_draw(bool ortho)
             program_set_float(forward_spot_program, "material.glow", objects[i]->material->glow);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
 
             for (unsigned int j = 0; j < num_spot_lights; j++)
             {
@@ -1137,7 +1137,7 @@ void renderer_draw(bool ortho)
     case RENDER_MODE_DEFERRED:
     {
         // bind geometry fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
 
         // geometry pass
         glViewport(0, 0, (GLsizei)(render_width * render_scale), (GLsizei)(render_height * render_scale));
@@ -1162,13 +1162,13 @@ void renderer_draw(bool ortho)
             program_set_float(geometry_program, "material.glow", objects[i]->material->glow);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture : 0);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
 
             mesh_draw(objects[i]->mesh);
         }
@@ -1179,7 +1179,7 @@ void renderer_draw(bool ortho)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // bind screen fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
         // lighting pass
         glViewport(0, 0, render_width, render_height);
@@ -1199,13 +1199,13 @@ void renderer_draw(bool ortho)
         program_set_mat4(deferred_directional_program, "directional_light.view", directional_light_view);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, depthmap_texture);
+        glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
 
         // draw screen mesh
         glBindVertexArray(screen_vao_id);
@@ -1232,11 +1232,11 @@ void renderer_draw(bool ortho)
         program_set_vec3(deferred_point_program, "camera.position", camera->position);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
 
         for (unsigned int i = 0; i < num_point_lights; i++)
         {
@@ -1266,11 +1266,11 @@ void renderer_draw(bool ortho)
         program_set_vec3(deferred_spot_program, "camera.position", camera->position);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture);
+        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
 
         for (unsigned int i = 0; i < num_spot_lights; i++)
         {
@@ -1311,8 +1311,8 @@ void renderer_draw(bool ortho)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // copy depth information to screen fbo
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_fbo);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_fbo);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_fbo_id);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_fbo_id);
         glBlitFramebuffer(0, 0, render_width, render_height, 0, 0, render_width, render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -1320,7 +1320,7 @@ void renderer_draw(bool ortho)
     }
 
     // bind screen fbo
-    glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
     // TEST: draw lights as a cube
     glViewport(0, 0, render_width, render_height);
@@ -1432,7 +1432,7 @@ void renderer_draw(bool ortho)
         program_set_vec3(sprite_program, "sprite.color", sprites[i]->color);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, sprites[i]->image->texture);
+        glBindTexture(GL_TEXTURE_2D, sprites[i]->image->texture_id);
 
         glBindVertexArray(sprite_vao_id);
         glEnableVertexAttribArray(0);
@@ -1460,7 +1460,7 @@ void renderer_draw(bool ortho)
     program_bind(post_program);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, screen_texture);
+    glBindTexture(GL_TEXTURE_2D, screen_texture_id);
 
     // draw screen mesh
     glBindVertexArray(screen_vao_id);
@@ -1490,18 +1490,18 @@ void renderer_quit(void)
     free(point_lights);
     free(objects);
 
-    glDeleteRenderbuffers(1, &geometry_rbo);
-    glDeleteTextures(1, &geometry_albedo_specular_texture);
-    glDeleteTextures(1, &geometry_normal_texture);
-    glDeleteTextures(1, &geometry_position_texture);
-    glDeleteFramebuffers(1, &geometry_fbo);
+    glDeleteRenderbuffers(1, &geometry_rbo_id);
+    glDeleteTextures(1, &geometry_albedo_specular_texture_id);
+    glDeleteTextures(1, &geometry_normal_texture_id);
+    glDeleteTextures(1, &geometry_position_texture_id);
+    glDeleteFramebuffers(1, &geometry_fbo_id);
 
-    glDeleteTextures(1, &depthmap_texture);
-    glDeleteFramebuffers(1, &depthmap_fbo);
+    glDeleteTextures(1, &depthmap_texture_id);
+    glDeleteFramebuffers(1, &depthmap_fbo_id);
 
-    glDeleteRenderbuffers(1, &screen_rbo);
-    glDeleteTextures(1, &screen_texture);
-    glDeleteFramebuffers(1, &screen_fbo);
+    glDeleteRenderbuffers(1, &screen_rbo_id);
+    glDeleteTextures(1, &screen_texture_id);
+    glDeleteFramebuffers(1, &screen_fbo_id);
 
     program_destroy(depth_program);
     program_destroy(post_program);

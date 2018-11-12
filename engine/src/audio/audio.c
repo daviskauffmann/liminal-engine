@@ -3,6 +3,8 @@
 static ALCdevice *device;
 static ALCcontext *context;
 
+// TODO: handle OpenAL errors
+
 int audio_init(int frequency, unsigned short format, int channels, int chunk_size)
 {
     // setup OpenAL
@@ -36,7 +38,7 @@ int audio_init(int frequency, unsigned short format, int channels, int chunk_siz
     return 0;
 }
 
-void ENGINE_API audio_set_listener(vec3 position)
+void audio_set_listener(vec3 position)
 {
     alListener3f(AL_POSITION, position[0], position[1], position[2]);
     alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);

@@ -13,7 +13,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
         return NULL;
     }
 
-    program->program = glCreateProgram();
+    program->program_id = glCreateProgram();
 
     // compile shaders
     GLuint vertex_shader = 0;
@@ -28,7 +28,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             return NULL;
         }
 
-        glAttachShader(program->program, vertex_shader);
+        glAttachShader(program->program_id, vertex_shader);
 
         glDeleteShader(vertex_shader);
     }
@@ -45,21 +45,21 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             return NULL;
         }
 
-        glAttachShader(program->program, fragment_shader);
+        glAttachShader(program->program_id, fragment_shader);
 
         glDeleteShader(fragment_shader);
     }
 
     // link program
-    glLinkProgram(program->program);
+    glLinkProgram(program->program_id);
     {
         GLint success;
-        glGetProgramiv(program->program, GL_LINK_STATUS, &success);
+        glGetProgramiv(program->program_id, GL_LINK_STATUS, &success);
 
         if (!success)
         {
             GLchar info_log[512];
-            glGetProgramInfoLog(program->program, sizeof(info_log), NULL, info_log);
+            glGetProgramInfoLog(program->program_id, sizeof(info_log), NULL, info_log);
 
             error("Program linking failed\n%s", info_log);
 
@@ -70,24 +70,24 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
     // detach shaders, we're done with them now
     if (vertex_shader)
     {
-        glDetachShader(program->program, vertex_shader);
+        glDetachShader(program->program_id, vertex_shader);
     }
 
     if (fragment_shader)
     {
-        glDetachShader(program->program, fragment_shader);
+        glDetachShader(program->program_id, fragment_shader);
     }
 
     // check for errors
-    glValidateProgram(program->program);
+    glValidateProgram(program->program_id);
     {
         GLint success;
-        glGetProgramiv(program->program, GL_VALIDATE_STATUS, &success);
+        glGetProgramiv(program->program_id, GL_VALIDATE_STATUS, &success);
 
         if (!success)
         {
             GLchar info_log[512];
-            glGetProgramInfoLog(program->program, sizeof(info_log), NULL, info_log);
+            glGetProgramInfoLog(program->program_id, sizeof(info_log), NULL, info_log);
 
             error("Program validation failed\n%s", info_log);
 
@@ -100,13 +100,12 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
 GLint program_get_location(struct program *program, const char *name)
 {
-    // TODO: cache in a hashmap or something
-    return glGetUniformLocation(program->program, name);
+    return glGetUniformLocation(program->program_id, name);
 }
 
 void program_bind(struct program *program)
 {
-    glUseProgram(program->program);
+    glUseProgram(program->program_id);
 }
 
 void program_set_int(struct program *program, const char *name, int value)
@@ -136,7 +135,7 @@ void program_unbind(void)
 
 void program_destroy(struct program *program)
 {
-    glDeleteProgram(program->program);
+    glDeleteProgram(program->program_id);
 
     free(program);
 }

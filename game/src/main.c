@@ -1,15 +1,3 @@
-// TODO: come up with a name for this engine
-
-// TODO: make a pass through all code and clean up names and whatnot (such as using _id for OpenGL handles)
-
-// TODO: further namespace header guards
-
-// TODO: redo input
-// we probably need an io module
-// i want to eliminate the need for the client to call SDL/OpenGL stuff directly
-
-// TODO: scene management
-
 #include <engine/engine.h>
 
 #define WINDOW_TITLE "Example Game"
@@ -22,6 +10,16 @@
 #define SHADOW_HEIGHT 4096
 
 #define FPS_CAP 120u
+
+// TODO: come up with a name for this engine
+
+// TODO: further namespace header guards
+
+// TODO: redo input
+// we probably need an io module
+// i want to eliminate the need for the client to call SDL/OpenGL stuff directly
+
+// TODO: scene management
 
 int main(int argc, char *argv[])
 {

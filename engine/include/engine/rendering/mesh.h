@@ -5,9 +5,9 @@
 
 struct mesh
 {
-    GLuint vao;
-    GLuint vbo;
-    GLuint ebo;
+    GLuint vao_id;
+    GLuint vbo_id;
+    GLuint ebo_id;
     int vertices_size;
     int indices_size;
 };
