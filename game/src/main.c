@@ -15,11 +15,29 @@
 
 // TODO: further namespace header guards
 
+// TODO: transparent textures like grass and windows
+
+// TODO: multiple shadow maps
+
+// TODO: point light shadows
+
+// TODO: obj loading + other file formats?
+
+// TODO: instanced rendering
+
+// TODO: animation
+// we're probably just gonna do simple keyframe animation for now, no IK and other complicated stuff
+
+// TODO: physics engine
+// look into physics libraries
+
 // TODO: redo input
 // we probably need an io module
 // i want to eliminate the need for the client to call SDL/OpenGL stuff directly
 
 // TODO: scene management
+// transform hierarchy?
+// might not be totally necessary
 
 int main(int argc, char *argv[])
 {
@@ -485,21 +503,29 @@ int main(int argc, char *argv[])
             glm_vec_add(camera->position, movement, camera->position);
         }
 
-        // update objects
+        // calculate angle for rotating stuff
         float angle = time_current() * 0.001f;
-        objects[1]->rotation[0] = angle;
-        objects[1]->rotation[1] = angle;
-        objects[1]->rotation[2] = angle;
+        float angle_sin = sinf(angle);
+        float angle_cos = cosf(angle);
 
-        directional_light->direction[0] = sinf(angle);
-        directional_light->direction[2] = cosf(angle);
+        // update objects
+        box_1_object->rotation[0] = angle_sin;
+        box_1_object->rotation[1] = angle_cos;
 
         // update lights
+        directional_light->direction[0] = angle_sin;
+        directional_light->direction[2] = angle_cos;
+
         glm_vec_copy(camera->position, flashlight_spot_light->position);
         glm_vec_copy(camera->front, flashlight_spot_light->direction);
 
         // update audio
-        audio_set_listener(camera->position);
+        vec3 camera_velocity = GLM_VEC3_ZERO_INIT;
+        glm_vec_scale(camera->front, speed, camera_velocity);
+
+        audio_set_listener(camera->position, camera_velocity, camera->front);
+
+        // update sources
         source_set_position(camera_source, camera->position);
 
         // shooting

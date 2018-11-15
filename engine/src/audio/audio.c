@@ -38,10 +38,11 @@ int audio_init(int frequency, unsigned short format, int channels, int chunk_siz
     return 0;
 }
 
-void audio_set_listener(vec3 position)
+void audio_set_listener(vec3 position, vec3 velocity, vec3 orientation)
 {
     alListener3f(AL_POSITION, position[0], position[1], position[2]);
-    alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+    alListener3f(AL_VELOCITY, velocity[0], velocity[1], velocity[2]);
+    alListener3f(AL_ORIENTATION, orientation[0], orientation[1], orientation[2]);
 }
 
 void audio_quit(void)
