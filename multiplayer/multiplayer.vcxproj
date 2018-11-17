@@ -110,6 +110,8 @@
     <ClCompile Include="src\data.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\server.c" />
+    <ClCompile Include="src\tcp.c" />
+    <ClCompile Include="src\udp.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engine\engine.vcxproj">
@@ -120,6 +122,8 @@
     <ClInclude Include="include\shared\client.h" />
     <ClInclude Include="include\shared\data.h" />
     <ClInclude Include="include\shared\server.h" />
+    <ClInclude Include="include\shared\tcp.h" />
+    <ClInclude Include="include\shared\udp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
