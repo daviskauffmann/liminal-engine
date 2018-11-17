@@ -1,5 +1,3 @@
-#include <engine/engine.h>
-
 TCPsocket tcp_open(IPaddress *address)
 {
     TCPsocket socket = SDLNet_TCP_Open(address);

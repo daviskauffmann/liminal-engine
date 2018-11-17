@@ -5,7 +5,7 @@ static ALCcontext *context;
 
 // TODO: handle OpenAL errors
 
-int audio_init(int frequency, unsigned short format, int channels, int chunk_size)
+int audio_init(void)
 {
     // setup OpenAL
     device = alcOpenDevice(NULL);
@@ -27,14 +27,6 @@ int audio_init(int frequency, unsigned short format, int channels, int chunk_siz
         return 1;
     }
 
-    // setup SDL_mixer
-    if (Mix_OpenAudio(frequency, format, channels, chunk_size))
-    {
-        error(Mix_GetError());
-
-        return 1;
-    }
-
     return 0;
 }
 
@@ -50,5 +42,4 @@ void audio_quit(void)
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
     alcCloseDevice(device);
-    Mix_CloseAudio();
 }

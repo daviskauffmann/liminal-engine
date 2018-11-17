@@ -1,35 +1,24 @@
 #include <engine/engine.h>
 
-struct sound *sound_create(const char *file)
+struct sound *sound_create(const void *data, int size)
 {
     struct sound *sound = malloc(sizeof(struct sound));
 
     if (!sound)
     {
-        error("Couldn't allocate sound");
+        printf("Error: Couldn't allocate sound\n");
 
         return NULL;
     }
 
     alGenBuffers(1, &sound->buffer_id);
 
-    Mix_Chunk *chunk = Mix_LoadWAV(file);
-
-    if (!chunk)
-    {
-        error(Mix_GetError());
-
-        return NULL;
-    }
-
     alBufferData(
         sound->buffer_id,
         AL_FORMAT_MONO16,
-        chunk->abuf,
-        chunk->alen,
+        data,
+        size,
         44100);
-
-    Mix_FreeChunk(chunk);
 
     return sound;
 }

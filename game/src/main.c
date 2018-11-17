@@ -1,4 +1,13 @@
 #include <engine/engine.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_mixer.h>
+#include <SDL/SDL_net.h>
+#include <SDL/SDL_ttf.h>
+
+#define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
+#define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
+#define MIX_FLAGS 0
 
 #define WINDOW_TITLE "Example Game"
 #define WINDOW_WIDTH 1280
@@ -9,7 +18,8 @@
 #define SHADOW_WIDTH 4096
 #define SHADOW_HEIGHT 4096
 
-#define FPS_CAP 120u
+#define FPS_CAP 120
+#define FRAME_DELAY (1000 / FPS_CAP)
 
 // TODO: come up with a name for this engine
 
@@ -31,60 +41,145 @@
 // TODO: physics engine
 // look into physics libraries
 
-// TODO: redo input
-// we probably need an io module
-// i want to eliminate the need for the client to call SDL/OpenGL stuff directly
+// TODO: allow game to provide malloc/free/log/file functions
 
-// TODO: scene management
-// transform hierarchy?
-// might not be totally necessary
+// TODO: write a custom math library?
 
 int main(int argc, char *argv[])
 {
-    // setup engine
-    core_init();
-    window_init(
+    // init SDL
+    SDL_Init(SDL_FLAGS);
+    IMG_Init(IMG_FLAGS);
+    Mix_Init(MIX_FLAGS);
+    TTF_Init();
+    SDLNet_Init();
+
+    // create window
+    SDL_Window *window = SDL_CreateWindow(
         WINDOW_TITLE,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
-        WINDOW_HEIGHT);
-    audio_init(
-        MIX_DEFAULT_FREQUENCY,
-        MIX_DEFAULT_FORMAT,
-        MIX_DEFAULT_CHANNELS,
-        1024);
+        WINDOW_HEIGHT,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+    // create OpenGL context
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+
+    // setup audio
+    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+
+    // setup engine
     renderer_init(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         RENDER_SCALE,
         SHADOW_WIDTH,
         SHADOW_HEIGHT);
+    audio_init();
 
-    time_cap_fps(FPS_CAP);
-    // window_set_fullscreen(SDL_WINDOW_FULLSCREEN);
     renderer_set_mode(RENDER_MODE_FORWARD);
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // create textures
-    struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
-    struct texture *box_specular_texture = texture_create("assets/images/box_specular.png");
-    struct texture *cobble_diffuse_texture = texture_create("assets/images/cobble_diffuse.jpg");
-    struct texture *cobble_specular_texture = texture_create("assets/images/cobble_specular.jpg");
+    SDL_Surface *box_diffuse_surface = IMG_Load("assets/images/box_diffuse.png");
+    SDL_Surface *box_specular_surface = IMG_Load("assets/images/box_specular.png");
+    SDL_Surface *cobble_diffuse_surface = IMG_Load("assets/images/cobble_diffuse.jpg");
+    SDL_Surface *cobble_specular_surface = IMG_Load("assets/images/cobble_specular.jpg");
+
+    struct texture *box_diffuse_texture = texture_create(
+        box_diffuse_surface->w,
+        box_diffuse_surface->h,
+        box_diffuse_surface->format->BytesPerPixel,
+        box_diffuse_surface->pixels);
+    struct texture *box_specular_texture = texture_create(
+        box_specular_surface->w,
+        box_specular_surface->h,
+        box_specular_surface->format->BytesPerPixel,
+        box_specular_surface->pixels);
+    struct texture *cobble_diffuse_texture = texture_create(
+        cobble_diffuse_surface->w,
+        cobble_diffuse_surface->h,
+        cobble_diffuse_surface->format->BytesPerPixel,
+        cobble_diffuse_surface->pixels);
+    struct texture *cobble_specular_texture = texture_create(
+        cobble_specular_surface->w,
+        cobble_specular_surface->h,
+        cobble_specular_surface->format->BytesPerPixel,
+        cobble_specular_surface->pixels);
+
+    SDL_FreeSurface(box_diffuse_surface);
+    SDL_FreeSurface(box_specular_surface);
+    SDL_FreeSurface(cobble_diffuse_surface);
+    SDL_FreeSurface(cobble_specular_surface);
 
     // create cubemaps
-    const char *skybox_cubemap_files[] = {
-        "assets/images/sky/right.jpg",
-        "assets/images/sky/left.jpg",
-        "assets/images/sky/top.jpg",
-        "assets/images/sky/bottom.jpg",
-        "assets/images/sky/front.jpg",
-        "assets/images/sky/back.jpg",
+    SDL_Surface *skybox_right_surface = IMG_Load("assets/images/sky/right.jpg");
+    SDL_Surface *skybox_left_surface = IMG_Load("assets/images/sky/left.jpg");
+    SDL_Surface *skybox_top_surface = IMG_Load("assets/images/sky/top.jpg");
+    SDL_Surface *skybox_bottom_surface = IMG_Load("assets/images/sky/bottom.jpg");
+    SDL_Surface *skybox_front_surface = IMG_Load("assets/images/sky/front.jpg");
+    SDL_Surface *skybox_back_surface = IMG_Load("assets/images/sky/back.jpg");
+
+    int skybox_widths[] = {
+        skybox_right_surface->w,
+        skybox_left_surface->w,
+        skybox_top_surface->w,
+        skybox_bottom_surface->w,
+        skybox_front_surface->w,
+        skybox_back_surface->w
     };
 
-    struct cubemap *skybox_cubemap = cubemap_create(skybox_cubemap_files);
+    int skybox_heights[] = {
+        skybox_right_surface->h,
+        skybox_left_surface->h,
+        skybox_top_surface->h,
+        skybox_bottom_surface->h,
+        skybox_front_surface->h,
+        skybox_back_surface->h
+    };
+
+    unsigned char skybox_bpps[] = {
+        skybox_right_surface->format->BytesPerPixel,
+        skybox_left_surface->format->BytesPerPixel,
+        skybox_top_surface->format->BytesPerPixel,
+        skybox_bottom_surface->format->BytesPerPixel,
+        skybox_front_surface->format->BytesPerPixel,
+        skybox_back_surface->format->BytesPerPixel
+    };
+
+    void *skybox_pixels[] = {
+        skybox_right_surface->pixels,
+        skybox_left_surface->pixels,
+        skybox_top_surface->pixels,
+        skybox_bottom_surface->pixels,
+        skybox_front_surface->pixels,
+        skybox_back_surface->pixels
+    };
+
+    struct cubemap *skybox_cubemap = cubemap_create(
+        skybox_widths,
+        skybox_heights,
+        skybox_bpps,
+        skybox_pixels);
+
+    SDL_FreeSurface(skybox_right_surface);
+    SDL_FreeSurface(skybox_left_surface);
+    SDL_FreeSurface(skybox_top_surface);
+    SDL_FreeSurface(skybox_bottom_surface);
+    SDL_FreeSurface(skybox_front_surface);
+    SDL_FreeSurface(skybox_back_surface);
 
     // create sounds
-    struct sound *bounce_sound = sound_create("assets/audio/bounce.wav");
-    struct sound *shoot_sound = sound_create("assets/audio/shoot.wav");
+    Mix_Chunk *bounce_chunk = Mix_LoadWAV("assets/audio/bounce.wav");
+    Mix_Chunk *shoot_chunk = Mix_LoadWAV("assets/audio/shoot.wav");
+
+    struct sound *bounce_sound = sound_create(
+        bounce_chunk->abuf,
+        bounce_chunk->alen);
+    struct sound *shoot_sound = sound_create(
+        shoot_chunk->abuf,
+        shoot_chunk->alen);
 
     // create materials
     vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
@@ -291,6 +386,10 @@ int main(int argc, char *argv[])
     struct source *camera_source = source_create();
 
     // game settings
+    unsigned int frame_start_time = 0;
+    unsigned int current_time = 0;
+    float delta_time = 0.0f;
+    unsigned int fps = 0;
     float fps_update_timer = 0.0f;
     bool flashlight = true;
     float bounce_timer = 0.0f;
@@ -301,18 +400,23 @@ int main(int argc, char *argv[])
     while (!quit)
     {
         // start of frame activities
-        time_frame_start();
+        frame_start_time = SDL_GetTicks();
+
+        unsigned int previous = current_time;
+        current_time = SDL_GetTicks();
+        delta_time = (current_time - previous) / 1000.0f;
+        fps = (unsigned int)(1 / delta_time);
 
         // update window title
-        fps_update_timer += time_delta();
+        fps_update_timer += delta_time;
 
         if (fps_update_timer > 0.25f)
         {
             fps_update_timer = 0.0f;
 
             char title[256];
-            sprintf_s(title, sizeof(title), "%s - FPS: %d", WINDOW_TITLE, time_fps());
-            window_set_title(title);
+            sprintf_s(title, sizeof(title), "%s - FPS: %d", WINDOW_TITLE, fps);
+            SDL_SetWindowTitle(window, title);
         }
 
         // get keyboard input
@@ -360,15 +464,15 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        unsigned int flags = window_get_flags();
+                        Uint32 flags = SDL_GetWindowFlags(window);
 
                         if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
                         {
-                            window_set_fullscreen(0);
+                            SDL_SetWindowFullscreen(window, 0);
                         }
                         else
                         {
-                            window_set_fullscreen(SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
                         }
                     }
                 }
@@ -435,7 +539,9 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
 
-                    window_resize(width, height);
+                    SDL_SetWindowSize(window, width, height);
+
+                    printf("Window resized to %dx%d\n", width, height);
                 }
                 break;
                 }
@@ -445,7 +551,7 @@ int main(int argc, char *argv[])
         }
 
         // calculate movement speed
-        float speed = 5.0f * time_delta();
+        float speed = 5.0f * delta_time;
 
         // sprinting
         if (keys[SDL_SCANCODE_LSHIFT])
@@ -504,7 +610,7 @@ int main(int argc, char *argv[])
         }
 
         // calculate angle for rotating stuff
-        float angle = time_current() * 0.001f;
+        float angle = current_time * 0.001f;
         float angle_sin = sinf(angle);
         float angle_cos = cosf(angle);
 
@@ -529,7 +635,7 @@ int main(int argc, char *argv[])
         source_set_position(camera_source, camera->position);
 
         // shooting
-        shoot_timer += time_delta();
+        shoot_timer += delta_time;
 
         if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
@@ -542,7 +648,7 @@ int main(int argc, char *argv[])
         }
 
         // 3d audio test
-        bounce_timer += time_delta();
+        bounce_timer += delta_time;
 
         if (keys[SDL_SCANCODE_SPACE])
         {
@@ -579,13 +685,19 @@ int main(int argc, char *argv[])
         renderer_add_water(water);
 
         // render everything
-        renderer_draw(false);
+        renderer_draw(false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
-        window_swap();
+        SDL_GL_SwapWindow(window);
 
         // end of frame activities
-        time_frame_end();
+        unsigned int frame_end = SDL_GetTicks();
+        unsigned int frame_time = frame_end - frame_start_time;
+
+        if (FRAME_DELAY > frame_time)
+        {
+            SDL_Delay(FRAME_DELAY - frame_time);
+        }
     }
 
     // free resources
@@ -623,10 +735,22 @@ int main(int argc, char *argv[])
     texture_destroy(box_diffuse_texture);
 
     // close engine
-    renderer_quit();
     audio_quit();
-    window_quit();
-    core_quit();
+    renderer_quit();
+
+    // close audio
+    Mix_CloseAudio();
+
+    // close window
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+
+    // close SDL
+    SDLNet_Quit();
+    TTF_Quit();
+    Mix_Quit();
+    IMG_Quit();
+    SDL_Quit();
 
     return 0;
 }

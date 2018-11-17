@@ -6,7 +6,7 @@ struct source *source_create(void)
 
     if (!source)
     {
-        error("Couldn't allocate source");
+        printf("Error: Couldn't allocate source\n");
 
         return NULL;
     }

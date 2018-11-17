@@ -30,21 +30,6 @@
     <ClCompile Include="src\rendering\cubemap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\core.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\bitmap.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\time.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\core\log.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rendering\window.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\rendering\renderer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -72,15 +57,6 @@
     <ClCompile Include="src\entities\water.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\net\http.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net\tcp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net\udp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\audio\sound.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -92,22 +68,10 @@
     <ClInclude Include="include\engine\audio\audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\engine\core\bitmap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\core\core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\engine\rendering\cubemap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\net\http.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\core\log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\rendering\material.h">
@@ -123,18 +87,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\rendering\texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\rendering\window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\net\tcp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\net\udp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\engine\core\time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\engine\entities\camera.h">

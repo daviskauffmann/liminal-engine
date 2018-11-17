@@ -6,7 +6,7 @@ struct water *water_create(vec3 position, vec2 scale)
 
     if (!water)
     {
-        error("Couldn't allocate water");
+        printf("Error: Couldn't allocate water\n");
 
         return NULL;
     }

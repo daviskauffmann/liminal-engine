@@ -8,7 +8,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
     if (!program)
     {
-        error("Couldn't allocate program");
+        printf("Error: Couldn't allocate program\n");
 
         return NULL;
     }
@@ -23,7 +23,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
         if (!vertex_shader)
         {
-            error("Couldn't compile vertex shader");
+            printf("Error: Couldn't compile vertex shader\n");
 
             return NULL;
         }
@@ -40,7 +40,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
         if (!fragment_shader)
         {
-            error("Couldn't compile fragment shader");
+            printf("Error: Couldn't compile fragment shader\n");
 
             return NULL;
         }
@@ -61,7 +61,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             GLchar info_log[512];
             glGetProgramInfoLog(program->program_id, sizeof(info_log), NULL, info_log);
 
-            error("Program linking failed\n%s", info_log);
+            printf("Error: Program linking failed\n%s\n", info_log);
 
             return NULL;
         }
@@ -89,7 +89,7 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
             GLchar info_log[512];
             glGetProgramInfoLog(program->program_id, sizeof(info_log), NULL, info_log);
 
-            error("Program validation failed\n%s", info_log);
+            printf("Error: Program validation failed\n%s\n", info_log);
 
             return NULL;
         }
@@ -146,34 +146,35 @@ static GLuint shader_create(GLenum type, const char *file)
     GLuint shader = glCreateShader(type);
 
     // open shader file
-    SDL_RWops *ctx = SDL_RWFromFile(file, "rb");
+    FILE *fp;
+    fopen_s(&fp, file, "rb");
 
-    if (!ctx)
+    if (!fp)
     {
-        error("Couldn't open file %s", file);
+        printf("Error: Couldn't open file %s\n", file);
 
         return 0;
     }
 
     // get file size
-    SDL_RWseek(ctx, 0, RW_SEEK_END);
-    size_t size = (size_t)SDL_RWtell(ctx);
-    SDL_RWseek(ctx, 0, RW_SEEK_SET);
+    fseek(fp, 0, SEEK_END);
+    size_t size = (size_t)ftell(fp);
+    rewind(fp);
 
     // file buffer
     char *source = malloc(size + 1);
 
     if (!source)
     {
-        error("Couldn't allocate size %ld", size);
+        printf("Error: Couldn't allocate size %ld\n", (long)size);
 
         return 0;
     }
 
     // read the file into the buffer
-    if (SDL_RWread(ctx, source, size, 1) <= 0)
+    if (fread(source, sizeof(char), size, fp) != size)
     {
-        error("Couldn't read file %s", file);
+        printf("Error: Couldn't read file %s\n", file);
 
         return 0;
     }
@@ -181,7 +182,7 @@ static GLuint shader_create(GLenum type, const char *file)
     // null terminate
     source[size] = '\0';
 
-    SDL_RWclose(ctx);
+    fclose(fp);
 
     // set the shader source
     glShaderSource(shader, 1, &source, NULL);
@@ -200,7 +201,7 @@ static GLuint shader_create(GLenum type, const char *file)
         GLchar info_log[512];
         glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
 
-        error("Shader compilation failed\n%s", info_log);
+        printf("Error: Shader compilation failed\n%s\n", info_log);
 
         return 0;
     }

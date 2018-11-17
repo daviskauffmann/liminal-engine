@@ -1,12 +1,12 @@
 #include <engine/engine.h>
 
-struct texture *texture_create(const char *file)
+struct texture *texture_create(int width, int height, unsigned char bpp, const void *pixels)
 {
     struct texture *texture = malloc(sizeof(struct texture));
 
     if (!texture)
     {
-        error("Couldn't allocate texture");
+        printf("Error: Couldn't allocate texture\n");
 
         return NULL;
     }
@@ -15,27 +15,16 @@ struct texture *texture_create(const char *file)
 
     glBindTexture(GL_TEXTURE_2D, texture->texture_id);
 
-    SDL_Surface *surface = IMG_Load(file);
-
-    if (!surface)
-    {
-        error(IMG_GetError());
-
-        return NULL;
-    }
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
         GL_RGB,
-        surface->w,
-        surface->h,
+        width,
+        height,
         0,
-        surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB,
+        bpp == 4 ? GL_RGBA : GL_RGB,
         GL_UNSIGNED_BYTE,
-        surface->pixels);
-
-    SDL_FreeSurface(surface);
+        pixels);
 
     // mip mapping
     glGenerateMipmap(GL_TEXTURE_2D);

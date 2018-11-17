@@ -10,7 +10,7 @@ struct mesh *mesh_create(
 
     if (!mesh)
     {
-        error("Couldn't allocate mesh");
+        printf("Error: Couldn't allocate mesh\n");
 
         return NULL;
     }

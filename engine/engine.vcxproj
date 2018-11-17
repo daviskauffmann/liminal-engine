@@ -62,7 +62,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;OpenAL32.lib;opengl32.lib;SDL2.lib;SDL2_image.lib;SDL2_mixer.lib;SDL2_net.lib;SDL2_ttf.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;OpenAL32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -80,14 +80,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;OpenAL32.lib;opengl32.lib;SDL2.lib;SDL2_image.lib;SDL2_mixer.lib;SDL2_net.lib;SDL2_ttf.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;OpenAL32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\audio\audio.c" />
     <ClCompile Include="src\audio\sound.c" />
     <ClCompile Include="src\audio\source.c" />
-    <ClCompile Include="src\core\bitmap.c" />
     <ClCompile Include="src\entities\camera.c" />
     <ClCompile Include="src\entities\directional_light.c" />
     <ClCompile Include="src\entities\object.c" />
@@ -95,32 +94,21 @@
     <ClCompile Include="src\entities\spot_light.c" />
     <ClCompile Include="src\entities\sprite.c" />
     <ClCompile Include="src\entities\water.c" />
-    <ClCompile Include="src\net\http.c" />
-    <ClCompile Include="src\net\tcp.c" />
-    <ClCompile Include="src\net\udp.c" />
     <ClCompile Include="src\rendering\cubemap.c" />
-    <ClCompile Include="src\core\core.c" />
-    <ClCompile Include="src\core\log.c" />
     <ClCompile Include="src\rendering\material.c" />
     <ClCompile Include="src\rendering\mesh.c" />
     <ClCompile Include="src\rendering\program.c" />
     <ClCompile Include="src\rendering\renderer.c" />
     <ClCompile Include="src\rendering\texture.c" />
-    <ClCompile Include="src\core\time.c" />
-    <ClCompile Include="src\rendering\window.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\engine\audio\audio.h" />
     <ClInclude Include="include\engine\audio\sound.h" />
     <ClInclude Include="include\engine\audio\source.h" />
-    <ClInclude Include="include\engine\core\bitmap.h" />
     <ClInclude Include="include\engine\entities\camera.h" />
-    <ClInclude Include="include\engine\core\core.h" />
     <ClInclude Include="include\engine\rendering\cubemap.h" />
     <ClInclude Include="include\engine\entities\directional_light.h" />
     <ClInclude Include="include\engine\engine.h" />
-    <ClInclude Include="include\engine\net\http.h" />
-    <ClInclude Include="include\engine\core\log.h" />
     <ClInclude Include="include\engine\rendering\material.h" />
     <ClInclude Include="include\engine\rendering\mesh.h" />
     <ClInclude Include="include\engine\entities\object.h" />
@@ -129,12 +117,8 @@
     <ClInclude Include="include\engine\rendering\renderer.h" />
     <ClInclude Include="include\engine\entities\spot_light.h" />
     <ClInclude Include="include\engine\entities\sprite.h" />
-    <ClInclude Include="include\engine\net\tcp.h" />
     <ClInclude Include="include\engine\rendering\texture.h" />
-    <ClInclude Include="include\engine\core\time.h" />
-    <ClInclude Include="include\engine\net\udp.h" />
     <ClInclude Include="include\engine\entities\water.h" />
-    <ClInclude Include="include\engine\rendering\window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

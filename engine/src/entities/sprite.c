@@ -11,7 +11,7 @@ struct sprite *sprite_create(
 
     if (!sprite)
     {
-        error("Couldn't allocate sprite");
+        printf("Error: Couldn't allocate sprite\n");
 
         return NULL;
     }

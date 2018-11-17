@@ -11,7 +11,7 @@ struct point_light *point_light_create(
 
     if (!point_light)
     {
-        error("Couldn't allocate point light");
+        printf("Error: Couldn't allocate point light\n");
 
         return NULL;
     }

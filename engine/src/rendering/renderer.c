@@ -11,13 +11,12 @@ static int shadow_height;
 static enum render_mode render_mode;
 
 // standard assets
-struct mesh *quad_mesh;
-struct mesh *cube_mesh;
-
-struct texture *default_diffuse_texture;
-struct texture *default_specular_texture;
+struct texture *default_texture;
 
 struct material *default_material;
+
+struct mesh *quad_mesh;
+struct mesh *cube_mesh;
 
 // programs
 static struct program *depth_program;
@@ -109,17 +108,17 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
         if (glewError != GLEW_OK)
         {
-            error(glewGetErrorString(glewError));
+            printf("Error: %s\n", glewGetErrorString(glewError));
 
             return 1;
         }
     }
 
-    info("GLEW %s", glewGetString(GLEW_VERSION));
-    info("OpenGL %s", glGetString(GL_VERSION));
-    info("Vendor %s", glGetString(GL_VENDOR));
-    info("Renderer %s", glGetString(GL_RENDERER));
-    info("GLSL %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    printf("GLEW %s\n", glewGetString(GLEW_VERSION));
+    printf("OpenGL %s\n", glGetString(GL_VERSION));
+    printf("Vendor %s\n", glGetString(GL_VENDOR));
+    printf("Renderer %s\n", glGetString(GL_RENDERER));
+    printf("GLSL %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     // setup opengl
     // TODO: face culling
@@ -128,6 +127,42 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
+
+    // create default textures
+    int default_texture_width = 256;
+    int default_texture_height = 256;
+    unsigned int *default_texture_pixels = malloc(default_texture_width * default_texture_height * sizeof(unsigned int));
+    memset(default_texture_pixels, -1, default_texture_width * default_texture_height * sizeof(unsigned int));
+
+    default_texture = texture_create(default_texture_width, default_texture_height, 4, default_texture_pixels);
+
+    if (!default_texture)
+    {
+        printf("Error: Couldn't create default texture\n");
+
+        return 1;
+    }
+
+    free(default_texture_pixels);
+
+    // create default materials
+    vec3 default_material_color = { 1.0f, 1.0f, 1.0f };
+
+    default_material = material_create(
+        default_material_color,
+        default_texture,
+        default_texture,
+        16.0f,
+        NULL,
+        NULL,
+        1.0f);
+
+    if (!default_material)
+    {
+        printf("Error: Couldn't create default material\n");
+
+        return 1;
+    }
 
     // create default meshes
     float quad_vertices[] = {
@@ -151,7 +186,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!quad_mesh)
     {
-        error("Couldn't create quad mesh");
+        printf("Error: Couldn't create quad mesh\n");
 
         return 1;
     }
@@ -224,44 +259,8 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!cube_mesh)
     {
-        error("Couldn't create cube mesh");
+        printf("Error: Couldn't create cube mesh\n");
 
-        return 1;
-    }
-
-    // create default texture
-    default_diffuse_texture = texture_create("../engine/assets/images/default.png");
-
-    if (!default_diffuse_texture)
-    {
-        error("Couldn't create default diffuse texture");
-
-        return 1;
-    }
-
-    default_specular_texture = texture_create("../engine/assets/images/default.png");
-
-    if (!default_specular_texture)
-    {
-        error("Couldn't create default specular texture");
-
-        return 1;
-    }
-
-    // create default material
-    vec3 default_material_color = { 1.0f, 1.0f, 1.0f };
-
-    default_material = material_create(
-        default_material_color,
-        default_diffuse_texture,
-        default_specular_texture,
-        16.0f,
-        NULL,
-        NULL,
-        1.0f);
-
-    if (!default_material)
-    {
         return 1;
     }
 
@@ -272,7 +271,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!depth_program)
     {
-        error("Couldn't create depth program");
+        printf("Error: Couldn't create depth program\n");
 
         return 1;
     }
@@ -283,7 +282,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_color_program)
     {
-        error("Couldn't create forward color program");
+        printf("Error: Couldn't create forward color program\n");
 
         return 1;
     }
@@ -294,7 +293,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_directional_program)
     {
-        error("Couldn't create forward directional program");
+        printf("Error: Couldn't create forward directional program\n");
 
         return 1;
     }
@@ -305,7 +304,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_point_program)
     {
-        error("Couldn't create forward point program");
+        printf("Error: Couldn't create forward point program\n");
 
         return 1;
     }
@@ -316,7 +315,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!forward_spot_program)
     {
-        error("Couldn't create forward spot program");
+        printf("Error: Couldn't create forward spot program\n");
 
         return 1;
     }
@@ -327,7 +326,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!geometry_program)
     {
-        error("Couldn't create geometry program");
+        printf("Error: Couldn't create geometry program\n");
 
         return 1;
     }
@@ -338,7 +337,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_directional_program)
     {
-        error("Couldn't create deferred directional program");
+        printf("Error: Couldn't create deferred directional program\n");
 
         return 1;
     }
@@ -349,7 +348,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_point_program)
     {
-        error("Couldn't create deferred point program");
+        printf("Error: Couldn't create deferred point program\n");
 
         return 1;
     }
@@ -360,7 +359,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!deferred_spot_program)
     {
-        error("Couldn't create deferred spot program");
+        printf("Error: Couldn't create deferred spot program\n");
 
         return 1;
     }
@@ -371,7 +370,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!skybox_program)
     {
-        error("Couldn't create skybox program");
+        printf("Error: Couldn't create skybox program\n");
 
         return 1;
     }
@@ -382,7 +381,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!water_program)
     {
-        error("Couldn't create water program");
+        printf("Error: Couldn't create water program\n");
 
         return 1;
     }
@@ -393,7 +392,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!sprite_program)
     {
-        error("Couldn't create sprite program");
+        printf("Error: Couldn't create sprite program\n");
 
         return 1;
     }
@@ -404,7 +403,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (!post_program)
     {
-        error("Couldn't create post program");
+        printf("Error: Couldn't create post program\n");
 
         return 1;
     }
@@ -519,7 +518,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        error("Couldn't complete screen framebuffer");
+        printf("Error: Couldn't complete screen framebuffer\n");
 
         return 1;
     }
@@ -567,7 +566,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        error("Couldn't complete depthmap framebuffer");
+        printf("Error: Couldn't complete depthmap framebuffer\n");
 
         return 1;
     }
@@ -678,7 +677,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        error("Couldn't complete geometry framebuffer");
+        printf("Error: Couldn't complete geometry framebuffer\n");
 
         return 1;
     }
@@ -746,7 +745,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        error("Couldn't complete water framebuffer");
+        printf("Error: Couldn't complete water framebuffer\n");
 
         return 1;
     }
@@ -852,7 +851,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     glGenBuffers(1, &sprite_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), & sprite_vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), &sprite_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);                     // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -878,7 +877,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(screen_vertices), &screen_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0); // position
-    glVertexAttribPointer(1 , 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
@@ -937,17 +936,17 @@ void renderer_add_sprite(struct sprite *sprite)
 }
 
 // TODO: split this up into sub functions, just for organization
-void renderer_draw(bool ortho)
+void renderer_draw(bool ortho, float aspect)
 {
     // calculate camera projection matrix
     mat4 camera_projection;
     if (ortho)
     {
-        camera_calc_projection_ortho(camera, camera_projection);
+        camera_calc_projection_ortho(camera, aspect, camera_projection);
     }
     else
     {
-        camera_calc_projection_perspective(camera, camera_projection);
+        camera_calc_projection_perspective(camera, aspect, camera_projection);
     }
 
     // calculate camera view matrix
@@ -1514,11 +1513,10 @@ void renderer_quit(void)
     program_destroy(forward_directional_program);
     program_destroy(forward_color_program);
 
-    material_destroy(default_material);
-
-    texture_destroy(default_specular_texture);
-    texture_destroy(default_diffuse_texture);
-
     mesh_destroy(cube_mesh);
     mesh_destroy(quad_mesh);
+
+    material_destroy(default_material);
+
+    texture_destroy(default_texture);
 }

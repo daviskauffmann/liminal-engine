@@ -13,7 +13,7 @@ struct material *material_create(
 
     if (!material)
     {
-        error("Couldn't allocate material");
+        printf("Error: Couldn't allocate material\n");
 
         return NULL;
     }

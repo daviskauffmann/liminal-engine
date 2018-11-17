@@ -1,12 +1,12 @@
 #include <engine/engine.h>
 
-struct cubemap *cubemap_create(const char **files)
+struct cubemap *cubemap_create(int *widths, int *heights, unsigned char *bpps, const void **pixels)
 {
     struct cubemap *cubemap = malloc(sizeof(struct cubemap));
 
     if (!cubemap)
     {
-        error("Couldn't create cubemap");
+        printf("Error: Couldn't create cubemap\n");
 
         return NULL;
     }
@@ -17,29 +17,17 @@ struct cubemap *cubemap_create(const char **files)
 
     for (unsigned int i = 0; i < 6; i++)
     {
-        // load image
-        SDL_Surface *surface = IMG_Load(files[i]);
-
-        if (!surface)
-        {
-            error(IMG_GetError());
-
-            return NULL;
-        }
-
         // create texture
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0,
             GL_RGB,
-            surface->w,
-            surface->h,
+            widths[i],
+            heights[i],
             0,
-            surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB,
+            bpps[i] == 4 ? GL_RGBA : GL_RGB,
             GL_UNSIGNED_BYTE,
-            surface->pixels);
-
-        SDL_FreeSurface(surface);
+            pixels[i]);
     }
 
     // wrapping

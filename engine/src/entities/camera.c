@@ -13,7 +13,7 @@ struct camera *camera_create(
 
     if (!camera)
     {
-        error("Couldn't allocate camera");
+        printf("Error: Couldn't allocate camera\n");
 
         return NULL;
     }
@@ -29,19 +29,19 @@ struct camera *camera_create(
     return camera;
 }
 
-void camera_calc_projection_perspective(struct camera *camera, vec4 *projection)
+void camera_calc_projection_perspective(struct camera *camera, float aspect, vec4 *projection)
 {
     glm_perspective(
         glm_rad(camera->fov),
-        window_get_aspect(),
+        aspect,
         0.01f,
         100.0f,
         projection);
 }
 
-void camera_calc_projection_ortho(struct camera *camera, vec4 *projection)
+void camera_calc_projection_ortho(struct camera *camera, float aspect, vec4 *projection)
 {
-    glm_ortho_default(window_get_aspect(), projection);
+    glm_ortho_default(aspect, projection);
 }
 
 void camera_calc_view(struct camera *camera, vec4 *view)

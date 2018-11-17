@@ -1,5 +1,3 @@
-#include <engine/engine.h>
-
 UDPsocket udp_open(unsigned short port)
 {
     UDPsocket socket = SDLNet_UDP_Open(port);
