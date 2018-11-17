@@ -386,10 +386,7 @@ int main(int argc, char *argv[])
     struct source *camera_source = source_create();
 
     // game settings
-    unsigned int frame_start_time = 0;
     unsigned int current_time = 0;
-    float delta_time = 0.0f;
-    unsigned int fps = 0;
     float fps_update_timer = 0.0f;
     bool flashlight = true;
     float bounce_timer = 0.0f;
@@ -399,13 +396,16 @@ int main(int argc, char *argv[])
     bool quit = false;
     while (!quit)
     {
-        // start of frame activities
-        frame_start_time = SDL_GetTicks();
+        // timer for fps cap
+        unsigned int frame_start = SDL_GetTicks();
 
-        unsigned int previous = current_time;
-        current_time = SDL_GetTicks();
-        delta_time = (current_time - previous) / 1000.0f;
-        fps = (unsigned int)(1 / delta_time);
+        // calculate time passed since last frame
+        unsigned int previous_time = current_time;
+        current_time = frame_start;
+
+        // calculate delta time and fps
+        float delta_time = (current_time - previous_time) / 1000.0f;
+        unsigned int fps = (unsigned int)(1 / delta_time);
 
         // update window title
         fps_update_timer += delta_time;
@@ -690,9 +690,9 @@ int main(int argc, char *argv[])
         // display the window
         SDL_GL_SwapWindow(window);
 
-        // end of frame activities
+        // apply fps cap
         unsigned int frame_end = SDL_GetTicks();
-        unsigned int frame_time = frame_end - frame_start_time;
+        unsigned int frame_time = frame_end - frame_start;
 
         if (FRAME_DELAY > frame_time)
         {
