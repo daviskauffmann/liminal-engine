@@ -27,6 +27,7 @@
 #include "entities/point_light.h"
 #include "entities/spot_light.h"
 #include "entities/sprite.h"
+#include "entities/sun.h"
 #include "entities/water.h"
 #include "rendering/cubemap.h"
 #include "rendering/material.h"

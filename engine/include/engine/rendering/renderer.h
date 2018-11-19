@@ -16,7 +16,8 @@ int ENGINE_API renderer_init(int render_width, int render_height, float render_s
 void ENGINE_API renderer_set_mode(enum render_mode render_mode);
 void ENGINE_API renderer_set_camera(struct camera *camera);
 void ENGINE_API renderer_add_object(struct object *object);
-void ENGINE_API renderer_set_directional_light(struct directional_light *directional_light);
+void ENGINE_API renderer_set_sun(struct sun *sun);
+void ENGINE_API renderer_add_directional_light(struct directional_light *directional_light);
 void ENGINE_API renderer_add_point_light(struct point_light *point_light);
 void ENGINE_API renderer_add_spot_light(struct spot_light *spot_light);
 void ENGINE_API renderer_set_skybox(struct cubemap *skybox);

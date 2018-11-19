@@ -40,10 +40,18 @@
 
 // TODO: physics engine
 // look into physics libraries
+// decide if this should be another feature of the library, or just let the game handle it
 
 // TODO: allow game to provide malloc/free/log/file functions
 
+// TODO: create a minecraft style game to test mesh manipulation and multiple textures
+// each chunk would be an object and we would have to generate a mesh and assign it to the object whenever the chunk changes
+// the state of each block would be stored in memory
+// how to deal with chunk borders?
+
 // TODO: write a custom math library?
+
+// TODO: DirectX version?
 
 int main(int argc, char *argv[])
 {
@@ -121,7 +129,7 @@ int main(int argc, char *argv[])
     SDL_Surface *skybox_front_surface = IMG_Load("assets/images/sky/front.jpg");
     SDL_Surface *skybox_back_surface = IMG_Load("assets/images/sky/back.jpg");
 
-    int skybox_widths[] = {
+    int skybox_width_array[] = {
         skybox_right_surface->w,
         skybox_left_surface->w,
         skybox_top_surface->w,
@@ -130,7 +138,7 @@ int main(int argc, char *argv[])
         skybox_back_surface->w
     };
 
-    int skybox_heights[] = {
+    int skybox_height_array[] = {
         skybox_right_surface->h,
         skybox_left_surface->h,
         skybox_top_surface->h,
@@ -139,7 +147,7 @@ int main(int argc, char *argv[])
         skybox_back_surface->h
     };
 
-    unsigned char skybox_bpps[] = {
+    unsigned char skybox_bytes_per_pixel_array[] = {
         skybox_right_surface->format->BytesPerPixel,
         skybox_left_surface->format->BytesPerPixel,
         skybox_top_surface->format->BytesPerPixel,
@@ -148,7 +156,7 @@ int main(int argc, char *argv[])
         skybox_back_surface->format->BytesPerPixel
     };
 
-    void *skybox_pixels[] = {
+    void *skybox_pixels_array[] = {
         skybox_right_surface->pixels,
         skybox_left_surface->pixels,
         skybox_top_surface->pixels,
@@ -158,10 +166,10 @@ int main(int argc, char *argv[])
     };
 
     struct cubemap *skybox_cubemap = cubemap_create(
-        skybox_widths,
-        skybox_heights,
-        skybox_bpps,
-        skybox_pixels);
+        skybox_width_array,
+        skybox_height_array,
+        skybox_bytes_per_pixel_array,
+        skybox_pixels_array);
 
     SDL_FreeSurface(skybox_right_surface);
     SDL_FreeSurface(skybox_left_surface);
@@ -271,17 +279,17 @@ int main(int argc, char *argv[])
     };
     const unsigned int num_objects = sizeof(objects) / sizeof(struct object *);
 
-    // create directional light
-    vec3 directional_light_direction = { -0.2f, -1.0f, -0.3f };
-    vec3 directional_light_ambient = { 0.1f, 0.1f, 0.1f };
-    vec3 directional_light_diffuse = { 0.8f, 0.8f, 0.8f };
-    vec3 directional_light_specular = { 1.0f, 1.0f, 1.0f };
+    // create sun
+    vec3 sun_direction = { -0.2f, -1.0f, -0.3f };
+    vec3 sun_ambient = { 0.1f, 0.1f, 0.1f };
+    vec3 sun_diffuse = { 0.8f, 0.8f, 0.8f };
+    vec3 sun_specular = { 1.0f, 1.0f, 1.0f };
 
-    struct directional_light *directional_light = directional_light_create(
-        directional_light_direction,
-        directional_light_ambient,
-        directional_light_diffuse,
-        directional_light_specular);
+    struct sun *sun = sun_create(
+        sun_direction,
+        sun_ambient,
+        sun_diffuse,
+        sun_specular);
 
     // create point lights
     vec3 red_point_light_position = { 2.0f, 0.0f, 2.0f };
@@ -464,7 +472,7 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        Uint32 flags = SDL_GetWindowFlags(window);
+                        unsigned int flags = SDL_GetWindowFlags(window);
 
                         if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
                         {
@@ -619,8 +627,8 @@ int main(int argc, char *argv[])
         box_1_object->rotation[1] = angle_cos;
 
         // update lights
-        directional_light->direction[0] = angle_sin;
-        directional_light->direction[2] = angle_cos;
+        sun->direction[0] = angle_sin;
+        sun->direction[2] = angle_cos;
 
         glm_vec_copy(camera->position, flashlight_spot_light->position);
         glm_vec_copy(camera->front, flashlight_spot_light->direction);
@@ -668,7 +676,7 @@ int main(int argc, char *argv[])
             renderer_add_object(objects[i]);
         }
 
-        renderer_set_directional_light(directional_light);
+        renderer_set_sun(sun);
 
         for (unsigned int i = 0; i < num_point_lights; i++)
         {
@@ -713,7 +721,7 @@ int main(int argc, char *argv[])
     point_light_destroy(yellow_point_light);
     point_light_destroy(red_point_light);
 
-    directional_light_destroy(directional_light);
+    sun_destroy(sun);
 
     object_destroy(box_5_object);
     object_destroy(box_4_object);

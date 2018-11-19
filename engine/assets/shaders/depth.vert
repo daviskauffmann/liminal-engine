@@ -2,11 +2,11 @@
 
 layout (location = 0) in vec3 position;
 
-uniform struct DirectionalLight
+uniform struct Sun
 {
     mat4 projection;
     mat4 view;
-} directional_light;
+} sun;
 
 uniform struct Object
 {
@@ -15,5 +15,5 @@ uniform struct Object
 
 void main()
 {
-    gl_Position = directional_light.projection * directional_light.view * object.model * vec4(position, 1.0);
+    gl_Position = sun.projection * sun.view * object.model * vec4(position, 1.0);
 }

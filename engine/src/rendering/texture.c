@@ -1,6 +1,6 @@
 #include <engine/engine.h>
 
-struct texture *texture_create(int width, int height, unsigned char bpp, const void *pixels)
+struct texture *texture_create(int width, int height, unsigned char bytes_per_pixel, const void *pixels)
 {
     struct texture *texture = malloc(sizeof(struct texture));
 
@@ -22,7 +22,7 @@ struct texture *texture_create(int width, int height, unsigned char bpp, const v
         width,
         height,
         0,
-        bpp == 4 ? GL_RGBA : GL_RGB,
+        bytes_per_pixel == 4 ? GL_RGBA : bytes_per_pixel == 1 ? GL_RED : GL_RGB,
         GL_UNSIGNED_BYTE,
         pixels);
 

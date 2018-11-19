@@ -23,19 +23,6 @@ struct directional_light *directional_light_create(
     return directional_light;
 }
 
-void directional_light_calc_projection(struct directional_light *directional_light, vec4 *projection)
-{
-    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, projection);
-}
-
-void directional_light_calc_view(struct directional_light *directional_light, vec4 *view)
-{
-    vec3 position;
-    glm_vec_sub((vec3) { 0.0f, 0.0f, 0.0f }, directional_light->direction, position);
-
-    glm_lookat(position, (vec3) { 0.0f, 0.0f, 0.0f }, (vec3) { 0.0f, 1.0f, 0.0f }, view);
-}
-
 void directional_light_destroy(struct directional_light *directional_light)
 {
     free(directional_light);

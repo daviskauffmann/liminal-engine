@@ -93,6 +93,7 @@
     <ClCompile Include="src\entities\point_light.c" />
     <ClCompile Include="src\entities\spot_light.c" />
     <ClCompile Include="src\entities\sprite.c" />
+    <ClCompile Include="src\entities\sun.c" />
     <ClCompile Include="src\entities\water.c" />
     <ClCompile Include="src\rendering\cubemap.c" />
     <ClCompile Include="src\rendering\material.c" />
@@ -106,6 +107,7 @@
     <ClInclude Include="include\engine\audio\sound.h" />
     <ClInclude Include="include\engine\audio\source.h" />
     <ClInclude Include="include\engine\entities\camera.h" />
+    <ClInclude Include="include\engine\entities\sun.h" />
     <ClInclude Include="include\engine\rendering\cubemap.h" />
     <ClInclude Include="include\engine\entities\directional_light.h" />
     <ClInclude Include="include\engine\engine.h" />

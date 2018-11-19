@@ -1,6 +1,8 @@
 #include <engine/engine.h>
 
-struct cubemap *cubemap_create(int *widths, int *heights, unsigned char *bpps, const void **pixels)
+// TODO: is there any way to make the arrays safer?
+
+struct cubemap *cubemap_create(int *width_array, int *height_array, unsigned char *bytes_per_pixel_array, const void **pixels_array)
 {
     struct cubemap *cubemap = malloc(sizeof(struct cubemap));
 
@@ -17,17 +19,22 @@ struct cubemap *cubemap_create(int *widths, int *heights, unsigned char *bpps, c
 
     for (unsigned int i = 0; i < 6; i++)
     {
+        int width = width_array[i];
+        int height = height_array[i];
+        unsigned char bytes_per_pixel = bytes_per_pixel_array[i];
+        const void *pixels = pixels_array[i];
+
         // create texture
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0,
             GL_RGB,
-            widths[i],
-            heights[i],
+            width,
+            height,
             0,
-            bpps[i] == 4 ? GL_RGBA : GL_RGB,
+            bytes_per_pixel == 4 ? GL_RGBA : bytes_per_pixel == 1 ? GL_RED : GL_RGB,
             GL_UNSIGNED_BYTE,
-            pixels[i]);
+            pixels);
     }
 
     // wrapping
