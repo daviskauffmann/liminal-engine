@@ -508,6 +508,10 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     program_set_int(skybox_program, "skybox.texture", 0);
     program_unbind();
 
+    program_bind(water_program);
+    program_set_int(water_program, "skybox.texture", 0);
+    program_unbind();
+
     program_bind(sprite_program);
     program_set_int(sprite_program, "sprite.image", 0);
     program_unbind();
@@ -801,7 +805,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
 
     // create water mesh
     float water_vertices[] = {
-        // position
+        // position 
         -1.0f, -1.0f,
         -1.0f,  1.0f,
          1.0f, -1.0f,
@@ -1476,6 +1480,10 @@ void renderer_draw(bool ortho, float aspect)
 
     program_set_mat4(water_program, "camera.projection", camera_projection);
     program_set_mat4(water_program, "camera.view", camera_view);
+    program_set_vec3(water_program, "camera.position", camera->position);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
 
     for (unsigned int i = 0; i < num_waters; i++)
     {

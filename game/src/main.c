@@ -86,9 +86,6 @@ int main(int argc, char *argv[])
         SHADOW_HEIGHT);
     audio_init();
 
-    renderer_set_mode(RENDER_MODE_FORWARD);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-
     // create textures
     SDL_Surface *box_diffuse_surface = IMG_Load("assets/images/box_diffuse.png");
     SDL_Surface *box_specular_surface = IMG_Load("assets/images/box_specular.png");
@@ -369,7 +366,7 @@ int main(int argc, char *argv[])
 
     // create water
     vec3 water_position = { 0.0f, -2.0f, 0.0f };
-    vec2 water_scale = { 20.0f, 20.0f };
+    vec2 water_scale = { 100.0f, 100.0f };
 
     struct water *water = water_create(
         water_position,
@@ -399,6 +396,9 @@ int main(int argc, char *argv[])
     bool flashlight = true;
     float bounce_timer = 0.0f;
     float shoot_timer = 0.0f;
+
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    renderer_set_mode(RENDER_MODE_FORWARD);
 
     // main loop
     bool quit = false;
