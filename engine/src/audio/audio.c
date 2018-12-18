@@ -30,11 +30,11 @@ int audio_init(void)
     return 0;
 }
 
-void audio_set_listener(vec3 position, vec3 velocity, vec3 orientation)
+void audio_set_listener(vec3 position, vec3 velocity, vec3 *orientation)
 {
-    alListener3f(AL_POSITION, position[0], position[1], position[2]);
-    alListener3f(AL_VELOCITY, velocity[0], velocity[1], velocity[2]);
-    alListener3f(AL_ORIENTATION, orientation[0], orientation[1], orientation[2]);
+    alListenerfv(AL_POSITION, (ALfloat *)position);
+    alListenerfv(AL_VELOCITY, (ALfloat *)velocity);
+    alListenerfv(AL_ORIENTATION, (ALfloat *)orientation);
 }
 
 void audio_quit(void)

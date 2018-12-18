@@ -1002,24 +1002,37 @@ void renderer_draw(bool ortho, float aspect)
     mat4 camera_projection;
     if (ortho)
     {
-        camera_calc_projection_ortho(camera, aspect, camera_projection);
+        glm_ortho_default(aspect, camera_projection);
     }
     else
     {
-        camera_calc_projection_perspective(camera, aspect, camera_projection);
+        glm_perspective(
+            glm_rad(camera->fov),
+            aspect,
+            0.01f,
+            100.0f,
+            camera_projection);
     }
 
     // calculate camera view matrix
     mat4 camera_view;
-    camera_calc_view(camera, camera_view);
+    vec3 camera_target;
+    glm_vec_add(camera->position, camera->front, camera_target);
+    glm_lookat(
+        camera->position,
+        camera_target,
+        camera->up,
+        camera_view);
 
     // calculate sun projection matrix
     mat4 sun_projection;
-    sun_calc_projection(sun, sun_projection);
+    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
 
     // calculate sun view matrix
     mat4 sun_view;
-    sun_calc_view(sun, sun_view);
+    vec3 sun_position;
+    glm_vec_sub(GLM_VEC3_ZERO, sun->direction, sun_position);
+    glm_lookat(sun_position, GLM_VEC3_ZERO, GLM_YUP, sun_view);
 
     // bind depthmap fbo
     glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo_id);

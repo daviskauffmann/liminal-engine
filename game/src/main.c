@@ -25,6 +25,9 @@
 
 // TODO: further namespace header guards
 
+// TODO: handle resize
+// need to delete and recreate framebuffers
+
 // TODO: transparent textures like grass and windows
 
 // TODO: multiple shadow maps
@@ -636,8 +639,11 @@ int main(int argc, char *argv[])
         // update audio
         vec3 camera_velocity = GLM_VEC3_ZERO_INIT;
         glm_vec_scale(camera->front, speed, camera_velocity);
+        vec3 camera_orientation[2];
+        glm_vec_copy(camera->front, camera_orientation[0]);
+        glm_vec_copy(camera->up, camera_orientation[1]);
 
-        audio_set_listener(camera->position, camera_velocity, camera->front);
+        audio_set_listener(camera->position, camera_velocity, camera_orientation);
 
         // update sources
         source_set_position(camera_source, camera->position);

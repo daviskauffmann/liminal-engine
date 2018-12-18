@@ -23,19 +23,6 @@ struct sun *sun_create(
     return sun;
 }
 
-void sun_calc_projection(struct sun *sun, vec4 *projection)
-{
-    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, projection);
-}
-
-void sun_calc_view(struct sun *sun, vec4 *view)
-{
-    vec3 position;
-    glm_vec_sub((vec3) { 0.0f, 0.0f, 0.0f }, sun->direction, position);
-
-    glm_lookat(position, (vec3) { 0.0f, 0.0f, 0.0f }, (vec3) { 0.0f, 1.0f, 0.0f }, view);
-}
-
 void sun_destroy(struct sun *sun)
 {
     free(sun);
