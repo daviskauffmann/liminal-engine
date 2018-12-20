@@ -34,12 +34,12 @@ void source_set_pitch(struct source *source, float pitch)
 
 void source_set_position(struct source *source, vec3 position)
 {
-    alSource3f(source->source_id, AL_POSITION, position[0], position[1], position[2]);
+    alSourcefv(source->source_id, AL_POSITION, (ALfloat *)position);
 }
 
 void source_set_velocity(struct source *source, vec3 velocity)
 {
-    alSource3f(source->source_id, AL_VELOCITY, velocity[0], velocity[1], velocity[2]);
+    alSourcefv(source->source_id, AL_VELOCITY, (ALfloat *)velocity);
 }
 
 bool source_is_playing(struct source *source)

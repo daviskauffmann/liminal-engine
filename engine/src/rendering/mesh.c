@@ -49,7 +49,7 @@ void mesh_draw(struct mesh *mesh)
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    // glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_id);
     // glDrawArrays(GL_TRIANGLES, 0, mesh->vertices_size);
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
 

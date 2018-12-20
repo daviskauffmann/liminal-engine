@@ -5,10 +5,6 @@
 #include <SDL/SDL_net.h>
 #include <SDL/SDL_ttf.h>
 
-#define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
-#define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
-#define MIX_FLAGS 0
-
 #define WINDOW_TITLE "Example Game"
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
@@ -59,9 +55,9 @@
 int main(int argc, char *argv[])
 {
     // init SDL
-    SDL_Init(SDL_FLAGS);
-    IMG_Init(IMG_FLAGS);
-    Mix_Init(MIX_FLAGS);
+    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+    Mix_Init(0);
     TTF_Init();
     SDLNet_Init();
 
@@ -88,6 +84,9 @@ int main(int argc, char *argv[])
         SHADOW_WIDTH,
         SHADOW_HEIGHT);
     audio_init();
+
+    // TODO: create some meshes using obj data
+    // the mesh inteface will probably stay the same, and it should be up to the client to parse an obj into the vertices, indices, etc.
 
     // create textures
     SDL_Surface *box_diffuse_surface = IMG_Load("assets/images/box_diffuse.png");
@@ -188,6 +187,9 @@ int main(int argc, char *argv[])
     struct sound *shoot_sound = sound_create(
         shoot_chunk->abuf,
         shoot_chunk->alen);
+
+    Mix_FreeChunk(bounce_chunk);
+    Mix_FreeChunk(shoot_chunk);
 
     // create materials
     vec3 box_material_color = { 1.0f, 1.0f, 1.0f };
@@ -350,40 +352,40 @@ int main(int argc, char *argv[])
     const unsigned int num_point_lights = sizeof(point_lights) / sizeof(struct point_light *);
 
     // create spot lights
-    vec3 flashlight_spot_light_position = { 0.0f, 0.0f, 0.0f };
-    vec3 flashlight_spot_light_direction = { 0.0f, 0.0f, 0.0f };
-    vec3 flashlight_spot_light_ambient = { 0.5f, 0.5f, 0.5f };
-    vec3 flashlight_spot_light_diffuse = { 1.0f, 1.0f, 1.0f };
-    vec3 flashlight_spot_light_specular = { 1.0f, 1.0f, 1.0f };
-    vec3 flashlight_spot_light_attenuation = { 1.0f, 0.09f, 0.32f };
+    vec3 torch_spot_light_position = { 0.0f, 0.0f, 0.0f };
+    vec3 torch_spot_light_direction = { 0.0f, 0.0f, 0.0f };
+    vec3 torch_spot_light_ambient = { 0.5f, 0.5f, 0.5f };
+    vec3 torch_spot_light_diffuse = { 1.0f, 1.0f, 1.0f };
+    vec3 torch_spot_light_specular = { 1.0f, 1.0f, 1.0f };
+    vec3 torch_spot_light_attenuation = { 1.0f, 0.09f, 0.32f };
 
-    struct spot_light *flashlight_spot_light = spot_light_create(
-        flashlight_spot_light_position,
-        flashlight_spot_light_direction,
-        flashlight_spot_light_ambient,
-        flashlight_spot_light_diffuse,
-        flashlight_spot_light_specular,
-        flashlight_spot_light_attenuation,
+    struct spot_light *torch_spot_light = spot_light_create(
+        torch_spot_light_position,
+        torch_spot_light_direction,
+        torch_spot_light_ambient,
+        torch_spot_light_diffuse,
+        torch_spot_light_specular,
+        torch_spot_light_attenuation,
         cosf(glm_rad(12.5f)),
         cosf(glm_rad(15.0f)));
 
     // create water
-    vec3 water_position = { 0.0f, -2.0f, 0.0f };
-    vec2 water_scale = { 100.0f, 100.0f };
+    vec3 test_water_position = { 0.0f, -2.0f, 0.0f };
+    vec2 test_water_scale = { 100.0f, 100.0f };
 
-    struct water *water = water_create(
-        water_position,
-        water_scale);
+    struct water *test_water = water_create(
+        test_water_position,
+        test_water_scale);
 
     // create camera
-    vec3 camera_position = { 0.0f, 0.0f, 3.0f };
-    vec3 camera_front = { 0.0f, 0.0f, -1.0f };
-    vec3 camera_up = { 0.0f, 1.0f, 0.0f };
+    vec3 main_camera_position = { 0.0f, 0.0f, 3.0f };
+    vec3 main_camera_front = { 0.0f, 0.0f, -1.0f };
+    vec3 main_camera_up = { 0.0f, 1.0f, 0.0f };
 
-    struct camera *camera = camera_create(
-        camera_position,
-        camera_front,
-        camera_up,
+    struct camera *main_camera = camera_create(
+        main_camera_position,
+        main_camera_front,
+        main_camera_up,
         0.0f,
         -90.0f,
         0.0f,
@@ -396,7 +398,7 @@ int main(int argc, char *argv[])
     // game settings
     unsigned int current_time = 0;
     float fps_update_timer = 0.0f;
-    bool flashlight = true;
+    bool torch = true;
     float bounce_timer = 0.0f;
     float shoot_timer = 0.0f;
 
@@ -468,7 +470,7 @@ int main(int argc, char *argv[])
                 break;
                 case SDLK_f:
                 {
-                    flashlight = !flashlight;
+                    torch = !torch;
                 }
                 break;
                 case SDLK_RETURN:
@@ -499,40 +501,40 @@ int main(int argc, char *argv[])
             case SDL_MOUSEMOTION:
             {
                 // mouselook
-                camera->pitch -= event.motion.yrel * 0.1f;
-                camera->yaw += event.motion.xrel * 0.1f;
+                main_camera->pitch -= event.motion.yrel * 0.1f;
+                main_camera->yaw += event.motion.xrel * 0.1f;
 
-                if (camera->pitch > 89.0f)
+                if (main_camera->pitch > 89.0f)
                 {
-                    camera->pitch = 89.0f;
+                    main_camera->pitch = 89.0f;
                 }
-                if (camera->pitch < -89.0f)
+                if (main_camera->pitch < -89.0f)
                 {
-                    camera->pitch = -89.0f;
+                    main_camera->pitch = -89.0f;
                 }
 
                 vec3 front = {
-                    cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch)),
-                    sinf(glm_rad(camera->pitch)),
-                    sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch)) };
+                    cosf(glm_rad(main_camera->yaw)) * cosf(glm_rad(main_camera->pitch)),
+                    sinf(glm_rad(main_camera->pitch)),
+                    sinf(glm_rad(main_camera->yaw)) * cosf(glm_rad(main_camera->pitch)) };
                 glm_normalize(front);
-                glm_vec_copy(front, camera->front);
+                glm_vec_copy(front, main_camera->front);
             }
             break;
             case SDL_MOUSEWHEEL:
             {
                 // zoom
-                if (camera->fov >= 1.0f && camera->fov <= 90.0f)
+                if (main_camera->fov >= 1.0f && main_camera->fov <= 90.0f)
                 {
-                    camera->fov -= event.wheel.y;
+                    main_camera->fov -= event.wheel.y;
                 }
-                if (camera->fov <= 1.0f)
+                if (main_camera->fov <= 1.0f)
                 {
-                    camera->fov = 1.0f;
+                    main_camera->fov = 1.0f;
                 }
-                if (camera->fov >= 90.0f)
+                if (main_camera->fov >= 90.0f)
                 {
-                    camera->fov = 90.0f;
+                    main_camera->fov = 90.0f;
                 }
             }
             break;
@@ -584,40 +586,40 @@ int main(int argc, char *argv[])
         if (keys[SDL_SCANCODE_W])
         {
             vec3 movement;
-            glm_vec_scale(camera->front, speed, movement);
-            glm_vec_add(camera->position, movement, camera->position);
+            glm_vec_scale(main_camera->front, speed, movement);
+            glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
         // strafe left
         if (keys[SDL_SCANCODE_A])
         {
             vec3 direction;
-            glm_cross(camera->front, camera->up, direction);
+            glm_cross(main_camera->front, main_camera->up, direction);
             glm_normalize(direction);
 
             vec3 movement;
             glm_vec_scale(direction, -speed, movement);
-            glm_vec_add(camera->position, movement, camera->position);
+            glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
         // move backward
         if (keys[SDL_SCANCODE_S])
         {
             vec3 movement;
-            glm_vec_scale(camera->front, -speed, movement);
-            glm_vec_add(camera->position, movement, camera->position);
+            glm_vec_scale(main_camera->front, -speed, movement);
+            glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
         // strafe right
         if (keys[SDL_SCANCODE_D])
         {
             vec3 direction;
-            glm_cross(camera->front, camera->up, direction);
+            glm_cross(main_camera->front, main_camera->up, direction);
             glm_normalize(direction);
 
             vec3 movement;
             glm_vec_scale(direction, speed, movement);
-            glm_vec_add(camera->position, movement, camera->position);
+            glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
         // calculate angle for rotating stuff
@@ -633,20 +635,20 @@ int main(int argc, char *argv[])
         sun->direction[0] = angle_sin;
         sun->direction[2] = angle_cos;
 
-        glm_vec_copy(camera->position, flashlight_spot_light->position);
-        glm_vec_copy(camera->front, flashlight_spot_light->direction);
+        glm_vec_copy(main_camera->position, torch_spot_light->position);
+        glm_vec_copy(main_camera->front, torch_spot_light->direction);
 
         // update audio
         vec3 camera_velocity = GLM_VEC3_ZERO_INIT;
-        glm_vec_scale(camera->front, speed, camera_velocity);
+        glm_vec_scale(main_camera->front, speed, camera_velocity);
         vec3 camera_orientation[2];
-        glm_vec_copy(camera->front, camera_orientation[0]);
-        glm_vec_copy(camera->up, camera_orientation[1]);
+        glm_vec_copy(main_camera->front, camera_orientation[0]);
+        glm_vec_copy(main_camera->up, camera_orientation[1]);
 
-        audio_set_listener(camera->position, camera_velocity, camera_orientation);
+        audio_set_listener(main_camera->position, camera_velocity, camera_orientation);
 
         // update sources
-        source_set_position(camera_source, camera->position);
+        source_set_position(camera_source, main_camera->position);
 
         // shooting
         shoot_timer += delta_time;
@@ -675,7 +677,7 @@ int main(int argc, char *argv[])
         }
 
         // setup renderer
-        renderer_set_camera(camera);
+        renderer_set_camera(main_camera);
 
         for (unsigned int i = 0; i < num_objects; i++)
         {
@@ -689,14 +691,14 @@ int main(int argc, char *argv[])
             renderer_add_point_light(point_lights[i]);
         }
 
-        if (flashlight)
+        if (torch)
         {
-            renderer_add_spot_light(flashlight_spot_light);
+            renderer_add_spot_light(torch_spot_light);
         }
 
         renderer_set_skybox(skybox_cubemap);
 
-        renderer_add_water(water);
+        renderer_add_water(test_water);
 
         // render everything
         renderer_draw(false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
@@ -718,9 +720,9 @@ int main(int argc, char *argv[])
     source_destroy(camera_source);
     source_destroy(origin_source);
 
-    water_destroy(water);
+    water_destroy(test_water);
 
-    spot_light_destroy(flashlight_spot_light);
+    spot_light_destroy(torch_spot_light);
 
     point_light_destroy(blue_point_light);
     point_light_destroy(green_point_light);
@@ -742,6 +744,7 @@ int main(int argc, char *argv[])
     material_destroy(box_material);
 
     sound_destroy(shoot_sound);
+    sound_destroy(bounce_sound);
 
     texture_destroy(cobble_specular_texture);
     texture_destroy(cobble_diffuse_texture);

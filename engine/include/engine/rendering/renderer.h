@@ -7,11 +7,15 @@ enum render_mode
     RENDER_MODE_DEFERRED
 };
 
+// standard assets
 extern struct texture ENGINE_API *default_texture;
+
 extern struct material ENGINE_API *default_material;
+
 extern struct mesh ENGINE_API *quad_mesh;
 extern struct mesh ENGINE_API *cube_mesh;
 
+// Initializes the core rendering engine. This function assumes an OpenGL context has already been created.
 int ENGINE_API renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height);
 void ENGINE_API renderer_set_mode(enum render_mode render_mode);
 void ENGINE_API renderer_set_camera(struct camera *camera);

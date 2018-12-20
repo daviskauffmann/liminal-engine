@@ -1,7 +1,5 @@
 #include <engine/engine.h>
 
-// TODO: move standard assets?
-
 // TODO: create a way to specify paths for engine assets and game assets separately
 
 // TODO: support resizing
@@ -9,6 +7,23 @@
 
 // TODO: render a sun texture in the sky
 // calculate its position based on the direction
+
+// TODO: optimize specular gbuffer by only storing red value
+// we dont need to have all 3 color values in the specular map
+
+// TODO: deferred reflections
+// new gbuffer texture (2 bytes)
+// byte 1: reflective map (just the red value)
+// byte 2: material reflectivity
+
+// TODO: user programmable part of the rendering pipeline
+
+static int render_width;
+static int render_height;
+static float render_scale;
+static int shadow_width;
+static int shadow_height;
+static enum render_mode render_mode;
 
 // standard assets
 struct texture *default_texture;
@@ -18,13 +33,6 @@ struct material *default_material;
 struct mesh *quad_mesh;
 struct mesh *cube_mesh;
 
-static int render_width;
-static int render_height;
-static float render_scale;
-static int shadow_width;
-static int shadow_height;
-static enum render_mode render_mode;
-
 // programs
 static struct program *depth_program;
 static struct program *forward_color_program;
@@ -32,6 +40,7 @@ static struct program *forward_sun_program;
 static struct program *forward_directional_program;
 static struct program *forward_point_program;
 static struct program *forward_spot_program;
+static struct program *forward_reflection_program;
 static struct program *geometry_program;
 static struct program *deferred_sun_program;
 static struct program *deferred_directional_program;
@@ -107,6 +116,13 @@ static unsigned int num_sprites;
 
 int renderer_init(int _render_width, int _render_height, float _render_scale, int _shadow_width, int _shadow_height)
 {
+    render_width = _render_width;
+    render_height = _render_height;
+    render_scale = _render_scale;
+    shadow_width = _shadow_width;
+    shadow_height = _shadow_height;
+    render_mode = RENDER_MODE_FORWARD;
+
     // init GLEW
     {
         GLenum glewError = glewInit();
@@ -124,6 +140,14 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     printf("Vendor %s\n", glGetString(GL_VENDOR));
     printf("Renderer %s\n", glGetString(GL_RENDERER));
     printf("GLSL %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    // setup opengl
+    // TODO: face culling
+    glViewport(0, 0, render_width, render_height);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
 
     // create default textures
     int default_texture_width = 256;
@@ -154,20 +178,13 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         NULL,
         1.0f);
 
-    if (!default_material)
-    {
-        printf("Error: Couldn't create default material\n");
-
-        return 1;
-    }
-
     // create default meshes
     float quad_vertices[] = {
         // position           // normal            // uv
-         1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top right
-         1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom right
-        -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f, // bottom left
-        -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f  // top left
+         1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top-right
+         1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
+        -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f, // bottom-left
+        -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f  // top-left
     };
 
     unsigned int quad_indices[] = {
@@ -180,13 +197,6 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         sizeof(quad_vertices),
         quad_indices,
         sizeof(quad_indices));
-
-    if (!quad_mesh)
-    {
-        printf("Error: Couldn't create quad mesh\n");
-
-        return 1;
-    }
 
     float cube_vertices[] = {
         // position           // normal            // uv
@@ -234,6 +244,7 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f  // bottom-left   
     };
 
+    // TODO: properly set up indices
     unsigned int cube_indices[] = {
         0, 1, 2,
         3, 4, 5,
@@ -253,28 +264,6 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
         sizeof(cube_vertices),
         cube_indices,
         sizeof(cube_indices));
-
-    if (!cube_mesh)
-    {
-        printf("Error: Couldn't create cube mesh\n");
-
-        return 1;
-    }
-
-    render_width = _render_width;
-    render_height = _render_height;
-    render_scale = _render_scale;
-    shadow_width = _shadow_width;
-    shadow_height = _shadow_height;
-    render_mode = RENDER_MODE_FORWARD;
-
-    // setup opengl
-    // TODO: face culling
-    glViewport(0, 0, render_width, render_height);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_STENCIL_TEST);
 
     // create programs
     depth_program = program_create(
@@ -339,6 +328,17 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     if (!forward_spot_program)
     {
         printf("Error: Couldn't create forward spot program\n");
+
+        return 1;
+    }
+
+    forward_reflection_program = program_create(
+        "../engine/assets/shaders/forward.vert",
+        "../engine/assets/shaders/forward_reflection.frag");
+
+    if (!forward_reflection_program)
+    {
+        printf("Error: Couldn't create forward reflection program\n");
 
         return 1;
     }
@@ -470,6 +470,11 @@ int renderer_init(int _render_width, int _render_height, float _render_scale, in
     program_set_int(forward_spot_program, "material.specular", 1);
     program_set_int(forward_spot_program, "material.normal", 2);
     program_set_int(forward_spot_program, "material.emission", 3);
+    program_unbind();
+
+    program_bind(forward_reflection_program);
+    program_set_int(forward_reflection_program, "material.reflective", 0);
+    program_set_int(forward_reflection_program, "skybox.texture", 1);
     program_unbind();
 
     program_bind(geometry_program);
@@ -992,12 +997,16 @@ void renderer_add_sprite(struct sprite *sprite)
     sprites[num_sprites++] = sprite;
 }
 
-// TODO: validation
-//       for example, if there is no camera set, dont render anything
-//       but if there is no skybox set, still render the scene
 // TODO: split this up into sub functions
 void renderer_draw(bool ortho, float aspect)
 {
+    if (!camera)
+    {
+        printf("Error: No camera has been set\n");
+
+        return;
+    }
+
     // calculate camera projection matrix
     mat4 camera_projection;
     if (ortho)
@@ -1026,430 +1035,468 @@ void renderer_draw(bool ortho, float aspect)
 
     // calculate sun projection matrix
     mat4 sun_projection;
-    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+    if (sun)
+    {
+        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+    }
 
     // calculate sun view matrix
     mat4 sun_view;
-    vec3 sun_position;
-    glm_vec_sub(GLM_VEC3_ZERO, sun->direction, sun_position);
-    glm_lookat(sun_position, GLM_VEC3_ZERO, GLM_YUP, sun_view);
-
-    // bind depthmap fbo
-    glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo_id);
-
-    // start shadow pass
-    glViewport(0, 0, shadow_width, shadow_height);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-
-    program_bind(depth_program);
-
-    program_set_mat4(depth_program, "sun.projection", sun_projection);
-    program_set_mat4(depth_program, "sun.view", sun_view);
-
-    for (unsigned int i = 0; i < num_objects; i++)
+    if (sun)
     {
-        // calculate model matrix
-        mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-        object_calc_model(objects[i], object_model);
-
-        program_set_mat4(depth_program, "object.model", object_model);
-
-        mesh_draw(objects[i]->mesh);
+        vec3 sun_position;
+        glm_vec_sub(GLM_VEC3_ZERO, sun->direction, sun_position);
+        glm_lookat(sun_position, GLM_VEC3_ZERO, GLM_YUP, sun_view);
     }
 
-    program_unbind();
+    // render sun shadows to depthmap
+    if (sun)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, depthmap_fbo_id);
 
-    // end shadow pass
+        glViewport(0, 0, shadow_width, shadow_height);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
-    // unbind depthmap fbo
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        program_bind(depth_program);
+
+        program_set_mat4(depth_program, "sun.projection", sun_projection);
+        program_set_mat4(depth_program, "sun.view", sun_view);
+
+        for (unsigned int i = 0; i < num_objects; i++)
+        {
+            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+            object_calc_model(objects[i], object_model);
+
+            program_set_mat4(depth_program, "object.model", object_model);
+
+            mesh_draw(objects[i]->mesh);
+        }
+
+        program_unbind();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     switch (render_mode)
     {
     case RENDER_MODE_FORWARD:
     {
-        // bind screen fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
-
-        // forward rendering
-        glViewport(0, 0, render_width, render_height);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        for (unsigned int i = 0; i < num_objects; i++)
+        // draw objects to the screen framebuffer
+        if (num_objects > 0)
         {
-            // calculate model matrix
-            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-            object_calc_model(objects[i], object_model);
+            glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
-            // sun
-            program_bind(forward_sun_program);
+            glViewport(0, 0, render_width, render_height);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            program_set_mat4(forward_sun_program, "camera.projection", camera_projection);
-            program_set_mat4(forward_sun_program, "camera.view", camera_view);
-            program_set_vec3(forward_sun_program, "camera.position", camera->position);
-
-            program_set_mat4(forward_sun_program, "object.model", object_model);
-
-            program_set_vec3(forward_sun_program, "material.color", objects[i]->material->color);
-            program_set_float(forward_sun_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(forward_sun_program, "material.glow", objects[i]->material->glow);
-
-            program_set_vec3(forward_sun_program, "sun.direction", sun->direction);
-            program_set_vec3(forward_sun_program, "sun.ambient", sun->ambient);
-            program_set_vec3(forward_sun_program, "sun.diffuse", sun->diffuse);
-            program_set_vec3(forward_sun_program, "sun.specular", sun->specular);
-            program_set_mat4(forward_sun_program, "sun.projection", sun_projection);
-            program_set_mat4(forward_sun_program, "sun.view", sun_view);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
-
-            mesh_draw(objects[i]->mesh);
-
-            program_unbind();
-
-            // enable blending
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ONE);
-            glDepthMask(GL_FALSE);
-            glDepthFunc(GL_EQUAL);
-
-            // directional lights
-            program_bind(forward_directional_program);
-
-            program_set_mat4(forward_directional_program, "camera.projection", camera_projection);
-            program_set_mat4(forward_directional_program, "camera.view", camera_view);
-            program_set_vec3(forward_directional_program, "camera.position", camera->position);
-
-            program_set_mat4(forward_directional_program, "object.model", object_model);
-
-            program_set_vec3(forward_directional_program, "material.color", objects[i]->material->color);
-            program_set_float(forward_directional_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(forward_directional_program, "material.glow", objects[i]->material->glow);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
-
-            for (unsigned int j = 0; j < num_directional_lights; j++)
+            for (unsigned int i = 0; i < num_objects; i++)
             {
-                program_set_vec3(forward_directional_program, "directional_light.direction", directional_lights[j]->direction);
-                program_set_vec3(forward_directional_program, "directional_light.ambient", directional_lights[j]->ambient);
-                program_set_vec3(forward_directional_program, "directional_light.diffuse", directional_lights[j]->diffuse);
-                program_set_vec3(forward_directional_program, "directional_light.specular", directional_lights[j]->specular);
+                mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+                object_calc_model(objects[i], object_model);
 
-                mesh_draw(objects[i]->mesh);
+                if (sun)
+                {
+                    program_bind(forward_sun_program);
+
+                    program_set_mat4(forward_sun_program, "camera.projection", camera_projection);
+                    program_set_mat4(forward_sun_program, "camera.view", camera_view);
+                    program_set_vec3(forward_sun_program, "camera.position", camera->position);
+
+                    program_set_mat4(forward_sun_program, "object.model", object_model);
+
+                    program_set_vec3(forward_sun_program, "material.color", objects[i]->material->color);
+                    program_set_float(forward_sun_program, "material.shininess", objects[i]->material->shininess);
+                    program_set_float(forward_sun_program, "material.glow", objects[i]->material->glow);
+
+                    program_set_vec3(forward_sun_program, "sun.direction", sun->direction);
+                    program_set_vec3(forward_sun_program, "sun.ambient", sun->ambient);
+                    program_set_vec3(forward_sun_program, "sun.diffuse", sun->diffuse);
+                    program_set_vec3(forward_sun_program, "sun.specular", sun->specular);
+                    program_set_mat4(forward_sun_program, "sun.projection", sun_projection);
+                    program_set_mat4(forward_sun_program, "sun.view", sun_view);
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE2);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
+
+                    mesh_draw(objects[i]->mesh);
+
+                    program_unbind();
+                }
+
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE);
+                glDepthMask(GL_FALSE);
+                glDepthFunc(GL_EQUAL);
+
+                if (num_directional_lights > 0)
+                {
+                    program_bind(forward_directional_program);
+
+                    program_set_mat4(forward_directional_program, "camera.projection", camera_projection);
+                    program_set_mat4(forward_directional_program, "camera.view", camera_view);
+                    program_set_vec3(forward_directional_program, "camera.position", camera->position);
+
+                    program_set_mat4(forward_directional_program, "object.model", object_model);
+
+                    program_set_vec3(forward_directional_program, "material.color", objects[i]->material->color);
+                    program_set_float(forward_directional_program, "material.shininess", objects[i]->material->shininess);
+                    program_set_float(forward_directional_program, "material.glow", objects[i]->material->glow);
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE2);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
+
+                    for (unsigned int j = 0; j < num_directional_lights; j++)
+                    {
+                        program_set_vec3(forward_directional_program, "directional_light.direction", directional_lights[j]->direction);
+                        program_set_vec3(forward_directional_program, "directional_light.ambient", directional_lights[j]->ambient);
+                        program_set_vec3(forward_directional_program, "directional_light.diffuse", directional_lights[j]->diffuse);
+                        program_set_vec3(forward_directional_program, "directional_light.specular", directional_lights[j]->specular);
+
+                        mesh_draw(objects[i]->mesh);
+                    }
+
+                    program_unbind();
+                }
+
+                if (num_point_lights > 0)
+                {
+                    program_bind(forward_point_program);
+
+                    program_set_mat4(forward_point_program, "camera.projection", camera_projection);
+                    program_set_mat4(forward_point_program, "camera.view", camera_view);
+                    program_set_vec3(forward_point_program, "camera.position", camera->position);
+
+                    program_set_mat4(forward_point_program, "object.model", object_model);
+
+                    program_set_vec3(forward_point_program, "material.color", objects[i]->material->color);
+                    program_set_float(forward_point_program, "material.shininess", objects[i]->material->shininess);
+                    program_set_float(forward_point_program, "material.glow", objects[i]->material->glow);
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE2);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
+
+                    for (unsigned int j = 0; j < num_point_lights; j++)
+                    {
+                        program_set_vec3(forward_point_program, "point_light.position", point_lights[j]->position);
+                        program_set_vec3(forward_point_program, "point_light.ambient", point_lights[j]->ambient);
+                        program_set_vec3(forward_point_program, "point_light.diffuse", point_lights[j]->diffuse);
+                        program_set_vec3(forward_point_program, "point_light.specular", point_lights[j]->specular);
+                        program_set_vec3(forward_point_program, "point_light.attenuation", point_lights[j]->attenuation);
+
+                        mesh_draw(objects[i]->mesh);
+                    }
+
+                    program_unbind();
+                }
+
+                if (num_spot_lights > 0)
+                {
+                    program_bind(forward_spot_program);
+
+                    program_set_mat4(forward_spot_program, "camera.projection", camera_projection);
+                    program_set_mat4(forward_spot_program, "camera.view", camera_view);
+                    program_set_vec3(forward_spot_program, "camera.position", camera->position);
+
+                    program_set_mat4(forward_spot_program, "object.model", object_model);
+
+                    program_set_vec3(forward_spot_program, "material.color", objects[i]->material->color);
+                    program_set_float(forward_spot_program, "material.shininess", objects[i]->material->shininess);
+                    program_set_float(forward_spot_program, "material.glow", objects[i]->material->glow);
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE2);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
+
+                    for (unsigned int j = 0; j < num_spot_lights; j++)
+                    {
+                        program_set_vec3(forward_spot_program, "spot_light.position", spot_lights[j]->position);
+                        program_set_vec3(forward_spot_program, "spot_light.direction", spot_lights[j]->direction);
+                        program_set_vec3(forward_spot_program, "spot_light.ambient", spot_lights[j]->ambient);
+                        program_set_vec3(forward_spot_program, "spot_light.diffuse", spot_lights[j]->diffuse);
+                        program_set_vec3(forward_spot_program, "spot_light.specular", spot_lights[j]->specular);
+                        program_set_vec3(forward_spot_program, "spot_light.attenuation", spot_lights[j]->attenuation);
+                        program_set_float(forward_spot_program, "spot_light.inner_cutoff", spot_lights[j]->inner_cutoff);
+                        program_set_float(forward_spot_program, "spot_light.outer_cutoff", spot_lights[j]->outer_cutoff);
+
+                        mesh_draw(objects[i]->mesh);
+                    }
+
+                    program_unbind();
+                }
+
+                // TODO: material reflection parameters
+                if (skybox)
+                {
+                    program_bind(forward_reflection_program);
+
+                    program_set_mat4(forward_reflection_program, "camera.projection", camera_projection);
+                    program_set_mat4(forward_reflection_program, "camera.view", camera_view);
+                    program_set_vec3(forward_reflection_program, "camera.position", camera->position);
+
+                    program_set_mat4(forward_reflection_program, "object.model", object_model);
+
+                    program_set_float(forward_reflection_program, "material.reflectivity", 0.0f);
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
+
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
+
+                    mesh_draw(objects[i]->mesh);
+
+                    program_unbind();
+                }
+
+                glDepthFunc(GL_LESS);
+                glDepthMask(GL_TRUE);
+                glDisable(GL_BLEND);
             }
 
-            program_unbind();
-
-            // point lights
-            program_bind(forward_point_program);
-
-            program_set_mat4(forward_point_program, "camera.projection", camera_projection);
-            program_set_mat4(forward_point_program, "camera.view", camera_view);
-            program_set_vec3(forward_point_program, "camera.position", camera->position);
-
-            program_set_mat4(forward_point_program, "object.model", object_model);
-
-            program_set_vec3(forward_point_program, "material.color", objects[i]->material->color);
-            program_set_float(forward_point_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(forward_point_program, "material.glow", objects[i]->material->glow);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
-
-            for (unsigned int j = 0; j < num_point_lights; j++)
-            {
-                program_set_vec3(forward_point_program, "point_light.position", point_lights[j]->position);
-                program_set_vec3(forward_point_program, "point_light.ambient", point_lights[j]->ambient);
-                program_set_vec3(forward_point_program, "point_light.diffuse", point_lights[j]->diffuse);
-                program_set_vec3(forward_point_program, "point_light.specular", point_lights[j]->specular);
-                program_set_vec3(forward_point_program, "point_light.attenuation", point_lights[j]->attenuation);
-
-                mesh_draw(objects[i]->mesh);
-            }
-
-            program_unbind();
-
-            // spot lights
-            program_bind(forward_spot_program);
-
-            program_set_mat4(forward_spot_program, "camera.projection", camera_projection);
-            program_set_mat4(forward_spot_program, "camera.view", camera_view);
-            program_set_vec3(forward_spot_program, "camera.position", camera->position);
-
-            program_set_mat4(forward_spot_program, "object.model", object_model);
-
-            program_set_vec3(forward_spot_program, "material.color", objects[i]->material->color);
-            program_set_float(forward_spot_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(forward_spot_program, "material.glow", objects[i]->material->glow);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
-
-            for (unsigned int j = 0; j < num_spot_lights; j++)
-            {
-                program_set_vec3(forward_spot_program, "spot_light.position", spot_lights[j]->position);
-                program_set_vec3(forward_spot_program, "spot_light.direction", spot_lights[j]->direction);
-                program_set_vec3(forward_spot_program, "spot_light.ambient", spot_lights[j]->ambient);
-                program_set_vec3(forward_spot_program, "spot_light.diffuse", spot_lights[j]->diffuse);
-                program_set_vec3(forward_spot_program, "spot_light.specular", spot_lights[j]->specular);
-                program_set_vec3(forward_spot_program, "spot_light.attenuation", spot_lights[j]->attenuation);
-                program_set_float(forward_spot_program, "spot_light.inner_cutoff", spot_lights[j]->inner_cutoff);
-                program_set_float(forward_spot_program, "spot_light.outer_cutoff", spot_lights[j]->outer_cutoff);
-
-                mesh_draw(objects[i]->mesh);
-            }
-
-            program_unbind();
-
-            // disable blending
-            glDepthFunc(GL_LESS);
-            glDepthMask(GL_TRUE);
-            glDisable(GL_BLEND);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
-
-        // unbind screen fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     break;
     case RENDER_MODE_DEFERRED:
     {
-        // bind geometry fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
-
-        // geometry pass
-        glViewport(0, 0, (GLsizei)(render_width * render_scale), (GLsizei)(render_height * render_scale));
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        program_bind(geometry_program);
-
-        program_set_mat4(geometry_program, "camera.projection", camera_projection);
-        program_set_mat4(geometry_program, "camera.view", camera_view);
-        program_set_vec3(geometry_program, "camera.position", camera->position);
-
-        for (unsigned int i = 0; i < num_objects; i++)
+        // draw objects to the gbuffer
+        if (num_objects > 0)
         {
-            // calculate model matrix
-            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-            object_calc_model(objects[i], object_model);
+            glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
 
-            program_set_mat4(geometry_program, "object.model", object_model);
+            glViewport(0, 0, (GLsizei)(render_width * render_scale), (GLsizei)(render_height * render_scale));
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            program_bind(geometry_program);
 
-            program_set_vec3(geometry_program, "material.color", objects[i]->material->color);
-            program_set_float(geometry_program, "material.shininess", objects[i]->material->shininess);
-            program_set_float(geometry_program, "material.glow", objects[i]->material->glow);
+            program_set_mat4(geometry_program, "camera.projection", camera_projection);
+            program_set_mat4(geometry_program, "camera.view", camera_view);
+            program_set_vec3(geometry_program, "camera.position", camera->position);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
+            for (unsigned int i = 0; i < num_objects; i++)
+            {
+                mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+                object_calc_model(objects[i], object_model);
 
-            mesh_draw(objects[i]->mesh);
+                program_set_mat4(geometry_program, "object.model", object_model);
+
+                program_set_vec3(geometry_program, "material.color", objects[i]->material->color);
+                program_set_float(geometry_program, "material.shininess", objects[i]->material->shininess);
+                program_set_float(geometry_program, "material.glow", objects[i]->material->glow);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, objects[i]->material->diffuse ? objects[i]->material->diffuse->texture_id : 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, objects[i]->material->specular ? objects[i]->material->specular->texture_id : 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, objects[i]->material->normal ? objects[i]->material->normal->texture_id : 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, objects[i]->material->emission ? objects[i]->material->emission->texture_id : 0);
+
+                mesh_draw(objects[i]->mesh);
+            }
+
+            program_unbind();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
-        program_unbind();
-
-        // unbind geometry fbo
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // bind screen fbo
+        // draw the gbuffer to the screen
         glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
-        // lighting pass
         glViewport(0, 0, render_width, render_height);
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
-        // sun
-        program_bind(deferred_sun_program);
+        if (sun)
+        {
+            program_bind(deferred_sun_program);
 
-        program_set_vec3(deferred_sun_program, "camera.position", camera->position);
+            program_set_vec3(deferred_sun_program, "camera.position", camera->position);
 
-        program_set_vec3(deferred_sun_program, "sun.direction", sun->direction);
-        program_set_vec3(deferred_sun_program, "sun.ambient", sun->ambient);
-        program_set_vec3(deferred_sun_program, "sun.diffuse", sun->diffuse);
-        program_set_vec3(deferred_sun_program, "sun.specular", sun->specular);
-        program_set_mat4(deferred_sun_program, "sun.projection", sun_projection);
-        program_set_mat4(deferred_sun_program, "sun.view", sun_view);
+            program_set_vec3(deferred_sun_program, "sun.direction", sun->direction);
+            program_set_vec3(deferred_sun_program, "sun.ambient", sun->ambient);
+            program_set_vec3(deferred_sun_program, "sun.diffuse", sun->diffuse);
+            program_set_vec3(deferred_sun_program, "sun.specular", sun->specular);
+            program_set_mat4(deferred_sun_program, "sun.projection", sun_projection);
+            program_set_mat4(deferred_sun_program, "sun.view", sun_view);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, depthmap_texture_id);
 
-        // draw screen mesh
-        glBindVertexArray(screen_vao_id);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
-        glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        glBindVertexArray(0);
+            glBindVertexArray(screen_vao_id);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+            glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glBindVertexArray(0);
 
-        program_unbind();
+            program_unbind();
+        }
 
-        // enable blending
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_EQUAL);
 
-        // directional lights
-        program_bind(deferred_directional_program);
-
-        program_set_vec3(deferred_directional_program, "camera.position", camera->position);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
-
-        for (unsigned int i = 0; i < num_directional_lights; i++)
+        if (num_directional_lights > 0)
         {
-            program_set_vec3(deferred_directional_program, "directional_light.direction", directional_lights[i]->direction);
-            program_set_vec3(deferred_directional_program, "directional_light.ambient", directional_lights[i]->ambient);
-            program_set_vec3(deferred_directional_program, "directional_light.diffuse", directional_lights[i]->diffuse);
-            program_set_vec3(deferred_directional_program, "directional_light.specular", directional_lights[i]->specular);
+            program_bind(deferred_directional_program);
 
-            // draw screen mesh
-            glBindVertexArray(screen_vao_id);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
-            glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glBindVertexArray(0);
+            program_set_vec3(deferred_directional_program, "camera.position", camera->position);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
+
+            for (unsigned int i = 0; i < num_directional_lights; i++)
+            {
+                program_set_vec3(deferred_directional_program, "directional_light.direction", directional_lights[i]->direction);
+                program_set_vec3(deferred_directional_program, "directional_light.ambient", directional_lights[i]->ambient);
+                program_set_vec3(deferred_directional_program, "directional_light.diffuse", directional_lights[i]->diffuse);
+                program_set_vec3(deferred_directional_program, "directional_light.specular", directional_lights[i]->specular);
+
+                glBindVertexArray(screen_vao_id);
+                glEnableVertexAttribArray(0);
+                glEnableVertexAttribArray(1);
+                glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+                glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glDisableVertexAttribArray(0);
+                glDisableVertexAttribArray(1);
+                glBindVertexArray(0);
+            }
+
+            program_unbind();
         }
 
-        program_unbind();
-
-        // point lights
-        program_bind(deferred_point_program);
-
-        program_set_vec3(deferred_point_program, "camera.position", camera->position);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
-
-        for (unsigned int i = 0; i < num_point_lights; i++)
+        if (num_point_lights > 0)
         {
-            program_set_vec3(deferred_point_program, "point_light.position", point_lights[i]->position);
-            program_set_vec3(deferred_point_program, "point_light.ambient", point_lights[i]->ambient);
-            program_set_vec3(deferred_point_program, "point_light.diffuse", point_lights[i]->diffuse);
-            program_set_vec3(deferred_point_program, "point_light.specular", point_lights[i]->specular);
-            program_set_vec3(deferred_point_program, "point_light.attenuation", point_lights[i]->attenuation);
+            program_bind(deferred_point_program);
 
-            // draw screen mesh
-            glBindVertexArray(screen_vao_id);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
-            glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glBindVertexArray(0);
+            program_set_vec3(deferred_point_program, "camera.position", camera->position);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
+
+            for (unsigned int i = 0; i < num_point_lights; i++)
+            {
+                program_set_vec3(deferred_point_program, "point_light.position", point_lights[i]->position);
+                program_set_vec3(deferred_point_program, "point_light.ambient", point_lights[i]->ambient);
+                program_set_vec3(deferred_point_program, "point_light.diffuse", point_lights[i]->diffuse);
+                program_set_vec3(deferred_point_program, "point_light.specular", point_lights[i]->specular);
+                program_set_vec3(deferred_point_program, "point_light.attenuation", point_lights[i]->attenuation);
+
+                glBindVertexArray(screen_vao_id);
+                glEnableVertexAttribArray(0);
+                glEnableVertexAttribArray(1);
+                glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+                glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glDisableVertexAttribArray(0);
+                glDisableVertexAttribArray(1);
+                glBindVertexArray(0);
+            }
+
+            program_unbind();
         }
 
-        program_unbind();
-
-        // spot lights
-        program_bind(deferred_spot_program);
-
-        program_set_vec3(deferred_spot_program, "camera.position", camera->position);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
-
-        for (unsigned int i = 0; i < num_spot_lights; i++)
+        if (num_spot_lights > 0)
         {
-            program_set_vec3(deferred_spot_program, "spot_light.position", spot_lights[i]->position);
-            program_set_vec3(deferred_spot_program, "spot_light.direction", spot_lights[i]->direction);
-            program_set_vec3(deferred_spot_program, "spot_light.ambient", spot_lights[i]->ambient);
-            program_set_vec3(deferred_spot_program, "spot_light.diffuse", spot_lights[i]->diffuse);
-            program_set_vec3(deferred_spot_program, "spot_light.specular", spot_lights[i]->specular);
-            program_set_vec3(deferred_spot_program, "spot_light.attenuation", spot_lights[i]->attenuation);
-            program_set_float(deferred_spot_program, "spot_light.inner_cutoff", spot_lights[i]->inner_cutoff);
-            program_set_float(deferred_spot_program, "spot_light.outer_cutoff", spot_lights[i]->outer_cutoff);
+            program_bind(deferred_spot_program);
 
-            // draw screen mesh
-            glBindVertexArray(screen_vao_id);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
-            glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glBindVertexArray(0);
+            program_set_vec3(deferred_spot_program, "camera.position", camera->position);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, geometry_albedo_specular_texture_id);
+
+            for (unsigned int i = 0; i < num_spot_lights; i++)
+            {
+                program_set_vec3(deferred_spot_program, "spot_light.position", spot_lights[i]->position);
+                program_set_vec3(deferred_spot_program, "spot_light.direction", spot_lights[i]->direction);
+                program_set_vec3(deferred_spot_program, "spot_light.ambient", spot_lights[i]->ambient);
+                program_set_vec3(deferred_spot_program, "spot_light.diffuse", spot_lights[i]->diffuse);
+                program_set_vec3(deferred_spot_program, "spot_light.specular", spot_lights[i]->specular);
+                program_set_vec3(deferred_spot_program, "spot_light.attenuation", spot_lights[i]->attenuation);
+                program_set_float(deferred_spot_program, "spot_light.inner_cutoff", spot_lights[i]->inner_cutoff);
+                program_set_float(deferred_spot_program, "spot_light.outer_cutoff", spot_lights[i]->outer_cutoff);
+
+                glBindVertexArray(screen_vao_id);
+                glEnableVertexAttribArray(0);
+                glEnableVertexAttribArray(1);
+                glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
+                glDrawArrays(GL_TRIANGLES, 0, num_screen_vertices);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glDisableVertexAttribArray(0);
+                glDisableVertexAttribArray(1);
+                glBindVertexArray(0);
+            }
+
+            program_unbind();
         }
 
-        program_unbind();
+        // TODO: reflections
+        if (skybox)
+        {
 
-        // TODO: emissive lighting pass
+        }
 
-        // disable blending
+        // TODO: emissive lighting
+
         glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        // end lighting pass
         glEnable(GL_DEPTH_TEST);
 
-        // unbind screen fbo
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // copy depth information to screen fbo
+        // copy depth information to screen framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_fbo_id);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_fbo_id);
         glBlitFramebuffer(0, 0, render_width, render_height, 0, 0, render_width, render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -1458,144 +1505,207 @@ void renderer_draw(bool ortho, float aspect)
     break;
     }
 
-    // bind screen fbo
     glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
 
-    // TEST: draw lights as a cube
     glViewport(0, 0, render_width, render_height);
 
-    program_bind(forward_color_program);
-
-    program_set_mat4(forward_color_program, "camera.projection", camera_projection);
-    program_set_mat4(forward_color_program, "camera.view", camera_view);
-
-    for (unsigned int i = 0; i < num_point_lights; i++)
+    // TEST: draw point lights as a cube
+    // this will be removed at some point so janky code is allowed
+    if (num_point_lights > 0)
     {
-        // calculate model matrix
-        mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-        glm_translate(object_model, point_lights[i]->position);
-        vec3 scale = { 0.125f, 0.125f, 0.125f };
-        glm_scale(object_model, scale);
+        program_bind(forward_color_program);
 
-        program_set_mat4(forward_color_program, "object.model", object_model);
+        program_set_mat4(forward_color_program, "camera.projection", camera_projection);
+        program_set_mat4(forward_color_program, "camera.view", camera_view);
 
-        program_set_vec3(forward_color_program, "material.color", point_lights[i]->specular);
+        for (unsigned int i = 0; i < num_point_lights; i++)
+        {
+            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+            glm_translate(object_model, point_lights[i]->position);
+            vec3 scale = { 0.125f, 0.125f, 0.125f };
+            glm_scale(object_model, scale);
 
-        mesh_draw(cube_mesh);
+            program_set_mat4(forward_color_program, "object.model", object_model);
+
+            program_set_vec3(forward_color_program, "material.color", point_lights[i]->specular);
+
+            static GLint light_vao_id = -1;
+            static GLint light_vbo_id = -1;
+            static GLint num_light_vertices = -1;
+
+            if (light_vao_id == -1)
+            {
+                float light_vertices[] = {
+                    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+                     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+                     1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+                     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+                    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+                    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+                    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+                     1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+                     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+                     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+                    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+                    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+                    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+                    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+                    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+                    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+                    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+                    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+                     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+                     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+                     1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+                     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+                     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+                     1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+                    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+                     1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+                     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+                     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+                    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+                    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+                    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+                     1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+                     1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+                     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+                    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+                    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
+                };
+                num_light_vertices = sizeof(light_vertices) / sizeof(float) / 2;
+
+                glGenVertexArrays(1, &light_vao_id);
+                glBindVertexArray(light_vao_id);
+
+                glGenBuffers(1, &light_vbo_id);
+                glBindBuffer(GL_ARRAY_BUFFER, light_vbo_id);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(light_vertices), &light_vertices, GL_STATIC_DRAW);
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)0);
+                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+                glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                glBindVertexArray(0);
+            }
+
+            glBindVertexArray(light_vao_id);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glEnableVertexAttribArray(2);
+            glBindBuffer(GL_ARRAY_BUFFER, light_vbo_id);
+            glDrawArrays(GL_TRIANGLES, 0, num_light_vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glDisableVertexAttribArray(2);
+            glBindVertexArray(0);
+        }
+
+        program_unbind();
     }
 
-    program_unbind();
-
-    // start water pass
-    glViewport(0, 0, render_width, render_height);
-
-    program_bind(water_program);
-
-    program_set_mat4(water_program, "camera.projection", camera_projection);
-    program_set_mat4(water_program, "camera.view", camera_view);
-    program_set_vec3(water_program, "camera.position", camera->position);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
-
-    for (unsigned int i = 0; i < num_waters; i++)
+    // render skybox
+    if (skybox)
     {
-        // calculate model matrix
-        mat4 water_model = GLM_MAT4_IDENTITY_INIT;
-        glm_translate(water_model, waters[i]->position);
-        vec3 water_scale;
-        water_scale[0] = waters[i]->scale[0];
-        water_scale[1] = 1.0f;
-        water_scale[2] = waters[i]->scale[1];
-        glm_scale(water_model, water_scale);
+        glDepthFunc(GL_LEQUAL);
 
-        program_set_mat4(water_program, "water.model", water_model);
+        mat4 camera_view_no_translate;
+        glm_mat4_copy(camera_view, camera_view_no_translate);
+        camera_view_no_translate[3][0] = 0.0f;
+        camera_view_no_translate[3][1] = 0.0f;
+        camera_view_no_translate[3][2] = 0.0f;
+        camera_view_no_translate[3][3] = 0.0f;
 
-        // draw water mesh
-        glBindVertexArray(water_vao_id);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
-        glDrawArrays(GL_TRIANGLES, 0, num_water_vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
-    }
+        program_bind(skybox_program);
 
-    program_unbind();
-
-    // end water pass
-
-    // start skybox pass
-    glViewport(0, 0, render_width, render_height);
-    glDepthFunc(GL_LEQUAL);
-
-    mat4 camera_view_no_translate;
-    glm_mat4_copy(camera_view, camera_view_no_translate);
-    camera_view_no_translate[3][0] = 0.0f;
-    camera_view_no_translate[3][1] = 0.0f;
-    camera_view_no_translate[3][2] = 0.0f;
-    camera_view_no_translate[3][3] = 0.0f;
-
-    program_bind(skybox_program);
-
-    program_set_mat4(skybox_program, "camera.projection", camera_projection);
-    program_set_mat4(skybox_program, "camera.view", camera_view_no_translate);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
-
-    // draw sprite mesh
-    glBindVertexArray(skybox_vao_id);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
-    glDrawArrays(GL_TRIANGLES, 0, num_skybox_vertices);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(0);
-    glBindVertexArray(0);
-
-    program_unbind();
-
-    // end skybox pass
-    glDepthFunc(GL_LESS);
-
-    // start sprite pass
-    glViewport(0, 0, render_width, render_height);
-
-    program_bind(sprite_program);
-
-    program_set_mat4(sprite_program, "camera.projection", camera_projection);
-
-    for (unsigned int i = 0; i < num_sprites; i++)
-    {
-        // calculate model matrix
-        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
-        sprite_calc_model(sprites[i], sprite_model);
-
-        program_set_mat4(sprite_program, "sprite.model", sprite_model);
-        program_set_vec3(sprite_program, "sprite.color", sprites[i]->color);
+        program_set_mat4(skybox_program, "camera.projection", camera_projection);
+        program_set_mat4(skybox_program, "camera.view", camera_view_no_translate);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, sprites[i]->image->texture_id);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
 
-        glBindVertexArray(sprite_vao_id);
+        glBindVertexArray(skybox_vao_id);
         glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
-        glDrawArrays(GL_TRIANGLES, 0, num_sprite_vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
+        glDrawArrays(GL_TRIANGLES, 0, num_skybox_vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
         glBindVertexArray(0);
+
+        program_unbind();
+
+        glDepthFunc(GL_LESS);
     }
 
-    program_unbind();
+    // render water
+    if (num_waters > 0)
+    {
+        program_bind(water_program);
 
-    // end sprite pass
+        program_set_mat4(water_program, "camera.projection", camera_projection);
+        program_set_mat4(water_program, "camera.view", camera_view);
+
+        for (unsigned int i = 0; i < num_waters; i++)
+        {
+            mat4 water_model = GLM_MAT4_IDENTITY_INIT;
+            glm_translate(water_model, waters[i]->position);
+            vec3 water_scale;
+            water_scale[0] = waters[i]->scale[0];
+            water_scale[1] = 1.0f;
+            water_scale[2] = waters[i]->scale[1];
+            glm_scale(water_model, water_scale);
+
+            program_set_mat4(water_program, "water.model", water_model);
+
+            glBindVertexArray(water_vao_id);
+            glEnableVertexAttribArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
+            glDrawArrays(GL_TRIANGLES, 0, num_water_vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(0);
+            glBindVertexArray(0);
+        }
+
+        program_unbind();
+    }
+
+    // render sprites
+    if (num_sprites > 0)
+    {
+        program_bind(sprite_program);
+
+        program_set_mat4(sprite_program, "camera.projection", camera_projection);
+
+        for (unsigned int i = 0; i < num_sprites; i++)
+        {
+            mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+            sprite_calc_model(sprites[i], sprite_model);
+
+            program_set_mat4(sprite_program, "sprite.model", sprite_model);
+            program_set_vec3(sprite_program, "sprite.color", sprites[i]->color);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, sprites[i]->image->texture_id);
+
+            glBindVertexArray(sprite_vao_id);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
+            glDrawArrays(GL_TRIANGLES, 0, num_sprite_vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glBindVertexArray(0);
+        }
+
+        program_unbind();
+    }
 
     // unbind screen fbo
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // post processing pass
+    // render the screen framebuffer to the default framebuffer
     glViewport(0, 0, render_width, render_height);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
@@ -1605,7 +1715,6 @@ void renderer_draw(bool ortho, float aspect)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, screen_texture_id);
 
-    // draw screen mesh
     glBindVertexArray(screen_vao_id);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -1618,6 +1727,7 @@ void renderer_draw(bool ortho, float aspect)
 
     program_unbind();
 
+    // clear renderables
     num_objects = 0;
     num_directional_lights = 0;
     num_point_lights = 0;
