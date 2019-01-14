@@ -698,7 +698,7 @@ int main(int argc, char *argv[])
 
         renderer_set_skybox(skybox_cubemap);
 
-        renderer_add_water(test_water);
+        // renderer_add_water(test_water);
 
         // render everything
         renderer_draw(false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
@@ -721,6 +721,8 @@ int main(int argc, char *argv[])
     source_destroy(origin_source);
 
     water_destroy(test_water);
+
+    camera_destroy(main_camera);
 
     spot_light_destroy(torch_spot_light);
 

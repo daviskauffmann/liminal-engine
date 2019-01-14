@@ -9,6 +9,9 @@
 #define SHADOW_WIDTH 4096
 #define SHADOW_HEIGHT 4096
 
+#define FPS_CAP 120
+#define FRAME_DELAY (1000 / FPS_CAP)
+
 enum game_state
 {
     GAME_STATE_ACTIVE,
@@ -20,14 +23,23 @@ static enum game_state game_state;
 
 int main(int argc, char *argv[])
 {
-    // init engine
-    core_init();
+    // init SDL
+    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
-    window_init(
+    // create window
+    SDL_Window *window = SDL_CreateWindow(
         WINDOW_TITLE,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
-        WINDOW_HEIGHT);
+        WINDOW_HEIGHT,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
+    // create OpenGL context
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+
+    // init engine
     renderer_init(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
@@ -36,7 +48,15 @@ int main(int argc, char *argv[])
         SHADOW_HEIGHT);
 
     // create textures
-    struct texture *awesomeface_texture = texture_create("assets/images/awesomeface.png");
+    SDL_Surface awesomeface_surface = IMG_Load("assets/images/awesomeface.png");
+
+    struct texture *awesomeface_texture = texture_create(
+        awesomeface_surface->w,
+        awesomeface_surface->h,
+        awesomeface_surface->format->BytesPerPixel,
+        awesomeface_surface->pixels);
+
+    SDL_FreeSurface(awesomeface_surface);
 
     // create sprites
     vec3 awesomeface_sprite_color = { 1.0f, 1.0f, 1.0f };
@@ -69,9 +89,6 @@ int main(int argc, char *argv[])
     bool quit = false;
     while (!quit)
     {
-        // start of frame activities
-        time_frame_start();
-
         // get keyboard input
         int num_keys;
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
@@ -147,23 +164,27 @@ int main(int argc, char *argv[])
         // setup renderer
         renderer_add_sprite(awesomeface_sprite);
 
-        // draw everything
-        renderer_draw(true);
+        // render everything
+        renderer_draw(false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
-        window_swap();
-
-        // end of frame activities
-        time_frame_end();
+        SDL_GL_SwapWindow(window);
     }
 
     // free resources
     sprite_destroy(awesomeface_sprite);
 
     // close engine
+    audio_quit();
     renderer_quit();
-    window_quit();
-    core_quit();
+
+    // close window
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+
+    // close SDL
+    IMG_Quit();
+    SDL_Quit();
 
     return 0;
 }
