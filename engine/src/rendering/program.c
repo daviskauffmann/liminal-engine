@@ -1,8 +1,12 @@
 #include <engine/engine.h>
 
-static GLuint shader_create(GLenum type, const char *file);
+// TODO: geometry shader
 
-struct program *program_create(const char *vertex_file, const char *fragment_file)
+// TODO: split up shader_create into shader_create_from_string and shader_create_from_file
+
+static GLuint shader_create(GLenum type, const char *filename);
+
+struct program *program_create(const char *vertex_filename, const char *fragment_filename)
 {
     struct program *program = malloc(sizeof(struct program));
 
@@ -17,9 +21,9 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
 
     // compile shaders
     GLuint vertex_shader = 0;
-    if (vertex_file)
+    if (vertex_filename)
     {
-        vertex_shader = shader_create(GL_VERTEX_SHADER, vertex_file);
+        vertex_shader = shader_create(GL_VERTEX_SHADER, vertex_filename);
 
         if (!vertex_shader)
         {
@@ -34,9 +38,9 @@ struct program *program_create(const char *vertex_file, const char *fragment_fil
     }
 
     GLuint fragment_shader = 0;
-    if (fragment_file)
+    if (fragment_filename)
     {
-        fragment_shader = shader_create(GL_FRAGMENT_SHADER, fragment_file);
+        fragment_shader = shader_create(GL_FRAGMENT_SHADER, fragment_filename);
 
         if (!fragment_shader)
         {
@@ -140,26 +144,26 @@ void program_destroy(struct program *program)
     free(program);
 }
 
-static GLuint shader_create(GLenum type, const char *file)
+static GLuint shader_create(GLenum type, const char *filename)
 {
     // create shader
     GLuint shader = glCreateShader(type);
 
     // open shader file
-    FILE *fp;
-    fopen_s(&fp, file, "rb");
+    FILE *file;
+    fopen_s(&file, filename, "rb");
 
-    if (!fp)
+    if (!file)
     {
-        printf("Error: Couldn't open file %s\n", file);
+        printf("Error: Couldn't open file %s\n", filename);
 
         return 0;
     }
 
     // get file size
-    fseek(fp, 0, SEEK_END);
-    size_t size = (size_t)ftell(fp);
-    rewind(fp);
+    fseek(file, 0, SEEK_END);
+    size_t size = (size_t)ftell(file);
+    rewind(file);
 
     // file buffer
     char *source = malloc(size + 1);
@@ -172,9 +176,9 @@ static GLuint shader_create(GLenum type, const char *file)
     }
 
     // read the file into the buffer
-    if (fread(source, sizeof(char), size, fp) != size)
+    if (fread(source, sizeof(char), size, file) != size)
     {
-        printf("Error: Couldn't read file %s\n", file);
+        printf("Error: Couldn't read file %s\n", filename);
 
         return 0;
     }
@@ -182,7 +186,7 @@ static GLuint shader_create(GLenum type, const char *file)
     // null terminate
     source[size] = '\0';
 
-    fclose(fp);
+    fclose(file);
 
     // set the shader source
     glShaderSource(shader, 1, &source, NULL);

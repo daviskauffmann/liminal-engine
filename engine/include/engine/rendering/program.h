@@ -7,7 +7,7 @@ struct program
     // TODO: cache uniforms in a hashmap or something
 };
 
-struct program ENGINE_API *program_create(const char *vertex_file, const char *fragment_file);
+struct program ENGINE_API *program_create(const char *vertex_filename, const char *fragment_filename);
 GLint ENGINE_API program_get_location(struct program *program, const char *name);
 void ENGINE_API program_bind(struct program *program);
 void ENGINE_API program_set_int(struct program *program, const char *name, int value);
