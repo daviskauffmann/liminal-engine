@@ -95,6 +95,7 @@
     <ClCompile Include="src\entities\sprite.c" />
     <ClCompile Include="src\entities\sun.c" />
     <ClCompile Include="src\entities\water.c" />
+    <ClCompile Include="src\rendering\assets.c" />
     <ClCompile Include="src\rendering\cubemap.c" />
     <ClCompile Include="src\rendering\material.c" />
     <ClCompile Include="src\rendering\mesh.c" />

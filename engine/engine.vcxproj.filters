@@ -66,6 +66,9 @@
     <ClCompile Include="src\entities\sun.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\assets.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\water.vert" />
@@ -73,7 +76,6 @@
     <None Include="assets\shaders\deferred_directional.frag" />
     <None Include="assets\shaders\deferred_point.frag" />
     <None Include="assets\shaders\deferred_spot.frag" />
-    <None Include="assets\shaders\deferred_sun.frag" />
     <None Include="assets\shaders\depth.frag" />
     <None Include="assets\shaders\depth.vert" />
     <None Include="assets\shaders\forward.vert" />
@@ -82,7 +84,6 @@
     <None Include="assets\shaders\forward_point.frag" />
     <None Include="assets\shaders\forward_reflection.frag" />
     <None Include="assets\shaders\forward_spot.frag" />
-    <None Include="assets\shaders\forward_sun.frag" />
     <None Include="assets\shaders\geometry.frag" />
     <None Include="assets\shaders\geometry.vert" />
     <None Include="assets\shaders\post.frag" />
@@ -92,5 +93,7 @@
     <None Include="assets\shaders\sprite.frag" />
     <None Include="assets\shaders\sprite.vert" />
     <None Include="assets\shaders\water.frag" />
+    <None Include="assets\shaders\forward_sun.frag" />
+    <None Include="assets\shaders\deferred_sun.frag" />
   </ItemGroup>
 </Project>

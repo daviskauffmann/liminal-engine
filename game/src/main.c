@@ -235,37 +235,37 @@ int main(int argc, char *argv[])
     vec3 box_5_object_scale = { 0.5f, 0.5f, 0.5f };
 
     struct object *floor_object = object_create(
-        cube_mesh,
+        assets.cube_mesh,
         cobble_material,
         floor_object_position,
         floor_object_rotation,
         floor_object_scale);
     struct object *box_1_object = object_create(
-        cube_mesh,
+        assets.cube_mesh,
         box_material,
         box_1_object_position,
         box_1_object_rotation,
         box_1_object_scale);
     struct object *box_2_object = object_create(
-        cube_mesh,
+        assets.cube_mesh,
         box_material,
         box_2_object_position,
         box_2_object_rotation,
         box_2_object_scale);
     struct object *box_3_object = object_create(
-        cube_mesh,
+        assets.cube_mesh,
         box_material,
         box_3_object_position,
         box_3_object_rotation,
         box_3_object_scale);
     struct object *box_4_object = object_create(
-        cube_mesh,
+        assets.cube_mesh,
         box_material,
         box_4_object_position,
         box_4_object_rotation,
         box_4_object_scale);
     struct object *box_5_object = object_create(
-        cube_mesh,
+        assets.cube_mesh,
         box_material,
         box_5_object_position,
         box_5_object_rotation,
@@ -390,6 +390,11 @@ int main(int argc, char *argv[])
         -90.0f,
         0.0f,
         45.0f);
+
+    if (!main_camera)
+    {
+        return 1;
+    }
 
     // create sources
     struct source *origin_source = source_create();
@@ -677,8 +682,6 @@ int main(int argc, char *argv[])
         }
 
         // setup renderer
-        renderer_set_camera(main_camera);
-
         for (unsigned int i = 0; i < num_objects; i++)
         {
             renderer_add_object(objects[i]);
@@ -701,7 +704,7 @@ int main(int argc, char *argv[])
         // renderer_add_water(test_water);
 
         // render everything
-        renderer_draw(false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(main_camera, false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
         SDL_GL_SwapWindow(window);

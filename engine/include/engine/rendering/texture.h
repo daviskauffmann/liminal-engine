@@ -7,6 +7,7 @@ struct texture
 };
 
 struct texture ENGINE_API *texture_create(int width, int height, unsigned char bytes_per_pixel, const void *pixels);
+void ENGINE_API texture_bind(struct texture *texture, unsigned int index);
 void ENGINE_API texture_destroy(struct texture *texture);
 
 #endif

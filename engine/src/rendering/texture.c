@@ -45,6 +45,12 @@ struct texture *texture_create(int width, int height, unsigned char bytes_per_pi
     return texture;
 }
 
+void ENGINE_API texture_bind(struct texture *texture, unsigned int index)
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_2D, texture->texture_id);
+}
+
 void texture_destroy(struct texture *texture)
 {
     glDeleteTextures(1, &texture->texture_id);
