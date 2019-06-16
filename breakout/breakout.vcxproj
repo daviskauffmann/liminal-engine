@@ -60,7 +60,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)engine\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glew32.lib;opengl32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\;$(SolutionDir)engine\lib\$(Platform)\</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -89,7 +89,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glew32.lib;opengl32.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)lib\$(Platform)\;$(SolutionDir)engine\lib\$(Platform)\</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>

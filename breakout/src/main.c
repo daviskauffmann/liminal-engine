@@ -1,4 +1,6 @@
 #include <engine/engine.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 
 #define WINDOW_TITLE "Breakout"
 #define WINDOW_WIDTH 1280
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
         SHADOW_HEIGHT);
 
     // create textures
-    SDL_Surface awesomeface_surface = IMG_Load("assets/images/awesomeface.png");
+    SDL_Surface *awesomeface_surface = IMG_Load("assets/images/awesomeface.png");
 
     struct texture *awesomeface_texture = texture_create(
         awesomeface_surface->w,
@@ -85,10 +87,39 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
+    // game settings
+    unsigned int current_time = 0;
+    float fps_update_timer = 0.0f;
+
+    renderer_set_mode(RENDER_MODE_FORWARD);
+
     // main loop
     bool quit = false;
     while (!quit)
     {
+        // timer for fps cap
+        unsigned int frame_start = SDL_GetTicks();
+
+        // calculate time passed since last frame
+        unsigned int previous_time = current_time;
+        current_time = frame_start;
+
+        // calculate delta time and fps
+        float delta_time = (current_time - previous_time) / 1000.0f;
+        unsigned int fps = (unsigned int)(1 / delta_time);
+
+        // update window title
+        fps_update_timer += delta_time;
+
+        if (fps_update_timer > 0.25f)
+        {
+            fps_update_timer = 0.0f;
+
+            char title[256];
+            sprintf_s(title, sizeof(title), "%s - FPS: %d", WINDOW_TITLE, fps);
+            SDL_SetWindowTitle(window, title);
+        }
+
         // get keyboard input
         int num_keys;
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
@@ -119,15 +150,15 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        unsigned int flags = window_get_flags();
+                        unsigned int flags = SDL_GetWindowFlags(window);
 
                         if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
                         {
-                            window_set_fullscreen(0);
+                            SDL_SetWindowFullscreen(window, 0);
                         }
                         else
                         {
-                            window_set_fullscreen(SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
                         }
                     }
                 }
@@ -148,7 +179,9 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
 
-                    window_resize(width, height);
+                    SDL_SetWindowSize(window, width, height);
+
+                    printf("Window resized to %dx%d\n", width, height);
                 }
                 break;
                 }
@@ -159,13 +192,13 @@ int main(int argc, char *argv[])
         }
 
         // update sprite
-        awesomeface_sprite->rotation += time_delta();
+        awesomeface_sprite->rotation += delta_time;
 
         // setup renderer
         renderer_add_sprite(awesomeface_sprite);
 
         // render everything
-        renderer_draw(false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(camera, false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
         SDL_GL_SwapWindow(window);
