@@ -50,8 +50,6 @@
 
 // TODO: write a custom math library?
 
-// TODO: DirectX version?
-
 int main(int argc, char *argv[])
 {
     // init SDL
@@ -393,6 +391,8 @@ int main(int argc, char *argv[])
 
     if (!main_camera)
     {
+        printf("Failed to create main camera\n");
+
         return 1;
     }
 
@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
     float shoot_timer = 0.0f;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    renderer_set_mode(RENDER_MODE_DEFERRED);
+    renderer_set_mode(RENDER_MODE_FORWARD);
 
     // main loop
     bool quit = false;

@@ -19,7 +19,7 @@ struct program *program_create(const char *vertex_filename, const char *fragment
 
     program->program_id = glCreateProgram();
 
-    // compile shaders
+    // compile shaders and attach to program
     GLuint vertex_shader = 0;
     if (vertex_filename)
     {
@@ -33,8 +33,6 @@ struct program *program_create(const char *vertex_filename, const char *fragment
         }
 
         glAttachShader(program->program_id, vertex_shader);
-
-        glDeleteShader(vertex_shader);
     }
 
     GLuint fragment_shader = 0;
@@ -50,8 +48,6 @@ struct program *program_create(const char *vertex_filename, const char *fragment
         }
 
         glAttachShader(program->program_id, fragment_shader);
-
-        glDeleteShader(fragment_shader);
     }
 
     // link program
@@ -71,15 +67,17 @@ struct program *program_create(const char *vertex_filename, const char *fragment
         }
     }
 
-    // detach shaders, we're done with them now
+    // detach and delete shaders, we're done with them now
     if (vertex_shader)
     {
         glDetachShader(program->program_id, vertex_shader);
+        glDeleteShader(vertex_shader);
     }
 
     if (fragment_shader)
     {
         glDetachShader(program->program_id, fragment_shader);
+        glDeleteShader(fragment_shader);
     }
 
     // check for errors

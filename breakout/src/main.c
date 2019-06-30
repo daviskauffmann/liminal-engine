@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
         renderer_add_sprite(awesomeface_sprite);
 
         // render everything
-        renderer_draw(camera, false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(camera, true, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
         SDL_GL_SwapWindow(window);
