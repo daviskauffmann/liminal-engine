@@ -23,6 +23,8 @@ struct renderer
     float render_scale;
     int shadow_width;
     int shadow_height;
+    int reflection_width;
+    int reflection_height;
     enum render_mode render_mode;
 
     // shader programs
@@ -57,9 +59,15 @@ struct renderer
     GLuint geometry_albedo_specular_texture_id;
     GLuint geometry_rbo_id;
 
-    GLuint water_fbo_id;
-    GLuint water_color_texture_id;
-    GLuint water_depth_texture_id;
+    GLuint water_reflection_fbo_id;
+    GLuint water_reflection_color_texture_id;
+    GLuint water_reflection_depth_texture_id;
+    GLuint water_reflection_depth_rbo_id;
+
+    GLuint water_refraction_fbo_id;
+    GLuint water_refraction_color_texture_id;
+    GLuint water_refraction_depth_texture_id;
+    GLuint water_refraction_depth_rbo_id;
 
     // water mesh
     unsigned int num_water_vertices;
@@ -114,6 +122,8 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.render_scale = render_scale;
     renderer.shadow_width = shadow_width;
     renderer.shadow_height = shadow_height;
+    renderer.reflection_width = render_width; // TODO: paramterize
+    renderer.reflection_height = render_height;
     renderer.render_mode = RENDER_MODE_FORWARD;
 
     // init GLEW
@@ -153,6 +163,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
+    glEnable(GL_CLIP_DISTANCE0);
 
     // create programs
     renderer.depth_program = program_create(
@@ -403,7 +414,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     program_unbind();
 
     program_bind(renderer.water_program);
-    program_set_int(renderer.water_program, "skybox.texture", 0);
+    program_set_int(renderer.water_program, "water.reflection", 0);
     program_unbind();
 
     program_bind(renderer.sprite_program);
@@ -629,19 +640,19 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // setup water fbo
-    glGenFramebuffers(1, &renderer.water_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderer.water_fbo_id);
+    // setup water reflection fbo
+    glGenFramebuffers(1, &renderer.water_reflection_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderer.water_reflection_fbo_id);
 
-    glGenTextures(1, &renderer.water_color_texture_id);
-    glBindTexture(GL_TEXTURE_2D, renderer.water_color_texture_id);
+    glGenTextures(1, &renderer.water_reflection_color_texture_id);
+    glBindTexture(GL_TEXTURE_2D, renderer.water_reflection_color_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
         GL_RGB8,
-        render_width, // TODO: specific water texture sizes?
-        render_height,
+        renderer.reflection_width,
+        renderer.reflection_height,
         0,
         GL_RGB,
         GL_UNSIGNED_BYTE,
@@ -654,23 +665,23 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
-        renderer.water_color_texture_id,
+        renderer.water_reflection_color_texture_id,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    GLenum water_fbo_attachments[] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(sizeof(water_fbo_attachments) / sizeof(GLenum), water_fbo_attachments);
+    GLenum water_reflection_fbo_attachments[] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(sizeof(water_reflection_fbo_attachments) / sizeof(GLenum), water_reflection_fbo_attachments);
 
-    glGenTextures(1, &renderer.water_depth_texture_id);
-    glBindTexture(GL_TEXTURE_2D, renderer.water_depth_texture_id);
+    glGenTextures(1, &renderer.water_reflection_depth_texture_id);
+    glBindTexture(GL_TEXTURE_2D, renderer.water_reflection_depth_texture_id);
 
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
         GL_DEPTH_COMPONENT32,
-        render_width,
-        render_height,
+        renderer.reflection_width,
+        renderer.reflection_height,
         0,
         GL_DEPTH_COMPONENT,
         GL_FLOAT,
@@ -683,10 +694,27 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
-        renderer.water_depth_texture_id,
+        renderer.water_reflection_depth_texture_id,
         0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenRenderbuffers(1, &renderer.water_reflection_depth_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderer.water_reflection_depth_rbo_id);
+
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH_COMPONENT,
+        renderer.reflection_width,
+        renderer.reflection_height);
+
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        GL_RENDERBUFFER,
+        renderer.water_reflection_depth_rbo_id);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -716,7 +744,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer.water_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(water_vertices), &water_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0); // position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
@@ -775,7 +803,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer.skybox_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0); // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
@@ -800,7 +828,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer.sprite_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), &sprite_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);                     // position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -809,7 +837,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     // create screen mesh
     float screen_vertices[] = {
-        // position    // uv
+        // position   // uv
         -1.0f, -1.0f, 0.0f, 0.0f,
         -1.0f,  1.0f, 0.0f, 1.0f,
          1.0f, -1.0f, 1.0f, 0.0f,
@@ -826,7 +854,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(screen_vertices), &screen_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0); // position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -941,79 +969,10 @@ void renderer_add_sprite(struct sprite *sprite)
     renderer.sprites[renderer.num_sprites++] = sprite;
 }
 
-// TODO: split this up into sub functions
-void renderer_draw(struct camera *camera, float aspect)
+void render_scene(GLuint fbo_id, struct camera *camera, mat4 camera_projection, mat4 camera_view, mat4 sun_projection, mat4 sun_view)
 {
-    if (!camera)
-    {
-        printf("Error: Camera cannot be null\n");
-
-        return;
-    }
-
-    // calculate camera projection matrix
-    mat4 camera_projection;
-    glm_perspective(
-        glm_rad(camera->fov),
-        aspect,
-        0.01f,
-        100.0f,
-        camera_projection);
-
-    // calculate camera view matrix
-    mat4 camera_view;
-    vec3 camera_target;
-    glm_vec_add(camera->position, camera->front, camera_target);
-    glm_lookat(
-        camera->position,
-        camera_target,
-        camera->up,
-        camera_view);
-
-    mat4 sun_projection;
-    mat4 sun_view;
-    if (renderer.sun)
-    {
-        // calculate sun projection matrix
-        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
-
-        // calculate sun "position"
-        vec3 sun_position;
-        glm_vec_sub(GLM_VEC3_ZERO, renderer.sun->direction, sun_position);
-
-        // calculate sun view matrix
-        glm_lookat(sun_position, GLM_VEC3_ZERO, GLM_YUP, sun_view);
-
-        // render sun shadows to depthmap
-        glBindFramebuffer(GL_FRAMEBUFFER, renderer.depthmap_fbo_id);
-
-        glViewport(0, 0, renderer.shadow_width, renderer.shadow_height);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        program_bind(renderer.depth_program);
-
-        program_set_mat4(renderer.depth_program, "sun.projection", sun_projection);
-        program_set_mat4(renderer.depth_program, "sun.view", sun_view);
-
-        for (unsigned int i = 0; i < renderer.num_objects; i++)
-        {
-            struct object *object = renderer.objects[i];
-
-            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-            object_calc_model(object, object_model);
-
-            program_set_mat4(renderer.depth_program, "object.model", object_model);
-
-            mesh_draw(object->mesh);
-        }
-
-        program_unbind();
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    // clear the screen
-    glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+    // clear the framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
     glViewport(0, 0, renderer.render_width, renderer.render_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1024,10 +983,10 @@ void renderer_draw(struct camera *camera, float aspect)
     {
     case RENDER_MODE_FORWARD:
     {
-        // draw objects to the screen framebuffer
+        // draw objects to the specified framebuffer
         if (renderer.num_objects > 0)
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
             glViewport(0, 0, renderer.render_width, renderer.render_height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1211,7 +1170,7 @@ void renderer_draw(struct camera *camera, float aspect)
 
                     program_set_mat4(renderer.forward_reflection_program, "object.model", object_model);
 
-                    program_set_float(renderer.forward_reflection_program, "material.reflectivity", 0.0f);
+                    program_set_float(renderer.forward_reflection_program, "material.reflectivity", 0.5f);
 
                     // TEMPORARY: use specular texture for reflectivity
                     glActiveTexture(GL_TEXTURE0);
@@ -1278,8 +1237,8 @@ void renderer_draw(struct camera *camera, float aspect)
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-            // draw the gbuffer to the screen
-            glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+            // draw the gbuffer to the specified framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
             glViewport(0, 0, renderer.render_width, renderer.render_height);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -1430,9 +1389,9 @@ void renderer_draw(struct camera *camera, float aspect)
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-            // copy depth information to screen framebuffer
+            // copy depth information to specified framebuffer
             glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer.geometry_fbo_id);
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer.screen_fbo_id);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
             glBlitFramebuffer(0, 0, renderer.render_width, renderer.render_height, 0, 0, renderer.render_width, renderer.render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -1440,7 +1399,8 @@ void renderer_draw(struct camera *camera, float aspect)
     break;
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+    // draw other things that need to be drawn after the deferred rendering pass
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
     glViewport(0, 0, renderer.render_width, renderer.render_height);
 
@@ -1566,6 +1526,82 @@ void renderer_draw(struct camera *camera, float aspect)
         glDepthFunc(GL_LESS);
     }
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void renderer_draw(struct camera *camera, float aspect)
+{
+    if (!camera)
+    {
+        printf("Error: Camera cannot be null\n");
+
+        return;
+    }
+
+    // calculate camera projection matrix
+    mat4 camera_projection;
+    glm_perspective(
+        glm_rad(camera->fov),
+        aspect,
+        0.01f,
+        100.0f,
+        camera_projection);
+
+    // calculate camera view matrix
+    mat4 camera_view;
+    vec3 camera_target;
+    glm_vec_add(camera->position, camera->front, camera_target);
+    glm_lookat(
+        camera->position,
+        camera_target,
+        camera->up,
+        camera_view);
+
+    mat4 sun_projection;
+    mat4 sun_view;
+    if (renderer.sun)
+    {
+        // calculate sun projection matrix
+        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+
+        // calculate sun "position"
+        vec3 sun_position;
+        glm_vec_sub(GLM_VEC3_ZERO, renderer.sun->direction, sun_position);
+
+        // calculate sun view matrix
+        glm_lookat(sun_position, GLM_VEC3_ZERO, GLM_YUP, sun_view);
+
+        // render sun shadows to depthmap
+        glBindFramebuffer(GL_FRAMEBUFFER, renderer.depthmap_fbo_id);
+
+        glViewport(0, 0, renderer.shadow_width, renderer.shadow_height);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        program_bind(renderer.depth_program);
+
+        program_set_mat4(renderer.depth_program, "sun.projection", sun_projection);
+        program_set_mat4(renderer.depth_program, "sun.view", sun_view);
+
+        for (unsigned int i = 0; i < renderer.num_objects; i++)
+        {
+            struct object *object = renderer.objects[i];
+
+            mat4 object_model = GLM_MAT4_IDENTITY_INIT;
+            object_calc_model(object, object_model);
+
+            program_set_mat4(renderer.depth_program, "object.model", object_model);
+
+            mesh_draw(object->mesh);
+        }
+
+        program_unbind();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    // render scene to the screen framebuffer
+    render_scene(renderer.screen_fbo_id, camera, camera_projection, camera_view, sun_projection, sun_view);
+
     // render water
     if (renderer.num_waters > 0)
     {
@@ -1574,9 +1610,19 @@ void renderer_draw(struct camera *camera, float aspect)
         program_set_mat4(renderer.water_program, "camera.projection", camera_projection);
         program_set_mat4(renderer.water_program, "camera.view", camera_view);
 
+        program_unbind();
+
         for (unsigned int i = 0; i < renderer.num_waters; i++)
         {
             struct water *water = renderer.waters[i];
+
+            // render scene to the water reflection framebuffer
+            // TODO: pass clipping plane info based on water height
+            render_scene(renderer.water_reflection_fbo_id, camera, camera_projection, camera_view, sun_projection, sun_view);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+
+            program_bind(renderer.water_program);
 
             mat4 water_model = GLM_MAT4_IDENTITY_INIT;
             glm_translate(water_model, water->position);
@@ -1591,14 +1637,18 @@ void renderer_draw(struct camera *camera, float aspect)
             glBindVertexArray(renderer.water_vao_id);
             glDrawArrays(GL_TRIANGLES, 0, renderer.num_water_vertices);
             glBindVertexArray(0);
-        }
 
-        program_unbind();
+            program_unbind();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
     }
 
     // render sprites
     if (renderer.num_sprites > 0)
     {
+        glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+
         program_bind(renderer.sprite_program);
 
         // calculate ortho projection
@@ -1626,11 +1676,13 @@ void renderer_draw(struct camera *camera, float aspect)
         }
 
         program_unbind();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    // render the screen framebuffer to the default framebuffer and apply post-processing
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // render the screen framebuffer to the default framebuffer and apply post-processing
     glViewport(0, 0, renderer.render_width, renderer.render_height);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);

@@ -23,10 +23,14 @@ out struct Vertex
     vec2 uv;
 } vertex;
 
+const vec4 plane = vec4(0, -1, 0, 15);
+
 void main()
 {
     gl_Position = camera.projection * camera.view * object.model * vec4(position, 1.0);
     vertex.position = vec3(object.model * vec4(position, 1.0));
     vertex.normal = mat3(transpose(inverse(object.model))) * normal;
     vertex.uv = vec2(uv.x, 1 - uv.y);
+
+	gl_ClipDistance[0] = dot(gl_Position, plane);
 }

@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
     float shoot_timer = 0.0f;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    renderer_set_mode(RENDER_MODE_DEFERRED);
+    renderer_set_mode(RENDER_MODE_FORWARD);
 
     // main loop
     bool quit = false;
@@ -720,7 +720,7 @@ int main(int argc, char *argv[])
 
         renderer_set_skybox(skybox_cubemap);
 
-        // renderer_add_water(test_water);
+        renderer_add_water(test_water);
 
         renderer_add_sprite(grass_sprite);
 
