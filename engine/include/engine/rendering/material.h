@@ -20,6 +20,7 @@ struct material ENGINE_API *material_create(
     struct texture *normal,
     struct texture *emission,
     float glow);
+void ENGINE_API material_bind(struct material *material);
 void ENGINE_API material_destroy(struct material *material);
 
 #endif

@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
     SDL_Surface *box_specular_surface = IMG_Load("assets/images/box_specular.png");
     SDL_Surface *cobble_diffuse_surface = IMG_Load("assets/images/cobble_diffuse.jpg");
     SDL_Surface *cobble_specular_surface = IMG_Load("assets/images/cobble_specular.jpg");
+    SDL_Surface *grass_surface = IMG_Load("assets/images/grass.png");
 
     struct texture *box_diffuse_texture = texture_create(
         box_diffuse_surface->w,
@@ -112,11 +113,17 @@ int main(int argc, char *argv[])
         cobble_specular_surface->h,
         cobble_specular_surface->format->BytesPerPixel,
         cobble_specular_surface->pixels);
+    struct texture *grass_texture = texture_create(
+        grass_surface->w,
+        grass_surface->h,
+        grass_surface->format->BytesPerPixel,
+        grass_surface->pixels);
 
     SDL_FreeSurface(box_diffuse_surface);
     SDL_FreeSurface(box_specular_surface);
     SDL_FreeSurface(cobble_diffuse_surface);
     SDL_FreeSurface(cobble_specular_surface);
+    SDL_FreeSurface(grass_surface);
 
     // create cubemaps
     SDL_Surface *skybox_right_surface = IMG_Load("assets/images/sky/right.jpg");
@@ -240,7 +247,7 @@ int main(int argc, char *argv[])
         floor_object_scale);
     struct object *box_1_object = object_create(
         assets.cube_mesh,
-        box_material,
+        assets.default_material,
         box_1_object_position,
         box_1_object_rotation,
         box_1_object_scale);
@@ -375,6 +382,18 @@ int main(int argc, char *argv[])
         test_water_position,
         test_water_scale);
 
+    vec3 grass_sprite_color = { 1.0f, 1.0f, 1.0f };
+    vec2 grass_sprite_position = { 0.0f, 0.0f };
+    float grass_sprite_rotation = 0.0f;
+    vec2 grass_sprite_scale = { 1.0f, 1.0f };
+
+    struct sprite *grass_sprite = sprite_create(
+        grass_sprite_color,
+        grass_texture,
+        grass_sprite_position,
+        grass_sprite_rotation,
+        grass_sprite_scale);
+
     // create camera
     vec3 main_camera_position = { 0.0f, 0.0f, 3.0f };
     vec3 main_camera_front = { 0.0f, 0.0f, -1.0f };
@@ -408,7 +427,7 @@ int main(int argc, char *argv[])
     float shoot_timer = 0.0f;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    renderer_set_mode(RENDER_MODE_FORWARD);
+    renderer_set_mode(RENDER_MODE_DEFERRED);
 
     // main loop
     bool quit = false;
@@ -703,8 +722,10 @@ int main(int argc, char *argv[])
 
         // renderer_add_water(test_water);
 
+        renderer_add_sprite(grass_sprite);
+
         // render everything
-        renderer_draw(main_camera, false, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(main_camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
         SDL_GL_SwapWindow(window);

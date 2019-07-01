@@ -16,5 +16,12 @@ out vec4 frag_color;
 
 void main()
 {    
-    frag_color = vec4(sprite.color, 1.0) * texture(sprite.image, vertex.uv);
+	vec4 texture_color = texture(sprite.image, vertex.uv);
+
+	if (texture_color.a < 0.1)
+	{
+		discard;
+	}
+
+    frag_color = vec4(sprite.color, 1.0) * texture_color;
 }

@@ -18,7 +18,7 @@ struct texture *texture_create(int width, int height, unsigned char bytes_per_pi
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB,
+        bytes_per_pixel == 4 ? GL_RGBA : GL_RGB,
         width,
         height,
         0,
@@ -45,7 +45,7 @@ struct texture *texture_create(int width, int height, unsigned char bytes_per_pi
     return texture;
 }
 
-void ENGINE_API texture_bind(struct texture *texture, unsigned int index)
+void texture_bind(struct texture *texture, unsigned int index)
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, texture->texture_id);

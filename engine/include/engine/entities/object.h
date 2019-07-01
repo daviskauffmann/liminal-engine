@@ -17,6 +17,7 @@ struct object ENGINE_API *object_create(
     vec3 rotation,
     vec3 scale);
 void ENGINE_API object_calc_model(struct object *object, vec4 *model);
+void ENGINE_API object_draw(struct object *object);
 void ENGINE_API object_destroy(struct object *object);
 
 #endif

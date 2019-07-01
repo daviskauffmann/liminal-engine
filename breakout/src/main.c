@@ -26,7 +26,7 @@ static enum game_state game_state;
 int main(int argc, char *argv[])
 {
     // init SDL
-    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
     // create window
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
         renderer_add_sprite(awesomeface_sprite);
 
         // render everything
-        renderer_draw(camera, true, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
 
         // display the window
         SDL_GL_SwapWindow(window);
@@ -208,7 +208,6 @@ int main(int argc, char *argv[])
     sprite_destroy(awesomeface_sprite);
 
     // close engine
-    audio_quit();
     renderer_quit();
 
     // close window

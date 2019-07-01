@@ -29,6 +29,29 @@ struct material *material_create(
     return material;
 }
 
+void material_bind(struct material *material)
+{
+    if (material->diffuse)
+    {
+        texture_bind(material->diffuse, 0);
+    }
+
+    if (material->specular)
+    {
+        texture_bind(material->specular, 1);
+    }
+
+    if (material->normal)
+    {
+        texture_bind(material->normal, 2);
+    }
+
+    if (material->emission)
+    {
+        texture_bind(material->emission, 3);
+    }
+}
+
 void material_destroy(struct material *material)
 {
     free(material);

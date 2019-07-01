@@ -8,9 +8,6 @@
 // TODO: render a sun texture in the sky
 // calculate its position based on the direction
 
-// TODO: optimize specular gbuffer by only storing red value
-// we dont need to have all 3 color values in the specular map
-
 // TODO: deferred reflections
 // new gbuffer texture (2 bytes)
 // byte 1: reflective map (just the red value)
@@ -20,7 +17,7 @@
 
 struct renderer
 {
-    /* Settings */
+    // settings
     int render_width;
     int render_height;
     float render_scale;
@@ -28,7 +25,7 @@ struct renderer
     int shadow_height;
     enum render_mode render_mode;
 
-    /* Shader programs */
+    // shader programs
     struct program *depth_program;
     struct program *forward_color_program;
     struct program *forward_sun_program;
@@ -46,7 +43,7 @@ struct renderer
     struct program *sprite_program;
     struct program *post_program;
 
-    /* Framebuffers */
+    // framebuffers
     GLuint screen_fbo_id;
     GLuint screen_texture_id;
     GLuint screen_rbo_id;
@@ -64,27 +61,27 @@ struct renderer
     GLuint water_color_texture_id;
     GLuint water_depth_texture_id;
 
-    /* Water Mesh */
+    // water mesh
     unsigned int num_water_vertices;
     GLuint water_vao_id;
     GLuint water_vbo_id;
 
-    /* Skybox Mesh */
+    // skybox mesh
     unsigned int num_skybox_vertices;
     GLuint skybox_vao_id;
     GLuint skybox_vbo_id;
 
-    /* Sprite Mesh */
+    // sprite mesh
     unsigned int num_sprite_vertices;
     GLuint sprite_vao_id;
     GLuint sprite_vbo_id;
 
-    /* Screen Mesh */
+    // screen mesh
     unsigned int num_screen_vertices;
     GLuint screen_vao_id;
     GLuint screen_vbo_id;
 
-    /* Renderables */
+    // renderables
     struct object **objects;
     unsigned long long num_objects;
 
@@ -152,7 +149,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     // setup opengl
     // TODO: face culling
     glViewport(0, 0, render_width, render_height);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
@@ -713,13 +710,14 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.num_water_vertices = sizeof(water_vertices) / sizeof(float) / 2;
 
     glGenVertexArrays(1, &renderer.water_vao_id);
+    glGenBuffers(1, &renderer.water_vbo_id);
+
     glBindVertexArray(renderer.water_vao_id);
 
-    glGenBuffers(1, &renderer.water_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, renderer.water_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(water_vertices), &water_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0); // position
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
 
@@ -771,13 +769,14 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.num_skybox_vertices = sizeof(skybox_vertices) / sizeof(float) / 3;
 
     glGenVertexArrays(1, &renderer.skybox_vao_id);
+    glGenBuffers(1, &renderer.skybox_vbo_id);
+
     glBindVertexArray(renderer.skybox_vao_id);
 
-    glGenBuffers(1, &renderer.skybox_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, renderer.skybox_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0); // position
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
 
@@ -795,14 +794,16 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.num_sprite_vertices = sizeof(sprite_vertices) / sizeof(float) / 4;
 
     glGenVertexArrays(1, &renderer.sprite_vao_id);
+    glGenBuffers(1, &renderer.sprite_vbo_id);
+
     glBindVertexArray(renderer.sprite_vao_id);
 
-    glGenBuffers(1, &renderer.sprite_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, renderer.sprite_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), &sprite_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);                     // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 
@@ -819,14 +820,16 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.num_screen_vertices = sizeof(screen_vertices) / sizeof(float) / 4;
 
     glGenVertexArrays(1, &renderer.screen_vao_id);
+    glGenBuffers(1, &renderer.screen_vbo_id);
+
     glBindVertexArray(renderer.screen_vao_id);
 
-    glGenBuffers(1, &renderer.screen_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(screen_vertices), &screen_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0); // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 
@@ -939,7 +942,7 @@ void renderer_add_sprite(struct sprite *sprite)
 }
 
 // TODO: split this up into sub functions
-void renderer_draw(struct camera *camera, bool ortho, float aspect)
+void renderer_draw(struct camera *camera, float aspect)
 {
     if (!camera)
     {
@@ -950,19 +953,12 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
 
     // calculate camera projection matrix
     mat4 camera_projection;
-    if (ortho)
-    {
-        glm_ortho_default(aspect, camera_projection);
-    }
-    else
-    {
-        glm_perspective(
-            glm_rad(camera->fov),
-            aspect,
-            0.01f,
-            100.0f,
-            camera_projection);
-    }
+    glm_perspective(
+        glm_rad(camera->fov),
+        aspect,
+        0.01f,
+        100.0f,
+        camera_projection);
 
     // calculate camera view matrix
     mat4 camera_view;
@@ -993,7 +989,6 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
 
         glViewport(0, 0, renderer.shadow_width, renderer.shadow_height);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
 
         program_bind(renderer.depth_program);
 
@@ -1016,6 +1011,14 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
+    // clear the screen
+    glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+
+    glViewport(0, 0, renderer.render_width, renderer.render_height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     switch (renderer.render_mode)
     {
@@ -1237,8 +1240,9 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, renderer.geometry_fbo_id);
 
-            glViewport(0, 0, (GLsizei)(renderer.render_width *renderer.render_scale), (GLsizei)(renderer.render_height *renderer.render_scale));
+            glViewport(0, 0, (GLsizei)(renderer.render_width * renderer.render_scale), (GLsizei)(renderer.render_height * renderer.render_scale));
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
             program_bind(renderer.geometry_program);
 
             program_set_mat4(renderer.geometry_program, "camera.projection", camera_projection);
@@ -1273,189 +1277,165 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
             program_unbind();
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
 
-        // draw the gbuffer to the screen
-        glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
+            // draw the gbuffer to the screen
+            glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
 
-        glViewport(0, 0, renderer.render_width, renderer.render_height);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDisable(GL_DEPTH_TEST);
+            glViewport(0, 0, renderer.render_width, renderer.render_height);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glDisable(GL_DEPTH_TEST);
 
-        if (renderer.sun)
-        {
-            program_bind(renderer.deferred_sun_program);
-
-            program_set_vec3(renderer.deferred_sun_program, "camera.position", camera->position);
-
-            program_set_vec3(renderer.deferred_sun_program, "sun.direction", renderer.sun->direction);
-            program_set_vec3(renderer.deferred_sun_program, "sun.ambient", renderer.sun->ambient);
-            program_set_vec3(renderer.deferred_sun_program, "sun.diffuse", renderer.sun->diffuse);
-            program_set_vec3(renderer.deferred_sun_program, "sun.specular", renderer.sun->specular);
-            program_set_mat4(renderer.deferred_sun_program, "sun.projection", sun_projection);
-            program_set_mat4(renderer.deferred_sun_program, "sun.view", sun_view);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, renderer.depthmap_texture_id);
-
-            glBindVertexArray(renderer.screen_vao_id);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
-            glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glBindVertexArray(0);
-
-            program_unbind();
-        }
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_EQUAL);
-
-        if (renderer.num_directional_lights > 0)
-        {
-            program_bind(renderer.deferred_directional_program);
-
-            program_set_vec3(renderer.deferred_directional_program, "camera.position", camera->position);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
-
-            for (unsigned int i = 0; i < renderer.num_directional_lights; i++)
+            if (renderer.sun)
             {
-                struct directional_light *directional_light = renderer.directional_lights[i];
+                program_bind(renderer.deferred_sun_program);
 
-                program_set_vec3(renderer.deferred_directional_program, "directional_light.direction", directional_light->direction);
-                program_set_vec3(renderer.deferred_directional_program, "directional_light.ambient", directional_light->ambient);
-                program_set_vec3(renderer.deferred_directional_program, "directional_light.diffuse", directional_light->diffuse);
-                program_set_vec3(renderer.deferred_directional_program, "directional_light.specular", directional_light->specular);
+                program_set_vec3(renderer.deferred_sun_program, "camera.position", camera->position);
+
+                program_set_vec3(renderer.deferred_sun_program, "sun.direction", renderer.sun->direction);
+                program_set_vec3(renderer.deferred_sun_program, "sun.ambient", renderer.sun->ambient);
+                program_set_vec3(renderer.deferred_sun_program, "sun.diffuse", renderer.sun->diffuse);
+                program_set_vec3(renderer.deferred_sun_program, "sun.specular", renderer.sun->specular);
+                program_set_mat4(renderer.deferred_sun_program, "sun.projection", sun_projection);
+                program_set_mat4(renderer.deferred_sun_program, "sun.view", sun_view);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, renderer.depthmap_texture_id);
 
                 glBindVertexArray(renderer.screen_vao_id);
-                glEnableVertexAttribArray(0);
-                glEnableVertexAttribArray(1);
-                glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
                 glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-                glDisableVertexAttribArray(0);
-                glDisableVertexAttribArray(1);
                 glBindVertexArray(0);
+
+                program_unbind();
             }
 
-            program_unbind();
-        }
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE);
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_EQUAL);
 
-        if (renderer.num_point_lights > 0)
-        {
-            program_bind(renderer.deferred_point_program);
-
-            program_set_vec3(renderer.deferred_point_program, "camera.position", camera->position);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
-
-            for (unsigned int i = 0; i < renderer.num_point_lights; i++)
+            if (renderer.num_directional_lights > 0)
             {
-                struct point_light *point_light = renderer.point_lights[i];
+                program_bind(renderer.deferred_directional_program);
 
-                program_set_vec3(renderer.deferred_point_program, "point_light.position", point_light->position);
-                program_set_vec3(renderer.deferred_point_program, "point_light.ambient", point_light->ambient);
-                program_set_vec3(renderer.deferred_point_program, "point_light.diffuse", point_light->diffuse);
-                program_set_vec3(renderer.deferred_point_program, "point_light.specular", point_light->specular);
-                program_set_vec3(renderer.deferred_point_program, "point_light.attenuation", point_light->attenuation);
+                program_set_vec3(renderer.deferred_directional_program, "camera.position", camera->position);
 
-                glBindVertexArray(renderer.screen_vao_id);
-                glEnableVertexAttribArray(0);
-                glEnableVertexAttribArray(1);
-                glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
-                glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-                glDisableVertexAttribArray(0);
-                glDisableVertexAttribArray(1);
-                glBindVertexArray(0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
+
+                for (unsigned int i = 0; i < renderer.num_directional_lights; i++)
+                {
+                    struct directional_light *directional_light = renderer.directional_lights[i];
+
+                    program_set_vec3(renderer.deferred_directional_program, "directional_light.direction", directional_light->direction);
+                    program_set_vec3(renderer.deferred_directional_program, "directional_light.ambient", directional_light->ambient);
+                    program_set_vec3(renderer.deferred_directional_program, "directional_light.diffuse", directional_light->diffuse);
+                    program_set_vec3(renderer.deferred_directional_program, "directional_light.specular", directional_light->specular);
+
+                    glBindVertexArray(renderer.screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
+                    glBindVertexArray(0);
+                }
+
+                program_unbind();
             }
 
-            program_unbind();
-        }
-
-        if (renderer.num_spot_lights > 0)
-        {
-            program_bind(renderer.deferred_spot_program);
-
-            program_set_vec3(renderer.deferred_spot_program, "camera.position", camera->position);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
-
-            for (unsigned int i = 0; i < renderer.num_spot_lights; i++)
+            if (renderer.num_point_lights > 0)
             {
-                struct spot_light *spot_light = renderer.spot_lights[i];
+                program_bind(renderer.deferred_point_program);
 
-                program_set_vec3(renderer.deferred_spot_program, "spot_light.position", spot_light->position);
-                program_set_vec3(renderer.deferred_spot_program, "spot_light.direction", spot_light->direction);
-                program_set_vec3(renderer.deferred_spot_program, "spot_light.ambient", spot_light->ambient);
-                program_set_vec3(renderer.deferred_spot_program, "spot_light.diffuse", spot_light->diffuse);
-                program_set_vec3(renderer.deferred_spot_program, "spot_light.specular", spot_light->specular);
-                program_set_vec3(renderer.deferred_spot_program, "spot_light.attenuation", spot_light->attenuation);
-                program_set_float(renderer.deferred_spot_program, "spot_light.inner_cutoff", spot_light->inner_cutoff);
-                program_set_float(renderer.deferred_spot_program, "spot_light.outer_cutoff", spot_light->outer_cutoff);
+                program_set_vec3(renderer.deferred_point_program, "camera.position", camera->position);
 
-                glBindVertexArray(renderer.screen_vao_id);
-                glEnableVertexAttribArray(0);
-                glEnableVertexAttribArray(1);
-                glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
-                glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-                glDisableVertexAttribArray(0);
-                glDisableVertexAttribArray(1);
-                glBindVertexArray(0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
+
+                for (unsigned int i = 0; i < renderer.num_point_lights; i++)
+                {
+                    struct point_light *point_light = renderer.point_lights[i];
+
+                    program_set_vec3(renderer.deferred_point_program, "point_light.position", point_light->position);
+                    program_set_vec3(renderer.deferred_point_program, "point_light.ambient", point_light->ambient);
+                    program_set_vec3(renderer.deferred_point_program, "point_light.diffuse", point_light->diffuse);
+                    program_set_vec3(renderer.deferred_point_program, "point_light.specular", point_light->specular);
+                    program_set_vec3(renderer.deferred_point_program, "point_light.attenuation", point_light->attenuation);
+
+                    glBindVertexArray(renderer.screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
+                    glBindVertexArray(0);
+                }
+
+                program_unbind();
             }
 
-            program_unbind();
+            if (renderer.num_spot_lights > 0)
+            {
+                program_bind(renderer.deferred_spot_program);
+
+                program_set_vec3(renderer.deferred_spot_program, "camera.position", camera->position);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
+
+                for (unsigned int i = 0; i < renderer.num_spot_lights; i++)
+                {
+                    struct spot_light *spot_light = renderer.spot_lights[i];
+
+                    program_set_vec3(renderer.deferred_spot_program, "spot_light.position", spot_light->position);
+                    program_set_vec3(renderer.deferred_spot_program, "spot_light.direction", spot_light->direction);
+                    program_set_vec3(renderer.deferred_spot_program, "spot_light.ambient", spot_light->ambient);
+                    program_set_vec3(renderer.deferred_spot_program, "spot_light.diffuse", spot_light->diffuse);
+                    program_set_vec3(renderer.deferred_spot_program, "spot_light.specular", spot_light->specular);
+                    program_set_vec3(renderer.deferred_spot_program, "spot_light.attenuation", spot_light->attenuation);
+                    program_set_float(renderer.deferred_spot_program, "spot_light.inner_cutoff", spot_light->inner_cutoff);
+                    program_set_float(renderer.deferred_spot_program, "spot_light.outer_cutoff", spot_light->outer_cutoff);
+
+                    glBindVertexArray(renderer.screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
+                    glBindVertexArray(0);
+                }
+
+                program_unbind();
+            }
+
+            // TODO: reflections
+            if (renderer.skybox)
+            {
+
+            }
+
+            // TODO: emissive lighting
+
+            glDepthFunc(GL_LESS);
+            glDepthMask(GL_TRUE);
+            glDisable(GL_BLEND);
+
+            glEnable(GL_DEPTH_TEST);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            // copy depth information to screen framebuffer
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer.geometry_fbo_id);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer.screen_fbo_id);
+            glBlitFramebuffer(0, 0, renderer.render_width, renderer.render_height, 0, 0, renderer.render_width, renderer.render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
-
-        // TODO: reflections
-        if (renderer.skybox)
-        {
-
-        }
-
-        // TODO: emissive lighting
-
-        glDepthFunc(GL_LESS);
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
-
-        glEnable(GL_DEPTH_TEST);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // copy depth information to screen framebuffer
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer.geometry_fbo_id);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer.screen_fbo_id);
-        glBlitFramebuffer(0, 0, renderer.render_width, renderer.render_height, 0, 0, renderer.render_width, renderer.render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     break;
     }
@@ -1533,29 +1513,24 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
                 num_light_vertices = sizeof(light_vertices) / sizeof(float) / 2;
 
                 glGenVertexArrays(1, &light_vao_id);
+                glGenBuffers(1, &light_vbo_id);
+
                 glBindVertexArray(light_vao_id);
 
-                glGenBuffers(1, &light_vbo_id);
                 glBindBuffer(GL_ARRAY_BUFFER, light_vbo_id);
                 glBufferData(GL_ARRAY_BUFFER, sizeof(light_vertices), &light_vertices, GL_STATIC_DRAW);
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)0);
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
                 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
                 glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glEnableVertexAttribArray(0);
+                glEnableVertexAttribArray(1);
+                glEnableVertexAttribArray(2);
 
                 glBindVertexArray(0);
             }
 
             glBindVertexArray(light_vao_id);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            glEnableVertexAttribArray(2);
-            glBindBuffer(GL_ARRAY_BUFFER, light_vbo_id);
             glDrawArrays(GL_TRIANGLES, 0, num_light_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glDisableVertexAttribArray(2);
             glBindVertexArray(0);
         }
 
@@ -1583,11 +1558,7 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
         glBindTexture(GL_TEXTURE_CUBE_MAP, renderer.skybox->texture_id);
 
         glBindVertexArray(renderer.skybox_vao_id);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, renderer.skybox_vbo_id);
         glDrawArrays(GL_TRIANGLES, 0, renderer.num_skybox_vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(0);
         glBindVertexArray(0);
 
         program_unbind();
@@ -1618,11 +1589,7 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
             program_set_mat4(renderer.water_program, "water.model", water_model);
 
             glBindVertexArray(renderer.water_vao_id);
-            glEnableVertexAttribArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, renderer.water_vbo_id);
             glDrawArrays(GL_TRIANGLES, 0, renderer.num_water_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
             glBindVertexArray(0);
         }
 
@@ -1634,7 +1601,11 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
     {
         program_bind(renderer.sprite_program);
 
-        program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection);
+        // calculate ortho projection
+        mat4 camera_projection_ortho;
+        glm_ortho_default(aspect, camera_projection_ortho);
+
+        program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection_ortho);
 
         for (unsigned int i = 0; i < renderer.num_sprites; i++)
         {
@@ -1650,23 +1621,16 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
             glBindTexture(GL_TEXTURE_2D, sprite->image->texture_id);
 
             glBindVertexArray(renderer.sprite_vao_id);
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            glBindBuffer(GL_ARRAY_BUFFER, renderer.sprite_vbo_id);
             glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
             glBindVertexArray(0);
         }
 
         program_unbind();
     }
 
-    // unbind screen fbo
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // render the screen framebuffer to the default framebuffer
+    // render the screen framebuffer to the default framebuffer and apply post-processing
     glViewport(0, 0, renderer.render_width, renderer.render_height);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
@@ -1677,16 +1641,12 @@ void renderer_draw(struct camera *camera, bool ortho, float aspect)
     glBindTexture(GL_TEXTURE_2D, renderer.screen_texture_id);
 
     glBindVertexArray(renderer.screen_vao_id);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, renderer.screen_vbo_id);
     glDrawArrays(GL_TRIANGLES, 0, renderer.num_screen_vertices);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
     glBindVertexArray(0);
 
     program_unbind();
+
+    glEnable(GL_DEPTH_TEST);
 
     // clear renderables
     renderer.num_objects = 0;
