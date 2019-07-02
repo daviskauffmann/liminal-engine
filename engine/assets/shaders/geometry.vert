@@ -15,6 +15,8 @@ uniform struct Object
     mat4 model;
 } object;
 
+uniform vec4 clipping_plane;
+
 out struct Vertex
 {
     vec3 position;
@@ -24,6 +26,8 @@ out struct Vertex
 
 void main()
 {
+	gl_ClipDistance[0] = dot(object.model * vec4(position, 1.0), clipping_plane);
+
     gl_Position = camera.projection * camera.view * object.model * vec4(position, 1.0);
     vertex.position = vec3(object.model * vec4(position, 1.0));
     vertex.normal = mat3(transpose(inverse(object.model))) * normal;

@@ -13,6 +13,7 @@ void ENGINE_API program_bind(struct program *program);
 void ENGINE_API program_set_int(struct program *program, const char *name, int value);
 void ENGINE_API program_set_float(struct program *program, const char *name, float value);
 void ENGINE_API program_set_vec3(struct program *program, const char *name, vec3 vec);
+void ENGINE_API program_set_vec4(struct program *program, const char *name, vec4 vec);
 void ENGINE_API program_set_mat4(struct program *program, const char *name, mat4 mat);
 void ENGINE_API program_unbind(void);
 void ENGINE_API program_destroy(struct program *program);

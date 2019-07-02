@@ -125,6 +125,11 @@ void program_set_vec3(struct program *program, const char *name, vec3 vec)
     glUniform3fv(program_get_location(program, name), 1, (GLfloat *)vec);
 }
 
+void program_set_vec4(struct program *program, const char *name, vec4 vec)
+{
+    glUniform4fv(program_get_location(program, name), 1, (GLfloat *)vec);
+}
+
 void program_set_mat4(struct program *program, const char *name, mat4 mat)
 {
     glUniformMatrix4fv(program_get_location(program, name), 1, GL_FALSE, (GLfloat *)mat);
