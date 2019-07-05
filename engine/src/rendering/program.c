@@ -115,6 +115,11 @@ void program_set_int(struct program *program, const char *name, int value)
     glUniform1i(program_get_location(program, name), value);
 }
 
+void program_set_unsigned_int(struct program *program, const char *name, unsigned int value)
+{
+    glUniform1ui(program_get_location(program, name), value);
+}
+
 void program_set_float(struct program *program, const char *name, float value)
 {
     glUniform1f(program_get_location(program, name), value);

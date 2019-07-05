@@ -653,6 +653,20 @@ int main(int argc, char *argv[])
             glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
+        if (keys[SDL_SCANCODE_SPACE])
+        {
+            vec3 movement;
+            glm_vec_scale(main_camera_up, speed, movement);
+            glm_vec_add(main_camera->position, movement, main_camera->position);
+        }
+
+        if (keys[SDL_SCANCODE_LCTRL])
+        {
+            vec3 movement;
+            glm_vec_scale(main_camera_up, -speed, movement);
+            glm_vec_add(main_camera->position, movement, main_camera->position);
+        }
+
         // calculate angle for rotating stuff
         float angle = current_time * 0.001f;
         float angle_sin = sinf(angle);
@@ -697,7 +711,7 @@ int main(int argc, char *argv[])
         // 3d audio test
         bounce_timer += delta_time;
 
-        if (keys[SDL_SCANCODE_SPACE])
+        if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
         {
             if (bounce_timer >= 0.25f)
             {
@@ -732,7 +746,7 @@ int main(int argc, char *argv[])
         // renderer_add_sprite(grass_sprite);
 
         // render everything
-        renderer_draw(main_camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(main_camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, SDL_GetTicks(), delta_time);
 
         // display the window
         SDL_GL_SwapWindow(window);

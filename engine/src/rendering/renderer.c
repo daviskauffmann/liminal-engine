@@ -1590,7 +1590,7 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void render_waters(GLuint fbo_id, struct camera *camera, float aspect)
+void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned int elapsed_time)
 {
     // calculate camera projection matrix
     mat4 camera_projection;
@@ -1623,6 +1623,8 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect)
 
     program_set_mat4(renderer.water_program, "camera.projection", camera_projection);
     program_set_mat4(renderer.water_program, "camera.view", camera_view);
+
+    program_set_unsigned_int(renderer.water_program, "elapsed_time", elapsed_time);
 
     program_unbind();
 
@@ -1980,7 +1982,7 @@ void render_screen(GLuint fbo_id)
     glEnable(GL_DEPTH_TEST);
 }
 
-void renderer_draw(struct camera *camera, float aspect)
+void renderer_draw(struct camera *camera, float aspect, unsigned int elapsed_time, float delta_time)
 {
     if (!camera)
     {
@@ -1997,7 +1999,7 @@ void renderer_draw(struct camera *camera, float aspect)
     // render water
     if (renderer.num_waters > 0)
     {
-        render_waters(renderer.screen_fbo_id, camera, aspect);
+        render_waters(renderer.screen_fbo_id, camera, aspect, elapsed_time);
     }
 
     // render sprites

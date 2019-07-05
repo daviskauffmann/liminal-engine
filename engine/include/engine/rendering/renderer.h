@@ -18,7 +18,7 @@ void ENGINE_API renderer_add_spot_light(struct spot_light *spot_light);
 void ENGINE_API renderer_set_skybox(struct cubemap *skybox);
 void ENGINE_API renderer_add_water(struct water *water);
 void ENGINE_API renderer_add_sprite(struct sprite *sprite);
-void ENGINE_API renderer_draw(struct camera *camera, float aspect);
+void ENGINE_API renderer_draw(struct camera *camera, float aspect, unsigned int elapsed_time, float delta_time);
 void ENGINE_API renderer_quit(void);
 
 #endif
