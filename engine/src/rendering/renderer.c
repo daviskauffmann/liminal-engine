@@ -1634,20 +1634,32 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
 
         // render water reflection
         vec4 reflection_clipping_plane = { 0.0f, 1.0f, 0.0f, -water->position[1] };
+        bool reflect = false;
 
-        float old_camera_y = camera->position[1];
-        float old_camera_pitch = camera->pitch;
+        if (camera->position[1] > water->position[1]) // don't draw reflections if under the water
+        {
+            reflect = true;
 
-        camera->position[1] -= 2 * (camera->position[1] - water->position[1]);
-        camera->pitch = -camera->pitch;
+            float old_camera_y = camera->position[1];
+            float old_camera_pitch = camera->pitch;
 
-        render_scene(renderer.water_reflection_fbo_id, camera, aspect, reflection_clipping_plane);
+            camera->position[1] -= 2 * (camera->position[1] - water->position[1]);
+            camera->pitch = -camera->pitch;
 
-        camera->position[1] = old_camera_y;
-        camera->pitch = old_camera_pitch;
+            render_scene(renderer.water_reflection_fbo_id, camera, aspect, reflection_clipping_plane);
+
+            camera->position[1] = old_camera_y;
+            camera->pitch = old_camera_pitch;
+        }
 
         // render water refraction
         vec4 refraction_clipping_plane = { 0.0f, -1.0f, 0.0f, water->position[1] };
+
+        if (camera->position[1] < water->position[1]) // flip refraction clipping plane if under the water
+        {
+            refraction_clipping_plane[1] = 1.0f;
+            refraction_clipping_plane[3] = -water->position[1];
+        }
 
         render_scene(renderer.water_refraction_fbo_id, camera, aspect, refraction_clipping_plane);
 
@@ -1666,7 +1678,7 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
         program_set_mat4(renderer.water_program, "water.model", water_model);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, renderer.water_reflection_color_texture_id);
+        glBindTexture(GL_TEXTURE_2D, reflect ? renderer.water_reflection_color_texture_id : 0);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, renderer.water_refraction_color_texture_id);
         glActiveTexture(GL_TEXTURE2);
