@@ -75,13 +75,7 @@ int main(int argc, char *argv[])
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     // setup engine
-    renderer_init(
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT,
-        RENDER_SCALE,
-        SHADOW_WIDTH,
-        SHADOW_HEIGHT);
-    audio_init();
+    engine_init();
 
     // TODO: create some meshes using obj data
     // the mesh inteface will probably stay the same, and it should be up to the client to parse an obj into the vertices, indices, etc.
@@ -92,6 +86,7 @@ int main(int argc, char *argv[])
     SDL_Surface *cobble_diffuse_surface = IMG_Load("assets/images/cobble_diffuse.jpg");
     SDL_Surface *cobble_specular_surface = IMG_Load("assets/images/cobble_specular.jpg");
     SDL_Surface *grass_surface = IMG_Load("assets/images/grass.png");
+    SDL_Surface *water_dudv_surface = IMG_Load("assets/images/water_dudv.png");
 
     struct texture *box_diffuse_texture = texture_create(
         box_diffuse_surface->w,
@@ -118,12 +113,28 @@ int main(int argc, char *argv[])
         grass_surface->h,
         grass_surface->format->BytesPerPixel,
         grass_surface->pixels);
+    struct texture *water_dudv_texture = texture_create(
+        water_dudv_surface->w,
+        water_dudv_surface->h,
+        water_dudv_surface->format->BytesPerPixel,
+        water_dudv_surface->pixels);
 
     SDL_FreeSurface(box_diffuse_surface);
     SDL_FreeSurface(box_specular_surface);
     SDL_FreeSurface(cobble_diffuse_surface);
     SDL_FreeSurface(cobble_specular_surface);
     SDL_FreeSurface(grass_surface);
+    SDL_FreeSurface(water_dudv_surface);
+
+    // setup renderer and audio
+    renderer_init(
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        RENDER_SCALE,
+        SHADOW_WIDTH,
+        SHADOW_HEIGHT,
+        water_dudv_texture);
+    audio_init();
 
     // create cubemaps
     SDL_Surface *skybox_right_surface = IMG_Load("assets/images/sky/right.jpg");
@@ -396,13 +407,9 @@ int main(int argc, char *argv[])
 
     // create camera
     vec3 main_camera_position = { 0.0f, 0.0f, 3.0f };
-    vec3 main_camera_front = { 0.0f, 0.0f, -1.0f };
-    vec3 main_camera_up = { 0.0f, 1.0f, 0.0f };
 
     struct camera *main_camera = camera_create(
         main_camera_position,
-        main_camera_front,
-        main_camera_up,
         0.0f,
         -90.0f,
         0.0f,
@@ -427,7 +434,7 @@ int main(int argc, char *argv[])
     float shoot_timer = 0.0f;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    renderer_set_mode(RENDER_MODE_FORWARD);
+    renderer_set_mode(RENDER_MODE_DEFERRED);
 
     // main loop
     bool quit = false;
@@ -536,13 +543,6 @@ int main(int argc, char *argv[])
                 {
                     main_camera->pitch = -89.0f;
                 }
-
-                vec3 front = {
-                    cosf(glm_rad(main_camera->yaw)) * cosf(glm_rad(main_camera->pitch)),
-                    sinf(glm_rad(main_camera->pitch)),
-                    sinf(glm_rad(main_camera->yaw)) * cosf(glm_rad(main_camera->pitch)) };
-                glm_normalize(front);
-                glm_vec_copy(front, main_camera->front);
             }
             break;
             case SDL_MOUSEWHEEL:
@@ -606,11 +606,18 @@ int main(int argc, char *argv[])
             speed *= 0.71f;
         }
 
+        // calculate camera vectors
+        vec3 main_camera_front;
+        camera_calc_front(main_camera, &main_camera_front);
+
+        vec3 main_camera_up;
+        camera_calc_up(main_camera, &main_camera_up);
+
         // move forward
         if (keys[SDL_SCANCODE_W])
         {
             vec3 movement;
-            glm_vec_scale(main_camera->front, speed, movement);
+            glm_vec_scale(main_camera_front, speed, movement);
             glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
@@ -618,7 +625,7 @@ int main(int argc, char *argv[])
         if (keys[SDL_SCANCODE_A])
         {
             vec3 direction;
-            glm_cross(main_camera->front, main_camera->up, direction);
+            glm_cross(main_camera_front, main_camera_up, direction);
             glm_normalize(direction);
 
             vec3 movement;
@@ -630,7 +637,7 @@ int main(int argc, char *argv[])
         if (keys[SDL_SCANCODE_S])
         {
             vec3 movement;
-            glm_vec_scale(main_camera->front, -speed, movement);
+            glm_vec_scale(main_camera_front, -speed, movement);
             glm_vec_add(main_camera->position, movement, main_camera->position);
         }
 
@@ -638,7 +645,7 @@ int main(int argc, char *argv[])
         if (keys[SDL_SCANCODE_D])
         {
             vec3 direction;
-            glm_cross(main_camera->front, main_camera->up, direction);
+            glm_cross(main_camera_front, main_camera_up, direction);
             glm_normalize(direction);
 
             vec3 movement;
@@ -660,14 +667,14 @@ int main(int argc, char *argv[])
         sun->direction[2] = angle_cos;
 
         glm_vec_copy(main_camera->position, torch_spot_light->position);
-        glm_vec_copy(main_camera->front, torch_spot_light->direction);
+        glm_vec_copy(main_camera_front, torch_spot_light->direction);
 
         // update audio
         vec3 camera_velocity = GLM_VEC3_ZERO_INIT;
-        glm_vec_scale(main_camera->front, speed, camera_velocity);
+        glm_vec_scale(main_camera_front, speed, camera_velocity);
         vec3 camera_orientation[2];
-        glm_vec_copy(main_camera->front, camera_orientation[0]);
-        glm_vec_copy(main_camera->up, camera_orientation[1]);
+        glm_vec_copy(main_camera_front, camera_orientation[0]);
+        glm_vec_copy(main_camera_up, camera_orientation[1]);
 
         audio_set_listener(main_camera->position, camera_velocity, camera_orientation);
 
@@ -722,7 +729,7 @@ int main(int argc, char *argv[])
 
         renderer_add_water(test_water);
 
-        renderer_add_sprite(grass_sprite);
+        // renderer_add_sprite(grass_sprite);
 
         // render everything
         renderer_draw(main_camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);

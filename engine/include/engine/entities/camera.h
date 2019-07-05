@@ -6,8 +6,6 @@
 struct camera
 {
     vec3 position;
-    vec3 front;
-    vec3 up;
     float pitch;
     float yaw;
     float roll;
@@ -16,12 +14,12 @@ struct camera
 
 struct camera ENGINE_API *camera_create(
     vec3 position,
-    vec3 front,
-    vec3 up,
     float pitch,
     float yaw,
     float roll,
     float fov);
+void ENGINE_API camera_calc_front(struct camera *camera, vec3 *front);
+void ENGINE_API camera_calc_up(struct camera *camera, vec3 *up);
 void ENGINE_API camera_destroy(struct camera *camera);
 
 #endif

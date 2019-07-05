@@ -25,6 +25,8 @@ out struct Vertex
     vec2 uv;
 } vertex;
 
+out float visibility;
+
 void main()
 {
 	gl_ClipDistance[0] = dot(object.model * vec4(position, 1.0), clipping_plane);
@@ -33,4 +35,10 @@ void main()
     vertex.position = vec3(object.model * vec4(position, 1.0));
     vertex.normal = mat3(transpose(inverse(object.model))) * normal;
     vertex.uv = vec2(uv.x, 1 - uv.y);
+
+	float dist = length(gl_Position.xyz);
+	float density = 0.007;
+	float gradient = 1.5;
+	visibility = exp(-pow(dist * density, gradient));
+	visibility = clamp(visibility, 0.0, 1.0);
 }

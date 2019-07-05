@@ -91,6 +91,9 @@ struct renderer
     GLuint screen_vao_id;
     GLuint screen_vbo_id;
 
+    // textures
+    struct texture *water_dudv_texture;
+
     // renderables
     struct object **objects;
     unsigned long long num_objects;
@@ -117,7 +120,7 @@ struct renderer
 
 struct renderer renderer;
 
-int renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height)
+int renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height, struct texture *water_dudv_texture)
 {
     renderer.render_width = render_width;
     renderer.render_height = render_height;
@@ -128,37 +131,8 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.reflection_height = render_height;
     renderer.refraction_width = render_width;
     renderer.refraction_height = render_height;
+    renderer.water_dudv_texture = water_dudv_texture;
     renderer.render_mode = RENDER_MODE_FORWARD;
-
-    // init GLEW
-    {
-        GLenum glewError = glewInit();
-
-        if (glewError != GLEW_OK)
-        {
-            printf("Error: %s\n", glewGetErrorString(glewError));
-
-            return 1;
-        }
-    }
-
-    printf("GLEW %s\n", glewGetString(GLEW_VERSION));
-    printf("OpenGL %s\n", glGetString(GL_VERSION));
-    printf("Vendor %s\n", glGetString(GL_VENDOR));
-    printf("Renderer %s\n", glGetString(GL_RENDERER));
-    printf("GLSL %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-    // load assets now that GLEW is initialized
-    {
-        int error = assets_load();
-
-        if (error != 0)
-        {
-            printf("Error: Couldn't initialize assets\n");
-
-            return error;
-        }
-    }
 
     // setup opengl
     // TODO: face culling
@@ -167,7 +141,6 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
-    glEnable(GL_CLIP_DISTANCE0);
 
     // create programs
     renderer.depth_program = program_create(
@@ -420,6 +393,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     program_bind(renderer.water_program);
     program_set_int(renderer.water_program, "water.reflection", 0);
     program_set_int(renderer.water_program, "water.refraction", 1);
+    program_set_int(renderer.water_program, "water.dudv", 2);
     program_unbind();
 
     program_bind(renderer.sprite_program);
@@ -819,13 +793,13 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     float water_vertices[] = {
         // position   // uv
         -1.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f, 0.0f, 0.0f,
-         1.0f, -1.0f, 0.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f, 0.0f,
-         1.0f,  1.0f, 0.0f, 0.0f
+        -1.0f,  1.0f, 0.0f, 1.0f,
+         1.0f, -1.0f, 1.0f, 0.0f,
+         1.0f, -1.0f, 1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f,
+         1.0f,  1.0f, 1.0f, 1.0f
     };
-    renderer.num_water_vertices = sizeof(water_vertices) / sizeof(float) / 2;
+    renderer.num_water_vertices = sizeof(water_vertices) / sizeof(float) / 4;
 
     glGenVertexArrays(1, &renderer.water_vao_id);
     glGenBuffers(1, &renderer.water_vbo_id);
@@ -837,6 +811,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 
@@ -934,7 +909,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
          1.0f, -1.0f, 1.0f, 0.0f,
          1.0f, -1.0f, 1.0f, 0.0f,
         -1.0f,  1.0f, 0.0f, 1.0f,
-         1.0f,  1.0f, 1.0f, 1.0f,
+         1.0f,  1.0f, 1.0f, 1.0f
     };
     renderer.num_screen_vertices = sizeof(screen_vertices) / sizeof(float) / 4;
 
@@ -951,6 +926,8 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
+
+    // create water dudv texture
 
     return 0;
 }
@@ -1080,14 +1057,20 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
         camera_projection);
 
     // calculate camera view matrix
+    vec3 camera_front;
+    camera_calc_front(camera, &camera_front);
+
     vec3 camera_target;
-    glm_vec_add(camera->position, camera->front, camera_target);
+    glm_vec_add(camera->position, camera_front, camera_target);
+
+    vec3 camera_up;
+    camera_calc_up(camera, &camera_up);
 
     mat4 camera_view;
     glm_lookat(
         camera->position,
         camera_target,
-        camera->up,
+        camera_up,
         camera_view);
 
     mat4 sun_projection;
@@ -1143,6 +1126,7 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
 
             glViewport(0, 0, renderer.render_width, renderer.render_height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CLIP_DISTANCE0);
 
             for (unsigned int i = 0; i < renderer.num_objects; i++)
             {
@@ -1333,7 +1317,7 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
 
                     program_set_vec4(renderer.forward_reflection_program, "clipping_plane", clipping_plane);
 
-                    program_set_float(renderer.forward_reflection_program, "material.reflectivity", 0.5f);
+                    program_set_float(renderer.forward_reflection_program, "material.reflectivity", 0.0f);
 
                     // TEMPORARY: use specular texture for reflectivity
                     glActiveTexture(GL_TEXTURE0);
@@ -1351,6 +1335,8 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
                 glDisable(GL_BLEND);
             }
 
+            glDisable(GL_CLIP_DISTANCE0);
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     }
@@ -1364,6 +1350,7 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
 
             glViewport(0, 0, (GLsizei)(renderer.render_width * renderer.render_scale), (GLsizei)(renderer.render_height * renderer.render_scale));
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CLIP_DISTANCE0);
 
             program_bind(renderer.geometry_program);
 
@@ -1399,6 +1386,8 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
             }
 
             program_unbind();
+
+            glDisable(GL_CLIP_DISTANCE0);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1569,8 +1558,194 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
 
     glViewport(0, 0, renderer.render_width, renderer.render_height);
 
+    // render skybox
+    if (renderer.skybox)
+    {
+        glDepthFunc(GL_LEQUAL);
+
+        mat4 camera_view_no_translate;
+        glm_mat4_copy(camera_view, camera_view_no_translate);
+        camera_view_no_translate[3][0] = 0.0f;
+        camera_view_no_translate[3][1] = 0.0f;
+        camera_view_no_translate[3][2] = 0.0f;
+        camera_view_no_translate[3][3] = 0.0f;
+
+        program_bind(renderer.skybox_program);
+
+        program_set_mat4(renderer.skybox_program, "camera.projection", camera_projection);
+        program_set_mat4(renderer.skybox_program, "camera.view", camera_view_no_translate);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, renderer.skybox->texture_id);
+
+        glBindVertexArray(renderer.skybox_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_skybox_vertices);
+        glBindVertexArray(0);
+
+        program_unbind();
+
+        glDepthFunc(GL_LESS);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void render_waters(GLuint fbo_id, struct camera *camera, float aspect)
+{
+    // calculate camera projection matrix
+    mat4 camera_projection;
+    glm_perspective(
+        glm_rad(camera->fov),
+        aspect,
+        0.01f,
+        100.0f,
+        camera_projection);
+
+    // calculate camera view matrix
+    vec3 camera_front;
+    camera_calc_front(camera, &camera_front);
+
+    vec3 camera_target;
+    glm_vec_add(camera->position, camera_front, camera_target);
+
+    vec3 camera_up;
+    camera_calc_up(camera, &camera_up);
+
+    mat4 camera_view;
+    glm_lookat(
+        camera->position,
+        camera_target,
+        camera_up,
+        camera_view);
+
+    // send camera transformations to water program
+    program_bind(renderer.water_program);
+
+    program_set_mat4(renderer.water_program, "camera.projection", camera_projection);
+    program_set_mat4(renderer.water_program, "camera.view", camera_view);
+
+    program_unbind();
+
+    for (unsigned int i = 0; i < renderer.num_waters; i++)
+    {
+        struct water *water = renderer.waters[i];
+
+        // render water reflection
+        vec4 reflection_clipping_plane = { 0.0f, 1.0f, 0.0f, -water->position[1] };
+
+        float old_camera_y = camera->position[1];
+        float old_camera_pitch = camera->pitch;
+
+        camera->position[1] -= 2 * (camera->position[1] - water->position[1]);
+        camera->pitch = -camera->pitch;
+
+        render_scene(renderer.water_reflection_fbo_id, camera, aspect, reflection_clipping_plane);
+
+        camera->position[1] = old_camera_y;
+        camera->pitch = old_camera_pitch;
+
+        // render water refraction
+        vec4 refraction_clipping_plane = { 0.0f, -1.0f, 0.0f, water->position[1] };
+
+        render_scene(renderer.water_refraction_fbo_id, camera, aspect, refraction_clipping_plane);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+        program_bind(renderer.water_program);
+
+        mat4 water_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(water_model, water->position);
+        vec3 water_scale;
+        water_scale[0] = water->scale[0];
+        water_scale[1] = 1.0f;
+        water_scale[2] = water->scale[1];
+        glm_scale(water_model, water_scale);
+
+        program_set_mat4(renderer.water_program, "water.model", water_model);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, renderer.water_reflection_color_texture_id);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, renderer.water_refraction_color_texture_id);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, renderer.water_dudv_texture ? renderer.water_dudv_texture->texture_id : 0);
+
+        glBindVertexArray(renderer.water_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_water_vertices);
+        glBindVertexArray(0);
+
+        program_unbind();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+}
+
+void render_sprites(GLuint fbo_id, float aspect)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+    program_bind(renderer.sprite_program);
+
+    // calculate ortho projection
+    mat4 camera_projection_ortho;
+    glm_ortho_default(aspect, camera_projection_ortho);
+
+    program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection_ortho);
+
+    for (unsigned int i = 0; i < renderer.num_sprites; i++)
+    {
+        struct sprite *sprite = renderer.sprites[i];
+
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        sprite_calc_model(sprite, sprite_model);
+
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", sprite->color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sprite->image->texture_id);
+
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
+        glBindVertexArray(0);
+    }
+
+    program_unbind();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void render_debug(GLuint fbo_id, struct camera *camera, float aspect)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+    // calculate camera projection matrix
+    mat4 camera_projection;
+    glm_perspective(
+        glm_rad(camera->fov),
+        aspect,
+        0.01f,
+        100.0f,
+        camera_projection);
+
+    // calculate camera view matrix
+    vec3 camera_front;
+    camera_calc_front(camera, &camera_front);
+
+    vec3 camera_target;
+    glm_vec_add(camera->position, camera_front, camera_target);
+
+    vec3 camera_up;
+    camera_calc_up(camera, &camera_up);
+
+    mat4 camera_view;
+    glm_lookat(
+        camera->position,
+        camera_target,
+        camera_up,
+        camera_view);
+
     // TEST: draw point lights as a cube
-    // this will be removed at some point so janky code is allowed
     if (renderer.num_point_lights > 0)
     {
         program_bind(renderer.forward_color_program);
@@ -1662,173 +1837,130 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
         program_unbind();
     }
 
-    // render skybox
-    if (renderer.skybox)
+    // draw debug textures to display fbos
+    program_bind(renderer.sprite_program);
+
+    // calculate ortho projection
+    mat4 camera_projection_ortho;
+    glm_ortho_default(aspect, camera_projection_ortho);
+
+    program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection_ortho);
+
+    vec3 position = GLM_VEC3_ZERO_INIT;
+    vec3 color = GLM_VEC3_ONE_INIT;
+
+    position[0] = -1.75f;
+    position[1] = 0.0f;
+
     {
-        glDepthFunc(GL_LEQUAL);
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(sprite_model, position);
 
-        mat4 camera_view_no_translate;
-        glm_mat4_copy(camera_view, camera_view_no_translate);
-        camera_view_no_translate[3][0] = 0.0f;
-        camera_view_no_translate[3][1] = 0.0f;
-        camera_view_no_translate[3][2] = 0.0f;
-        camera_view_no_translate[3][3] = 0.0f;
-
-        program_bind(renderer.skybox_program);
-
-        program_set_mat4(renderer.skybox_program, "camera.projection", camera_projection);
-        program_set_mat4(renderer.skybox_program, "camera.view", camera_view_no_translate);
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", color);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, renderer.skybox->texture_id);
+        glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
 
-        glBindVertexArray(renderer.skybox_vao_id);
-        glDrawArrays(GL_TRIANGLES, 0, renderer.num_skybox_vertices);
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
         glBindVertexArray(0);
-
-        program_unbind();
-
-        glDepthFunc(GL_LESS);
     }
+
+    position[0] += 1.0f;
+
+    {
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(sprite_model, position);
+
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
+
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
+        glBindVertexArray(0);
+    }
+
+    position[0] += 1.0f;
+
+    {
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(sprite_model, position);
+
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, renderer.geometry_albedo_specular_texture_id);
+
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
+        glBindVertexArray(0);
+    }
+
+    position[0] += 1.0f;
+
+    {
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(sprite_model, position);
+
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, renderer.depthmap_texture_id);
+
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
+        glBindVertexArray(0);
+    }
+
+    position[0] = -1.75f;
+    position[1] = -1.0f;
+
+    {
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(sprite_model, position);
+
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, renderer.water_reflection_color_texture_id);
+
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
+        glBindVertexArray(0);
+    }
+
+    position[0] += 1.0f;
+
+    {
+        mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        glm_translate(sprite_model, position);
+
+        program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
+        program_set_vec3(renderer.sprite_program, "sprite.color", color);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, renderer.water_refraction_color_texture_id);
+
+        glBindVertexArray(renderer.sprite_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
+        glBindVertexArray(0);
+    }
+
+    program_unbind();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void renderer_draw(struct camera *camera, float aspect)
+void render_screen(GLuint fbo_id)
 {
-    if (!camera)
-    {
-        printf("Error: Camera cannot be null\n");
-
-        return;
-    }
-
-    vec4 clipping_plane = GLM_VEC4_ZERO_INIT;
-
-    // render scene to the screen framebuffer
-    render_scene(renderer.screen_fbo_id, camera, aspect, clipping_plane);
-
-    // render water
-    if (renderer.num_waters > 0)
-    {
-        // calculate camera projection matrix
-        mat4 camera_projection;
-        glm_perspective(
-            glm_rad(camera->fov),
-            aspect,
-            0.01f,
-            100.0f,
-            camera_projection);
-
-        // calculate camera view matrix
-        vec3 camera_target;
-        glm_vec_add(camera->position, camera->front, camera_target);
-        
-        mat4 camera_view;
-        glm_lookat(
-            camera->position,
-            camera_target,
-            camera->up,
-            camera_view);
-
-        // send camera transformations to water program
-        program_bind(renderer.water_program);
-
-        program_set_mat4(renderer.water_program, "camera.projection", camera_projection);
-        program_set_mat4(renderer.water_program, "camera.view", camera_view);
-
-        program_unbind();
-
-        for (unsigned int i = 0; i < renderer.num_waters; i++)
-        {
-            struct water *water = renderer.waters[i];
-
-            // render water reflection
-            vec4 reflection_clipping_plane = { 0.0f, 1.0f, 0.0f, -water->position[1] };
-
-            float old_camera_y = camera->position[1];
-            float old_camera_pitch = camera->pitch;
-
-            camera->position[1] -= (2 * camera->position[1] - water->position[1]);
-            camera->pitch = -camera->pitch;
-
-            render_scene(renderer.water_reflection_fbo_id, camera, aspect, reflection_clipping_plane);
-
-            camera->position[1] = old_camera_y;
-            camera->pitch = old_camera_pitch;
-
-            // render water refraction
-            vec4 refraction_clipping_plane = { 0.0f, 1.0f, 0.0f, water->position[1] };
-
-            render_scene(renderer.water_refraction_fbo_id, camera, aspect, refraction_clipping_plane);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
-
-            program_bind(renderer.water_program);
-
-            mat4 water_model = GLM_MAT4_IDENTITY_INIT;
-            glm_translate(water_model, water->position);
-            vec3 water_scale;
-            water_scale[0] = water->scale[0];
-            water_scale[1] = 1.0f;
-            water_scale[2] = water->scale[1];
-            glm_scale(water_model, water_scale);
-
-            program_set_mat4(renderer.water_program, "water.model", water_model);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderer.water_reflection_color_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, renderer.water_refraction_color_texture_id);
-
-            glBindVertexArray(renderer.water_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, renderer.num_water_vertices);
-            glBindVertexArray(0);
-
-            program_unbind();
-
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-    }
-
-    // render sprites
-    if (renderer.num_sprites > 0)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
-
-        program_bind(renderer.sprite_program);
-
-        // calculate ortho projection
-        mat4 camera_projection_ortho;
-        glm_ortho_default(aspect, camera_projection_ortho);
-
-        program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection_ortho);
-
-        for (unsigned int i = 0; i < renderer.num_sprites; i++)
-        {
-            struct sprite *sprite = renderer.sprites[i];
-
-            mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
-            sprite_calc_model(sprite, sprite_model);
-
-            program_set_mat4(renderer.sprite_program, "sprite.model", sprite_model);
-            program_set_vec3(renderer.sprite_program, "sprite.color", sprite->color);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, sprite->image->texture_id);
-
-            glBindVertexArray(renderer.sprite_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, renderer.num_sprite_vertices);
-            glBindVertexArray(0);
-        }
-
-        program_unbind();
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    // render the screen framebuffer to the default framebuffer and apply post-processing
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
     glViewport(0, 0, renderer.render_width, renderer.render_height);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -1846,6 +1978,39 @@ void renderer_draw(struct camera *camera, float aspect)
     program_unbind();
 
     glEnable(GL_DEPTH_TEST);
+}
+
+void renderer_draw(struct camera *camera, float aspect)
+{
+    if (!camera)
+    {
+        printf("Error: Camera cannot be null\n");
+
+        return;
+    }
+
+    // render scene to the screen framebuffer
+    vec4 clipping_plane = GLM_VEC4_ZERO_INIT;
+
+    render_scene(renderer.screen_fbo_id, camera, aspect, clipping_plane);
+
+    // render water
+    if (renderer.num_waters > 0)
+    {
+        render_waters(renderer.screen_fbo_id, camera, aspect);
+    }
+
+    // render sprites
+    if (renderer.num_sprites > 0)
+    {
+        render_sprites(renderer.screen_fbo_id, aspect);
+    }
+
+    // TEST: render debug info
+    // render_debug(renderer.screen_fbo_id, camera, aspect);
+
+    // render the screen framebuffer to the default framebuffer and apply post-processing
+    render_screen(0);
 
     // clear renderables
     renderer.num_objects = 0;

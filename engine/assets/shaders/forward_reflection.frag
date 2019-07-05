@@ -7,6 +7,8 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+in float visibility;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -37,4 +39,5 @@ void main()
 	vec3 refraction = refract(view, normalize(vertex.normal), ratio);
 
     frag_color = vec4((texture(skybox.texture, reflection) * texture(material.reflective, vertex.uv) * material.reflectivity).rgb, 1.0);
+	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);
 }

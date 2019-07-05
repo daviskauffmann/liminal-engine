@@ -7,8 +7,8 @@ enum render_mode
     RENDER_MODE_DEFERRED
 };
 
-// Initializes the core rendering engine. This function assumes an OpenGL context has already been created.
-int ENGINE_API renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height);
+// Initializes the core rendering engine.
+int ENGINE_API renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height, struct texture *water_dudv_texture);
 void ENGINE_API renderer_set_mode(enum render_mode render_mode);
 void ENGINE_API renderer_add_object(struct object *object);
 void ENGINE_API renderer_set_sun(struct sun *sun);

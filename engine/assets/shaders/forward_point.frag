@@ -7,6 +7,8 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+in float visibility;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -69,4 +71,5 @@ void main()
     float attenuation = 1.0 / (constant + linear * light_distance + quadratic * pow(light_distance, 2));
 
     frag_color = vec4((final_ambient + final_diffuse + final_specular) * attenuation, 1.0);
+	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);
 }

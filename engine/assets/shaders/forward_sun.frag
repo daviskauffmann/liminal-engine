@@ -7,6 +7,8 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+in float visibility;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -85,4 +87,5 @@ void main()
     if (proj_coords.z > 1.0) shadow = 0.0;
 
     frag_color = vec4((final_ambient + (1.0 - shadow) * (final_diffuse + final_specular)), 1.0);
+	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);
 }

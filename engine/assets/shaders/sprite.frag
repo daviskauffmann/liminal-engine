@@ -20,7 +20,7 @@ void main()
 
 	if (texture_color.a < 0.1)
 	{
-		discard;
+		// discard;
 	}
 
     frag_color = vec4(sprite.color, 1.0) * texture_color;

@@ -7,6 +7,8 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+in float visibility;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -65,4 +67,5 @@ void main()
     vec3 final_specular = directional_light.specular * specular * specular_factor;
 
     frag_color = vec4(final_ambient + final_diffuse + final_specular, 1.0);
+	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);
 }
