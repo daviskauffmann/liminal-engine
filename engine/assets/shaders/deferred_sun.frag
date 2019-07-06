@@ -35,30 +35,29 @@ out vec4 frag_color;
 
 void main()
 {
-    vec3 position = texture(geometry.position, vertex.uv).rgb;
-    vec3 normal = texture(geometry.normal, vertex.uv).rgb;
-    vec3 diffuse = texture(geometry.albedo_specular, vertex.uv).rgb;
-    float specular = texture(geometry.albedo_specular, vertex.uv).a;
-	float shininess = 16.0;
-    vec3 view_direction = normalize(camera.position - position);
-
     // ambient
+    vec3 diffuse = texture(geometry.albedo_specular, vertex.uv).rgb;
     vec3 final_ambient = sun.ambient * diffuse;
 
     // diffuse
     vec3 light_direction = normalize(-sun.direction);
+    vec3 normal = texture(geometry.normal, vertex.uv).rgb;
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
     vec3 final_diffuse = sun.diffuse * diffuse * diffuse_factor;
 
     // specular
+    vec3 position = texture(geometry.position, vertex.uv).rgb;
+    vec3 view_direction = normalize(camera.position - position);
     vec3 halfway_direction = normalize(light_direction + view_direction);
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+	float shininess = 16.0; // TODO: get material shininess from gbuffer
     float specular_factor = pow(specular_angle, shininess);
+    float specular = texture(geometry.albedo_specular, vertex.uv).a;
     vec3 final_specular = sun.specular * specular * specular_factor;
 	
     // shadow
-    vec4 shadow_position = sun.projection * sun.view * vec4(position, 1.0);
-    vec3 proj_coords = (shadow_position.xyz / shadow_position.w) * 0.5 + 0.5;
+    vec4 sun_space_position = sun.projection * sun.view * vec4(position, 1.0);
+    vec3 proj_coords = (sun_space_position.xyz / sun_space_position.w) * 0.5 + 0.5;
     float current_depth = proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
     float shadow = 0.0;

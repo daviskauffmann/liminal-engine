@@ -43,31 +43,27 @@ out vec4 frag_color;
 
 void main()
 {
-	vec3 position = vertex.position;
-	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
-	vec3 normal = normalize(vertex.normal);
-	vec3 specular = texture(material.specular, vertex.uv).rgb;
-	float shininess = material.shininess;
-	vec3 emission = texture(material.emission, vertex.uv).rgb;
-	float glow = material.glow;
-    vec3 view_direction = normalize(camera.position - position);
-	
     // ambient
+	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
     vec3 final_ambient = spot_light.ambient * diffuse;
 
     // diffuse
-    vec3 light_direction = normalize(spot_light.position - position);
+    vec3 light_direction = normalize(spot_light.position - vertex.position);
+	vec3 normal = normalize(vertex.normal);
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
     vec3 final_diffuse = spot_light.diffuse * diffuse * diffuse_factor;
 
     // specular
+    vec3 view_direction = normalize(camera.position - vertex.position);
     vec3 halfway_direction = normalize(light_direction + view_direction);
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+	float shininess = material.shininess;
     float specular_factor = pow(specular_angle, shininess);
+	vec3 specular = texture(material.specular, vertex.uv).rgb;
     vec3 final_specular = spot_light.specular * specular * specular_factor;
 
     // attenuation
-    float light_distance = length(spot_light.position - position);
+    float light_distance = length(spot_light.position - vertex.position);
 	float constant = spot_light.attenuation[0];
 	float linear = spot_light.attenuation[1];
 	float quadratic = spot_light.attenuation[2];

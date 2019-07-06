@@ -41,8 +41,6 @@
 // look into physics libraries
 // decide if this should be another feature of the library, or just let the game handle it
 
-// TODO: allow game to provide malloc/free/log/file functions
-
 // TODO: create a minecraft style game to test mesh manipulation and multiple textures
 // each chunk would be an object and we would have to generate a mesh and assign it to the object whenever the chunk changes
 // the state of each block would be stored in memory
@@ -86,7 +84,6 @@ int main(int argc, char *argv[])
     SDL_Surface *cobble_diffuse_surface = IMG_Load("assets/images/cobble_diffuse.jpg");
     SDL_Surface *cobble_specular_surface = IMG_Load("assets/images/cobble_specular.jpg");
     SDL_Surface *grass_surface = IMG_Load("assets/images/grass.png");
-    SDL_Surface *water_dudv_surface = IMG_Load("assets/images/water_dudv.png");
 
     struct texture *box_diffuse_texture = texture_create(
         box_diffuse_surface->w,
@@ -113,18 +110,12 @@ int main(int argc, char *argv[])
         grass_surface->h,
         grass_surface->format->BytesPerPixel,
         grass_surface->pixels);
-    struct texture *water_dudv_texture = texture_create(
-        water_dudv_surface->w,
-        water_dudv_surface->h,
-        water_dudv_surface->format->BytesPerPixel,
-        water_dudv_surface->pixels);
 
     SDL_FreeSurface(box_diffuse_surface);
     SDL_FreeSurface(box_specular_surface);
     SDL_FreeSurface(cobble_diffuse_surface);
     SDL_FreeSurface(cobble_specular_surface);
     SDL_FreeSurface(grass_surface);
-    SDL_FreeSurface(water_dudv_surface);
 
     // setup renderer and audio
     renderer_init(
@@ -132,8 +123,7 @@ int main(int argc, char *argv[])
         WINDOW_HEIGHT,
         RENDER_SCALE,
         SHADOW_WIDTH,
-        SHADOW_HEIGHT,
-        water_dudv_texture);
+        SHADOW_HEIGHT);
     audio_init();
 
     // create cubemaps

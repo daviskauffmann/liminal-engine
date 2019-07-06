@@ -29,10 +29,12 @@ out float visibility;
 
 void main()
 {
-	gl_ClipDistance[0] = dot(object.model * vec4(position, 1.0), clipping_plane);
+	vec4 world_position = object.model * vec4(position, 1.0);
 
-    gl_Position = camera.projection * camera.view * object.model * vec4(position, 1.0);
-    vertex.position = vec3(object.model * vec4(position, 1.0));
+	gl_ClipDistance[0] = dot(world_position, clipping_plane);
+    gl_Position = camera.projection * camera.view * world_position;
+
+    vertex.position = world_position.xyz;
     vertex.normal = mat3(transpose(inverse(object.model))) * normal;
     vertex.uv = vec2(uv.x, 1 - uv.y);
 

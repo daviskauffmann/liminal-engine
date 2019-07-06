@@ -7,16 +7,18 @@
 #define ENGINE_API __declspec(dllimport)
 #endif
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <cglm/cglm.h>
-#include <GL/glew.h>
 #include <malloc.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <cglm/cglm.h>
+#include <GL/glew.h>
+#include <stb_image.h>
 
 #include "audio/audio.h"
 #include "audio/sound.h"

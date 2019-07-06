@@ -10,11 +10,12 @@ uniform struct Camera
 
 out struct Vertex
 {
-	vec3 texture_coords;
+	vec3 uv;
 } vertex;
 
 void main()
 {
     gl_Position = (camera.projection * camera.view * vec4(position, 1.0)).xyww;
-    vertex.texture_coords = position;
+
+    vertex.uv = position;
 }

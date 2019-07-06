@@ -2,17 +2,17 @@
 
 in struct Vertex
 {
-	vec3 texture_coords;
+	vec3 uv;
 } vertex;
 
 uniform struct Skybox
 {
-	samplerCube texture;
+	samplerCube cubemap;
 } skybox;
 
 out vec4 frag_color;
 
 void main()
 {    
-    frag_color = texture(skybox.texture, vertex.texture_coords);
+    frag_color = texture(skybox.cubemap, vertex.uv);
 }

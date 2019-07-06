@@ -31,12 +31,12 @@ out vec4 frag_color;
 
 void main()
 {    
-    vec3 view = normalize(vertex.position - camera.position);
+    vec3 view_direction = normalize(vertex.position - camera.position);
 	
-	vec3 reflection = reflect(view, normalize(vertex.normal));
+	vec3 reflection = reflect(view_direction, normalize(vertex.normal));
 	
 	float ratio = 1.00 / 1.33;
-	vec3 refraction = refract(view, normalize(vertex.normal), ratio);
+	vec3 refraction = refract(view_direction, normalize(vertex.normal), ratio);
 
     frag_color = vec4((texture(skybox.texture, reflection) * texture(material.reflective, vertex.uv) * material.reflectivity).rgb, 1.0);
 	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);

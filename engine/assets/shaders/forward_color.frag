@@ -1,5 +1,7 @@
 #version 460 core
 
+// TODO: add emissive texture and rename to forward_emissive.frag
+
 in float visibility;
 
 uniform struct Material

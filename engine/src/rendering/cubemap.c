@@ -28,7 +28,7 @@ struct cubemap *cubemap_create(int *width_array, int *height_array, unsigned cha
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0,
-            GL_RGB,
+            bytes_per_pixel == 4 ? GL_RGBA : GL_RGB,
             width,
             height,
             0,

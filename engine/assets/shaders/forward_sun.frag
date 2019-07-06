@@ -45,32 +45,28 @@ out vec4 frag_color;
 
 void main()
 {
-	vec3 position = vertex.position;
-	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
-	vec3 normal = normalize(vertex.normal);
-	vec3 specular = texture(material.specular, vertex.uv).rgb;
-	float shininess = material.shininess;
-	vec3 emission = texture(material.emission, vertex.uv).rgb;
-	float glow = material.glow;
-    vec3 view_direction = normalize(camera.position - position);
-
     // ambient
+	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
     vec3 final_ambient = sun.ambient * diffuse;
 
     // diffuse
+	vec3 normal = normalize(vertex.normal);
     vec3 light_direction = normalize(-sun.direction);
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
     vec3 final_diffuse = sun.diffuse * diffuse * diffuse_factor;
 
     // specular
+    vec3 view_direction = normalize(camera.position - vertex.position);
     vec3 halfway_direction = normalize(light_direction + view_direction);
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+	float shininess = material.shininess;
     float specular_factor = pow(specular_angle, shininess);
+	vec3 specular = texture(material.specular, vertex.uv).rgb;
     vec3 final_specular = sun.specular * specular * specular_factor;
 
     // shadow
-    vec4 shadow_position = sun.projection * sun.view * vec4(position, 1.0);
-    vec3 proj_coords = (shadow_position.xyz / shadow_position.w) * 0.5 + 0.5;
+    vec4 sun_space_position = sun.projection * sun.view * vec4(vertex.position, 1.0);
+    vec3 proj_coords = (sun_space_position.xyz / sun_space_position.w) * 0.5 + 0.5;
     float current_depth = proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
     float shadow = 0.0;

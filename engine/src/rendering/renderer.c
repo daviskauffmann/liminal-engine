@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <engine/engine.h>
 
 // TODO: create a way to specify paths for engine assets and game assets separately
@@ -120,7 +122,7 @@ struct renderer
 
 struct renderer renderer;
 
-int renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height, struct texture *water_dudv_texture)
+int renderer_init(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height)
 {
     renderer.render_width = render_width;
     renderer.render_height = render_height;
@@ -131,7 +133,6 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.reflection_height = render_height;
     renderer.refraction_width = render_width;
     renderer.refraction_height = render_height;
-    renderer.water_dudv_texture = water_dudv_texture;
     renderer.render_mode = RENDER_MODE_FORWARD;
 
     // setup opengl
@@ -387,7 +388,7 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     program_unbind();
 
     program_bind(renderer.skybox_program);
-    program_set_int(renderer.skybox_program, "skybox.texture", 0);
+    program_set_int(renderer.skybox_program, "skybox.cubemap", 0);
     program_unbind();
 
     program_bind(renderer.water_program);
@@ -928,6 +929,26 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glBindVertexArray(0);
 
     // create water dudv texture
+    int width, height, bytes_per_pixel;
+    unsigned char *pixels = stbi_load("../engine/assets/images/water_dudv.png", &width, &height, &bytes_per_pixel, STBI_rgb);
+
+    if (!pixels)
+    {
+        printf("Error: Couldn't load water dudv image");
+
+        return 1;
+    }
+
+    renderer.water_dudv_texture = texture_create(width, height, bytes_per_pixel, pixels);
+
+    if (!renderer.water_dudv_texture)
+    {
+        printf("Error: Couldn't load water dudv texture\n");
+
+        return 1;
+    }
+
+    stbi_image_free(pixels);
 
     return 0;
 }
@@ -1623,6 +1644,7 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
 
     program_set_mat4(renderer.water_program, "camera.projection", camera_projection);
     program_set_mat4(renderer.water_program, "camera.view", camera_view);
+    program_set_vec3(renderer.water_program, "camera.position", camera->position);
 
     program_set_unsigned_int(renderer.water_program, "elapsed_time", elapsed_time);
 
@@ -1729,39 +1751,39 @@ void render_sprites(GLuint fbo_id, float aspect)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void render_debug(GLuint fbo_id, struct camera *camera, float aspect)
+void DEBUG_render_point_lights(GLuint fbo_id, struct camera *camera, float aspect)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
-    // calculate camera projection matrix
-    mat4 camera_projection;
-    glm_perspective(
-        glm_rad(camera->fov),
-        aspect,
-        0.01f,
-        100.0f,
-        camera_projection);
-
-    // calculate camera view matrix
-    vec3 camera_front;
-    camera_calc_front(camera, &camera_front);
-
-    vec3 camera_target;
-    glm_vec_add(camera->position, camera_front, camera_target);
-
-    vec3 camera_up;
-    camera_calc_up(camera, &camera_up);
-
-    mat4 camera_view;
-    glm_lookat(
-        camera->position,
-        camera_target,
-        camera_up,
-        camera_view);
-
-    // TEST: draw point lights as a cube
+    // draw point lights as a cube
     if (renderer.num_point_lights > 0)
     {
+        // calculate camera projection matrix
+        mat4 camera_projection;
+        glm_perspective(
+            glm_rad(camera->fov),
+            aspect,
+            0.01f,
+            100.0f,
+            camera_projection);
+
+        // calculate camera view matrix
+        vec3 camera_front;
+        camera_calc_front(camera, &camera_front);
+
+        vec3 camera_target;
+        glm_vec_add(camera->position, camera_front, camera_target);
+
+        vec3 camera_up;
+        camera_calc_up(camera, &camera_up);
+
+        mat4 camera_view;
+        glm_lookat(
+            camera->position,
+            camera_target,
+            camera_up,
+            camera_view);
+
         program_bind(renderer.forward_color_program);
 
         program_set_mat4(renderer.forward_color_program, "camera.projection", camera_projection);
@@ -1780,78 +1802,20 @@ void render_debug(GLuint fbo_id, struct camera *camera, float aspect)
 
             program_set_vec3(renderer.forward_color_program, "material.color", point_light->specular);
 
-            static GLint light_vao_id = -1;
-            static GLint light_vbo_id = -1;
-            static GLint num_light_vertices = -1;
-
-            if (light_vao_id == -1)
-            {
-                float light_vertices[] = {
-                    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-                     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-                     1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-                     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-                    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-                    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-                    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-                     1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-                     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-                     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-                    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-                    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-                    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-                    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-                    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-                    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-                    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-                    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-                     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-                     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-                     1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-                     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-                     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-                     1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-                    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-                     1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-                     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-                     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-                    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-                    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-                    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-                     1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-                     1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-                     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-                    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-                    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
-                };
-                num_light_vertices = sizeof(light_vertices) / sizeof(float) / 2;
-
-                glGenVertexArrays(1, &light_vao_id);
-                glGenBuffers(1, &light_vbo_id);
-
-                glBindVertexArray(light_vao_id);
-
-                glBindBuffer(GL_ARRAY_BUFFER, light_vbo_id);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(light_vertices), &light_vertices, GL_STATIC_DRAW);
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
-                glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
-                glEnableVertexAttribArray(0);
-                glEnableVertexAttribArray(1);
-                glEnableVertexAttribArray(2);
-
-                glBindVertexArray(0);
-            }
-
-            glBindVertexArray(light_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, num_light_vertices);
-            glBindVertexArray(0);
+            mesh_draw(assets.cube_mesh);
         }
 
         program_unbind();
     }
 
-    // draw debug textures to display fbos
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void DEBUG_render_geometry_fbos(GLuint fbo_id, struct camera *camera, float aspect)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+    // draw gbuffers
     program_bind(renderer.sprite_program);
 
     // calculate ortho projection
@@ -1915,7 +1879,29 @@ void render_debug(GLuint fbo_id, struct camera *camera, float aspect)
         glBindVertexArray(0);
     }
 
-    position[0] += 1.0f;
+    program_unbind();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void DEBUG_render_depthmap_fbo(GLuint fbo_id, struct camera *camera, float aspect)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+    // draw depthmap
+    program_bind(renderer.sprite_program);
+
+    // calculate ortho projection
+    mat4 camera_projection_ortho;
+    glm_ortho_default(aspect, camera_projection_ortho);
+
+    program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection_ortho);
+
+    vec3 position = GLM_VEC3_ZERO_INIT;
+    vec3 color = GLM_VEC3_ONE_INIT;
+
+    position[0] = -1.75f;
+    position[1] = -1.0f;
 
     {
         mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
@@ -1932,7 +1918,29 @@ void render_debug(GLuint fbo_id, struct camera *camera, float aspect)
         glBindVertexArray(0);
     }
 
-    position[0] = -1.75f;
+    program_unbind();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void DEBUG_render_water_fbos(GLuint fbo_id, struct camera *camera, float aspect)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+    // draw water reflection and refraction textures
+    // NOTE: this will draw the textures for whatever water tile was rendered last, since each water tile calculates its own reflection/refraction textures
+    program_bind(renderer.sprite_program);
+
+    // calculate ortho projection
+    mat4 camera_projection_ortho;
+    glm_ortho_default(aspect, camera_projection_ortho);
+
+    program_set_mat4(renderer.sprite_program, "camera.projection", camera_projection_ortho);
+
+    vec3 position = GLM_VEC3_ZERO_INIT;
+    vec3 color = GLM_VEC3_ONE_INIT;
+
+    position[0] = -0.75f;
     position[1] = -1.0f;
 
     {
@@ -2008,20 +2016,26 @@ void renderer_draw(struct camera *camera, float aspect, unsigned int elapsed_tim
 
     render_scene(renderer.screen_fbo_id, camera, aspect, clipping_plane);
 
+    // DEBUG_render_point_lights(renderer.screen_fbo_id, camera, aspect);
+    if (renderer.render_mode == RENDER_MODE_DEFERRED)
+    {
+        // DEBUG_render_geometry_fbos(renderer.screen_fbo_id, camera, aspect);
+    }
+    // DEBUG_render_depthmap_fbo(renderer.screen_fbo_id, camera, aspect);
+
     // render water
     if (renderer.num_waters > 0)
     {
         render_waters(renderer.screen_fbo_id, camera, aspect, elapsed_time);
     }
 
+    // DEBUG_render_water_fbos(renderer.screen_fbo_id, camera, aspect);
+
     // render sprites
     if (renderer.num_sprites > 0)
     {
         render_sprites(renderer.screen_fbo_id, aspect);
     }
-
-    // TEST: render debug info
-    // render_debug(renderer.screen_fbo_id, camera, aspect);
 
     // render the screen framebuffer to the default framebuffer and apply post-processing
     render_screen(0);

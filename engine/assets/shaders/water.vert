@@ -7,6 +7,7 @@ uniform struct Camera
 {
     mat4 projection;
     mat4 view;
+    vec3 position;
 } camera;
 
 uniform struct Water
@@ -19,13 +20,20 @@ uniform struct Water
 
 out struct Vertex
 {
+    vec3 position;
+	vec3 normal;
 	vec2 uv;
-	vec4 clip_space;
+	vec4 clip_space_position;
 } vertex;
 
 void main()
 {
-    gl_Position = camera.projection * camera.view * water.model * vec4(position.x, 0.0, position.y, 1.0);
+	vec4 world_position = water.model * vec4(position.x, 0.0, position.y, 1.0);
+
+    gl_Position = camera.projection * camera.view * world_position;
+
+    vertex.position = world_position.xyz;
+	vertex.normal = vec3(0.0, 1.0, 0.0);
 	vertex.uv = uv * 6.0;
-	vertex.clip_space = gl_Position;
+	vertex.clip_space_position = gl_Position;
 }

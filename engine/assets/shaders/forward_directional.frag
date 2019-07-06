@@ -43,27 +43,23 @@ out vec4 frag_color;
 
 void main()
 {
-	vec3 position = vertex.position;
-	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
-	vec3 normal = normalize(vertex.normal);
-	vec3 specular = texture(material.specular, vertex.uv).rgb;
-	float shininess = material.shininess;
-	vec3 emission = texture(material.emission, vertex.uv).rgb;
-	float glow = material.glow;
-    vec3 view_direction = normalize(camera.position - position);
-
     // ambient
+	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
     vec3 final_ambient = directional_light.ambient * diffuse;
 
     // diffuse
     vec3 light_direction = normalize(-directional_light.direction);
+	vec3 normal = normalize(vertex.normal);
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
     vec3 final_diffuse = directional_light.diffuse * diffuse * diffuse_factor;
 
     // specular
+    vec3 view_direction = normalize(camera.position - vertex.position);
     vec3 halfway_direction = normalize(light_direction + view_direction);
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
+	float shininess = material.shininess;
     float specular_factor = pow(specular_angle, shininess);
+	vec3 specular = texture(material.specular, vertex.uv).rgb;
     vec3 final_specular = directional_light.specular * specular * specular_factor;
 
     frag_color = vec4(final_ambient + final_diffuse + final_specular, 1.0);
