@@ -104,32 +104,6 @@
     <ClCompile Include="src\rendering\renderer.c" />
     <ClCompile Include="src\rendering\texture.c" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\shaders\deferred.vert" />
-    <None Include="assets\shaders\deferred_directional.frag" />
-    <None Include="assets\shaders\deferred_point.frag" />
-    <None Include="assets\shaders\deferred_spot.frag" />
-    <None Include="assets\shaders\deferred_sun.frag" />
-    <None Include="assets\shaders\depth.frag" />
-    <None Include="assets\shaders\depth.vert" />
-    <None Include="assets\shaders\forward.vert" />
-    <None Include="assets\shaders\forward_color.frag" />
-    <None Include="assets\shaders\forward_directional.frag" />
-    <None Include="assets\shaders\forward_point.frag" />
-    <None Include="assets\shaders\forward_reflection.frag" />
-    <None Include="assets\shaders\forward_spot.frag" />
-    <None Include="assets\shaders\forward_sun.frag" />
-    <None Include="assets\shaders\geometry.frag" />
-    <None Include="assets\shaders\geometry.vert" />
-    <None Include="assets\shaders\post.frag" />
-    <None Include="assets\shaders\post.vert" />
-    <None Include="assets\shaders\skybox.frag" />
-    <None Include="assets\shaders\skybox.vert" />
-    <None Include="assets\shaders\sprite.frag" />
-    <None Include="assets\shaders\sprite.vert" />
-    <None Include="assets\shaders\water.frag" />
-    <None Include="assets\shaders\water.vert" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

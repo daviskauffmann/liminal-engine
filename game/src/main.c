@@ -6,8 +6,8 @@
 #include <SDL/SDL_ttf.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 #define RENDER_SCALE 1.0f
 
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
         1.0f);
 
     // create objects
-    vec3 floor_object_position = { 0.0f, -2.0f, 0.0f };
+    vec3 floor_object_position = { 0.0f, -5.0f, 0.0f };
     vec3 box_1_object_position = { 0.0f, 1.0f, 0.0f };
     vec3 box_2_object_position = { 2.0f, -0.5f, 0.0f };
     vec3 box_3_object_position = { 0.0f, -0.5f, 2.0f };

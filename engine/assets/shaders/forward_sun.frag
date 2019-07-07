@@ -66,8 +66,8 @@ void main()
 
     // shadow
     vec4 sun_space_position = sun.projection * sun.view * vec4(vertex.position, 1.0);
-    vec3 proj_coords = (sun_space_position.xyz / sun_space_position.w) * 0.5 + 0.5;
-    float current_depth = proj_coords.z;
+    vec3 sun_space_proj_coords = (sun_space_position.xyz / sun_space_position.w) * 0.5 + 0.5;
+    float current_depth = sun_space_proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
     float shadow = 0.0;
     vec2 texel_size = 1.0 / textureSize(depthmap.texture, 0);
@@ -75,12 +75,12 @@ void main()
     {
         for (int y = -1; y <= 1; y++)
         {
-            float pcf_depth = texture(depthmap.texture, proj_coords.xy + vec2(x, y) * texel_size).r;
+            float pcf_depth = texture(depthmap.texture, sun_space_proj_coords.xy + vec2(x, y) * texel_size).r;
             shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
         }
     }
     shadow /= 9.0;
-    if (proj_coords.z > 1.0) shadow = 0.0;
+    if (sun_space_proj_coords.z > 1.0) shadow = 0.0;
 
     frag_color = vec4((final_ambient + (1.0 - shadow) * (final_diffuse + final_specular)), 1.0);
 	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);

@@ -95,6 +95,7 @@ struct renderer
 
     // textures
     struct texture *water_dudv_texture;
+    struct texture *water_normal_texture;
 
     // renderables
     struct object **objects;
@@ -395,6 +396,8 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     program_set_int(renderer.water_program, "water.reflection", 0);
     program_set_int(renderer.water_program, "water.refraction", 1);
     program_set_int(renderer.water_program, "water.dudv", 2);
+    program_set_int(renderer.water_program, "water.normal", 3);
+    program_set_int(renderer.water_program, "depthmap.texture", 4);
     program_unbind();
 
     program_bind(renderer.sprite_program);
@@ -929,26 +932,52 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glBindVertexArray(0);
 
     // create water dudv texture
-    int width, height, bytes_per_pixel;
-    unsigned char *pixels = stbi_load("../engine/assets/images/water_dudv.png", &width, &height, &bytes_per_pixel, STBI_rgb);
-
-    if (!pixels)
     {
-        printf("Error: Couldn't load water dudv image");
+        int width, height, bytes_per_pixel;
+        unsigned char *pixels = stbi_load("../engine/assets/images/water_dudv.png", &width, &height, &bytes_per_pixel, STBI_rgb);
 
-        return 1;
+        if (!pixels)
+        {
+            printf("Error: Couldn't load water dudv image");
+
+            return 1;
+        }
+
+        renderer.water_dudv_texture = texture_create(width, height, bytes_per_pixel, pixels);
+
+        if (!renderer.water_dudv_texture)
+        {
+            printf("Error: Couldn't load water dudv texture\n");
+
+            return 1;
+        }
+
+        stbi_image_free(pixels);
     }
 
-    renderer.water_dudv_texture = texture_create(width, height, bytes_per_pixel, pixels);
-
-    if (!renderer.water_dudv_texture)
+    // create water normal texture
     {
-        printf("Error: Couldn't load water dudv texture\n");
+        int width, height, bytes_per_pixel;
+        unsigned char *pixels = stbi_load("../engine/assets/images/water_normal.png", &width, &height, &bytes_per_pixel, STBI_rgb);
 
-        return 1;
+        if (!pixels)
+        {
+            printf("Error: Couldn't load water normal image");
+
+            return 1;
+        }
+
+        renderer.water_normal_texture = texture_create(width, height, bytes_per_pixel, pixels);
+
+        if (!renderer.water_normal_texture)
+        {
+            printf("Error: Couldn't load water normal texture\n");
+
+            return 1;
+        }
+
+        stbi_image_free(pixels);
     }
-
-    stbi_image_free(pixels);
 
     return 0;
 }
@@ -1058,7 +1087,7 @@ void renderer_add_sprite(struct sprite *sprite)
     renderer.sprites[renderer.num_sprites++] = sprite;
 }
 
-void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipping_plane)
+void render_scene(GLuint fbo_id, struct camera *camera, float aspect, unsigned int elapsed_time, vec4 clipping_plane)
 {
     // clear the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -1586,10 +1615,10 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, vec4 clipp
 
         mat4 camera_view_no_translate;
         glm_mat4_copy(camera_view, camera_view_no_translate);
+        // glm_rotate(camera_view_no_translate, glm_rad(elapsed_time) * 0.001, GLM_YUP);
         camera_view_no_translate[3][0] = 0.0f;
         camera_view_no_translate[3][1] = 0.0f;
         camera_view_no_translate[3][2] = 0.0f;
-        camera_view_no_translate[3][3] = 0.0f;
 
         program_bind(renderer.skybox_program);
 
@@ -1639,12 +1668,37 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
         camera_up,
         camera_view);
 
+    mat4 sun_projection;
+    mat4 sun_view;
+    if (renderer.sun)
+    {
+        // calculate sun projection matrix
+        glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+
+        // calculate sun "position"
+        vec3 sun_position;
+        glm_vec_sub(GLM_VEC3_ZERO, renderer.sun->direction, sun_position);
+
+        // calculate sun view matrix
+        glm_lookat(sun_position, GLM_VEC3_ZERO, GLM_YUP, sun_view);
+    }
+
     // send camera transformations to water program
     program_bind(renderer.water_program);
 
     program_set_mat4(renderer.water_program, "camera.projection", camera_projection);
     program_set_mat4(renderer.water_program, "camera.view", camera_view);
     program_set_vec3(renderer.water_program, "camera.position", camera->position);
+
+    if (renderer.sun)
+    {
+        program_set_vec3(renderer.water_program, "sun.direction", renderer.sun->direction);
+        program_set_vec3(renderer.water_program, "sun.ambient", renderer.sun->ambient);
+        program_set_vec3(renderer.water_program, "sun.diffuse", renderer.sun->diffuse);
+        program_set_vec3(renderer.water_program, "sun.specular", renderer.sun->specular);
+        program_set_mat4(renderer.water_program, "sun.projection", sun_projection);
+        program_set_mat4(renderer.water_program, "sun.view", sun_view);
+    }
 
     program_set_unsigned_int(renderer.water_program, "elapsed_time", elapsed_time);
 
@@ -1668,7 +1722,7 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
             camera->position[1] -= 2 * (camera->position[1] - water->position[1]);
             camera->pitch = -camera->pitch;
 
-            render_scene(renderer.water_reflection_fbo_id, camera, aspect, reflection_clipping_plane);
+            render_scene(renderer.water_reflection_fbo_id, camera, aspect, elapsed_time, reflection_clipping_plane);
 
             camera->position[1] = old_camera_y;
             camera->pitch = old_camera_pitch;
@@ -1683,7 +1737,7 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
             refraction_clipping_plane[3] = -water->position[1];
         }
 
-        render_scene(renderer.water_refraction_fbo_id, camera, aspect, refraction_clipping_plane);
+        render_scene(renderer.water_refraction_fbo_id, camera, aspect, elapsed_time, refraction_clipping_plane);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
@@ -1705,6 +1759,10 @@ void render_waters(GLuint fbo_id, struct camera *camera, float aspect, unsigned 
         glBindTexture(GL_TEXTURE_2D, renderer.water_refraction_color_texture_id);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, renderer.water_dudv_texture ? renderer.water_dudv_texture->texture_id : 0);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, renderer.water_normal_texture ? renderer.water_normal_texture->texture_id : 0);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, renderer.depthmap_texture_id);
 
         glBindVertexArray(renderer.water_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, renderer.num_water_vertices);
@@ -2014,7 +2072,7 @@ void renderer_draw(struct camera *camera, float aspect, unsigned int elapsed_tim
     // render scene to the screen framebuffer
     vec4 clipping_plane = GLM_VEC4_ZERO_INIT;
 
-    render_scene(renderer.screen_fbo_id, camera, aspect, clipping_plane);
+    render_scene(renderer.screen_fbo_id, camera, aspect, elapsed_time, clipping_plane);
 
     // DEBUG_render_point_lights(renderer.screen_fbo_id, camera, aspect);
     if (renderer.render_mode == RENDER_MODE_DEFERRED)

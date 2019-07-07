@@ -16,6 +16,7 @@ uniform struct Water
 	sampler2D reflection;
 	sampler2D refraction;
 	sampler2D dudv;
+	sampler2D normal;
 } water;
 
 out struct Vertex
