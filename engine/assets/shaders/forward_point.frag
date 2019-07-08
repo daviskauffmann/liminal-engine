@@ -7,8 +7,6 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
-in float visibility;
-
 uniform struct Camera
 {
     mat4 projection;
@@ -19,20 +17,20 @@ uniform struct Camera
 uniform struct Material
 {
     vec3 color;
-    sampler2D diffuse;
-    sampler2D specular;
+    sampler2D diffuse_map;
+    sampler2D specular_map;
 	float shininess;
-    sampler2D normal;
-    sampler2D emission;
+    sampler2D normal_map;
+    sampler2D emission_map;
 	float glow;
 } material;
 
 uniform struct PointLight
 {
     vec3 position;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    vec3 ambient_color;
+    vec3 diffuse_color;
+    vec3 specular_color;
 	vec3 attenuation;
 } point_light;
 
@@ -41,14 +39,14 @@ out vec4 frag_color;
 void main()
 {
     // ambient
-	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
-    vec3 final_ambient = point_light.ambient * diffuse;
+	vec3 diffuse_color = texture(material.diffuse_map, vertex.uv).rgb * material.color;
+    vec3 final_ambient_color = point_light.ambient_color * diffuse_color;
 
     // diffuse
     vec3 light_direction = normalize(point_light.position - vertex.position);
 	vec3 normal = normalize(vertex.normal);
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
-    vec3 final_diffuse = point_light.diffuse * diffuse * diffuse_factor;
+    vec3 final_diffuse_color = point_light.diffuse_color * diffuse_color * diffuse_factor;
 
     // specular
     vec3 view_direction = normalize(camera.position - vertex.position);
@@ -56,8 +54,8 @@ void main()
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
 	float shininess = material.shininess;
     float specular_factor = pow(specular_angle, shininess);
-	vec3 specular = texture(material.specular, vertex.uv).rgb;
-    vec3 final_specular = point_light.specular * specular * specular_factor;
+	vec3 specular_color = texture(material.specular_map, vertex.uv).rgb;
+    vec3 final_specular_color = point_light.specular_color * specular_color * specular_factor;
 
     // attenuation
     float light_distance = length(point_light.position - vertex.position);
@@ -66,6 +64,5 @@ void main()
 	float quadratic = point_light.attenuation[2];
     float attenuation = 1.0 / (constant + linear * light_distance + quadratic * pow(light_distance, 2));
 
-    frag_color = vec4((final_ambient + final_diffuse + final_specular) * attenuation, 1.0);
-	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);
+    frag_color = vec4((final_ambient_color + final_diffuse_color + final_specular_color) * attenuation, 1.0);
 }

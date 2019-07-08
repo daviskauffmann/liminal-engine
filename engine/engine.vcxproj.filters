@@ -69,8 +69,5 @@
     <ClCompile Include="src\rendering\assets.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

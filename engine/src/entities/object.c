@@ -34,11 +34,16 @@ void object_calc_model(struct object *object, vec4 *model)
     glm_scale(model, object->scale);
 }
 
-void object_draw(struct object *object)
+void object_draw(
+    struct object *object,
+    unsigned int diffuse_map_index,
+    unsigned int specular_map_index,
+    unsigned int normal_map_index,
+    unsigned int emission_map_index)
 {
     if (object->material)
     {
-        material_bind(object->material);
+        material_bind(object->material, diffuse_map_index, specular_map_index, normal_map_index, emission_map_index);
     }
 
     mesh_draw(object->mesh);

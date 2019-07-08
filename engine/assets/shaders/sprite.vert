@@ -11,7 +11,7 @@ uniform struct Camera
 uniform struct Sprite
 {
 	vec3 color;
-	sampler2D image;
+	sampler2D color_map;
 	mat4 model;
 } sprite;
 

@@ -1,9 +1,5 @@
 #include <engine/engine.h>
 
-// TODO: a way to load textures internally within the engine
-// right now, we expect the user to load their own textures however they want and pass the pixel data into the engine
-// however, it would be nice to be able to load stuff like the water dudv map within the engine itself and not force the user to supply one
-
 struct texture *texture_create(int width, int height, unsigned char bytes_per_pixel, const void *pixels)
 {
     struct texture *texture = malloc(sizeof(struct texture));

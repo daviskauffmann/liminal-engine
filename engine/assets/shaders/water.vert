@@ -1,7 +1,6 @@
 #version 460 core
 
 layout (location = 0) in vec2 position;
-layout (location = 1) in vec2 uv;
 
 uniform struct Camera
 {
@@ -13,10 +12,10 @@ uniform struct Camera
 uniform struct Water
 {
 	mat4 model;
-	sampler2D reflection;
-	sampler2D refraction;
-	sampler2D dudv;
-	sampler2D normal;
+	sampler2D reflection_map;
+	sampler2D refraction_map;
+	sampler2D dudv_map;
+	sampler2D normal_map;
 } water;
 
 out struct Vertex
@@ -35,6 +34,6 @@ void main()
 
     vertex.position = world_position.xyz;
 	vertex.normal = mat3(transpose(inverse(water.model))) * vec3(0.0, 1.0, 0.0);
-	vertex.uv = vec2(uv.x, 1 - uv.y) * 6.0;
+	vertex.uv = vec2(position.x * 0.5 + 0.5, position.y * 0.5 + 0.5) * 4.0;
 	vertex.clip_space_position = gl_Position;
 }

@@ -6,8 +6,8 @@
 #include <SDL/SDL_ttf.h>
 
 #define WINDOW_TITLE "Example Game"
-#define WINDOW_WIDTH 1920
-#define WINDOW_HEIGHT 1080
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 
 #define RENDER_SCALE 1.0f
 
@@ -72,8 +72,14 @@ int main(int argc, char *argv[])
     // setup audio
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
-    // setup engine
-    engine_init();
+    // setup renderer and audio
+    renderer_init(
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        RENDER_SCALE,
+        SHADOW_WIDTH,
+        SHADOW_HEIGHT);
+    audio_init();
 
     // TODO: create some meshes using obj data
     // the mesh inteface will probably stay the same, and it should be up to the client to parse an obj into the vertices, indices, etc.
@@ -116,15 +122,6 @@ int main(int argc, char *argv[])
     SDL_FreeSurface(cobble_diffuse_surface);
     SDL_FreeSurface(cobble_specular_surface);
     SDL_FreeSurface(grass_surface);
-
-    // setup renderer and audio
-    renderer_init(
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT,
-        RENDER_SCALE,
-        SHADOW_WIDTH,
-        SHADOW_HEIGHT);
-    audio_init();
 
     // create cubemaps
     SDL_Surface *skybox_right_surface = IMG_Load("assets/images/sky/right.jpg");
@@ -219,7 +216,7 @@ int main(int argc, char *argv[])
         1.0f);
 
     // create objects
-    vec3 floor_object_position = { 0.0f, -5.0f, 0.0f };
+    vec3 floor_object_position = { 0.0f, -4.0f, 0.0f };
     vec3 box_1_object_position = { 0.0f, 1.0f, 0.0f };
     vec3 box_2_object_position = { 2.0f, -0.5f, 0.0f };
     vec3 box_3_object_position = { 0.0f, -0.5f, 2.0f };
@@ -733,7 +730,7 @@ int main(int argc, char *argv[])
 
         renderer_add_water(test_water);
 
-        // renderer_add_sprite(grass_sprite);
+        renderer_add_sprite(grass_sprite);
 
         // render everything
         renderer_draw(main_camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, SDL_GetTicks(), delta_time);

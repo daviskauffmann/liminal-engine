@@ -39,7 +39,4 @@
 #include "rendering/renderer.h"
 #include "rendering/texture.h"
 
-// Initializes the engine. This function assumes an OpenGL context has already been created.
-int ENGINE_API engine_init(void);
-
 #endif

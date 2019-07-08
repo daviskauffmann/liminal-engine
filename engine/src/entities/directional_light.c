@@ -2,9 +2,9 @@
 
 struct directional_light *directional_light_create(
     vec3 direction,
-    vec3 ambient,
-    vec3 diffuse,
-    vec3 specular)
+    vec3 ambient_color,
+    vec3 diffuse_color,
+    vec3 specular_color)
 {
     struct directional_light *directional_light = malloc(sizeof(struct directional_light));
 
@@ -16,9 +16,9 @@ struct directional_light *directional_light_create(
     }
 
     glm_vec_copy(direction, directional_light->direction);
-    glm_vec_copy(ambient, directional_light->ambient);
-    glm_vec_copy(diffuse, directional_light->diffuse);
-    glm_vec_copy(specular, directional_light->specular);
+    glm_vec_copy(ambient_color, directional_light->ambient_color);
+    glm_vec_copy(diffuse_color, directional_light->diffuse_color);
+    glm_vec_copy(specular_color, directional_light->specular_color);
 
     return directional_light;
 }

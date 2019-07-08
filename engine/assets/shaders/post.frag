@@ -6,12 +6,12 @@ in struct Vertex
 } vertex;
 
 uniform struct Screen {
-    sampler2D texture;
+    sampler2D color_map;
 } screen;
 
 out vec4 frag_color;
 
 void main()
 {
-    frag_color = texture(screen.texture, vertex.uv);
+    frag_color = texture(screen.color_map, vertex.uv);
 }

@@ -2,7 +2,7 @@
 
 struct sprite *sprite_create(
     vec3 color,
-    struct texture *image,
+    struct texture *color_map,
     vec2 position,
     float rotation,
     vec2 scale)
@@ -17,7 +17,7 @@ struct sprite *sprite_create(
     }
 
     glm_vec_copy(color, sprite->color);
-    sprite->image = image;
+    sprite->color_map = color_map;
     glm_vec_copy(position, sprite->position);
     sprite->rotation = rotation;
     glm_vec_copy(scale, sprite->scale);

@@ -7,12 +7,12 @@ in struct Vertex
 
 uniform struct Skybox
 {
-	samplerCube cubemap;
+	samplerCube color_map;
 } skybox;
 
 out vec4 frag_color;
 
 void main()
 {    
-    frag_color = texture(skybox.cubemap, vertex.uv);
+    frag_color = texture(skybox.color_map, vertex.uv);
 }

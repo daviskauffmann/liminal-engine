@@ -87,7 +87,6 @@
     <ClCompile Include="src\audio\audio.c" />
     <ClCompile Include="src\audio\sound.c" />
     <ClCompile Include="src\audio\source.c" />
-    <ClCompile Include="src\engine.c" />
     <ClCompile Include="src\entities\camera.c" />
     <ClCompile Include="src\entities\directional_light.c" />
     <ClCompile Include="src\entities\object.c" />

@@ -7,8 +7,6 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
-in float visibility;
-
 uniform struct Camera
 {
     mat4 projection;
@@ -19,41 +17,38 @@ uniform struct Camera
 uniform struct Material
 {
     vec3 color;
-    sampler2D diffuse;
-    sampler2D specular;
+    sampler2D diffuse_map;
+    sampler2D specular_map;
 	float shininess;
-    sampler2D normal;
-    sampler2D emission;
+    sampler2D normal_map;
+    sampler2D emission_map;
 	float glow;
 } material;
 
 uniform struct Sun
 {
     vec3 direction;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    vec3 ambient_color;
+    vec3 diffuse_color;
+    vec3 specular_color;
 	mat4 projection;
 	mat4 view;
+	sampler2D depth_map;
 } sun;
-
-uniform struct Depthmap {
-    sampler2D texture;
-} depthmap;
 
 out vec4 frag_color;
 
 void main()
 {
     // ambient
-	vec3 diffuse = texture(material.diffuse, vertex.uv).rgb * material.color;
-    vec3 final_ambient = sun.ambient * diffuse;
+	vec3 diffuse_color = texture(material.diffuse_map, vertex.uv).rgb * material.color;
+    vec3 final_ambient_color = sun.ambient_color * diffuse_color;
 
     // diffuse
 	vec3 normal = normalize(vertex.normal);
     vec3 light_direction = normalize(-sun.direction);
     float diffuse_factor = max(dot(normal, light_direction), 0.0);
-    vec3 final_diffuse = sun.diffuse * diffuse * diffuse_factor;
+    vec3 final_diffuse_color = sun.diffuse_color * diffuse_color * diffuse_factor;
 
     // specular
     vec3 view_direction = normalize(camera.position - vertex.position);
@@ -61,8 +56,8 @@ void main()
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
 	float shininess = material.shininess;
     float specular_factor = pow(specular_angle, shininess);
-	vec3 specular = texture(material.specular, vertex.uv).rgb;
-    vec3 final_specular = sun.specular * specular * specular_factor;
+	vec3 specular_color = texture(material.specular_map, vertex.uv).rgb;
+    vec3 final_specular_color = sun.specular_color * specular_color * specular_factor;
 
     // shadow
     vec4 sun_space_position = sun.projection * sun.view * vec4(vertex.position, 1.0);
@@ -70,18 +65,17 @@ void main()
     float current_depth = sun_space_proj_coords.z;
     float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
     float shadow = 0.0;
-    vec2 texel_size = 1.0 / textureSize(depthmap.texture, 0);
+    vec2 texel_size = 1.0 / textureSize(sun.depth_map, 0);
     for (int x = -1; x <= 1; x++)
     {
         for (int y = -1; y <= 1; y++)
         {
-            float pcf_depth = texture(depthmap.texture, sun_space_proj_coords.xy + vec2(x, y) * texel_size).r;
+            float pcf_depth = texture(sun.depth_map, sun_space_proj_coords.xy + vec2(x, y) * texel_size).r;
             shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
         }
     }
     shadow /= 9.0;
     if (sun_space_proj_coords.z > 1.0) shadow = 0.0;
 
-    frag_color = vec4((final_ambient + (1.0 - shadow) * (final_diffuse + final_specular)), 1.0);
-	frag_color = mix(vec4(0.0, 0.0, 0.0, 1.0), frag_color, visibility);
+    frag_color = vec4((final_ambient_color + (1.0 - shadow) * (final_diffuse_color + final_specular_color)), 1.0);
 }

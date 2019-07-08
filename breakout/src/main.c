@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     // create OpenGL context
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
-    // init engine
+    // init renderer
     renderer_init(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
@@ -75,13 +75,9 @@ int main(int argc, char *argv[])
 
     // create camera
     vec3 camera_position = { 0.0f, 0.0f, 3.0f };
-    vec3 camera_front = { 0.0f, 0.0f, -1.0f };
-    vec3 camera_up = { 0.0f, 1.0f, 0.0f };
 
     struct camera *camera = camera_create(
         camera_position,
-        camera_front,
-        camera_up,
         0.0f,
         -90.0f,
         0.0f,
@@ -198,7 +194,7 @@ int main(int argc, char *argv[])
         renderer_add_sprite(awesomeface_sprite);
 
         // render everything
-        renderer_draw(camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT);
+        renderer_draw(camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, SDL_GetTicks(), delta_time);
 
         // display the window
         SDL_GL_SwapWindow(window);

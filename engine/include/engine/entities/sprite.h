@@ -4,7 +4,7 @@
 struct sprite
 {
     vec3 color;
-    struct texture *image;
+    struct texture *color_map;
     vec2 position;
     float rotation;
     vec2 scale;
@@ -12,7 +12,7 @@ struct sprite
 
 struct sprite ENGINE_API *sprite_create(
     vec3 color,
-    struct texture *image,
+    struct texture *color_map,
     vec2 position,
     float rotation,
     vec2 scale);

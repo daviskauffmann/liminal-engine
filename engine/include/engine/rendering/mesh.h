@@ -8,8 +8,8 @@ struct mesh
     GLuint vao_id;
     GLuint vbo_id;
     GLuint ebo_id;
-    int vertices_size;
-    int indices_size;
+    unsigned int vertices_size;
+    unsigned int indices_size;
 };
 
 struct mesh ENGINE_API *mesh_create(
