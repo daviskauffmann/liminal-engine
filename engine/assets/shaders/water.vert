@@ -34,7 +34,7 @@ void main()
     gl_Position = camera.projection * camera.view * world_position;
 
     vertex.position = world_position.xyz;
-	vertex.normal = vec3(0.0, 1.0, 0.0);
-	vertex.uv = uv * 6.0;
+	vertex.normal = mat3(transpose(inverse(water.model))) * vec3(0.0, 1.0, 0.0);
+	vertex.uv = vec2(uv.x, 1 - uv.y) * 6.0;
 	vertex.clip_space_position = gl_Position;
 }

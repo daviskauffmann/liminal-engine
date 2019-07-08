@@ -2,6 +2,8 @@
 
 #include <engine/engine.h>
 
+// TODO: make renderer work properly if the sun is not set
+
 // TODO: create a way to specify paths for engine assets and game assets separately
 
 // TODO: support resizing
