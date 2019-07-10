@@ -14,7 +14,7 @@
 #define SHADOW_WIDTH 4096
 #define SHADOW_HEIGHT 4096
 
-#define FPS_CAP 120
+#define FPS_CAP 300
 #define FRAME_DELAY (1000 / FPS_CAP)
 
 int main(int argc, char *argv[])
@@ -387,6 +387,7 @@ int main(int argc, char *argv[])
     float shoot_timer = 0.0f;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_GL_SetSwapInterval(0);
     renderer_set_mode(RENDER_MODE_DEFERRED);
 
     // main loop

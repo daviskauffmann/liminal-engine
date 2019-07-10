@@ -2088,7 +2088,7 @@ void renderer_draw(struct camera *camera, float aspect, unsigned int elapsed_tim
         render_waters(renderer.screen_fbo_id, camera, aspect, elapsed_time);
     }
 
-    DEBUG_render_water_fbos(renderer.screen_fbo_id, camera, aspect);
+    // DEBUG_render_water_fbos(renderer.screen_fbo_id, camera, aspect);
 
     // render sprites
     if (renderer.num_sprites > 0)
