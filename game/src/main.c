@@ -17,37 +17,6 @@
 #define FPS_CAP 120
 #define FRAME_DELAY (1000 / FPS_CAP)
 
-// TODO: come up with a name for this engine
-
-// TODO: further namespace header guards
-
-// TODO: handle resize
-// need to delete and recreate framebuffers
-
-// TODO: transparent textures like grass and windows
-
-// TODO: multiple shadow maps
-
-// TODO: point light shadows
-
-// TODO: obj loading + other file formats?
-
-// TODO: instanced rendering
-
-// TODO: animation
-// we're probably just gonna do simple keyframe animation for now, no IK and other complicated stuff
-
-// TODO: physics engine
-// look into physics libraries
-// decide if this should be another feature of the library, or just let the game handle it
-
-// TODO: create a minecraft style game to test mesh manipulation and multiple textures
-// each chunk would be an object and we would have to generate a mesh and assign it to the object whenever the chunk changes
-// the state of each block would be stored in memory
-// how to deal with chunk borders?
-
-// TODO: write a custom math library?
-
 int main(int argc, char *argv[])
 {
     // init SDL
@@ -80,9 +49,6 @@ int main(int argc, char *argv[])
         SHADOW_WIDTH,
         SHADOW_HEIGHT);
     audio_init();
-
-    // TODO: create some meshes using obj data
-    // the mesh inteface will probably stay the same, and it should be up to the client to parse an obj into the vertices, indices, etc.
 
     // create textures
     SDL_Surface *box_diffuse_surface = IMG_Load("assets/images/box_diffuse.png");

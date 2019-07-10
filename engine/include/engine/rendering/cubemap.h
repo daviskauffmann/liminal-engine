@@ -1,5 +1,5 @@
-#ifndef CUBEMAP_H
-#define CUBEMAP_H
+#ifndef ENGINE_CUBEMAP_H
+#define ENGINE_CUBEMAP_H
 
 struct cubemap
 {

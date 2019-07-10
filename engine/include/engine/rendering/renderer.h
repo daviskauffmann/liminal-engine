@@ -1,5 +1,5 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef ENGINE_RENDERER_H
+#define ENGINE_RENDERER_H
 
 enum render_mode
 {

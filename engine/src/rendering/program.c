@@ -1,9 +1,5 @@
 #include <engine/engine.h>
 
-// TODO: geometry shader
-
-// TODO: split up shader_create into shader_create_from_string and shader_create_from_file
-
 static GLuint shader_create(GLenum type, const char *filename);
 
 struct program *program_create(const char *vertex_filename, const char *fragment_filename)

@@ -37,7 +37,6 @@ void camera_calc_front(struct camera *camera, vec3 *front)
 
 void camera_calc_up(struct camera *camera, vec3 *up)
 {
-    // TODO: use roll?
     vec3 camera_up = { 0.0f, 1.0f, 0.0f };
     glm_vec_copy(camera_up, *up);
 }

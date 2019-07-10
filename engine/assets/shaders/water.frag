@@ -79,7 +79,6 @@ void main()
 	modified_normal = normalize(modified_normal);
 
 	// specular
-	// TODO: fix this, there are 2 specular reflections for some reason
     vec3 light_direction = normalize(-sun.direction);
     vec3 halfway_direction = normalize(light_direction + view_direction);
 	float specular_angle = max(dot(modified_normal, halfway_direction), 0.0);

@@ -1,7 +1,5 @@
 #include <engine/engine.h>
 
-// TODO: is there any way to make the arrays safer?
-
 struct cubemap *cubemap_create(int *width_array, int *height_array, unsigned char *bytes_per_pixel_array, const void **pixels_array)
 {
     struct cubemap *cubemap = malloc(sizeof(struct cubemap));

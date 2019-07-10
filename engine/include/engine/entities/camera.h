@@ -1,7 +1,5 @@
-#ifndef CAMERA_H
-#define CAMERA_H
-
-// TODO: perhaps separate into different ortho and perspective camera structs?
+#ifndef ENGINE_CAMERA_H
+#define ENGINE_CAMERA_H
 
 struct camera
 {

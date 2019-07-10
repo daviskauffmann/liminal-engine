@@ -3,8 +3,6 @@
 static ALCdevice *device;
 static ALCcontext *context;
 
-// TODO: handle OpenAL errors
-
 int audio_init(void)
 {
     // setup OpenAL

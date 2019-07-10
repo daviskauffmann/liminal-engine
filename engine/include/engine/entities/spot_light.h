@@ -1,5 +1,5 @@
-#ifndef SPOT_LIGHT_H
-#define SPOT_LIGHT_H
+#ifndef ENGINE_SPOT_LIGHT_H
+#define ENGINE_SPOT_LIGHT_H
 
 struct spot_light
 {

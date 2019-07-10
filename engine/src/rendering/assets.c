@@ -114,7 +114,6 @@ int assets_load(void)
         -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f  // bottom-left   
     };
 
-    // TODO: properly set up indices
     unsigned int cube_indices[] = {
         0, 1, 2,
         3, 4, 5,

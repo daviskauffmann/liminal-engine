@@ -1,5 +1,5 @@
-#ifndef WATER_H
-#define WATER_H
+#ifndef ENGINE_WATER_H
+#define ENGINE_WATER_H
 
 struct water
 {

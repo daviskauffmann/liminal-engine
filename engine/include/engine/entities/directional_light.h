@@ -1,5 +1,5 @@
-#ifndef DIRECTIONAL_LIGHT_H
-#define DIRECTIONAL_LIGHT_H
+#ifndef ENGINE_DIRECTIONAL_LIGHT_H
+#define ENGINE_DIRECTIONAL_LIGHT_H
 
 struct directional_light
 {

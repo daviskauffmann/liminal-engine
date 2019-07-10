@@ -1,7 +1,5 @@
-#ifndef MESH_H
-#define MESH_H
-
-// TODO: perhaps separate into mesh and indexed_mesh structs?
+#ifndef ENGINE_MESH_H
+#define ENGINE_MESH_H
 
 struct mesh
 {

@@ -1,5 +1,5 @@
-#ifndef OBJECT_H
-#define OBJECT_H
+#ifndef ENGINE_OBJECT_H
+#define ENGINE_OBJECT_H
 
 struct object
 {

@@ -1,10 +1,9 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
+#ifndef ENGINE_PROGRAM_H
+#define ENGINE_PROGRAM_H
 
 struct program
 {
     GLuint program_id;
-    // TODO: cache uniforms in a hashmap or something
 };
 
 struct program ENGINE_API *program_create(const char *vertex_filename, const char *fragment_filename);

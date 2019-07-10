@@ -1,12 +1,12 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#ifndef ENGINE_MATERIAL_H
+#define ENGINE_MATERIAL_H
 
 struct material
 {
     vec3 color;
     struct texture *diffuse_map;
     struct texture *specular_map;
-    float shininess; // TODO: rename this to shine_damper?
+    float shininess;
     struct texture *normal_map;
     struct texture *emission_map;
     float glow;

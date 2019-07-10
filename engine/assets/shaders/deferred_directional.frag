@@ -44,7 +44,7 @@ void main()
     vec3 view_direction = normalize(camera.position - position);
     vec3 halfway_direction = normalize(light_direction + view_direction);
 	float specular_angle = max(dot(normal, halfway_direction), 0.0);
-	float shininess = 16.0; // TODO: get material shininess from gbuffer
+	float shininess = 16.0;
     float specular_factor = pow(specular_angle, shininess);
     float specular_color = texture(geometry.albedo_specular_map, vertex.uv).a;
     vec3 final_specular_color = directional_light.specular_color * specular_color * specular_factor;

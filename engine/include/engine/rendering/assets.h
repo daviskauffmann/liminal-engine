@@ -1,5 +1,5 @@
-#ifndef ASSETS_H
-#define ASSETS_H
+#ifndef ENGINE_ASSETS_H
+#define ENGINE_ASSETS_H
 
 struct assets
 {

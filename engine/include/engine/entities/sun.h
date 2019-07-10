@@ -1,5 +1,5 @@
-#ifndef SUN_H
-#define SUN_H
+#ifndef ENGINE_SUN_H
+#define ENGINE_SUN_H
 
 struct sun
 {

@@ -2,31 +2,6 @@
 
 #include <engine/engine.h>
 
-// TODO: fix render scale
-
-// TODO: fog
-
-// TODO: terrain
-
-// TODO: post processing effects
-
-// TODO: make renderer work properly if the sun is not set
-
-// TODO: create a way to specify paths for engine assets and game assets separately
-
-// TODO: support resizing
-// we need to resize the viewport, as well as recreate all the framebuffers
-
-// TODO: render a sun texture in the sky
-// calculate its position based on the direction
-
-// TODO: deferred cubemap reflections
-// new gbuffer texture (2 bytes)
-// byte 1: reflective map (just the red value)
-// byte 2: material reflectivity
-
-// TODO: user programmable part of the rendering pipeline?
-
 struct renderer
 {
     // settings
@@ -140,10 +115,10 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     renderer.render_scale = render_scale;
     renderer.shadow_width = shadow_width;
     renderer.shadow_height = shadow_height;
-    renderer.reflection_width = render_width; // TODO: paramterize
-    renderer.reflection_height = render_height; // TODO: paramterize
-    renderer.refraction_width = render_width; // TODO: paramterize
-    renderer.refraction_height = render_height; // TODO: paramterize
+    renderer.reflection_width = render_width;
+    renderer.reflection_height = render_height;
+    renderer.refraction_width = render_width;
+    renderer.refraction_height = render_height;
     renderer.render_mode = RENDER_MODE_FORWARD;
 
     // init GLEW
@@ -177,7 +152,6 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     }
 
     // setup opengl
-    // TODO: face culling
     glViewport(0, 0, render_width, render_height);
     glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
@@ -556,7 +530,6 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glGenFramebuffers(1, &renderer.geometry_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, renderer.geometry_fbo_id);
 
-    // TODO: dont store position because it can be recreated in the fragment shader from depth
     glGenTextures(1, &renderer.geometry_position_texture_id);
     glBindTexture(GL_TEXTURE_2D, renderer.geometry_position_texture_id);
 
@@ -583,7 +556,6 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // TODO: find a way to optimize this
     glGenTextures(1, &renderer.geometry_normal_texture_id);
     glBindTexture(GL_TEXTURE_2D, renderer.geometry_normal_texture_id);
 
@@ -1392,7 +1364,6 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, unsigned i
                     program_unbind();
                 }
 
-                // TODO: material reflection parameters
                 if (renderer.skybox)
                 {
                     program_bind(renderer.forward_reflection_program);
@@ -1614,14 +1585,6 @@ void render_scene(GLuint fbo_id, struct camera *camera, float aspect, unsigned i
 
                 program_unbind();
             }
-
-            // TODO: reflections
-            if (renderer.skybox)
-            {
-
-            }
-
-            // TODO: emissive lighting
 
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);
@@ -2145,7 +2108,6 @@ void renderer_draw(struct camera *camera, float aspect, unsigned int elapsed_tim
     renderer.num_sprites = 0;
 }
 
-// TODO: delete all resources
 void renderer_quit(void)
 {
     glDeleteBuffers(1, &renderer.sprite_vbo_id);

@@ -1,5 +1,5 @@
-#ifndef SOUND_H
-#define SOUND_H
+#ifndef ENGINE_SOUND_H
+#define ENGINE_SOUND_H
 
 struct sound
 {

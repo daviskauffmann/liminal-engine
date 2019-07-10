@@ -1,5 +1,5 @@
-#ifndef SOURCE_H
-#define SOURCE_H
+#ifndef ENGINE_SOURCE_H
+#define ENGINE_SOURCE_H
 
 struct source
 {

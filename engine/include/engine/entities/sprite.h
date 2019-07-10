@@ -1,5 +1,5 @@
-#ifndef SPRITE_H
-#define SPRITE_H
+#ifndef ENGINE_SPRITE_H
+#define ENGINE_SPRITE_H
 
 struct sprite
 {
