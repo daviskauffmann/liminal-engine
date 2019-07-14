@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
 
         renderer_add_water(test_water);
 
-        renderer_add_sprite(grass_sprite);
+        // renderer_add_sprite(grass_sprite);
 
         // render everything
         renderer_draw(main_camera, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, SDL_GetTicks(), delta_time);
