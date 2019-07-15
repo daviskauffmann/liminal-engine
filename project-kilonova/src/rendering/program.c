@@ -154,10 +154,9 @@ static GLuint shader_create(GLenum type, const char *filename)
     GLuint shader = glCreateShader(type);
 
     // open shader file
-    FILE *file;
-    fopen_s(&file, filename, "rb");
+    SDL_RWops *io = SDL_RWFromFile(filename, "rb");
 
-    if (!file)
+    if (!io)
     {
         printf("Error: Couldn't open file %s\n", filename);
 
@@ -165,9 +164,9 @@ static GLuint shader_create(GLenum type, const char *filename)
     }
 
     // get file size
-    fseek(file, 0, SEEK_END);
-    size_t size = (size_t)ftell(file);
-    rewind(file);
+    SDL_RWseek(io, 0, RW_SEEK_END);
+    size_t size = SDL_RWtell(io);
+    SDL_RWseek(io, 0, RW_SEEK_SET);
 
     // file buffer
     char *source = malloc(size + 1);
@@ -180,7 +179,7 @@ static GLuint shader_create(GLenum type, const char *filename)
     }
 
     // read the file into the buffer
-    if (fread(source, sizeof(char), size, file) != size)
+    if (SDL_RWread(io, source, sizeof(char), size) != size)
     {
         printf("Error: Couldn't read file %s\n", filename);
 
@@ -190,7 +189,7 @@ static GLuint shader_create(GLenum type, const char *filename)
     // null terminate
     source[size] = '\0';
 
-    fclose(file);
+    SDL_RWclose(io);
 
     // set the shader source
     glShaderSource(shader, 1, &source, NULL);
