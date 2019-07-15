@@ -106,7 +106,7 @@ void main()
     if (sun_space_proj_coords.z > 1.0) shadow = 0.0;
 
 	// final water color
-	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor) + (1 - shadow) * vec4(final_specular_color, 0.0);
+	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor); // + (1 - shadow) * vec4(final_specular_color, 0.0);
 
 	// blue tint
 	vec4 blue_color = vec4(0.0, 0.3, 0.5, 1.0);

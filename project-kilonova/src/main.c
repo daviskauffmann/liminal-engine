@@ -14,6 +14,15 @@
 
 int main(int argc, char *argv[])
 {
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
+        {
+            printf("Options:\n");
+            printf("  -h, --help\tPrint this message\n");
+        }
+    }
+
     // init SDL
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
