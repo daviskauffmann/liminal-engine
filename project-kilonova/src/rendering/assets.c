@@ -5,7 +5,7 @@ struct assets assets;
 int assets_load(void)
 {
     // create default texture
-    assets.default_texture = texture_create("assets/images/window.png");
+    assets.default_texture = texture_create("assets/images/default.png");
 
     if (!assets.default_texture)
     {
