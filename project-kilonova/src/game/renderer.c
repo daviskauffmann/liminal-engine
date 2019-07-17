@@ -32,7 +32,7 @@ struct renderer
     struct program *skybox_program;
     struct program *water_program;
     struct program *sprite_program;
-    struct program *post_program;
+    struct program *screen_program;
 
     // framebuffers
     GLuint screen_fbo_id;
@@ -324,13 +324,13 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
         return 1;
     }
 
-    renderer.post_program = program_create(
-        "assets/shaders/post.vert",
-        "assets/shaders/post.frag");
+    renderer.screen_program = program_create(
+        "assets/shaders/screen.vert",
+        "assets/shaders/screen.frag");
 
-    if (!renderer.post_program)
+    if (!renderer.screen_program)
     {
-        printf("Error: Couldn't create post program\n");
+        printf("Error: Couldn't create screen program\n");
 
         return 1;
     }
@@ -418,13 +418,12 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     program_set_int(renderer.sprite_program, "sprite.color_map", 0);
     program_unbind();
 
-    program_bind(renderer.post_program);
-    program_set_int(renderer.post_program, "screen.color_map", 0);
+    program_bind(renderer.screen_program);
+    program_set_int(renderer.screen_program, "screen.color_map", 0);
     program_unbind();
 
     // setup screen fbo
     glGenFramebuffers(1, &renderer.screen_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderer.screen_fbo_id);
 
     glGenTextures(1, &renderer.screen_texture_id);
     glBindTexture(GL_TEXTURE_2D, renderer.screen_texture_id);
@@ -443,12 +442,8 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        renderer.screen_texture_id,
-        0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -461,13 +456,21 @@ int renderer_init(int render_width, int render_height, float render_scale, int s
         render_width,
         render_height);
 
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer.screen_fbo_id);
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        renderer.screen_texture_id,
+        0);
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
         GL_DEPTH_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER,
         renderer.screen_rbo_id);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -2019,7 +2022,7 @@ void render_screen(GLuint fbo_id)
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
 
-    program_bind(renderer.post_program);
+    program_bind(renderer.screen_program);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer.screen_texture_id);
@@ -2103,7 +2106,7 @@ void renderer_quit(void)
     glDeleteFramebuffers(1, &renderer.screen_fbo_id);
 
     program_destroy(renderer.depth_program);
-    program_destroy(renderer.post_program);
+    program_destroy(renderer.screen_program);
     program_destroy(renderer.geometry_program);
     program_destroy(renderer.deferred_spot_program);
     program_destroy(renderer.deferred_point_program);
