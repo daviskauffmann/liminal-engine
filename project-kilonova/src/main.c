@@ -1,4 +1,4 @@
-#include <engine/engine.h>
+#include <game/game.h>
 
 #define WINDOW_TITLE "Project Kilonova"
 #define WINDOW_WIDTH 1280
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
                 break;
                 case SDLK_TAB:
                 {
-                    SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
+                    SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
                 }
                 break;
                 }
@@ -401,17 +401,20 @@ int main(int argc, char *argv[])
             break;
             case SDL_MOUSEMOTION:
             {
-                // mouselook
-                main_camera->pitch -= event.motion.yrel * 0.1f;
-                main_camera->yaw += event.motion.xrel * 0.1f;
+                if (SDL_GetRelativeMouseMode())
+                {
+                    // mouselook
+                    main_camera->pitch -= event.motion.yrel * 0.1f;
+                    main_camera->yaw += event.motion.xrel * 0.1f;
 
-                if (main_camera->pitch > 89.0f)
-                {
-                    main_camera->pitch = 89.0f;
-                }
-                if (main_camera->pitch < -89.0f)
-                {
-                    main_camera->pitch = -89.0f;
+                    if (main_camera->pitch > 89.0f)
+                    {
+                        main_camera->pitch = 89.0f;
+                    }
+                    if (main_camera->pitch < -89.0f)
+                    {
+                        main_camera->pitch = -89.0f;
+                    }
                 }
             }
             break;
