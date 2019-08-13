@@ -1,16 +1,16 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-#define WINDOW_TITLE "Project Kilonova"
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
+constexpr auto WINDOW_TITLE = "Project Kilonova";
+constexpr auto WINDOW_WIDTH = 1280;
+constexpr auto WINDOW_HEIGHT = 720;
 
-#define RENDER_SCALE 1.0f
+constexpr auto RENDER_SCALE = 1.0f;
 
-#define SHADOW_WIDTH 4096
-#define SHADOW_HEIGHT 4096
+constexpr auto SHADOW_WIDTH = 4096;
+constexpr auto SHADOW_HEIGHT = 4096;
 
-#define FPS_CAP 300
-#define FRAME_DELAY (1000 / FPS_CAP)
+constexpr auto FPS_CAP = 300;
+constexpr auto FRAME_DELAY = 1000 / FPS_CAP;
 
 int main(int argc, char *argv[])
 {
@@ -46,20 +46,15 @@ int main(int argc, char *argv[])
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     // setup renderer and audio
-    renderer_init(
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT,
-        RENDER_SCALE,
-        SHADOW_WIDTH,
-        SHADOW_HEIGHT);
-    audio_init();
+    Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT, RENDER_SCALE, SHADOW_WIDTH, SHADOW_HEIGHT);
+    Audio audio();
 
     // create textures
-    struct texture *box_diffuse_texture = texture_create("assets/images/box_diffuse.png");
-    struct texture *box_specular_texture = texture_create("assets/images/box_specular.png");
-    struct texture *cobble_diffuse_texture = texture_create("assets/images/cobble_diffuse.jpg");
-    struct texture *cobble_specular_texture = texture_create("assets/images/cobble_specular.jpg");
-    struct texture *grass_texture = texture_create("assets/images/grass.png");
+    Texture box_diffuse_texture("assets/images/box_diffuse.png");
+    Texture box_specular_texture("assets/images/box_specular.png");
+    Texture cobble_diffuse_texture("assets/images/cobble_diffuse.jpg");
+    Texture cobble_specular_texture("assets/images/cobble_specular.jpg");
+    Texture grass_texture("assets/images/grass.png");
 
     // create cubemaps
     const char *skybox_filenames[] = {
