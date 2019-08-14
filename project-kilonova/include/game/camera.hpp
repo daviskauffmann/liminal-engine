@@ -1,23 +1,24 @@
 #ifndef GAME_CAMERA_H
 #define GAME_CAMERA_H
 
-struct camera
+struct Camera
 {
     vec3 position;
     float pitch;
     float yaw;
     float roll;
     float fov;
-};
 
-struct camera *camera_create(
-    vec3 position,
-    float pitch,
-    float yaw,
-    float roll,
-    float fov);
-void camera_calc_front(struct camera *camera, vec3 *front);
-void camera_calc_up(struct camera *camera, vec3 *up);
-void camera_destroy(struct camera *camera);
+    Camera(
+        vec3 position,
+        float pitch,
+        float yaw,
+        float roll,
+        float fov);
+    ~Camera();
+
+    void calcFront(vec3 *front) const;
+    void calcUp(vec3 *up) const;
+};
 
 #endif

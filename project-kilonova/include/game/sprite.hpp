@@ -1,22 +1,23 @@
 #ifndef GAME_SPRITE_H
 #define GAME_SPRITE_H
 
-struct sprite
+struct Sprite
 {
     vec3 color;
-    struct texture *color_map;
+    Texture *colorMap;
     vec2 position;
     float rotation;
     vec2 scale;
-};
 
-struct sprite *sprite_create(
-    vec3 color,
-    struct texture *color_map,
-    vec2 position,
-    float rotation,
-    vec2 scale);
-void sprite_calc_model(struct sprite *sprite, mat4 model);
-void sprite_destroy(struct sprite *sprite);
+    Sprite(
+        vec3 color,
+        Texture *colorMap,
+        vec2 position,
+        float rotation,
+        vec2 scale);
+    ~Sprite();
+
+    void calcModel(mat4 *model) const;
+};
 
 #endif

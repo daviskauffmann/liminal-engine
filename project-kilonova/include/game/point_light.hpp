@@ -1,21 +1,21 @@
-#ifndef GAME_POINT_LIGHT_H
-#define GAME_POINT_LIGHT_H
+#ifndef GAME_POINT_LIGHT_HPP
+#define GAME_POINT_LIGHT_HPP
 
-struct point_light
+struct PointLight
 {
     vec3 position;
-    vec3 ambient_color;
-    vec3 diffuse_color;
-    vec3 specular_color;
+    vec3 ambientColor;
+    vec3 diffuseColor;
+    vec3 specularColor;
     vec3 attenuation;
-};
 
-struct point_light *point_light_create(
-    vec3 position,
-    vec3 ambient_color,
-    vec3 diffuse_color,
-    vec3 specular_color,
-    vec3 attenuation);
-void point_light_destroy(struct point_light *point_light);
+    PointLight(
+        vec3 position,
+        vec3 ambientColor,
+        vec3 diffuseColor,
+        vec3 specularColor,
+        vec3 attenuation);
+    ~PointLight();
+};
 
 #endif

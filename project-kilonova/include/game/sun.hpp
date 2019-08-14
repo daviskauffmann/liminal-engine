@@ -1,19 +1,19 @@
-#ifndef GAME_SUN_H
-#define GAME_SUN_H
+#ifndef GAME_SUN_HPP
+#define GAME_SUN_HPP
 
-struct sun
+struct Sun
 {
     vec3 direction;
-    vec3 ambient_color;
-    vec3 diffuse_color;
-    vec3 specular_color;
-};
+    vec3 ambientColor;
+    vec3 diffuseColor;
+    vec3 specularColor;
 
-struct sun *sun_create(
-    vec3 direction,
-    vec3 ambient_color,
-    vec3 diffuse_color,
-    vec3 specular_color);
-void sun_destroy(struct sun *sun);
+    Sun(
+        vec3 direction,
+        vec3 ambientColor,
+        vec3 diffuseColor,
+        vec3 specularColor);
+    ~Sun();
+};
 
 #endif

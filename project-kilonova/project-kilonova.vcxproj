@@ -108,8 +108,6 @@
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\game\assets.cpp" />
-    <ClCompile Include="src\game\audio.c" />
     <ClCompile Include="src\game\audio.cpp" />
     <ClCompile Include="src\game\camera.cpp" />
     <ClCompile Include="src\game\cubemap.cpp" />
@@ -120,26 +118,12 @@
     <ClCompile Include="src\game\point_light.cpp" />
     <ClCompile Include="src\game\program.cpp" />
     <ClCompile Include="src\game\renderer.cpp" />
-    <ClCompile Include="src\game\sound.c" />
     <ClCompile Include="src\game\sound.cpp" />
-    <ClCompile Include="src\game\source.c" />
-    <ClCompile Include="src\game\camera.c" />
-    <ClCompile Include="src\game\directional_light.c" />
-    <ClCompile Include="src\game\object.c" />
-    <ClCompile Include="src\game\point_light.c" />
     <ClCompile Include="src\game\source.cpp" />
-    <ClCompile Include="src\game\spot_light.c" />
     <ClCompile Include="src\game\spot_light.cpp" />
     <ClCompile Include="src\game\sprite.cpp" />
     <ClCompile Include="src\game\sun.cpp" />
     <ClCompile Include="src\game\water.cpp" />
-    <ClCompile Include="src\main.c" />
-    <ClCompile Include="src\game\assets.c" />
-    <ClCompile Include="src\game\cubemap.c" />
-    <ClCompile Include="src\game\material.c" />
-    <ClCompile Include="src\game\mesh.c" />
-    <ClCompile Include="src\game\program.c" />
-    <ClCompile Include="src\game\renderer.c" />
     <ClCompile Include="src\game\texture.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>

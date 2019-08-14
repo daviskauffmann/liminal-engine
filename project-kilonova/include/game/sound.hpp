@@ -1,12 +1,12 @@
-#ifndef GAME_SOUND_H
-#define GAME_SOUND_H
+#ifndef GAME_SOUND_HPP
+#define GAME_SOUND_HPP
 
-struct sound
+struct Sound
 {
-    ALuint buffer_id;
-};
+    ALuint bufferId;
 
-struct sound *sound_create(const char *filename);
-void sound_destroy(struct sound *sound);
+    Sound(const std::string &filename);
+    ~Sound();
+};
 
 #endif

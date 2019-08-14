@@ -1,21 +1,22 @@
-#ifndef GAME_MESH_H
-#define GAME_MESH_H
+#ifndef GAME_MESH_HPP
+#define GAME_MESH_HPP
 
-struct mesh
+struct Mesh
 {
-    GLuint vao_id;
-    GLuint vbo_id;
-    GLuint ebo_id;
-    unsigned int vertices_size;
-    unsigned int indices_size;
-};
+    GLuint vaoId;
+    GLuint vboId;
+    GLuint eboId;
+    unsigned int verticesSize;
+    unsigned int indicesSize;
 
-struct mesh *mesh_create(
-    float *vertices,
-    unsigned int vertices_size,
-    unsigned int *indices,
-    unsigned int indices_size);
-void mesh_draw(struct mesh *mesh);
-void mesh_destroy(struct mesh *mesh);
+    Mesh(
+        float *vertices,
+        unsigned int verticesSize,
+        unsigned int *indices,
+        unsigned int indicesSize);
+    ~Mesh();
+
+    void draw() const;
+};
 
 #endif

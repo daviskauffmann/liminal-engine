@@ -1,31 +1,33 @@
-#ifndef GAME_MATERIAL_H
-#define GAME_MATERIAL_H
+#ifndef GAME_MATERIAL_HPP
+#define GAME_MATERIAL_HPP
 
-struct material
+struct Texture;
+
+struct Material
 {
     vec3 color;
-    struct texture *diffuse_map;
-    struct texture *specular_map;
+    Texture *diffuseMap;
+    Texture *specularMap;
     float shininess;
-    struct texture *normal_map;
-    struct texture *emission_map;
+    Texture *normalMap;
+    Texture *emissionMap;
     float glow;
-};
 
-struct material *material_create(
-    vec3 color,
-    struct texture *diffuse_map,
-    struct texture *specular_map,
-    float shininess,
-    struct texture *normal_map,
-    struct texture *emission_map,
-    float glow);
-void material_bind(
-    struct material *material,
-    unsigned int diffuse_map_index,
-    unsigned int specular_map_index,
-    unsigned int normal_map_index,
-    unsigned int emission_map_index);
-void material_destroy(struct material *material);
+    Material(
+        vec3 _color,
+        Texture *diffuseMap,
+        Texture *specularMap,
+        float shininess,
+        Texture *normalMap,
+        Texture *emissionMap,
+        float glow);
+    ~Material();
+
+    void bind(
+        unsigned int diffuseMapIndex,
+        unsigned int specularMapIndex,
+        unsigned int normalMapIndex,
+        unsigned int emissionMapIndex) const;
+};
 
 #endif

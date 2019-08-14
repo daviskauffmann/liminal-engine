@@ -1,27 +1,27 @@
-#ifndef GAME_SPOT_LIGHT_H
-#define GAME_SPOT_LIGHT_H
+#ifndef GAME_SPOT_LIGHT_HPP
+#define GAME_SPOT_LIGHT_HPP
 
-struct spot_light
+struct SpotLight
 {
     vec3 position;
     vec3 direction;
-    vec3 ambient_color;
-    vec3 diffuse_color;
-    vec3 specular_color;
+    vec3 ambientColor;
+    vec3 diffuseColor;
+    vec3 specularColor;
     vec3 attenuation;
-    float inner_cutoff;
-    float outer_cutoff;
-};
+    float innerCutoff;
+    float outerCutoff;
 
-struct spot_light *spot_light_create(
-    vec3 position,
-    vec3 direction,
-    vec3 ambient_color,
-    vec3 diffuse_color,
-    vec3 specular_color,
-    vec3 attenuation,
-    float inner_cutoff,
-    float outer_cutoff);
-void spot_light_destroy(struct spot_light *spot_light);
+    SpotLight(
+        vec3 position,
+        vec3 direction,
+        vec3 ambientColor,
+        vec3 diffuseColor,
+        vec3 specularColor,
+        vec3 attenuation,
+        float innerCutoff,
+        float outerCutoff);
+    ~SpotLight();
+};
 
 #endif

@@ -1,6 +1,18 @@
 #ifndef GAME_RENDERER_HPP
 #define GAME_RENDERER_HPP
 
+struct Camera;
+struct Cubemap;
+struct DirectionalLight;
+struct Object;
+struct PointLight;
+class Program;
+struct SpotLight;
+struct Sprite;
+struct Sun;
+struct Texture;
+struct Water;
+
 enum RenderMode
 {
     RENDER_MODE_FORWARD,
@@ -13,16 +25,16 @@ public:
     Renderer(int renderWidth, int renderHeight, float renderScale, int shadowWidth, int shadowHeight);
     ~Renderer();
 
-    void setMode(enum render_mode renderMode);
-    void addObject(struct object *object);
-    void setSun(struct sun *sun);
-    void addDirectionalLight(struct directional_light *directionalLight);
-    void addPointLight(struct point_light *pointLight);
-    void addspotLight(struct spot_light *spotLight);
-    void setSkybox(struct cubemap *skybox);
-    void addWater(struct water *water);
-    void addSprite(struct sprite *sprite);
-    void draw(struct camera *camera, float aspect, unsigned int elapsedTime, float deltaTime) const;
+    void setMode(RenderMode renderMode);
+    void addObject(Object *object);
+    void setSun(Sun *sun);
+    void addDirectionalLight(DirectionalLight *directionalLight);
+    void addPointLight(PointLight *pointLight);
+    void addSpotLight(SpotLight *spotLight);
+    void setSkybox(Cubemap *skybox);
+    void addWater(Water *water);
+    void addSprite(Sprite *sprite);
+    void draw(Camera *camera, float aspect, unsigned int elapsedTime, float deltaTime) const;
 
 private:
     // settings
@@ -35,25 +47,25 @@ private:
     int reflectionHeight;
     int refractionWidth;
     int refractionHeight;
-    render_mode renderMode;
+    RenderMode renderMode;
 
     // shader programs
-    program *depthProgram;
-    program *forwardColorProgram;
-    program *forwardSunProgram;
-    program *forwardDirectionalProgram;
-    program *forwardPointProgram;
-    program *forwardSpotProgram;
-    program *forwardReflectionProgram;
-    program *geometryProgram;
-    program *deferredSunProgram;
-    program *deferredDirectionalProgram;
-    program *deferredPointProgram;
-    program *deferredSpotProgram;
-    program *skyboxProgram;
-    program *waterProgram;
-    program *spriteProgram;
-    program *screenProgram;
+    Program *depthProgram;
+    Program *forwardColorProgram;
+    Program *forwardSunProgram;
+    Program *forwardDirectionalProgram;
+    Program *forwardPointProgram;
+    Program *forwardSpotProgram;
+    Program *forwardReflectionProgram;
+    Program *geometryProgram;
+    Program *deferredSunProgram;
+    Program *deferredDirectionalProgram;
+    Program *deferredPointProgram;
+    Program *deferredSpotProgram;
+    Program *skyboxProgram;
+    Program *waterProgram;
+    Program *spriteProgram;
+    Program *screenProgram;
 
     // framebuffers
     GLuint screenFboId;
@@ -100,31 +112,18 @@ private:
     GLuint screenVboId;
 
     // textures
-    texture *waterDudvTexture;
-    texture *waterNormalTexture;
+    Texture *waterDudvTexture;
+    Texture *waterNormalTexture;
 
     // renderables
-    object **objects;
-    unsigned long long numObjects;
-
-    sun *sun;
-
-    directional_light **directionalLights;
-    unsigned long long numDirectionalLights;
-
-    point_light **pointLights;
-    unsigned long long numPointLights;
-
-    spot_light **spotLights;
-    unsigned long long numSpotLights;
-
-    cubemap *skybox;
-
-    water **waters;
-    unsigned long long numWaters;
-
-    sprite **sprites;
-    unsigned long long numSprites;
+    std::vector<Object *> objects;
+    Sun *sun;
+    std::vector<DirectionalLight *> directionalLights;
+    std::vector<PointLight *> pointLights;
+    std::vector<SpotLight *> spotLights;
+    Cubemap *skybox;
+    std::vector<Water *> waters;
+    std::vector<Sprite *> sprites;
 };
 
 #endif

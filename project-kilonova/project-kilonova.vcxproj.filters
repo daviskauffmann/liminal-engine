@@ -60,9 +60,6 @@
     <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\game\assets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\game\audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

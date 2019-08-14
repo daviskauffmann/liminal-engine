@@ -1,28 +1,28 @@
-#ifndef GAME_OBJECT_H
-#define GAME_OBJECT_H
+#ifndef GAME_OBJECT_HPP
+#define GAME_OBJECT_HPP
 
-struct object
+struct Object
 {
-    struct mesh *mesh;
-    struct material *material;
+    Mesh *mesh;
+    Material *material;
     vec3 position;
     vec3 rotation;
     vec3 scale;
-};
 
-struct object *object_create(
-    struct mesh *mesh,
-    struct material *material,
-    vec3 position,
-    vec3 rotation,
-    vec3 scale);
-void object_calc_model(struct object *object, vec4 *model);
-void object_draw(
-    struct object *object,
-    unsigned int diffuse_map_index,
-    unsigned int specular_map_index,
-    unsigned int normal_map_index,
-    unsigned int emission_map_index);
-void object_destroy(struct object *object);
+    Object(
+        Mesh *mesh,
+        Material *material,
+        vec3 position,
+        vec3 rotation,
+        vec3 scale);
+    ~Object();
+
+    void calcModel(vec4 *model) const;
+    void draw(
+        unsigned int diffusemapIndex,
+        unsigned int specularmapIndex,
+        unsigned int normalmapIndex,
+        unsigned int emissionmapIndex) const;
+};
 
 #endif

@@ -1,12 +1,10 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <malloc.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -18,7 +16,6 @@
 #include <SDL/SDL_net.h>
 #include <SDL/SDL_ttf.h>
 
-#include "assets.hpp"
 #include "audio.hpp"
 #include "camera.hpp"
 #include "cubemap.hpp"

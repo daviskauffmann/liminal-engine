@@ -1,21 +1,24 @@
 #ifndef GAME_PROGRAM_H
 #define GAME_PROGRAM_H
 
-struct program
+class Program
 {
-    GLuint program_id;
-};
+public:
+    Program(const std::string &vertexFilename, const std::string &fragmentFilename);
+    ~Program();
 
-struct program *program_create(const char *vertex_filename, const char *fragment_filename);
-GLint program_get_location(struct program *program, const char *name);
-void program_bind(struct program *program);
-void program_set_int(struct program *program, const char *name, int value);
-void program_set_unsigned_int(struct program *program, const char *name, unsigned int value);
-void program_set_float(struct program *program, const char *name, float value);
-void program_set_vec3(struct program *program, const char *name, vec3 vec);
-void program_set_vec4(struct program *program, const char *name, vec4 vec);
-void program_set_mat4(struct program *program, const char *name, mat4 mat);
-void program_unbind(void);
-void program_destroy(struct program *program);
+    GLint getLocation(const std::string &name) const;
+    void bind() const;
+    void setInt(const std::string &name, int value) const;
+    void setUnsignedInt(const std::string &name, unsigned int value) const;
+    void setFloat(const std::string &name, float value) const;
+    void setVec3(const std::string &name, vec3 vec) const;
+    void setVec4(const std::string &name, vec4 vec) const;
+    void setMat4(const std::string &name, mat4 mat) const;
+    void unbind(void) const;
+private:
+    GLuint programId;
+    std::map<std::string, GLint> uniforms;
+};
 
 #endif

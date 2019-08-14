@@ -1,12 +1,12 @@
 #ifndef GAME_CUBEMAP_H
 #define GAME_CUBEMAP_H
 
-struct cubemap
+struct Cubemap
 {
-    GLuint texture_id;
-};
+    GLuint textureId;
 
-struct cubemap *cubemap_create(const char **filenames);
-void cubemap_destroy(struct cubemap *cubemap);
+    Cubemap(std::vector<std::string> filenames);
+    ~Cubemap();
+};
 
 #endif

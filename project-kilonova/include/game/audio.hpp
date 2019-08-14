@@ -1,8 +1,16 @@
-#ifndef GAME_AUDIO_H
-#define GAME_AUDIO_H
+#ifndef GAME_AUDIO_HPP
+#define GAME_AUDIO_HPP
 
-int audio_init(void);
-void audio_set_listener(vec3 position, vec3 velocity, vec3 *orientation);
-void audio_quit(void);
+class Audio
+{
+public:
+    Audio();
+    ~Audio();
+
+    void setListener(vec3 position, vec3 velocity, vec3 *orientation) const;
+private:
+    ALCdevice *device;
+    ALCcontext *context;
+};
 
 #endif

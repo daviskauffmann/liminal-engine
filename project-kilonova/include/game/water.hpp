@@ -1,13 +1,13 @@
 #ifndef GAME_WATER_H
 #define GAME_WATER_H
 
-struct water
+struct Water
 {
     vec3 position;
     vec2 scale;
-};
 
-struct water *water_create(vec3 position, vec2 scale);
-void water_destroy(struct water *water);
+    Water(vec3 position, vec2 scale);
+    ~Water();
+};
 
 #endif

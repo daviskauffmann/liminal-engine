@@ -1,13 +1,14 @@
-#ifndef GAME_TEXTURE_H
-#define GAME_TEXTURE_H
+#ifndef GAME_TEXTURE_HPP
+#define GAME_TEXTURE_HPP
 
-struct texture
+struct Texture
 {
     GLuint texture_id;
-};
 
-struct texture *texture_create(const char *filename);
-void texture_bind(struct texture *texture, unsigned int index);
-void texture_destroy(struct texture *texture);
+    Texture(const std::string &filename);
+    ~Texture();
+
+    void bind(unsigned int index) const;
+};
 
 #endif
