@@ -1,23 +1,28 @@
-#ifndef GAME_SPRITE_H
-#define GAME_SPRITE_H
+#ifndef GAME_SPRITE_HPP
+#define GAME_SPRITE_HPP
 
-struct Sprite
+namespace pk
 {
-    vec3 color;
-    Texture *colorMap;
-    vec2 position;
-    float rotation;
-    vec2 scale;
+    struct texture;
 
-    Sprite(
-        vec3 color,
-        Texture *colorMap,
-        vec2 position,
-        float rotation,
-        vec2 scale);
-    ~Sprite();
+    struct sprite
+    {
+        vec3 color;
+        texture *color_map;
+        vec2 position;
+        float rotation;
+        vec2 scale;
 
-    void calcModel(mat4 *model) const;
-};
+        sprite(
+            vec3 color,
+            texture *colorMap,
+            vec2 position,
+            float rotation,
+            vec2 scale);
+        ~sprite();
+
+        void calc_model(vec4 *model);
+    };
+}
 
 #endif

@@ -1,19 +1,22 @@
 #ifndef GAME_SUN_HPP
 #define GAME_SUN_HPP
 
-struct Sun
+namespace pk
 {
-    vec3 direction;
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
+    struct sun
+    {
+        vec3 direction;
+        vec3 ambient_color;
+        vec3 diffuse_color;
+        vec3 specular_color;
 
-    Sun(
-        vec3 direction,
-        vec3 ambientColor,
-        vec3 diffuseColor,
-        vec3 specularColor);
-    ~Sun();
-};
+        sun(
+            vec3 direction,
+            vec3 ambient_color,
+            vec3 diffuse_color,
+            vec3 specular_color);
+        ~sun();
+    };
+}
 
 #endif

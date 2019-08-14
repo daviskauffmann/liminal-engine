@@ -1,164 +1,16 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-static GLuint shader_create(GLenum type, const char *filename);
-
-struct program *program_create(const char *vertex_filename, const char *fragment_filename)
-{
-    struct program *program = malloc(sizeof(struct program));
-
-    if (!program)
-    {
-        printf("Error: Couldn't allocate program\n");
-
-        return NULL;
-    }
-
-    program->program_id = glCreateProgram();
-
-    // compile shaders and attach to program
-    GLuint vertex_shader = 0;
-    if (vertex_filename)
-    {
-        vertex_shader = shader_create(GL_VERTEX_SHADER, vertex_filename);
-
-        if (!vertex_shader)
-        {
-            printf("Error: Couldn't compile vertex shader\n");
-
-            return NULL;
-        }
-
-        glAttachShader(program->program_id, vertex_shader);
-    }
-
-    GLuint fragment_shader = 0;
-    if (fragment_filename)
-    {
-        fragment_shader = shader_create(GL_FRAGMENT_SHADER, fragment_filename);
-
-        if (!fragment_shader)
-        {
-            printf("Error: Couldn't compile fragment shader\n");
-
-            return NULL;
-        }
-
-        glAttachShader(program->program_id, fragment_shader);
-    }
-
-    // link program
-    glLinkProgram(program->program_id);
-    {
-        GLint success;
-        glGetProgramiv(program->program_id, GL_LINK_STATUS, &success);
-
-        if (!success)
-        {
-            GLchar info_log[512];
-            glGetProgramInfoLog(program->program_id, sizeof(info_log), NULL, info_log);
-
-            printf("Error: Program linking failed\n%s\n", info_log);
-
-            return NULL;
-        }
-    }
-
-    // detach and delete shaders, we're done with them now
-    if (vertex_shader)
-    {
-        glDetachShader(program->program_id, vertex_shader);
-        glDeleteShader(vertex_shader);
-    }
-
-    if (fragment_shader)
-    {
-        glDetachShader(program->program_id, fragment_shader);
-        glDeleteShader(fragment_shader);
-    }
-
-    // check for errors
-    glValidateProgram(program->program_id);
-    {
-        GLint success;
-        glGetProgramiv(program->program_id, GL_VALIDATE_STATUS, &success);
-
-        if (!success)
-        {
-            GLchar info_log[512];
-            glGetProgramInfoLog(program->program_id, sizeof(info_log), NULL, info_log);
-
-            printf("Error: Program validation failed\n%s\n", info_log);
-
-            return NULL;
-        }
-    }
-
-    return program;
-}
-
-GLint program_get_location(struct program *program, const char *name)
-{
-    return glGetUniformLocation(program->program_id, name);
-}
-
-void program_bind(struct program *program)
-{
-    glUseProgram(program->program_id);
-}
-
-void program_set_int(struct program *program, const char *name, int value)
-{
-    glUniform1i(program_get_location(program, name), value);
-}
-
-void program_set_unsigned_int(struct program *program, const char *name, unsigned int value)
-{
-    glUniform1ui(program_get_location(program, name), value);
-}
-
-void program_set_float(struct program *program, const char *name, float value)
-{
-    glUniform1f(program_get_location(program, name), value);
-}
-
-void program_set_vec3(struct program *program, const char *name, vec3 vec)
-{
-    glUniform3fv(program_get_location(program, name), 1, (GLfloat *)vec);
-}
-
-void program_set_vec4(struct program *program, const char *name, vec4 vec)
-{
-    glUniform4fv(program_get_location(program, name), 1, (GLfloat *)vec);
-}
-
-void program_set_mat4(struct program *program, const char *name, mat4 mat)
-{
-    glUniformMatrix4fv(program_get_location(program, name), 1, GL_FALSE, (GLfloat *)mat);
-}
-
-void program_unbind(void)
-{
-    glUseProgram(0);
-}
-
-void program_destroy(struct program *program)
-{
-    glDeleteProgram(program->program_id);
-
-    free(program);
-}
-
-static GLuint shader_create(GLenum type, const char *filename)
+static GLuint create_shader(GLenum type, const std::string &filename)
 {
     // create shader
     GLuint shader = glCreateShader(type);
 
     // open shader file
-    SDL_RWops *io = SDL_RWFromFile(filename, "rb");
+    SDL_RWops *io = SDL_RWFromFile(filename.c_str(), "rb");
 
     if (!io)
     {
-        printf("Error: Couldn't open file %s\n", filename);
+        std::cout << "Error: Couldn't open file " << filename << std::endl;
 
         return 0;
     }
@@ -169,11 +21,11 @@ static GLuint shader_create(GLenum type, const char *filename)
     SDL_RWseek(io, 0, RW_SEEK_SET);
 
     // file buffer
-    char *source = malloc(size + 1);
+    char *source = (char *)malloc(size + 1);
 
     if (!source)
     {
-        printf("Error: Couldn't allocate size %ld\n", (long)size);
+        std::cout << "Error: Couldn't allocate size " << size << std::endl;
 
         return 0;
     }
@@ -181,7 +33,7 @@ static GLuint shader_create(GLenum type, const char *filename)
     // read the file into the buffer
     if (SDL_RWread(io, source, sizeof(char), size) != size)
     {
-        printf("Error: Couldn't read file %s\n", filename);
+        std::cout << "Error: Couldn't read file " << filename << std::endl;
 
         return 0;
     }
@@ -207,11 +59,140 @@ static GLuint shader_create(GLenum type, const char *filename)
     {
         GLchar info_log[512];
         glGetShaderInfoLog(shader, sizeof(info_log), NULL, info_log);
-
-        printf("Error: Shader compilation failed\n%s\n", info_log);
+        std::cout << info_log << std::endl;
 
         return 0;
     }
 
     return shader;
+}
+
+namespace pk
+{
+    program::program(const std::string &vertex_filename, const std::string &fragment_filename)
+    {
+        this->program_id = glCreateProgram();
+
+        // compile shaders and attach to program
+        GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
+
+        if (!vertex_shader)
+        {
+            throw std::exception("Couldn't compile vertex shader");
+        }
+
+        glAttachShader(this->program_id, vertex_shader);
+
+        GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
+
+        if (!fragment_shader)
+        {
+            throw std::exception("Couldn't compile fragment shader");
+        }
+
+        glAttachShader(this->program_id, fragment_shader);
+
+        // link program
+        glLinkProgram(this->program_id);
+        {
+            GLint success;
+            glGetProgramiv(this->program_id, GL_LINK_STATUS, &success);
+
+            if (!success)
+            {
+                GLchar info_log[512];
+                glGetProgramInfoLog(this->program_id, sizeof(info_log), NULL, info_log);
+                std::cout << info_log << std::endl;
+
+                throw std::exception("Program linking failed... see log");
+            }
+        }
+
+        // detach and delete shaders, we're done with them now
+        glDetachShader(this->program_id, vertex_shader);
+        glDeleteShader(vertex_shader);
+
+        glDetachShader(this->program_id, fragment_shader);
+        glDeleteShader(fragment_shader);
+
+        // check for errors
+        glValidateProgram(this->program_id);
+        {
+            GLint success;
+            glGetProgramiv(this->program_id, GL_VALIDATE_STATUS, &success);
+
+            if (!success)
+            {
+                GLchar info_log[512];
+                glGetProgramInfoLog(this->program_id, sizeof(info_log), NULL, info_log);
+                std::cout << info_log << std::endl;
+
+                throw std::exception("Program validation failed... see log");
+            }
+        }
+    }
+
+    program::~program()
+    {
+        glDeleteProgram(this->program_id);
+    }
+
+    void program::bind() const
+    {
+        glUseProgram(this->program_id);
+    }
+
+    void program::unbind(void) const
+    {
+        glUseProgram(0);
+    }
+
+    GLint program::get_location(const std::string &name)
+    {
+        GLint location;
+
+        if (this->uniforms.find(name) == this->uniforms.end())
+        {
+            location = this->uniforms[name];
+        }
+        else
+        {
+            location = glGetUniformLocation(this->program_id, name.c_str());
+
+            this->uniforms[name] = location;
+        }
+
+        return location;
+    }
+
+
+    void program::set_int(const std::string &name, int value)
+    {
+        glUniform1i(this->get_location(name), value);
+    }
+
+    void program::set_unsigned_int(const std::string &name, unsigned int value)
+    {
+        glUniform1ui(this->get_location(name), value);
+    }
+
+    void program::set_float(const std::string &name, float value)
+    {
+        glUniform1f(this->get_location(name), value);
+    }
+
+    void program::set_vec3(const std::string &name, vec3 vec)
+    {
+        glUniform3fv(this->get_location(name), 1, (GLfloat *)vec);
+    }
+
+    void program::set_vec4(const std::string &name, vec4 vec)
+    {
+        glUniform4fv(this->get_location(name), 1, (GLfloat *)vec);
+    }
+
+    void program::set_mat4(const std::string &name, mat4 mat)
+    {
+        glUniformMatrix4fv(this->get_location(name), 1, GL_FALSE, (GLfloat *)mat);
+    }
 }

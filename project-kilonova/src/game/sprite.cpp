@@ -1,42 +1,32 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct sprite *sprite_create(
-    vec3 color,
-    struct texture *color_map,
-    vec2 position,
-    float rotation,
-    vec2 scale)
+namespace pk
 {
-    struct sprite *sprite = malloc(sizeof(struct sprite));
-
-    if (!sprite)
+    sprite::sprite(
+        vec3 color,
+        pk::texture *color_map,
+        vec2 position,
+        float rotation,
+        vec2 scale)
     {
-        printf("Error: Couldn't allocate sprite\n");
-
-        return NULL;
+        glm_vec_copy(color, this->color);
+        this->color_map = color_map;
+        glm_vec_copy(position, this->position);
+        this->rotation = rotation;
+        glm_vec_copy(scale, this->scale);
     }
 
-    glm_vec_copy(color, sprite->color);
-    sprite->color_map = color_map;
-    glm_vec_copy(position, sprite->position);
-    sprite->rotation = rotation;
-    glm_vec_copy(scale, sprite->scale);
+    sprite::~sprite()
+    {
 
-    return sprite;
-}
+    }
 
-void sprite_calc_model(struct sprite *sprite, mat4 model)
-{
-    glm_translate(model, sprite->position);
-    vec3 center = { sprite->scale[0] * 0.5f, sprite->scale[1] * 0.5f, 0.0f };
-    glm_translate(model, center);
-    glm_rotate(model, sprite->rotation, GLM_ZUP);
-    vec3 revert = { sprite->scale[0] * -0.5f, sprite->scale[1] * -0.5f, 0.0f };
-    glm_translate(model, revert);
-    glm_scale(model, sprite->scale);
-}
-
-void sprite_destroy(struct sprite *sprite)
-{
-    free(sprite);
+    void sprite::calc_model(vec4 *model)
+    {
+        glm_translate(model, this->position);
+        glm_translate(model, vec3{ this->scale[0] * 0.5f, this->scale[1] * 0.5f, 0.0f });
+        glm_rotate(model, this->rotation, vec3{ 0.0f, 0.0f, 1.0f });
+        glm_translate(model, vec3{ this->scale[0] * -0.5f, this->scale[1] * -0.5f, 0.0f });
+        glm_scale(model, this->scale);
+    }
 }

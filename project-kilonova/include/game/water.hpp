@@ -1,13 +1,16 @@
-#ifndef GAME_WATER_H
-#define GAME_WATER_H
+#ifndef GAME_WATER_HPP
+#define GAME_WATER_HPP
 
-struct Water
+namespace pk
 {
-    vec3 position;
-    vec2 scale;
+    struct water
+    {
+        vec3 position;
+        vec2 scale;
 
-    Water(vec3 position, vec2 scale);
-    ~Water();
-};
+        water(vec3 position, vec2 scale);
+        ~water();
+    };
+}
 
 #endif

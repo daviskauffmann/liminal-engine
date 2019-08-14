@@ -1,16 +1,16 @@
 #include <game/game.hpp>
 
-constexpr auto windowTitle = "Project Kilonova";
-constexpr auto windowWidth = 1280;
-constexpr auto windowHeight = 720;
+constexpr auto window_title = "Project Kilonova";
+constexpr auto window_width = 1280;
+constexpr auto window_height = 720;
 
-constexpr auto renderScale = 1.0f;
+constexpr auto render_scale = 1.0f;
 
-constexpr auto shadowWidth = 4096;
-constexpr auto shadowHeight = 4096;
+constexpr auto shadow_width = 4096;
+constexpr auto shadow_height = 4096;
 
-constexpr auto fpsCap = 300;
-constexpr auto frameDelay = 1000 / fpsCap;
+constexpr auto fps_cap = 300;
+constexpr auto frame_delay = 1000 / fps_cap;
 
 int main(int argc, char *argv[])
 {
@@ -33,11 +33,11 @@ int main(int argc, char *argv[])
 
     // create window
     SDL_Window *window = SDL_CreateWindow(
-        windowTitle,
+        window_title,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        windowWidth,
-        windowHeight,
+        window_width,
+        window_height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     // create OpenGL context
@@ -47,28 +47,28 @@ int main(int argc, char *argv[])
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     // setup renderer and audio
-    Renderer renderer(windowWidth, windowHeight, renderScale, shadowWidth, shadowHeight);
-    Audio audio;
+    pk::renderer renderer(window_width, window_height, render_scale, shadow_width, shadow_height);
+    pk::audio audio;
 
     // create meshes
-    float quadVertices[] = {
+    float quad_vertices[] = {
         // position           // normal            // uv
          1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top-right
          1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
         -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f, // bottom-left
         -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f  // top-left
     };
-    unsigned int quadIndices[] = {
+    unsigned int quad_indices[] = {
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
-    Mesh quadMesh(
-        quadVertices,
-        sizeof(quadVertices),
-        quadIndices,
-        sizeof(quadIndices));
+    pk::mesh quad_mesh(
+        quad_vertices,
+        sizeof(quad_vertices),
+        quad_indices,
+        sizeof(quad_indices));
 
-    float cubeVertices[] = {
+    float cube_vertices[] = {
         // position           // normal            // uv
         // back face
         -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, // bottom-left
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
         -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f  // bottom-left   
     };
-    unsigned int cubeIndices[] = {
+    unsigned int cube_indices[] = {
         0, 1, 2,
         3, 4, 5,
         6, 7, 8,
@@ -126,22 +126,22 @@ int main(int argc, char *argv[])
         27, 28, 29,
         30, 31, 32,
         33, 34, 35 };
-    Mesh cubeMesh(
-        cubeVertices,
-        sizeof(cubeVertices),
-        cubeIndices,
-        sizeof(cubeIndices));
+    pk::mesh cube_mesh(
+        cube_vertices,
+        sizeof(cube_vertices),
+        cube_indices,
+        sizeof(cube_indices));
 
     // create textures
-    Texture defaultTexture("assets/images/default.png");
-    Texture boxDiffuseTexture("assets/images/box_diffuse.png");
-    Texture boxSpecularTexture("assets/images/box_specular.png");
-    Texture cobbleDiffuseTexture("assets/images/cobble_diffuse.jpg");
-    Texture cobbleSpecularTexture("assets/images/cobble_specular.jpg");
-    Texture grassTexture("assets/images/grass.png");
+    pk::texture default_texture("assets/images/default.png");
+    pk::texture box_diffuse_texture("assets/images/box_diffuse.png");
+    pk::texture box_specular_texture("assets/images/box_specular.png");
+    pk::texture cobble_diffuse_texture("assets/images/cobble_diffuse.jpg");
+    pk::texture cobble_specular_texture("assets/images/cobble_specular.jpg");
+    pk::texture grass_texture("assets/images/grass.png");
 
     // create cubemaps
-    Cubemap skyboxCubemap({
+    pk::cubemap skybox_cubemap({
         "assets/images/sky/right.jpg",
         "assets/images/sky/left.jpg",
         "assets/images/sky/top.jpg",
@@ -150,100 +150,100 @@ int main(int argc, char *argv[])
         "assets/images/sky/back.jpg" });
 
     // create sounds
-    Sound bounceSound("assets/audio/bounce.wav");
-    Sound shootSound("assets/audio/shoot.wav");
+    pk::sound bounce_sound("assets/audio/bounce.wav");
+    pk::sound shoot_sound("assets/audio/shoot.wav");
 
     // create materials
-    Material defaultMaterial(
+    pk::material default_material(
         vec3{ 1.0f, 1.0f, 1.0f },
-        &defaultTexture,
-        &defaultTexture,
+        &default_texture,
+        &default_texture,
         16.0f,
         nullptr,
         nullptr,
         1.0f);
-    Material boxMaterial(
+    pk::material box_material(
         vec3{ 1.0f, 1.0f, 1.0f },
-        &boxDiffuseTexture,
-        &boxSpecularTexture,
+        &box_diffuse_texture,
+        &box_specular_texture,
         16.0f,
         nullptr,
         nullptr,
         1.0f);
-    Material cobbleMaterial(
+    pk::material cobble_material(
         vec3{ 1.0f, 1.0f, 1.0f },
-        &cobbleDiffuseTexture,
-        &cobbleSpecularTexture,
+        &cobble_diffuse_texture,
+        &cobble_specular_texture,
         16.0f,
         nullptr,
         nullptr,
         1.0f);
 
     // create objects
-    Object floorObject(
-        &cubeMesh,
-        &cobbleMaterial,
+    pk::object floor_object(
+        &cube_mesh,
+        &cobble_material,
         vec3{ 0.0f, -4.0f, 0.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 10.0f, 1.0f, 10.0f });
-    Object box1Object(
-        &cubeMesh,
-        &defaultMaterial,
+    pk::object box_1_object(
+        &cube_mesh,
+        &default_material,
         vec3{ 0.0f, 1.0f, 0.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 1.0f, 1.0f, 1.0f });
-    Object box2Object(
-        &cubeMesh,
-        &boxMaterial,
+    pk::object box_2_object(
+        &cube_mesh,
+        &box_material,
         vec3{ 2.0f, -0.5f, 0.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 0.5f, 0.5f, 0.5f });
-    Object box3Object(
-        &cubeMesh,
-        &boxMaterial,
+    pk::object box_3_object(
+        &cube_mesh,
+        &box_material,
         vec3{ 0.0f, -0.5f, 2.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 0.5f, 0.5f, 0.5f });
-    Object box4Object(
-        &cubeMesh,
-        &boxMaterial,
+    pk::object box_4_object(
+        &cube_mesh,
+        &box_material,
         vec3{ -2.0f, -0.5f, 0.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 0.5f, 0.5f, 0.5f });
-    Object box5Object(
-        &cubeMesh,
-        &boxMaterial,
+    pk::object box_5_object(
+        &cube_mesh,
+        &box_material,
         vec3{ 0.0f, -0.5f, -2.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 0.5f, 0.5f, 0.5f });
 
     // create sun
-    Sun sun(
+    pk::sun sun(
         vec3{ -0.2f, -1.0f, -0.3f },
         vec3{ 0.1f, 0.1f, 0.1f },
         vec3{ 0.8f, 0.8f, 0.8f },
         vec3{ 1.0f, 1.0f, 1.0f });
 
     // create point lights
-    PointLight redPointLight(
+    pk::point_light red_point_light(
         vec3{ 2.0f, 0.0f, 2.0f },
         vec3{ 0.1f, 0.0f, 0.0f },
         vec3{ 0.8f, 0.0f, 0.0f },
         vec3{ 1.0f, 0.0f, 0.0f },
         vec3{ 1.0f, 0.09f, 0.32f });
-    PointLight yellowPointLight(
+    pk::point_light yellow_point_light(
         vec3{ -2.0f, 0.0f, -2.0f },
         vec3{ 0.1f, 0.1f, 0.0f },
         vec3{ 0.8f, 0.8f, 0.0f },
         vec3{ 1.0f, 1.0f, 0.0f },
         vec3{ 1.0f, 0.09f, 0.32f });
-    PointLight greenPointLight(
+    pk::point_light green_point_light(
         vec3{ 2.0f, 0.0f, -2.0f },
         vec3{ 0.0f, 0.1f, 0.0f },
         vec3{ 0.0f, 0.8f, 0.0f },
         vec3{ 0.0f, 1.0f, 0.0f },
         vec3{ 1.0f, 0.09f, 0.32f });
-    PointLight bluePointLight(
+    pk::point_light blue_point_light(
         vec3{ -2.0f, 0.0f, 2.0f },
         vec3{ 0.0f, 0.0f, 0.1f },
         vec3{ 0.0f, 0.0f, 0.8f },
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
         vec3{ 1.0f, 0.09f, 0.32f });
 
     // create spot lights
-    SpotLight torchSpotLight(
+    pk::spot_light torch_spot_light(
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 0.0f, 0.0f, 0.0f },
         vec3{ 0.5f, 0.5f, 0.5f },
@@ -262,20 +262,20 @@ int main(int argc, char *argv[])
         cosf(glm_rad(15.0f)));
 
     // create waters
-    Water testWater(
+    pk::water test_water(
         vec3{ 0.0f, -2.0f, 0.0f },
         vec3{ 100.0f, 100.0f });
 
     // create sprites
-    Sprite grassSprite(
+    pk::sprite grass_sprite(
         vec3{ 1.0f, 1.0f, 1.0f },
-        &grassTexture,
+        &grass_texture,
         vec2{ 0.0f, 0.0f },
         0.0f,
         vec2{ 1.0f, 1.0f });
 
     // create camera
-    Camera mainCamera(
+    pk::camera main_camera(
         vec3{ 0.0f, 0.0f, 3.0f },
         0.0f,
         -90.0f,
@@ -283,54 +283,54 @@ int main(int argc, char *argv[])
         45.0f);
 
     // create sources
-    Source originSource;
-    Source cameraSource;
+    pk::source origin_source;
+    pk::source camera_source;
 
     // game settings
-    unsigned int currentTime = 0;
-    float fpsUpdateTimer = 0.0f;
+    unsigned int current_time = 0;
+    float fps_update_timer = 0.0f;
     bool torch = true;
-    float bounceTimer = 0.0f;
-    float shootTimer = 0.0f;
+    float bounce_timer = 0.0f;
+    float shoot_timer = 0.0f;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GL_SetSwapInterval(0);
-    renderer.setMode(RENDER_MODE_DEFERRED);
+    renderer.set_mode(pk::render_mode::RENDER_MODE_DEFERRED);
 
     // main loop
     bool quit = false;
     while (!quit)
     {
         // timer for fps cap
-        unsigned int frameStart = SDL_GetTicks();
+        unsigned int frame_start = SDL_GetTicks();
 
         // calculate time passed since last frame
-        unsigned int previousTime = currentTime;
-        currentTime = frameStart;
+        unsigned int previous_time = current_time;
+        current_time = frame_start;
 
         // calculate delta time and fps
-        float deltaTime = (currentTime - previousTime) / 1000.0f;
-        unsigned int fps = (unsigned int)(1 / deltaTime);
+        float delta_time = (current_time - previous_time) / 1000.0f;
+        unsigned int fps = (unsigned int)(1 / delta_time);
 
         // update window title
-        fpsUpdateTimer += deltaTime;
+        fps_update_timer += delta_time;
 
-        if (fpsUpdateTimer > 0.25f)
+        if (fps_update_timer > 0.25f)
         {
-            fpsUpdateTimer = 0.0f;
+            fps_update_timer = 0.0f;
 
             char title[256];
-            sprintf_s(title, sizeof(title), "%s - FPS: %d", windowTitle, fps);
+            sprintf_s(title, sizeof(title), "%s - FPS: %d", window_title, fps);
             SDL_SetWindowTitle(window, title);
         }
 
         // get keyboard input
-        int numKeys;
-        const unsigned char *keys = SDL_GetKeyboardState(&numKeys);
+        int num_keys;
+        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
 
         // get mouse input
-        int mouseX, mouseY;
-        unsigned int mouse = SDL_GetMouseState(&mouseX, &mouseY);
+        int mouse_x, mouse_y;
+        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
 
         // handle events
         SDL_Event event;
@@ -344,12 +344,12 @@ int main(int argc, char *argv[])
                 {
                 case SDLK_F1:
                 {
-                    renderer.setMode(RENDER_MODE_FORWARD);
+                    renderer.set_mode(pk::render_mode::RENDER_MODE_FORWARD);
                 }
                 break;
                 case SDLK_F2:
                 {
-                    renderer.setMode(RENDER_MODE_DEFERRED);
+                    renderer.set_mode(pk::render_mode::RENDER_MODE_DEFERRED);
                 }
                 break;
                 case SDLK_F4:
@@ -395,16 +395,16 @@ int main(int argc, char *argv[])
                 if (SDL_GetRelativeMouseMode())
                 {
                     // mouselook
-                    mainCamera.pitch -= event.motion.yrel * 0.1f;
-                    mainCamera.yaw += event.motion.xrel * 0.1f;
+                    main_camera.pitch -= event.motion.yrel * 0.1f;
+                    main_camera.yaw += event.motion.xrel * 0.1f;
 
-                    if (mainCamera.pitch > 89.0f)
+                    if (main_camera.pitch > 89.0f)
                     {
-                        mainCamera.pitch = 89.0f;
+                        main_camera.pitch = 89.0f;
                     }
-                    if (mainCamera.pitch < -89.0f)
+                    if (main_camera.pitch < -89.0f)
                     {
-                        mainCamera.pitch = -89.0f;
+                        main_camera.pitch = -89.0f;
                     }
                 }
             }
@@ -412,17 +412,17 @@ int main(int argc, char *argv[])
             case SDL_MOUSEWHEEL:
             {
                 // zoom
-                if (mainCamera.fov >= 1.0f && mainCamera.fov <= 90.0f)
+                if (main_camera.fov >= 1.0f && main_camera.fov <= 90.0f)
                 {
-                    mainCamera.fov -= event.wheel.y;
+                    main_camera.fov -= event.wheel.y;
                 }
-                if (mainCamera.fov <= 1.0f)
+                if (main_camera.fov <= 1.0f)
                 {
-                    mainCamera.fov = 1.0f;
+                    main_camera.fov = 1.0f;
                 }
-                if (mainCamera.fov >= 90.0f)
+                if (main_camera.fov >= 90.0f)
                 {
-                    mainCamera.fov = 90.0f;
+                    main_camera.fov = 90.0f;
                 }
             }
             break;
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
         }
 
         // calculate movement speed
-        float speed = 5.0f * deltaTime;
+        float speed = 5.0f * delta_time;
 
         // sprinting
         if (keys[SDL_SCANCODE_LSHIFT])
@@ -471,159 +471,159 @@ int main(int argc, char *argv[])
         }
 
         // calculate camera vectors
-        vec3 mainCameraFront;
-        mainCamera.calcFront(&mainCameraFront);
+        vec3 main_camera_front;
+        main_camera.calc_front(&main_camera_front);
 
-        vec3 mainCameraUp;
-        mainCamera.calcUp(&mainCameraUp);
+        vec3 main_camera_up;
+        main_camera.calc_up(&main_camera_up);
 
         // move forward
         if (keys[SDL_SCANCODE_W])
         {
             vec3 movement;
-            glm_vec_scale(mainCameraFront, speed, movement);
-            glm_vec_add(mainCamera.position, movement, mainCamera.position);
+            glm_vec_scale(main_camera_front, speed, movement);
+            glm_vec_add(main_camera.position, movement, main_camera.position);
         }
 
         // strafe left
         if (keys[SDL_SCANCODE_A])
         {
             vec3 direction;
-            glm_cross(mainCameraFront, mainCameraUp, direction);
+            glm_cross(main_camera_front, main_camera_up, direction);
             glm_normalize(direction);
 
             vec3 movement;
             glm_vec_scale(direction, -speed, movement);
-            glm_vec_add(mainCamera.position, movement, mainCamera.position);
+            glm_vec_add(main_camera.position, movement, main_camera.position);
         }
 
         // move backward
         if (keys[SDL_SCANCODE_S])
         {
             vec3 movement;
-            glm_vec_scale(mainCameraFront, -speed, movement);
-            glm_vec_add(mainCamera.position, movement, mainCamera.position);
+            glm_vec_scale(main_camera_front, -speed, movement);
+            glm_vec_add(main_camera.position, movement, main_camera.position);
         }
 
         // strafe right
         if (keys[SDL_SCANCODE_D])
         {
             vec3 direction;
-            glm_cross(mainCameraFront, mainCameraUp, direction);
+            glm_cross(main_camera_front, main_camera_up, direction);
             glm_normalize(direction);
 
             vec3 movement;
             glm_vec_scale(direction, speed, movement);
-            glm_vec_add(mainCamera.position, movement, mainCamera.position);
+            glm_vec_add(main_camera.position, movement, main_camera.position);
         }
 
         if (keys[SDL_SCANCODE_SPACE])
         {
             vec3 movement;
-            glm_vec_scale(mainCameraUp, speed, movement);
-            glm_vec_add(mainCamera.position, movement, mainCamera.position);
+            glm_vec_scale(main_camera_up, speed, movement);
+            glm_vec_add(main_camera.position, movement, main_camera.position);
         }
 
         if (keys[SDL_SCANCODE_LCTRL])
         {
             vec3 movement;
-            glm_vec_scale(mainCameraUp, -speed, movement);
-            glm_vec_add(mainCamera.position, movement, mainCamera.position);
+            glm_vec_scale(main_camera_up, -speed, movement);
+            glm_vec_add(main_camera.position, movement, main_camera.position);
         }
 
         // calculate angle for rotating stuff
-        float angle = currentTime * 0.001f;
-        float sinAngle = sinf(angle);
-        float cosAngle = cosf(angle);
+        float angle = current_time * 0.001f;
+        float angle_sin = sinf(angle);
+        float angle_cos = cosf(angle);
 
         // update objects
-        box1Object.rotation[0] = sinAngle;
-        box1Object.rotation[1] = cosAngle;
+        box_1_object.rotation[0] = angle_sin;
+        box_1_object.rotation[1] = angle_cos;
 
         // update lights
-        sun.direction[0] = sinAngle;
-        sun.direction[2] = cosAngle;
+        sun.direction[0] = angle_sin;
+        sun.direction[2] = angle_cos;
 
-        glm_vec_copy(mainCamera.position, torchSpotLight.position);
-        glm_vec_copy(mainCameraFront, torchSpotLight.direction);
+        glm_vec_copy(main_camera.position, torch_spot_light.position);
+        glm_vec_copy(main_camera_front, torch_spot_light.direction);
 
         // update audio
-        vec3 mainCameraVelocity = GLM_VEC3_ZERO_INIT;
-        glm_vec_scale(mainCameraFront, speed, mainCameraVelocity);
-        vec3 mainCameraOrientation[2];
-        glm_vec_copy(mainCameraFront, mainCameraOrientation[0]);
-        glm_vec_copy(mainCameraUp, mainCameraOrientation[1]);
+        vec3 main_camera_velocity = GLM_VEC3_ZERO_INIT;
+        glm_vec_scale(main_camera_front, speed, main_camera_velocity);
+        vec3 main_camera_orientation[2];
+        glm_vec_copy(main_camera_front, main_camera_orientation[0]);
+        glm_vec_copy(main_camera_up, main_camera_orientation[1]);
 
-        audio.setListener(mainCamera.position, mainCameraVelocity, mainCameraOrientation);
+        audio.set_listener(main_camera.position, main_camera_velocity, main_camera_orientation);
 
         // update sources
-        cameraSource.setPosition(mainCamera.position);
+        camera_source.set_position(main_camera.position);
 
         // shooting
-        shootTimer += deltaTime;
+        shoot_timer += delta_time;
 
         if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
-            if (shootTimer >= 0.25f)
+            if (shoot_timer >= 0.25f)
             {
-                shootTimer = 0.0f;
+                shoot_timer = 0.0f;
 
-                cameraSource.play(&shootSound);
+                camera_source.play(&shoot_sound);
             }
         }
 
         // 3d audio test
-        bounceTimer += deltaTime;
+        bounce_timer += delta_time;
 
         if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
         {
-            if (bounceTimer >= 0.25f)
+            if (bounce_timer >= 0.25f)
             {
-                bounceTimer = 0.0f;
+                bounce_timer = 0.0f;
 
-                originSource.play(&bounceSound);
+                origin_source.play(&bounce_sound);
             }
         }
 
         // setup renderer
-        renderer.addObject(&floorObject);
-        renderer.addObject(&box1Object);
-        renderer.addObject(&box2Object);
-        renderer.addObject(&box3Object);
-        renderer.addObject(&box4Object);
-        renderer.addObject(&box5Object);
+        renderer.add_object(&floor_object);
+        renderer.add_object(&box_1_object);
+        renderer.add_object(&box_2_object);
+        renderer.add_object(&box_3_object);
+        renderer.add_object(&box_4_object);
+        renderer.add_object(&box_5_object);
 
-        renderer.setSun(&sun);
+        renderer.set_sun(&sun);
 
-        renderer.addPointLight(&redPointLight);
-        renderer.addPointLight(&yellowPointLight);
-        renderer.addPointLight(&greenPointLight);
-        renderer.addPointLight(&bluePointLight);
+        renderer.add_point_light(&red_point_light);
+        renderer.add_point_light(&yellow_point_light);
+        renderer.add_point_light(&green_point_light);
+        renderer.add_point_light(&blue_point_light);
 
         if (torch)
         {
-            renderer.addSpotLight(&torchSpotLight);
+            renderer.add_spot_light(&torch_spot_light);
         }
 
-        renderer.setSkybox(&skyboxCubemap);
+        renderer.set_skybox(&skybox_cubemap);
 
-        renderer.addWater(&testWater);
+        renderer.add_water(&test_water);
 
-        renderer.addSprite(&grassSprite);
+        renderer.add_sprite(&grass_sprite);
 
         // render everything
-        renderer.draw(&mainCamera, (float)windowWidth / (float)windowHeight, SDL_GetTicks(), deltaTime);
+        renderer.draw(&main_camera, (float)window_width / (float)window_height, SDL_GetTicks(), delta_time);
 
         // display the window
         SDL_GL_SwapWindow(window);
 
         // apply fps cap
-        unsigned int frameEnd = SDL_GetTicks();
-        unsigned int frameTime = frameEnd - frameStart;
+        unsigned int frame_end = SDL_GetTicks();
+        unsigned int frame_time = frame_end - frame_start;
 
-        if (frameDelay > frameTime)
+        if (frame_delay > frame_time)
         {
-            SDL_Delay(frameDelay - frameTime);
+            SDL_Delay(frame_delay - frame_time);
         }
     }
 

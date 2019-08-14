@@ -1,24 +1,27 @@
-#ifndef GAME_PROGRAM_H
-#define GAME_PROGRAM_H
+#ifndef GAME_PROGRAM_HPP
+#define GAME_PROGRAM_HPP
 
-class Program
+namespace pk
 {
-public:
-    Program(const std::string &vertexFilename, const std::string &fragmentFilename);
-    ~Program();
+    class program
+    {
+    public:
+        program(const std::string &vertex_filename, const std::string &fragment_filename);
+        ~program();
 
-    GLint getLocation(const std::string &name) const;
-    void bind() const;
-    void setInt(const std::string &name, int value) const;
-    void setUnsignedInt(const std::string &name, unsigned int value) const;
-    void setFloat(const std::string &name, float value) const;
-    void setVec3(const std::string &name, vec3 vec) const;
-    void setVec4(const std::string &name, vec4 vec) const;
-    void setMat4(const std::string &name, mat4 mat) const;
-    void unbind(void) const;
-private:
-    GLuint programId;
-    std::map<std::string, GLint> uniforms;
-};
+        void bind() const;
+        void unbind(void) const;
+        GLint get_location(const std::string &name);
+        void set_int(const std::string &name, int value);
+        void set_unsigned_int(const std::string &name, unsigned int value);
+        void set_float(const std::string &name, float value);
+        void set_vec3(const std::string &name, vec3 vec);
+        void set_vec4(const std::string &name, vec4 vec);
+        void set_mat4(const std::string &name, mat4 mat);
+    private:
+        GLuint program_id;
+        std::unordered_map<std::string, GLint> uniforms;
+    };
+}
 
 #endif

@@ -1,12 +1,15 @@
 #ifndef GAME_SOUND_HPP
 #define GAME_SOUND_HPP
 
-struct Sound
+namespace pk
 {
-    ALuint bufferId;
+    struct sound
+    {
+        ALuint buffer_id;
 
-    Sound(const std::string &filename);
-    ~Sound();
-};
+        sound(const std::string &filename);
+        ~sound();
+    };
+}
 
 #endif

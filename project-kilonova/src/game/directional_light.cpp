@@ -1,29 +1,21 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct directional_light *directional_light_create(
-    vec3 direction,
-    vec3 ambient_color,
-    vec3 diffuse_color,
-    vec3 specular_color)
+namespace pk
 {
-    struct directional_light *directional_light = malloc(sizeof(struct directional_light));
-
-    if (!directional_light)
+    directional_light::directional_light(
+        vec3 direction,
+        vec3 ambient_color,
+        vec3 diffuse_color,
+        vec3 specular_color)
     {
-        printf("Error: Couldn't allocate directional light\n");
-
-        return NULL;
+        glm_vec_copy(direction, this->direction);
+        glm_vec_copy(ambient_color, this->ambient_color);
+        glm_vec_copy(diffuse_color, this->diffuse_color);
+        glm_vec_copy(specular_color, this->specular_color);
     }
 
-    glm_vec_copy(direction, directional_light->direction);
-    glm_vec_copy(ambient_color, directional_light->ambient_color);
-    glm_vec_copy(diffuse_color, directional_light->diffuse_color);
-    glm_vec_copy(specular_color, directional_light->specular_color);
+    directional_light::~directional_light()
+    {
 
-    return directional_light;
-}
-
-void directional_light_destroy(struct directional_light *directional_light)
-{
-    free(directional_light);
+    }
 }

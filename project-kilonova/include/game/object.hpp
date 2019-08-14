@@ -1,28 +1,34 @@
 #ifndef GAME_OBJECT_HPP
 #define GAME_OBJECT_HPP
 
-struct Object
+namespace pk
 {
-    Mesh *mesh;
-    Material *material;
-    vec3 position;
-    vec3 rotation;
-    vec3 scale;
+    struct material;
+    struct mesh;
 
-    Object(
-        Mesh *mesh,
-        Material *material,
-        vec3 position,
-        vec3 rotation,
-        vec3 scale);
-    ~Object();
+    struct object
+    {
+        pk::mesh *mesh;
+        pk::material *material;
+        vec3 position;
+        vec3 rotation;
+        vec3 scale;
 
-    void calcModel(vec4 *model) const;
-    void draw(
-        unsigned int diffusemapIndex,
-        unsigned int specularmapIndex,
-        unsigned int normalmapIndex,
-        unsigned int emissionmapIndex) const;
-};
+        object(
+            pk::mesh *mesh,
+            pk::material *material,
+            vec3 position,
+            vec3 rotation,
+            vec3 scale);
+        ~object();
+
+        void calc_model(vec4 *model);
+        void draw(
+            unsigned int diffuse_map_index,
+            unsigned int specular_map_index,
+            unsigned int normal_map_index,
+            unsigned int emission_map_index) const;
+    };
+}
 
 #endif

@@ -1,78 +1,68 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct source *source_create(void)
+namespace pk
 {
-    struct source *source = malloc(sizeof(struct source));
-
-    if (!source)
+    source::source()
     {
-        printf("Error: Couldn't allocate source\n");
-
-        return NULL;
+        alGenSources(1, &this->source_id);
     }
 
-    alGenSources(1, &source->source_id);
+    source::~source()
+    {
+        alDeleteSources(1, &this->source_id);
+    }
 
+    void source::set_loop(bool loop) const
+    {
+        alSourcei(this->source_id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
+    }
 
-    return source;
-}
+    void source::set_gain(float gain) const
+    {
+        alSourcef(this->source_id, AL_GAIN, gain);
+    }
 
-void source_set_loop(struct source *source, bool loop)
-{
-    alSourcei(source->source_id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
-}
+    void source::set_pitch(float pitch) const
+    {
+        alSourcef(this->source_id, AL_PITCH, pitch);
+    }
 
-void source_set_gain(struct source *source, float gain)
-{
-    alSourcef(source->source_id, AL_GAIN, gain);
-}
+    void source::set_position(vec3 position) const
+    {
+        alSourcefv(this->source_id, AL_POSITION, (ALfloat *)position);
+    }
 
-void source_set_pitch(struct source *source, float pitch)
-{
-    alSourcef(source->source_id, AL_PITCH, pitch);
-}
+    void source::set_velocity(vec3 velocity) const
+    {
+        alSourcefv(this->source_id, AL_VELOCITY, (ALfloat *)velocity);
+    }
 
-void source_set_position(struct source *source, vec3 position)
-{
-    alSourcefv(source->source_id, AL_POSITION, (ALfloat *)position);
-}
+    bool source::is_playing() const
+    {
+        ALint value;
+        alGetSourcei(this->source_id, AL_SOURCE_STATE, &value);
 
-void source_set_velocity(struct source *source, vec3 velocity)
-{
-    alSourcefv(source->source_id, AL_VELOCITY, (ALfloat *)velocity);
-}
+        return value == AL_PLAYING;
+    }
 
-bool source_is_playing(struct source *source)
-{
-    ALint value;
-    alGetSourcei(source->source_id, AL_SOURCE_STATE, &value);
+    void source::play(pk::sound *sound) const
+    {
+        alSourcei(this->source_id, AL_BUFFER, sound->buffer_id);
+        alSourcePlay(this->source_id);
+    }
 
-    return value == AL_PLAYING;
-}
+    void source::resume() const
+    {
+        alSourcePlay(this->source_id);
+    }
 
-void source_play(struct source *source, struct sound *sound)
-{
-    alSourcei(source->source_id, AL_BUFFER, sound->buffer_id);
-    alSourcePlay(source->source_id);
-}
+    void source::pause() const
+    {
+        alSourcePause(this->source_id);
+    }
 
-void source_resume(struct source *source)
-{
-    alSourcePlay(source->source_id);
-}
-
-void source_pause(struct source *source)
-{
-    alSourcePause(source->source_id);
-}
-
-void source_stop(struct source *source)
-{
-    alSourceStop(source->source_id);
-}
-
-void source_destroy(struct source *source)
-{
-    alDeleteSources(1, &source->source_id);
-    free(source);
+    void source::stop() const
+    {
+        alSourceStop(this->source_id);
+    }
 }

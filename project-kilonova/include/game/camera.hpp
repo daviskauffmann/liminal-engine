@@ -1,24 +1,27 @@
-#ifndef GAME_CAMERA_H
-#define GAME_CAMERA_H
+#ifndef GAME_CAMERA_HPP
+#define GAME_CAMERA_HPP
 
-struct Camera
+namespace pk
 {
-    vec3 position;
-    float pitch;
-    float yaw;
-    float roll;
-    float fov;
+    struct camera
+    {
+        vec3 position;
+        float pitch;
+        float yaw;
+        float roll;
+        float fov;
 
-    Camera(
-        vec3 position,
-        float pitch,
-        float yaw,
-        float roll,
-        float fov);
-    ~Camera();
+        camera(
+            vec3 position,
+            float pitch,
+            float yaw,
+            float roll,
+            float fov);
+        ~camera();
 
-    void calcFront(vec3 *front) const;
-    void calcUp(vec3 *up) const;
-};
+        void calc_front(vec3 *front) const;
+        void calc_up(vec3 *up) const;
+    };
+}
 
 #endif

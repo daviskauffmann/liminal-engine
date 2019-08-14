@@ -1,19 +1,22 @@
-#ifndef GAME_DIRECTIONAL_LIGHT_H
-#define GAME_DIRECTIONAL_LIGHT_H
+#ifndef GAME_DIRECTIONAL_LIGHT_HPP
+#define GAME_DIRECTIONAL_LIGHT_HPP
 
-struct DirectionalLight
+namespace pk
 {
-    vec3 direction;
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
+    struct directional_light
+    {
+        vec3 direction;
+        vec3 ambient_color;
+        vec3 diffuse_color;
+        vec3 specular_color;
 
-    DirectionalLight(
-        vec3 direction,
-        vec3 ambientColor,
-        vec3 diffuseColor,
-        vec3 specularColor);
-    ~DirectionalLight();
-};
+        directional_light(
+            vec3 direction,
+            vec3 ambient_color,
+            vec3 diffuse_color,
+            vec3 specular_color);
+        ~directional_light();
+    };
+}
 
 #endif

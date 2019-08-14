@@ -1,27 +1,30 @@
 #ifndef GAME_SPOT_LIGHT_HPP
 #define GAME_SPOT_LIGHT_HPP
 
-struct SpotLight
+namespace pk
 {
-    vec3 position;
-    vec3 direction;
-    vec3 ambientColor;
-    vec3 diffuseColor;
-    vec3 specularColor;
-    vec3 attenuation;
-    float innerCutoff;
-    float outerCutoff;
+    struct spot_light
+    {
+        vec3 position;
+        vec3 direction;
+        vec3 ambient_color;
+        vec3 diffuse_color;
+        vec3 specular_color;
+        vec3 attenuation;
+        float inner_cutoff;
+        float outer_cutoff;
 
-    SpotLight(
-        vec3 position,
-        vec3 direction,
-        vec3 ambientColor,
-        vec3 diffuseColor,
-        vec3 specularColor,
-        vec3 attenuation,
-        float innerCutoff,
-        float outerCutoff);
-    ~SpotLight();
-};
+        spot_light(
+            vec3 position,
+            vec3 direction,
+            vec3 ambient_color,
+            vec3 diffuse_color,
+            vec3 specular_color,
+            vec3 attenuation,
+            float inner_cutoff,
+            float outer_cutoff);
+        ~spot_light();
+    };
+}
 
 #endif

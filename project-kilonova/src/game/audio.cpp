@@ -1,43 +1,41 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-static ALCdevice *device;
-static ALCcontext *context;
-
-int audio_init(void)
+namespace pk
 {
-    // setup OpenAL
-    device = alcOpenDevice(NULL);
-
-    if (!device)
+    audio::audio()
     {
-        return 1;
+        // setup OpenAL
+        this->device = alcOpenDevice(nullptr);
+
+        if (!this->device)
+        {
+            throw std::exception("Couldn't open device");
+        }
+
+        this->context = alcCreateContext(device, nullptr);
+
+        if (!this->context)
+        {
+            throw std::exception("Couldn't create context");
+        }
+
+        if (!alcMakeContextCurrent(context))
+        {
+            throw std::exception("Couldn't make context current");
+        }
     }
 
-    context = alcCreateContext(device, NULL);
-
-    if (!context)
+    audio::~audio()
     {
-        return 1;
+        alcMakeContextCurrent(nullptr);
+        alcDestroyContext(this->context);
+        alcCloseDevice(this->device);
     }
 
-    if (!alcMakeContextCurrent(context))
+    void audio::set_listener(vec3 position, vec3 velocity, vec3 *orientation) const
     {
-        return 1;
+        alListenerfv(AL_POSITION, (ALfloat *)position);
+        alListenerfv(AL_VELOCITY, (ALfloat *)velocity);
+        alListenerfv(AL_ORIENTATION, (ALfloat *)orientation);
     }
-
-    return 0;
-}
-
-void audio_set_listener(vec3 position, vec3 velocity, vec3 *orientation)
-{
-    alListenerfv(AL_POSITION, (ALfloat *)position);
-    alListenerfv(AL_VELOCITY, (ALfloat *)velocity);
-    alListenerfv(AL_ORIENTATION, (ALfloat *)orientation);
-}
-
-void audio_quit(void)
-{
-    alcMakeContextCurrent(NULL);
-    alcDestroyContext(context);
-    alcCloseDevice(device);
 }

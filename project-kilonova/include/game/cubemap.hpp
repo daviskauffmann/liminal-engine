@@ -1,12 +1,15 @@
-#ifndef GAME_CUBEMAP_H
-#define GAME_CUBEMAP_H
+#ifndef GAME_CUBEMAP_HPP
+#define GAME_CUBEMAP_HPP
 
-struct Cubemap
+namespace pk
 {
-    GLuint textureId;
+    struct cubemap
+    {
+        GLuint texture_id;
 
-    Cubemap(std::vector<std::string> filenames);
-    ~Cubemap();
-};
+        cubemap(std::vector<std::string> filenames);
+        ~cubemap();
+    };
+}
 
 #endif

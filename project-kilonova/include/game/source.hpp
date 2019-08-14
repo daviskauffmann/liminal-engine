@@ -1,24 +1,29 @@
-#ifndef GAME_SOURCE_H
-#define GAME_SOURCE_H
+#ifndef GAME_SOURCE_HPP
+#define GAME_SOURCE_HPP
 
-class Source
+namespace pk
 {
-public:
-    Source();
-    ~Source();
+    struct sound;
 
-    void setLoop(bool loop) const;
-    void setGain(float gain) const;
-    void setPitch(float pitch) const;
-    void setPosition(vec3 position) const;
-    void setVelocity(vec3 velocity) const;
-    bool isPlaying() const;
-    void play(Sound *sound) const;
-    void pause() const;
-    void resume() const;
-    void stop() const;
-private:
-    ALuint source_id;
-};
+    class source
+    {
+    public:
+        source();
+        ~source();
+
+        void set_loop(bool loop) const;
+        void set_gain(float gain) const;
+        void set_pitch(float pitch) const;
+        void set_position(vec3 position) const;
+        void set_velocity(vec3 velocity) const;
+        bool is_playing() const;
+        void play(pk::sound *sound) const;
+        void pause() const;
+        void resume() const;
+        void stop() const;
+    private:
+        ALuint source_id;
+    };
+}
 
 #endif

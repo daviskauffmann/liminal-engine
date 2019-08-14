@@ -1,16 +1,19 @@
 #ifndef GAME_AUDIO_HPP
 #define GAME_AUDIO_HPP
 
-class Audio
+namespace pk
 {
-public:
-    Audio();
-    ~Audio();
+    class audio
+    {
+    public:
+        audio();
+        ~audio();
 
-    void setListener(vec3 position, vec3 velocity, vec3 *orientation) const;
-private:
-    ALCdevice *device;
-    ALCcontext *context;
-};
+        void set_listener(vec3 position, vec3 velocity, vec3 *orientation) const;
+    private:
+        ALCdevice *device;
+        ALCcontext *context;
+    };
+}
 
 #endif

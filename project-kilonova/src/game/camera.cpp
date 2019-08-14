@@ -1,47 +1,39 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct camera *camera_create(
-    vec3 position,
-    float pitch,
-    float yaw,
-    float roll,
-    float fov)
+namespace pk
 {
-    struct camera *camera = malloc(sizeof(struct camera));
-
-    if (!camera)
+    camera::camera(
+        vec3 position,
+        float pitch,
+        float yaw,
+        float roll,
+        float fov)
     {
-        printf("Error: Couldn't allocate camera\n");
-
-        return NULL;
+        glm_vec_copy(position, this->position);
+        this->pitch = pitch;
+        this->yaw = yaw;
+        this->roll = roll;
+        this->fov = fov;
     }
 
-    glm_vec_copy(position, camera->position);
-    camera->pitch = pitch;
-    camera->yaw = yaw;
-    camera->roll = roll;
-    camera->fov = fov;
+    camera::~camera()
+    {
 
-    return camera;
-}
+    }
 
-void camera_calc_front(struct camera *camera, vec3 *front)
-{
-    vec3 camera_front = {
-        cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch)),
-        sinf(glm_rad(camera->pitch)),
-        sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch)) };
-    glm_normalize(camera_front);
-    glm_vec_copy(camera_front, *front);
-}
+    void camera::calc_front(vec3 *front) const
+    {
+        vec3 camera_front = {
+            cosf(glm_rad(this->yaw)) * cosf(glm_rad(this->pitch)),
+            sinf(glm_rad(this->pitch)),
+            sinf(glm_rad(this->yaw)) * cosf(glm_rad(this->pitch)) };
+        glm_normalize(camera_front);
+        glm_vec_copy(camera_front, *front);
+    }
 
-void camera_calc_up(struct camera *camera, vec3 *up)
-{
-    vec3 camera_up = { 0.0f, 1.0f, 0.0f };
-    glm_vec_copy(camera_up, *up);
-}
-
-void camera_destroy(struct camera *camera)
-{
-    free(camera);
+    void camera::calc_up(vec3 *up) const
+    {
+        vec3 camera_up = { 0.0f, 1.0f, 0.0f };
+        glm_vec_copy(camera_up, *up);
+    }
 }

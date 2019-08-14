@@ -1,41 +1,30 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct sound *sound_create(const char *filename)
+namespace pk
 {
-    struct sound *sound = malloc(sizeof(struct sound));
-
-    if (!sound)
+    sound::sound(const std::string &filename)
     {
-        printf("Error: Couldn't allocate sound\n");
+        alGenBuffers(1, &this->buffer_id);
 
-        return NULL;
+        Mix_Chunk *chunk = Mix_LoadWAV(filename.c_str());
+
+        if (!chunk)
+        {
+            throw std::exception("Couldn't load chunk");
+        }
+
+        alBufferData(
+            this->buffer_id,
+            AL_FORMAT_MONO16,
+            chunk->abuf,
+            chunk->alen,
+            44100);
+
+        Mix_FreeChunk(chunk);
     }
 
-    alGenBuffers(1, &sound->buffer_id);
-
-    Mix_Chunk *chunk = Mix_LoadWAV(filename);
-
-    if (!chunk)
+    sound::~sound()
     {
-        printf("Error: Couldn't load chunk\n");
-
-        return NULL;
+        alDeleteBuffers(1, &this->buffer_id);
     }
-
-    alBufferData(
-        sound->buffer_id,
-        AL_FORMAT_MONO16,
-        chunk->abuf,
-        chunk->alen,
-        44100);
-
-    Mix_FreeChunk(chunk);
-
-    return sound;
-}
-
-void sound_destroy(struct sound *sound)
-{
-    alDeleteBuffers(1, &sound->buffer_id);
-    free(sound);
 }

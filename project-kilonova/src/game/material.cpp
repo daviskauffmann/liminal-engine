@@ -1,63 +1,54 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct material *material_create(
-    vec3 color,
-    struct texture *diffuse_map,
-    struct texture *specular_map,
-    float shininess,
-    struct texture *normal_map,
-    struct texture *emission_map,
-    float glow)
+namespace pk
 {
-    struct material *material = malloc(sizeof(struct material));
-
-    if (!material)
+    material::material(
+        vec3 _color,
+        pk::texture *diffuseMap,
+        pk::texture *specularMap,
+        float shininess,
+        pk::texture *normalMap,
+        pk::texture *emissionMap,
+        float glow)
     {
-        printf("Error: Couldn't allocate material\n");
-
-        return NULL;
+        glm_vec_copy(color, this->color);
+        this->diffuse_map = diffuse_map;
+        this->specular_map = specular_map;
+        this->shininess = shininess;
+        this->normal_map = normal_map;
+        this->emission_map = emission_map;
+        this->glow = glow;
     }
 
-    glm_vec_copy(color, material->color);
-    material->diffuse_map = diffuse_map;
-    material->specular_map = specular_map;
-    material->shininess = shininess;
-    material->normal_map = normal_map;
-    material->emission_map = emission_map;
-    material->glow = glow;
-
-    return material;
-}
-
-void material_bind(
-    struct material *material,
-    unsigned int diffuse_map_index,
-    unsigned int specular_map_index,
-    unsigned int normal_map_index,
-    unsigned int emission_map_index)
-{
-    if (material->diffuse_map)
+    material::~material()
     {
-        texture_bind(material->diffuse_map, diffuse_map_index);
+
     }
 
-    if (material->specular_map)
+    void material::bind(
+        unsigned int diffuse_map_index,
+        unsigned int specular_map_index,
+        unsigned int normal_map_index,
+        unsigned int emission_map_index) const
     {
-        texture_bind(material->specular_map, specular_map_index);
-    }
+        if (this->diffuse_map)
+        {
+            this->diffuse_map->bind(diffuse_map_index);
+        }
 
-    if (material->normal_map)
-    {
-        texture_bind(material->normal_map, normal_map_index);
-    }
+        if (this->specular_map)
+        {
+            this->specular_map->bind(specular_map_index);
+        }
 
-    if (material->emission_map)
-    {
-        texture_bind(material->emission_map, emission_map_index);
-    }
-}
+        if (this->normal_map)
+        {
+            this->normal_map->bind(normal_map_index);
+        }
 
-void material_destroy(struct material *material)
-{
-    free(material);
+        if (this->emission_map)
+        {
+            this->emission_map->bind(emission_map_index);
+        }
+    }
 }

@@ -1,14 +1,17 @@
 #ifndef GAME_TEXTURE_HPP
 #define GAME_TEXTURE_HPP
 
-struct Texture
+namespace pk
 {
-    GLuint texture_id;
+    struct texture
+    {
+        GLuint texture_id;
 
-    Texture(const std::string &filename);
-    ~Texture();
+        texture(const std::string &filename);
+        ~texture();
 
-    void bind(unsigned int index) const;
-};
+        void bind(unsigned int index) const;
+    };
+}
 
 #endif

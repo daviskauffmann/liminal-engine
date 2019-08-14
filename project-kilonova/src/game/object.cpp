@@ -1,55 +1,46 @@
-#include <game/game.h>
+#include <game/game.hpp>
 
-struct object *object_create(
-    struct mesh *mesh,
-    struct material *material,
-    vec3 position,
-    vec3 rotation,
-    vec3 scale)
+namespace pk
 {
-    struct object *object = malloc(sizeof(struct object));
-
-    if (!object)
+    object::object(
+        pk::mesh *mesh,
+        pk::material *material,
+        vec3 position,
+        vec3 rotation,
+        vec3 scale)
     {
-        printf("Error: Couldn't allocate object\n");
-
-        return NULL;
+        this->mesh = mesh;
+        this->material = material;
+        glm_vec_copy(position, this->position);
+        glm_vec_copy(rotation, this->rotation);
+        glm_vec_copy(scale, this->scale);
     }
 
-    object->mesh = mesh;
-    object->material = material;
-    glm_vec_copy(position, object->position);
-    glm_vec_copy(rotation, object->rotation);
-    glm_vec_copy(scale, object->scale);
-
-    return object;
-}
-
-void object_calc_model(struct object *object, vec4 *model)
-{
-    glm_translate(model, object->position);
-    glm_rotate(model, object->rotation[0], GLM_XUP);
-    glm_rotate(model, object->rotation[1], GLM_YUP);
-    glm_rotate(model, object->rotation[2], GLM_ZUP);
-    glm_scale(model, object->scale);
-}
-
-void object_draw(
-    struct object *object,
-    unsigned int diffuse_map_index,
-    unsigned int specular_map_index,
-    unsigned int normal_map_index,
-    unsigned int emission_map_index)
-{
-    if (object->material)
+    object::~object()
     {
-        material_bind(object->material, diffuse_map_index, specular_map_index, normal_map_index, emission_map_index);
+
     }
 
-    mesh_draw(object->mesh);
-}
+    void object::calc_model(vec4 *model)
+    {
+        glm_translate(model, this->position);
+        glm_rotate(model, this->rotation[0], vec3{ 1.0f, 0.0f, 0.0f });
+        glm_rotate(model, this->rotation[1], vec3{ 0.0f, 1.0f, 0.0f });
+        glm_rotate(model, this->rotation[2], vec3{ 0.0f, 0.0f, 1.0f });
+        glm_scale(model, this->scale);
+    }
 
-void object_destroy(struct object *object)
-{
-    free(object);
+    void object::draw(
+        unsigned int diffuse_map_index,
+        unsigned int specular_map_index,
+        unsigned int normal_map_index,
+        unsigned int emission_map_index) const
+    {
+        if (this->material)
+        {
+            this->material->bind(diffuse_map_index, specular_map_index, normal_map_index, emission_map_index);
+        }
+
+        this->mesh->draw();
+    }
 }
