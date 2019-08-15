@@ -1,4 +1,29 @@
-#include <game/game.hpp>
+#include <iostream>
+
+#include <cglm/cglm.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_mixer.h>
+#include <SDL/SDL_net.h>
+#include <SDL/SDL_ttf.h>
+
+#include "audio.hpp"
+#include "camera.hpp"
+#include "cubemap.hpp"
+#include "directional_light.hpp"
+#include "material.hpp"
+#include "mesh.hpp"
+#include "object.hpp"
+#include "point_light.hpp"
+#include "program.hpp"
+#include "renderer.hpp"
+#include "sound.hpp"
+#include "source.hpp"
+#include "spot_light.hpp"
+#include "sprite.hpp"
+#include "sun.hpp"
+#include "texture.hpp"
+#include "water.hpp"
 
 constexpr auto window_title = "Project Kilonova";
 constexpr auto window_width = 1280;
@@ -295,7 +320,7 @@ int main(int argc, char *argv[])
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GL_SetSwapInterval(0);
-    renderer.set_mode(pk::render_mode::RENDER_MODE_DEFERRED);
+    // renderer.set_mode(pk::render_mode::RENDER_MODE_DEFERRED);
 
     // main loop
     bool quit = false;
@@ -609,7 +634,7 @@ int main(int argc, char *argv[])
 
         renderer.add_water(&test_water);
 
-        renderer.add_sprite(&grass_sprite);
+        // renderer.add_sprite(&grass_sprite);
 
         // render everything
         renderer.draw(&main_camera, (float)window_width / (float)window_height, SDL_GetTicks(), delta_time);
