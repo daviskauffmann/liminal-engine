@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
 
                     SDL_SetWindowSize(window, width, height);
 
-                    printf("Window resized to %dx%d\n", width, height);
+                    std::cout << "Window resized to " << width << "x" << height << std::endl;
                 }
                 break;
                 }

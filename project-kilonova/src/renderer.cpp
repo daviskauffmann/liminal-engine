@@ -760,7 +760,7 @@ namespace pk
     {
         if (!camera)
         {
-            printf("Error: Camera cannot be null\n");
+            std::cout << "Error: Camera cannot be null" << std::endl;
 
             return;
         }
