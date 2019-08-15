@@ -82,7 +82,7 @@ namespace pk
         glUseProgram(0);
     }
 
-    GLint program::get_location(const std::string &name)
+    GLint program::get_location(const std::string &name) const
     {
         GLint location;
 
@@ -101,32 +101,32 @@ namespace pk
     }
 
 
-    void program::set_int(const std::string &name, int value)
+    void program::set_int(const std::string &name, int value) const
     {
         glUniform1i(this->get_location(name), value);
     }
 
-    void program::set_unsigned_int(const std::string &name, unsigned int value)
+    void program::set_unsigned_int(const std::string &name, unsigned int value) const
     {
         glUniform1ui(this->get_location(name), value);
     }
 
-    void program::set_float(const std::string &name, float value)
+    void program::set_float(const std::string &name, float value) const
     {
         glUniform1f(this->get_location(name), value);
     }
 
-    void program::set_vec3(const std::string &name, vec3 vec)
+    void program::set_vec3(const std::string &name, vec3 vec) const
     {
         glUniform3fv(this->get_location(name), 1, (GLfloat *)vec);
     }
 
-    void program::set_vec4(const std::string &name, vec4 vec)
+    void program::set_vec4(const std::string &name, vec4 vec) const
     {
         glUniform4fv(this->get_location(name), 1, (GLfloat *)vec);
     }
 
-    void program::set_mat4(const std::string &name, mat4 mat)
+    void program::set_mat4(const std::string &name, mat4 mat) const
     {
         glUniformMatrix4fv(this->get_location(name), 1, GL_FALSE, (GLfloat *)mat);
     }
