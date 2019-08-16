@@ -128,7 +128,7 @@ namespace pk
         std::vector<pk::water *> waters;
         std::vector<pk::sprite *> sprites;
 
-        void render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, vec4 clipping_plane);
+        void render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane);
         void render_waters(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time);
         void render_sprites(GLuint fbo_id, float aspect);
         void render_screen(GLuint fbo_id);

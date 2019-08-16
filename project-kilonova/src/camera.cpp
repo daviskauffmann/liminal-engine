@@ -1,39 +1,53 @@
 #include "camera.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace pk
 {
-    camera::camera(
-        vec3 position,
-        float pitch,
-        float yaw,
-        float roll,
-        float fov)
+    camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float fov)
+        : position(position)
+        , pitch(pitch)
+        , yaw(yaw)
+        , roll(roll)
+        , fov(fov)
     {
-        glm_vec_copy(position, this->position);
-        this->pitch = pitch;
-        this->yaw = yaw;
-        this->roll = roll;
-        this->fov = fov;
     }
 
     camera::~camera()
     {
-
     }
 
-    void camera::calc_front(vec3 *front) const
+    glm::vec3 camera::calc_front() const
     {
-        vec3 camera_front = {
-            cosf(glm_rad(this->yaw)) * cosf(glm_rad(this->pitch)),
-            sinf(glm_rad(this->pitch)),
-            sinf(glm_rad(this->yaw)) * cosf(glm_rad(this->pitch)) };
-        glm_normalize(camera_front);
-        glm_vec_copy(camera_front, *front);
+        glm::vec3 front(
+            cosf(glm::radians(this->yaw)) * cosf(glm::radians(this->pitch)),
+            sinf(glm::radians(this->pitch)),
+            sinf(glm::radians(this->yaw)) * cosf(glm::radians(this->pitch)));
+
+        return glm::normalize(front);
     }
 
-    void camera::calc_up(vec3 *up) const
+    glm::vec3 camera::calc_up() const
     {
-        vec3 camera_up = { 0.0f, 1.0f, 0.0f };
-        glm_vec_copy(camera_up, *up);
+        glm::vec3 up(0.0f, 1.0f, 0.0f);
+
+        return up;
+    }
+
+    glm::mat4 camera::calc_projection(float aspect) const
+    {
+        glm::mat4 projection = glm::perspective(glm::radians(this->fov), aspect, 0.01f, 100.0f);
+
+        return projection;
+    }
+
+    glm::mat4 camera::calc_view() const
+    {
+        glm::vec3 front = this->calc_front();
+        glm::vec3 target = this->position + front;
+        glm::vec3 up = this->calc_up();
+        glm::mat4 view = glm::lookAt(this->position, target, up);
+
+        return view;
     }
 }

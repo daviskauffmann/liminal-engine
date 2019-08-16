@@ -1,7 +1,9 @@
 #ifndef GAME_SPRITE_HPP
 #define GAME_SPRITE_HPP
 
-#include <cglm/cglm.h>
+#include <glm/matrix.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 #include "texture.hpp"
 
@@ -9,21 +11,21 @@ namespace pk
 {
     struct sprite
     {
-        vec3 color;
-        texture *color_map;
-        vec2 position;
+        glm::vec3 color;
+        pk::texture *color_map;
+        glm::vec2 position;
         float rotation;
-        vec2 scale;
+        glm::vec2 scale;
 
         sprite(
-            vec3 color,
-            texture *colorMap,
-            vec2 position,
+            glm::vec3 color,
+            pk::texture *colorMap,
+            glm::vec2 position,
             float rotation,
-            vec2 scale);
+            glm::vec2 scale);
         ~sprite();
 
-        void calc_model(vec4 *model);
+        glm::mat4 calc_model() const;
     };
 }
 

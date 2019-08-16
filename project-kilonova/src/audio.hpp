@@ -2,7 +2,7 @@
 #define GAME_AUDIO_HPP
 
 #include <AL/alc.h>
-#include <cglm/cglm.h>
+#include <glm/vec3.hpp>
 
 namespace pk
 {
@@ -12,10 +12,11 @@ namespace pk
         audio();
         ~audio();
 
-        void set_listener(vec3 position, vec3 velocity, vec3 *orientation) const;
+        void set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const;
     private:
         ALCdevice *device;
         ALCcontext *context;
+        mutable glm::vec3 position;
     };
 }
 

@@ -1,28 +1,26 @@
 #ifndef GAME_CAMERA_HPP
 #define GAME_CAMERA_HPP
 
-#include <cglm/cglm.h>
+#include <glm/matrix.hpp>
+#include <glm/vec3.hpp>
 
 namespace pk
 {
     struct camera
     {
-        vec3 position;
+        glm::vec3 position;
         float pitch;
         float yaw;
         float roll;
         float fov;
 
-        camera(
-            vec3 position,
-            float pitch,
-            float yaw,
-            float roll,
-            float fov);
+        camera(glm::vec3 position, float pitch, float yaw, float roll, float fov);
         ~camera();
 
-        void calc_front(vec3 *front) const;
-        void calc_up(vec3 *up) const;
+        glm::vec3 calc_front() const;
+        glm::vec3 calc_up() const;
+        glm::mat4 calc_projection(float aspect) const;
+        glm::mat4 calc_view() const;
     };
 }
 

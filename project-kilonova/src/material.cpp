@@ -3,7 +3,7 @@
 namespace pk
 {
     material::material(
-        vec3 color,
+        glm::vec3 color,
         pk::texture *diffuse_map,
         pk::texture *specular_map,
         float shininess,
@@ -11,7 +11,7 @@ namespace pk
         pk::texture *emission_map,
         float glow)
     {
-        glm_vec_copy(color, this->color);
+        this->color = color;
         this->diffuse_map = diffuse_map;
         this->specular_map = specular_map;
         this->shininess = shininess;

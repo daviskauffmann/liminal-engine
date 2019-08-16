@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace pk
 {
     program::program(const std::string &vertex_filename, const std::string &fragment_filename)
@@ -12,21 +14,9 @@ namespace pk
 
         // compile shaders and attach to program
         GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
-
-        if (!vertex_shader)
-        {
-            std::cout << "Error: Couldn't compile vertex shader" << std::endl;
-        }
-
         glAttachShader(this->program_id, vertex_shader);
 
         GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
-
-        if (!fragment_shader)
-        {
-            std::cout << "Error: Couldn't compile fragment shader" << std::endl;
-        }
-
         glAttachShader(this->program_id, fragment_shader);
 
         // link program
@@ -37,7 +27,7 @@ namespace pk
 
             if (!success)
             {
-                GLchar info_log[512];
+                GLchar info_log[1024];
                 glGetProgramInfoLog(this->program_id, sizeof(info_log), nullptr, info_log);
 
                 std::cout << "Error: Program linking failed\n" << info_log << std::endl;
@@ -59,7 +49,7 @@ namespace pk
 
             if (!success)
             {
-                GLchar info_log[512];
+                GLchar info_log[1024];
                 glGetProgramInfoLog(this->program_id, sizeof(info_log), nullptr, info_log);
 
                 std::cout << "Error: Program validation failed\n" << info_log << std::endl;
@@ -116,19 +106,19 @@ namespace pk
         glUniform1f(this->get_location(name), value);
     }
 
-    void program::set_vec3(const std::string &name, vec3 vec) const
+    void program::set_vec3(const std::string &name, glm::vec3 vec3) const
     {
-        glUniform3fv(this->get_location(name), 1, (GLfloat *)vec);
+        glUniform3fv(this->get_location(name), 1, glm::value_ptr(vec3));
     }
 
-    void program::set_vec4(const std::string &name, vec4 vec) const
+    void program::set_vec4(const std::string &name, glm::vec4 vec4) const
     {
-        glUniform4fv(this->get_location(name), 1, (GLfloat *)vec);
+        glUniform4fv(this->get_location(name), 1, glm::value_ptr(vec4));
     }
 
-    void program::set_mat4(const std::string &name, mat4 mat) const
+    void program::set_mat4(const std::string &name, glm::mat4 mat4) const
     {
-        glUniformMatrix4fv(this->get_location(name), 1, GL_FALSE, (GLfloat *)mat);
+        glUniformMatrix4fv(this->get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
     }
 
     GLuint program::create_shader(GLenum type, const std::string &filename) const
@@ -148,7 +138,7 @@ namespace pk
         std::string source_str = stream.str();
         const char *source_c_str = source_str.c_str();
 
-        // set shader code
+        // set shader source
         glShaderSource(shader, 1, &source_c_str, nullptr);
 
         // compile the shader
@@ -160,10 +150,10 @@ namespace pk
 
         if (!success)
         {
-            GLchar info_log[512];
+            GLchar info_log[1024];
             glGetShaderInfoLog(shader, sizeof(info_log), nullptr, info_log);
 
-            std::cout << "Error: Couldn't compile shader\n" << info_log << std::endl;
+            std::cout << "Error: Shader compilation failed\n" << info_log << std::endl;
         }
 
         return shader;

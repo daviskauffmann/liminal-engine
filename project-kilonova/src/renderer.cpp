@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#include <glm/matrix.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace pk
 {
     renderer::renderer(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height)
@@ -766,9 +769,7 @@ namespace pk
         }
 
         // render scene to the screen framebuffer
-        vec4 clipping_plane = GLM_VEC4_ZERO_INIT;
-
-        this->render_scene(this->screen_fbo_id, camera, aspect, elapsed_time, clipping_plane);
+        this->render_scene(this->screen_fbo_id, camera, aspect, elapsed_time, glm::vec4(0.0f));
 
         // DEBUG_render_point_lights(this->screen_fbo_id, camera, aspect);
         if (this->render_mode == RENDER_MODE_DEFERRED)
@@ -803,7 +804,7 @@ namespace pk
         this->sprites.clear();
     }
 
-    void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, vec4 clipping_plane)
+    void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane)
     {
         // clear the framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -814,44 +815,23 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // calculate camera projection matrix
-        mat4 camera_projection;
-        glm_perspective(
-            glm_rad(camera->fov),
-            aspect,
-            0.01f,
-            100.0f,
-            camera_projection);
+        glm::mat4 camera_projection = camera->calc_projection(aspect);
 
         // calculate camera view matrix
-        vec3 camera_front;
-        camera->calc_front(&camera_front);
+        glm::mat4 camera_view = camera->calc_view();
 
-        vec3 camera_target;
-        glm_vec_add(camera->position, camera_front, camera_target);
-
-        vec3 camera_up;
-        camera->calc_up(&camera_up);
-
-        mat4 camera_view;
-        glm_lookat(
-            camera->position,
-            camera_target,
-            camera_up,
-            camera_view);
-
-        mat4 sun_projection;
-        mat4 sun_view;
+        glm::mat4 sun_projection;
+        glm::mat4 sun_view;
         if (this->sun)
         {
             // calculate sun projection matrix
-            glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+            sun_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
 
             // calculate sun "position"
-            vec3 sun_position;
-            glm_vec_sub(vec3{ 0.0f, 0.0f, 0.0f }, this->sun->direction, sun_position);
+            glm::vec3 sun_position = glm::vec3(0.0f) - this->sun->direction;
 
             // calculate sun view matrix
-            glm_lookat(sun_position, vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f }, sun_view);
+            sun_view = glm::lookAt(sun_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
             // render sun shadows to depthmap
             glBindFramebuffer(GL_FRAMEBUFFER, this->depthmap_fbo_id);
@@ -866,8 +846,7 @@ namespace pk
 
             for (auto &object : this->objects)
             {
-                mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-                object->calc_model(object_model);
+                glm::mat4 object_model = object->calc_model();
 
                 this->depth_program->set_mat4("object.model", object_model);
 
@@ -894,8 +873,7 @@ namespace pk
 
                 for (auto &object : this->objects)
                 {
-                    mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-                    object->calc_model(object_model);
+                    glm::mat4 object_model = object->calc_model();
 
                     if (this->sun)
                     {
@@ -1115,8 +1093,7 @@ namespace pk
 
                 for (auto &object : this->objects)
                 {
-                    mat4 object_model = GLM_MAT4_IDENTITY_INIT;
-                    object->calc_model(object_model);
+                    glm::mat4 object_model = object->calc_model();
 
                     this->geometry_program->set_mat4("object.model", object_model);
 
@@ -1302,9 +1279,8 @@ namespace pk
         {
             glDepthFunc(GL_LEQUAL);
 
-            mat4 camera_view_no_translate;
-            glm_mat4_copy(camera_view, camera_view_no_translate);
-            // glm_rotate(camera_view_no_translate, glm_rad(elapsed_time) * 0.001, GLM_YUP);
+            glm::mat4 camera_view_no_translate = camera_view;
+            // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)elapsed_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
             camera_view_no_translate[3][0] = 0.0f;
             camera_view_no_translate[3][1] = 0.0f;
             camera_view_no_translate[3][2] = 0.0f;
@@ -1332,44 +1308,23 @@ namespace pk
     void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time)
     {
         // calculate camera projection matrix
-        mat4 camera_projection;
-        glm_perspective(
-            glm_rad(camera->fov),
-            aspect,
-            0.01f,
-            100.0f,
-            camera_projection);
+        glm::mat4 camera_projection = camera->calc_projection(aspect);
 
         // calculate camera view matrix
-        vec3 camera_front;
-        camera->calc_front(&camera_front);
+        glm::mat4 camera_view = camera->calc_view();
 
-        vec3 camera_target;
-        glm_vec_add(camera->position, camera_front, camera_target);
-
-        vec3 camera_up;
-        camera->calc_up(&camera_up);
-
-        mat4 camera_view;
-        glm_lookat(
-            camera->position,
-            camera_target,
-            camera_up,
-            camera_view);
-
-        mat4 sun_projection;
-        mat4 sun_view;
+        glm::mat4 sun_projection;
+        glm::mat4 sun_view;
         if (this->sun)
         {
             // calculate sun projection matrix
-            glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f, sun_projection);
+            sun_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
 
             // calculate sun "position"
-            vec3 sun_position;
-            glm_vec_sub(vec3{ 0.0f, 0.0f, 0.0f }, this->sun->direction, sun_position);
+            glm::vec3 sun_position = glm::vec3(0.0f) - this->sun->direction;
 
             // calculate sun view matrix
-            glm_lookat(sun_position, vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f }, sun_view);
+            sun_view = glm::lookAt(sun_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         }
 
         // send camera transformations to water program
@@ -1396,7 +1351,7 @@ namespace pk
         for (auto &water : this->waters)
         {
             // render water reflection
-            vec4 reflection_clipping_plane = { 0.0f, 1.0f, 0.0f, -water->position[1] };
+            glm::vec4 reflection_clipping_plane = { 0.0f, 1.0f, 0.0f, -water->position[1] };
             bool reflect = false;
 
             if (camera->position[1] > water->position[1]) // don't draw reflections if under the water
@@ -1416,7 +1371,7 @@ namespace pk
             }
 
             // render water refraction
-            vec4 refraction_clipping_plane = { 0.0f, -1.0f, 0.0f, water->position[1] };
+            glm::vec4 refraction_clipping_plane = { 0.0f, -1.0f, 0.0f, water->position[1] };
 
             if (camera->position[1] < water->position[1]) // flip refraction clipping plane if under the water
             {
@@ -1430,13 +1385,9 @@ namespace pk
 
             this->water_program->bind();
 
-            mat4 water_model = GLM_MAT4_IDENTITY_INIT;
-            glm_translate(water_model, water->position);
-            vec3 water_scale;
-            water_scale[0] = water->scale[0];
-            water_scale[1] = 1.0f;
-            water_scale[2] = water->scale[1];
-            glm_scale(water_model, water_scale);
+            glm::mat4 water_model(1.0f);
+            water_model = glm::translate(water_model, water->position);
+            water_model = glm::scale(water_model, { water->scale.x, 1.0f, water->scale.y });
 
             this->water_program->set_mat4("water.model", water_model);
 
@@ -1463,35 +1414,35 @@ namespace pk
 
     void renderer::render_sprites(GLuint fbo_id, float aspect)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        //glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
-        this->sprite_program->bind();
+        //this->sprite_program->bind();
 
-        // calculate ortho projection
-        mat4 camera_projection_ortho;
-        glm_ortho_default(aspect, camera_projection_ortho);
+        //// calculate ortho projection
+        //mat4 camera_projection_ortho;
+        //glm_ortho_default(aspect, camera_projection_ortho);
 
-        this->sprite_program->set_mat4("camera.projection", camera_projection_ortho);
+        //this->sprite_program->set_mat4("camera.projection", camera_projection_ortho);
 
-        for (auto &sprite : this->sprites)
-        {
-            mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
-            sprite->calc_model(sprite_model);
+        //for (auto &sprite : this->sprites)
+        //{
+        //    mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
+        //    sprite->calc_model(sprite_model);
 
-            this->sprite_program->set_mat4("sprite.model", sprite_model);
-            this->sprite_program->set_vec3("sprite.color", sprite->color);
+        //    this->sprite_program->set_mat4("sprite.model", sprite_model);
+        //    this->sprite_program->set_vec3("sprite.color", sprite->color);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, sprite->color_map->texture_id);
+        //    glActiveTexture(GL_TEXTURE0);
+        //    glBindTexture(GL_TEXTURE_2D, sprite->color_map->texture_id);
 
-            glBindVertexArray(this->sprite_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, this->num_sprite_vertices);
-            glBindVertexArray(0);
-        }
+        //    glBindVertexArray(this->sprite_vao_id);
+        //    glDrawArrays(GL_TRIANGLES, 0, this->num_sprite_vertices);
+        //    glBindVertexArray(0);
+        //}
 
-        this->sprite_program->unbind();
+        //this->sprite_program->unbind();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void renderer::render_screen(GLuint fbo_id)

@@ -1,19 +1,21 @@
 #include "object.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace pk
 {
     object::object(
         pk::mesh *mesh,
         pk::material *material,
-        vec3 position,
-        vec3 rotation,
-        vec3 scale)
+        glm::vec3 position,
+        glm::vec3 rotation,
+        glm::vec3 scale)
     {
         this->mesh = mesh;
         this->material = material;
-        glm_vec_copy(position, this->position);
-        glm_vec_copy(rotation, this->rotation);
-        glm_vec_copy(scale, this->scale);
+        this->position = position;
+        this->rotation = rotation;
+        this->scale = scale;
     }
 
     object::~object()
@@ -21,13 +23,15 @@ namespace pk
 
     }
 
-    void object::calc_model(vec4 *model)
+    glm::mat4 object::calc_model() const
     {
-        glm_translate(model, this->position);
-        glm_rotate(model, this->rotation[0], vec3{ 1.0f, 0.0f, 0.0f });
-        glm_rotate(model, this->rotation[1], vec3{ 0.0f, 1.0f, 0.0f });
-        glm_rotate(model, this->rotation[2], vec3{ 0.0f, 0.0f, 1.0f });
-        glm_scale(model, this->scale);
+        glm::mat4 model(1.0f);
+
+        model = glm::translate(model, this->position);
+        //model = glm::rotate(model, );
+        model = glm::scale(model, this->scale);
+
+        return model;
     }
 
     void object::draw(

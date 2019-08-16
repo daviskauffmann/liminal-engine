@@ -1,7 +1,7 @@
 #ifndef GAME_MATERIAL_HPP
 #define GAME_MATERIAL_HPP
 
-#include <cglm/cglm.h>
+#include <glm/vec3.hpp>
 
 #include "texture.hpp"
 
@@ -9,7 +9,7 @@ namespace pk
 {
     struct material
     {
-        vec3 color;
+        glm::vec3 color;
         pk::texture *diffuse_map;
         pk::texture *specular_map;
         float shininess;
@@ -18,7 +18,7 @@ namespace pk
         float glow;
 
         material(
-            vec3 _color,
+            glm::vec3 color,
             pk::texture *diffuseMap,
             pk::texture *specularMap,
             float shininess,

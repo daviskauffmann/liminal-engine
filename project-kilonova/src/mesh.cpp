@@ -2,27 +2,23 @@
 
 namespace pk
 {
-    mesh::mesh(
-        float *vertices,
-        unsigned int vertices_size,
-        unsigned int *indices,
-        unsigned int indices_size)
+    mesh::mesh(std::vector<float> vertices, std::vector<unsigned int> indices)
+        : vertices(vertices)
+        , indices(indices)
     {
         glGenVertexArrays(1, &this->vao_id);
         glGenBuffers(1, &this->vbo_id);
         glGenBuffers(1, &this->ebo_id);
-        this->vertices_size = vertices_size;
-        this->indices_size = indices_size;
 
         glBindVertexArray(this->vao_id);
 
         // setup vertex buffer
         glBindBuffer(GL_ARRAY_BUFFER, this->vbo_id);
-        glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-
+        glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+        
         // setup element buffer
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
         // setup vertex attributes
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
@@ -48,7 +44,7 @@ namespace pk
     {
         glBindVertexArray(this->vao_id);
 
-        glDrawElements(GL_TRIANGLES, this->indices_size, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, this->indices.size() * sizeof(unsigned int), GL_UNSIGNED_INT, nullptr);
 
         glBindVertexArray(0);
     }

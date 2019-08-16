@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <AL/al.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace pk
 {
@@ -36,10 +37,17 @@ namespace pk
         alcCloseDevice(this->device);
     }
 
-    void audio::set_listener(vec3 position, vec3 velocity, vec3 *orientation) const
+    void audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const
     {
-        alListenerfv(AL_POSITION, (ALfloat *)position);
-        alListenerfv(AL_VELOCITY, (ALfloat *)velocity);
-        alListenerfv(AL_ORIENTATION, (ALfloat *)orientation);
+        glm::vec3 velocity = this->position - position;
+        float orientation[] = {
+            front.x, front.y, front.z,
+            up.x, up.y, up.z };
+
+        alListenerfv(AL_POSITION, glm::value_ptr(position));
+        alListenerfv(AL_VELOCITY, glm::value_ptr(velocity));
+        alListenerfv(AL_ORIENTATION, orientation);
+
+        this->position = position;
     }
 }

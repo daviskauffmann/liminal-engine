@@ -1,5 +1,7 @@
 #include "source.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace pk
 {
     source::source()
@@ -27,14 +29,14 @@ namespace pk
         alSourcef(this->source_id, AL_PITCH, pitch);
     }
 
-    void source::set_position(vec3 position) const
+    void source::set_position(glm::vec3 position) const
     {
-        alSourcefv(this->source_id, AL_POSITION, (ALfloat *)position);
-    }
+        glm::vec3 velocity = this->position - position;
 
-    void source::set_velocity(vec3 velocity) const
-    {
-        alSourcefv(this->source_id, AL_VELOCITY, (ALfloat *)velocity);
+        alSourcefv(this->source_id, AL_POSITION, glm::value_ptr(position));
+        alSourcefv(this->source_id, AL_VELOCITY, glm::value_ptr(velocity));
+
+        this->position = position;
     }
 
     bool source::is_playing() const

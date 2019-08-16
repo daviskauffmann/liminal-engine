@@ -1,22 +1,22 @@
 #ifndef GAME_SUN_HPP
 #define GAME_SUN_HPP
 
-#include <cglm/cglm.h>
+#include <glm/vec3.hpp>
 
 namespace pk
 {
     struct sun
     {
-        vec3 direction;
-        vec3 ambient_color;
-        vec3 diffuse_color;
-        vec3 specular_color;
+        glm::vec3 direction;
+        glm::vec3 ambient_color;
+        glm::vec3 diffuse_color;
+        glm::vec3 specular_color;
 
         sun(
-            vec3 direction,
-            vec3 ambient_color,
-            vec3 diffuse_color,
-            vec3 specular_color);
+            glm::vec3 direction,
+            glm::vec3 ambient_color,
+            glm::vec3 diffuse_color,
+            glm::vec3 specular_color);
         ~sun();
     };
 }

@@ -2,10 +2,9 @@
 
 namespace pk
 {
-    water::water(vec3 position, vec2 scale)
+    water::water(glm::vec3 position, glm::vec2 scale) :
+        position(position), scale(scale)
     {
-        glm_vec_copy(position, this->position);
-        glm_vec_copy(scale, this->scale);
     }
 
     water::~water()

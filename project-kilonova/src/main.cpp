@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <cglm/cglm.h>
+#include <glm/glm.hpp>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_mixer.h>
@@ -76,24 +76,20 @@ int main(int argc, char *argv[])
     pk::audio audio;
 
     // create meshes
-    float quad_vertices[] = {
+    std::vector<float> quad_vertices = {
         // position           // normal            // uv
          1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top-right
          1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
         -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f, // bottom-left
         -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f  // top-left
     };
-    unsigned int quad_indices[] = {
+    std::vector<unsigned int> quad_indices = {
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
-    pk::mesh quad_mesh(
-        quad_vertices,
-        sizeof(quad_vertices),
-        quad_indices,
-        sizeof(quad_indices));
+    pk::mesh quad_mesh(quad_vertices, quad_indices);
 
-    float cube_vertices[] = {
+    std::vector<float> cube_vertices = {
         // position           // normal            // uv
         // back face
         -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, // bottom-left
@@ -138,7 +134,7 @@ int main(int argc, char *argv[])
         -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
         -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f  // bottom-left   
     };
-    unsigned int cube_indices[] = {
+    std::vector<unsigned int> cube_indices = {
         0, 1, 2,
         3, 4, 5,
         6, 7, 8,
@@ -151,11 +147,7 @@ int main(int argc, char *argv[])
         27, 28, 29,
         30, 31, 32,
         33, 34, 35 };
-    pk::mesh cube_mesh(
-        cube_vertices,
-        sizeof(cube_vertices),
-        cube_indices,
-        sizeof(cube_indices));
+    pk::mesh cube_mesh(cube_vertices, cube_indices);
 
     // create textures
     pk::texture default_texture("assets/images/default.png");
@@ -180,7 +172,7 @@ int main(int argc, char *argv[])
 
     // create materials
     pk::material default_material(
-        vec3{ 1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
         &default_texture,
         &default_texture,
         16.0f,
@@ -188,7 +180,7 @@ int main(int argc, char *argv[])
         nullptr,
         1.0f);
     pk::material box_material(
-        vec3{ 1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
         &box_diffuse_texture,
         &box_specular_texture,
         16.0f,
@@ -196,7 +188,7 @@ int main(int argc, char *argv[])
         nullptr,
         1.0f);
     pk::material cobble_material(
-        vec3{ 1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
         &cobble_diffuse_texture,
         &cobble_specular_texture,
         16.0f,
@@ -208,100 +200,100 @@ int main(int argc, char *argv[])
     pk::object floor_object(
         &cube_mesh,
         &cobble_material,
-        vec3{ 0.0f, -4.0f, 0.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 10.0f, 1.0f, 10.0f });
+        { 0.0f, -4.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 10.0f, 1.0f, 10.0f });
     pk::object box_1_object(
         &cube_mesh,
         &default_material,
-        vec3{ 0.0f, 1.0f, 0.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 1.0f, 1.0f, 1.0f });
+        { 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 1.0f, 1.0f, 1.0f });
     pk::object box_2_object(
         &cube_mesh,
         &box_material,
-        vec3{ 2.0f, -0.5f, 0.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 0.5f, 0.5f, 0.5f });
+        { 2.0f, -0.5f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.5f, 0.5f, 0.5f });
     pk::object box_3_object(
         &cube_mesh,
         &box_material,
-        vec3{ 0.0f, -0.5f, 2.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 0.5f, 0.5f, 0.5f });
+        { 0.0f, -0.5f, 2.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.5f, 0.5f, 0.5f });
     pk::object box_4_object(
         &cube_mesh,
         &box_material,
-        vec3{ -2.0f, -0.5f, 0.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 0.5f, 0.5f, 0.5f });
+        { -2.0f, -0.5f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.5f, 0.5f, 0.5f });
     pk::object box_5_object(
         &cube_mesh,
         &box_material,
-        vec3{ 0.0f, -0.5f, -2.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 0.5f, 0.5f, 0.5f });
+        { 0.0f, -0.5f, -2.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.5f, 0.5f, 0.5f });
 
     // create sun
     pk::sun sun(
-        vec3{ -0.2f, -1.0f, -0.3f },
-        vec3{ 0.1f, 0.1f, 0.1f },
-        vec3{ 0.8f, 0.8f, 0.8f },
-        vec3{ 1.0f, 1.0f, 1.0f });
+        { -0.2f, -1.0f, -0.3f },
+        { 0.1f, 0.1f, 0.1f },
+        { 0.8f, 0.8f, 0.8f },
+        { 1.0f, 1.0f, 1.0f });
 
     // create point lights
     pk::point_light red_point_light(
-        vec3{ 2.0f, 0.0f, 2.0f },
-        vec3{ 0.1f, 0.0f, 0.0f },
-        vec3{ 0.8f, 0.0f, 0.0f },
-        vec3{ 1.0f, 0.0f, 0.0f },
-        vec3{ 1.0f, 0.09f, 0.32f });
+        { 2.0f, 0.0f, 2.0f },
+        { 0.1f, 0.0f, 0.0f },
+        { 0.8f, 0.0f, 0.0f },
+        { 1.0f, 0.0f, 0.0f },
+        { 1.0f, 0.09f, 0.32f });
     pk::point_light yellow_point_light(
-        vec3{ -2.0f, 0.0f, -2.0f },
-        vec3{ 0.1f, 0.1f, 0.0f },
-        vec3{ 0.8f, 0.8f, 0.0f },
-        vec3{ 1.0f, 1.0f, 0.0f },
-        vec3{ 1.0f, 0.09f, 0.32f });
+        { -2.0f, 0.0f, -2.0f },
+        { 0.1f, 0.1f, 0.0f },
+        { 0.8f, 0.8f, 0.0f },
+        { 1.0f, 1.0f, 0.0f },
+        { 1.0f, 0.09f, 0.32f });
     pk::point_light green_point_light(
-        vec3{ 2.0f, 0.0f, -2.0f },
-        vec3{ 0.0f, 0.1f, 0.0f },
-        vec3{ 0.0f, 0.8f, 0.0f },
-        vec3{ 0.0f, 1.0f, 0.0f },
-        vec3{ 1.0f, 0.09f, 0.32f });
+        { 2.0f, 0.0f, -2.0f },
+        { 0.0f, 0.1f, 0.0f },
+        { 0.0f, 0.8f, 0.0f },
+        { 0.0f, 1.0f, 0.0f },
+        { 1.0f, 0.09f, 0.32f });
     pk::point_light blue_point_light(
-        vec3{ -2.0f, 0.0f, 2.0f },
-        vec3{ 0.0f, 0.0f, 0.1f },
-        vec3{ 0.0f, 0.0f, 0.8f },
-        vec3{ 0.0f, 0.0f, 1.0f },
-        vec3{ 1.0f, 0.09f, 0.32f });
+        { -2.0f, 0.0f, 2.0f },
+        { 0.0f, 0.0f, 0.1f },
+        { 0.0f, 0.0f, 0.8f },
+        { 0.0f, 0.0f, 1.0f },
+        { 1.0f, 0.09f, 0.32f });
 
     // create spot lights
     pk::spot_light torch_spot_light(
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 0.0f, 0.0f, 0.0f },
-        vec3{ 0.5f, 0.5f, 0.5f },
-        vec3{ 1.0f, 1.0f, 1.0f },
-        vec3{ 1.0f, 1.0f, 1.0f },
-        vec3{ 1.0f, 0.09f, 0.32f },
-        cosf(glm_rad(12.5f)),
-        cosf(glm_rad(15.0f)));
+        { 0.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.5f, 0.5f, 0.5f },
+        { 1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
+        { 1.0f, 0.09f, 0.32f },
+        cosf(glm::radians(12.5f)),
+        cosf(glm::radians(15.0f)));
 
     // create waters
     pk::water test_water(
-        vec3{ 0.0f, -2.0f, 0.0f },
-        vec3{ 100.0f, 100.0f });
+        { 0.0f, -2.0f, 0.0f },
+        { 100.0f, 100.0f });
 
     // create sprites
     pk::sprite grass_sprite(
-        vec3{ 1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
         &grass_texture,
-        vec2{ 0.0f, 0.0f },
+        { 0.0f, 0.0f },
         0.0f,
-        vec2{ 1.0f, 1.0f });
+        { 1.0f, 1.0f });
 
     // create camera
     pk::camera main_camera(
-        vec3{ 0.0f, 0.0f, 3.0f },
+        { 0.0f, 0.0f, 3.0f },
         0.0f,
         -90.0f,
         0.0f,
@@ -496,64 +488,31 @@ int main(int argc, char *argv[])
         }
 
         // calculate camera vectors
-        vec3 main_camera_front;
-        main_camera.calc_front(&main_camera_front);
-
-        vec3 main_camera_up;
-        main_camera.calc_up(&main_camera_up);
+        glm::vec3 main_camera_front = main_camera.calc_front();
+        glm::vec3 main_camera_up = main_camera.calc_up();
 
         // move forward
         if (keys[SDL_SCANCODE_W])
         {
-            vec3 movement;
-            glm_vec_scale(main_camera_front, speed, movement);
-            glm_vec_add(main_camera.position, movement, main_camera.position);
+            main_camera.position += main_camera_front * speed;
         }
 
         // strafe left
         if (keys[SDL_SCANCODE_A])
         {
-            vec3 direction;
-            glm_cross(main_camera_front, main_camera_up, direction);
-            glm_normalize(direction);
-
-            vec3 movement;
-            glm_vec_scale(direction, -speed, movement);
-            glm_vec_add(main_camera.position, movement, main_camera.position);
+            main_camera.position -= glm::normalize(glm::cross(main_camera_front, main_camera_up)) * speed;
         }
 
         // move backward
         if (keys[SDL_SCANCODE_S])
         {
-            vec3 movement;
-            glm_vec_scale(main_camera_front, -speed, movement);
-            glm_vec_add(main_camera.position, movement, main_camera.position);
+            main_camera.position -= main_camera_front * speed;
         }
 
         // strafe right
         if (keys[SDL_SCANCODE_D])
         {
-            vec3 direction;
-            glm_cross(main_camera_front, main_camera_up, direction);
-            glm_normalize(direction);
-
-            vec3 movement;
-            glm_vec_scale(direction, speed, movement);
-            glm_vec_add(main_camera.position, movement, main_camera.position);
-        }
-
-        if (keys[SDL_SCANCODE_SPACE])
-        {
-            vec3 movement;
-            glm_vec_scale(main_camera_up, speed, movement);
-            glm_vec_add(main_camera.position, movement, main_camera.position);
-        }
-
-        if (keys[SDL_SCANCODE_LCTRL])
-        {
-            vec3 movement;
-            glm_vec_scale(main_camera_up, -speed, movement);
-            glm_vec_add(main_camera.position, movement, main_camera.position);
+            main_camera.position += glm::normalize(glm::cross(main_camera_front, main_camera_up)) * speed;
         }
 
         // calculate angle for rotating stuff
@@ -569,17 +528,11 @@ int main(int argc, char *argv[])
         sun.direction[0] = angle_sin;
         sun.direction[2] = angle_cos;
 
-        glm_vec_copy(main_camera.position, torch_spot_light.position);
-        glm_vec_copy(main_camera_front, torch_spot_light.direction);
+        torch_spot_light.position = main_camera.position;
+        torch_spot_light.direction = main_camera_front;
 
         // update audio
-        vec3 main_camera_velocity = GLM_VEC3_ZERO_INIT;
-        glm_vec_scale(main_camera_front, speed, main_camera_velocity);
-        vec3 main_camera_orientation[2];
-        glm_vec_copy(main_camera_front, main_camera_orientation[0]);
-        glm_vec_copy(main_camera_up, main_camera_orientation[1]);
-
-        audio.set_listener(main_camera.position, main_camera_velocity, main_camera_orientation);
+        audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
 
         // update sources
         camera_source.set_position(main_camera.position);

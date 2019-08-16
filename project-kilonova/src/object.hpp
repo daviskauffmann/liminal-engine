@@ -1,7 +1,8 @@
 #ifndef GAME_OBJECT_HPP
 #define GAME_OBJECT_HPP
 
-#include <cglm/cglm.h>
+#include <glm/vec3.hpp>
+#include <glm/matrix.hpp>
 
 #include "material.hpp"
 #include "mesh.hpp"
@@ -12,19 +13,19 @@ namespace pk
     {
         pk::mesh *mesh;
         pk::material *material;
-        vec3 position;
-        vec3 rotation;
-        vec3 scale;
+        glm::vec3 position;
+        glm::vec3 rotation;
+        glm::vec3 scale;
 
         object(
             pk::mesh *mesh,
             pk::material *material,
-            vec3 position,
-            vec3 rotation,
-            vec3 scale);
+            glm::vec3 position,
+            glm::vec3 rotation,
+            glm::vec3 scale);
         ~object();
 
-        void calc_model(vec4 *model);
+        glm::mat4 calc_model() const;
         void draw(
             unsigned int diffuse_map_index,
             unsigned int specular_map_index,
