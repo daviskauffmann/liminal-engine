@@ -23,6 +23,7 @@
 #include "sprite.hpp"
 #include "sun.hpp"
 #include "texture.hpp"
+#include "vertex.hpp"
 #include "water.hpp"
 
 constexpr auto window_title = "Project Kilonova";
@@ -76,12 +77,11 @@ int main(int argc, char *argv[])
     pk::audio audio;
 
     // create meshes
-    std::vector<float> quad_vertices = {
-        // position           // normal            // uv
-         1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top-right
-         1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
-        -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f, // bottom-left
-        -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f  // top-left
+    std::vector<pk::vertex> quad_vertices = {
+        pk::vertex(glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f,  0.0f), glm::vec2(1.0f, 1.0f)), // top-right
+        pk::vertex(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f,  0.0f), glm::vec2(1.0f, 0.0f)), // bottom-right
+        pk::vertex(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 1.0f,  0.0f), glm::vec2(0.0f, 0.0f)), // bottom-left
+        pk::vertex(glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f,  0.0f), glm::vec2(0.0f, 1.0f))  // top-left
     };
     std::vector<unsigned int> quad_indices = {
         0, 1, 3, // first triangle
@@ -89,50 +89,49 @@ int main(int argc, char *argv[])
     };
     pk::mesh quad_mesh(quad_vertices, quad_indices);
 
-    std::vector<float> cube_vertices = {
-        // position           // normal            // uv
+    std::vector<pk::vertex > cube_vertices = {
         // back face
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, // bottom-left
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f, // bottom-right         
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f, // top-right
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f, // bottom-left
-        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f, // top-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f, -1.0f),  glm::vec3(0.0f,  0.0f, -1.0f),  glm::vec2(0.0f,  0.0f)), // bottom-left
+        pk::vertex(glm::vec3(1.0f,  1.0f, -1.0f),  glm::vec3(0.0f,  0.0f, -1.0f),  glm::vec2(1.0f,  1.0f)), // top-right
+        pk::vertex(glm::vec3(1.0f, -1.0f, -1.0f),  glm::vec3(0.0f,  0.0f, -1.0f),  glm::vec2(1.0f,  0.0f)), // bottom-right         
+        pk::vertex(glm::vec3(1.0f,  1.0f, -1.0f),  glm::vec3(0.0f,  0.0f, -1.0f),  glm::vec2(1.0f,  1.0f)), // top-right
+        pk::vertex(glm::vec3(-1.0f, -1.0f, -1.0f),  glm::vec3(0.0f,  0.0f, -1.0f),  glm::vec2(0.0f,  0.0f)), // bottom-left
+        pk::vertex(glm::vec3(-1.0f,  1.0f, -1.0f),  glm::vec3(0.0f,  0.0f, -1.0f),  glm::vec2(0.0f,  1.0f)), // top-left
         // front face
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // top-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // top-right
-        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f, // top-left
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // bottom-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f,  1.0f),  glm::vec3(0.0f,  0.0f,  1.0f),  glm::vec2(0.0f,  0.0f)), // bottom-left
+        pk::vertex(glm::vec3(1.0f, -1.0f,  1.0f),  glm::vec3(0.0f,  0.0f,  1.0f),  glm::vec2(1.0f,  0.0f)), // bottom-right
+        pk::vertex(glm::vec3(1.0f,  1.0f,  1.0f),  glm::vec3(0.0f,  0.0f,  1.0f),  glm::vec2(1.0f,  1.0f)), // top-right
+        pk::vertex(glm::vec3(1.0f,  1.0f,  1.0f),  glm::vec3(0.0f,  0.0f,  1.0f),  glm::vec2(1.0f,  1.0f)), // top-right
+        pk::vertex(glm::vec3(-1.0f,  1.0f,  1.0f),  glm::vec3(0.0f,  0.0f,  1.0f),  glm::vec2(0.0f,  1.0f)), // top-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f,  1.0f),  glm::vec3(0.0f,  0.0f,  1.0f),  glm::vec2(0.0f,  0.0f)), // bottom-left
         // left face
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-right
-        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // top-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-left
-        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // bottom-right
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-right
+        pk::vertex(glm::vec3(-1.0f,  1.0f,  1.0f), -glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // top-right
+        pk::vertex(glm::vec3(-1.0f,  1.0f, -1.0f), -glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(1.0f,  1.0f)), // top-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f, -1.0f), -glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // bottom-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f, -1.0f), -glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // bottom-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f,  1.0f), -glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(0.0f,  0.0f)), // bottom-right
+        pk::vertex(glm::vec3(-1.0f,  1.0f,  1.0f), -glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // top-right
         // right face
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-left
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // top-right         
-         1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // top-left
-         1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // bottom-left     
+        pk::vertex(glm::vec3(1.0f,  1.0f,  1.0f),  glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // top-left
+        pk::vertex(glm::vec3(1.0f, -1.0f, -1.0f),  glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // bottom-right
+        pk::vertex(glm::vec3(1.0f,  1.0f, -1.0f),  glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(1.0f,  1.0f)), // top-right         
+        pk::vertex(glm::vec3(1.0f, -1.0f, -1.0f),  glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // bottom-right
+        pk::vertex(glm::vec3(1.0f,  1.0f,  1.0f),  glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // top-left
+        pk::vertex(glm::vec3(1.0f, -1.0f,  1.0f),  glm::vec3(1.0f,  0.0f,  0.0f),  glm::vec2(0.0f,  0.0f)), // bottom-left     
         // bottom face
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f, // top-right
-         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f, // top-left
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f, // bottom-left
-        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f, // bottom-right
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f, // top-right
+        pk::vertex(glm::vec3(-1.0f, -1.0f, -1.0f),  glm::vec3(0.0f, -1.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // top-right
+        pk::vertex(glm::vec3(1.0f, -1.0f, -1.0f),  glm::vec3(0.0f, -1.0f,  0.0f),  glm::vec2(1.0f,  1.0f)), // top-left
+        pk::vertex(glm::vec3(1.0f, -1.0f,  1.0f),  glm::vec3(0.0f, -1.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // bottom-left
+        pk::vertex(glm::vec3(1.0f, -1.0f,  1.0f),  glm::vec3(0.0f, -1.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // bottom-left
+        pk::vertex(glm::vec3(-1.0f, -1.0f,  1.0f),  glm::vec3(0.0f, -1.0f,  0.0f),  glm::vec2(0.0f,  0.0f)), // bottom-right
+        pk::vertex(glm::vec3(-1.0f, -1.0f, -1.0f),  glm::vec3(0.0f, -1.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // top-right
         // top face
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
-         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f, // top-right     
-         1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f  // bottom-left   
+        pk::vertex(glm::vec3(-1.0f,  1.0f, -1.0f),  glm::vec3(0.0f,  1.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // top-left
+        pk::vertex(glm::vec3(1.0f,  1.0f , 1.0f),  glm::vec3(0.0f,  1.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // bottom-right
+        pk::vertex(glm::vec3(1.0f,  1.0f, -1.0f),  glm::vec3(0.0f,  1.0f,  0.0f),  glm::vec2(1.0f,  1.0f)), // top-right     
+        pk::vertex(glm::vec3(1.0f,  1.0f,  1.0f),  glm::vec3(0.0f,  1.0f,  0.0f),  glm::vec2(1.0f,  0.0f)), // bottom-right
+        pk::vertex(glm::vec3(-1.0f,  1.0f, -1.0f),  glm::vec3(0.0f,  1.0f,  0.0f),  glm::vec2(0.0f,  1.0f)), // top-left
+        pk::vertex(glm::vec3(-1.0f,  1.0f,  1.0f),  glm::vec3(0.0f,  1.0f,  0.0f),  glm::vec2(0.0f,  0.0f))  // bottom-left   
     };
     std::vector<unsigned int> cube_indices = {
         0, 1, 2,

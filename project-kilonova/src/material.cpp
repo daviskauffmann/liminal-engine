@@ -10,19 +10,18 @@ namespace pk
         pk::texture *normal_map,
         pk::texture *emission_map,
         float glow)
+        : color(color)
+        , diffuse_map(diffuse_map)
+        , specular_map(specular_map)
+        , shininess(shininess)
+        , normal_map(normal_map)
+        , emission_map(emission_map)
+        , glow(glow)
     {
-        this->color = color;
-        this->diffuse_map = diffuse_map;
-        this->specular_map = specular_map;
-        this->shininess = shininess;
-        this->normal_map = normal_map;
-        this->emission_map = emission_map;
-        this->glow = glow;
     }
 
     material::~material()
     {
-
     }
 
     void material::bind(

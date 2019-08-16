@@ -10,17 +10,16 @@ namespace pk
         glm::vec3 position,
         glm::vec3 rotation,
         glm::vec3 scale)
+        : mesh(mesh)
+        , material(material)
+        , position(position)
+        , rotation(rotation)
+        , scale(scale)
     {
-        this->mesh = mesh;
-        this->material = material;
-        this->position = position;
-        this->rotation = rotation;
-        this->scale = scale;
     }
 
     object::~object()
     {
-
     }
 
     glm::mat4 object::calc_model() const

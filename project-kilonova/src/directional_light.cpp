@@ -7,15 +7,14 @@ namespace pk
         glm::vec3 ambient_color,
         glm::vec3 diffuse_color,
         glm::vec3 specular_color)
+        : direction(direction)
+        , ambient_color(ambient_color)
+        , diffuse_color(diffuse_color)
+        , specular_color(specular_color)
     {
-        this->direction = direction;
-        this->ambient_color = ambient_color;
-        this->diffuse_color = diffuse_color;
-        this->specular_color = specular_color;
     }
 
     directional_light::~directional_light()
     {
-
     }
 }

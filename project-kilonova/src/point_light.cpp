@@ -8,16 +8,15 @@ namespace pk
         glm::vec3 diffuse_color,
         glm::vec3 specular_color,
         glm::vec3 attenuation)
+        : position(position)
+        , ambient_color(ambient_color)
+        , diffuse_color(diffuse_color)
+        , specular_color(specular_color)
+        , attenuation(attenuation)
     {
-        this->position = position;
-        this->ambient_color = ambient_color;
-        this->diffuse_color = diffuse_color;
-        this->specular_color = specular_color;
-        this->attenuation = attenuation;
     }
 
     point_light::~point_light()
     {
-
     }
 }

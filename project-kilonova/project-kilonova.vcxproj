@@ -123,6 +123,7 @@
     <ClCompile Include="src\spot_light.cpp" />
     <ClCompile Include="src\sprite.cpp" />
     <ClCompile Include="src\sun.cpp" />
+    <ClCompile Include="src\vertex.cpp" />
     <ClCompile Include="src\water.cpp" />
     <ClCompile Include="src\texture.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="src\sprite.hpp" />
     <ClInclude Include="src\sun.hpp" />
     <ClInclude Include="src\texture.hpp" />
+    <ClInclude Include="src\vertex.hpp" />
     <ClInclude Include="src\water.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
