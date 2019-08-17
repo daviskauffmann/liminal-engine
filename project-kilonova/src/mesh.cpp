@@ -21,9 +21,9 @@ namespace pk
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
         // setup vertex attributes
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)offsetof(pk::vertex, position));
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)offsetof(pk::vertex, normal));
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)offsetof(pk::vertex, uv));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, position));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, normal));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, uv));
 
         // enable vertex attributes for this vertex array
         glEnableVertexAttribArray(0);
@@ -44,7 +44,7 @@ namespace pk
     {
         glBindVertexArray(this->vao_id);
 
-        glDrawElements(GL_TRIANGLES, (GLsizei)(this->indices.size() * sizeof(unsigned int)), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, (GLsizei)this->indices.size() * sizeof(unsigned int), GL_UNSIGNED_INT, nullptr);
 
         glBindVertexArray(0);
     }
