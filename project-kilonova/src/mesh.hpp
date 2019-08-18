@@ -13,8 +13,8 @@ namespace pk
 {
     struct mesh
     {
-        std::vector<pk::vertex> vertices;
-        std::vector<unsigned int> indices;
+        GLsizei vertices_size;
+        GLsizei indices_size;
         GLuint vao_id;
         GLuint vbo_id;
         GLuint ebo_id;

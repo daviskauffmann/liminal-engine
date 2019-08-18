@@ -5,6 +5,12 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define LIGHTING_COLOR 1
+#define LIGHTING_TEXTURE 2
+#define LIGHTING_FORWARD 3
+#define LIGHTING_DEFERRED 4
+#define LIGHTING_MODE LIGHTING_DEFERRED
+
 namespace pk
 {
     renderer::renderer(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height)
@@ -18,7 +24,6 @@ namespace pk
         this->reflection_height = render_height;
         this->refraction_width = render_width;
         this->refraction_height = render_height;
-        this->render_mode = RENDER_MODE_FORWARD;
 
         // init GLEW
         {
@@ -47,9 +52,12 @@ namespace pk
         this->depth_program = new pk::program(
             "assets/shaders/depth.vert",
             "assets/shaders/depth.frag");
-        this->forward_color_program = new pk::program(
-            "assets/shaders/forward.vert",
-            "assets/shaders/forward_color.frag");
+        this->color_program = new pk::program(
+            "assets/shaders/color.vert",
+            "assets/shaders/color.frag");
+        this->texture_program = new pk::program(
+            "assets/shaders/texture.vert",
+            "assets/shaders/texture.frag");
         this->forward_sun_program = new pk::program(
             "assets/shaders/forward.vert",
             "assets/shaders/forward_sun.frag");
@@ -94,6 +102,10 @@ namespace pk
             "assets/shaders/screen.frag");
 
         // setup shader samplers
+        this->texture_program->bind();
+        this->texture_program->set_int("color_map", 0);
+        this->texture_program->unbind();
+
         this->forward_sun_program->bind();
         this->forward_sun_program->set_int("material.diffuse_map", 0);
         this->forward_sun_program->set_int("material.specular_map", 1);
@@ -557,7 +569,7 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // create water mesh
-        float water_vertices[] = {
+        std::vector<float> water_vertices = {
             // position  
             -1.0f, -1.0f,
             -1.0f,  1.0f,
@@ -566,7 +578,7 @@ namespace pk
             -1.0f,  1.0f,
              1.0f,  1.0f
         };
-        this->num_water_vertices = sizeof(water_vertices) / sizeof(float) / 2;
+        this->water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(float));
 
         glGenVertexArrays(1, &this->water_vao_id);
         glGenBuffers(1, &this->water_vbo_id);
@@ -574,14 +586,14 @@ namespace pk
         glBindVertexArray(this->water_vao_id);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->water_vbo_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(water_vertices), &water_vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, this->water_vertices_size, water_vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
         glEnableVertexAttribArray(0);
 
         glBindVertexArray(0);
 
         // create skybox mesh
-        float skybox_vertices[] = {
+        std::vector<float> skybox_vertices = {
             // position
             -1.0f,  1.0f, -1.0f,
             -1.0f, -1.0f, -1.0f,
@@ -625,7 +637,7 @@ namespace pk
             -1.0f, -1.0f,  1.0f,
              1.0f, -1.0f,  1.0f
         };
-        this->num_skybox_vertices = sizeof(skybox_vertices) / sizeof(float) / 3;
+        this->skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(float));
 
         glGenVertexArrays(1, &this->skybox_vao_id);
         glGenBuffers(1, &this->skybox_vbo_id);
@@ -633,14 +645,14 @@ namespace pk
         glBindVertexArray(this->skybox_vao_id);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->skybox_vbo_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, this->skybox_vertices_size, skybox_vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
         glEnableVertexAttribArray(0);
 
         glBindVertexArray(0);
 
         // create sprite mesh
-        float sprite_vertices[] = {
+        std::vector<float> sprite_vertices = {
             // position // uv
             0.0f, 1.0f, 0.0f, 1.0f,
             1.0f, 0.0f, 1.0f, 0.0f,
@@ -650,7 +662,7 @@ namespace pk
             1.0f, 1.0f, 1.0f, 1.0f,
             1.0f, 0.0f, 1.0f, 0.0f
         };
-        this->num_sprite_vertices = sizeof(sprite_vertices) / sizeof(float) / 4;
+        this->sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(float));
 
         glGenVertexArrays(1, &this->sprite_vao_id);
         glGenBuffers(1, &this->sprite_vbo_id);
@@ -658,7 +670,7 @@ namespace pk
         glBindVertexArray(this->sprite_vao_id);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->sprite_vbo_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_vertices), &sprite_vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, this->sprite_vertices_size, sprite_vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
         glEnableVertexAttribArray(0);
@@ -667,7 +679,7 @@ namespace pk
         glBindVertexArray(0);
 
         // create screen mesh
-        float screen_vertices[] = {
+        std::vector<float> screen_vertices = {
             // position   // uv
             -1.0f, -1.0f, 0.0f, 0.0f,
             -1.0f,  1.0f, 0.0f, 1.0f,
@@ -676,7 +688,7 @@ namespace pk
             -1.0f,  1.0f, 0.0f, 1.0f,
              1.0f,  1.0f, 1.0f, 1.0f
         };
-        this->num_screen_vertices = sizeof(screen_vertices) / sizeof(float) / 4;
+        this->screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(float));
 
         glGenVertexArrays(1, &this->screen_vao_id);
         glGenBuffers(1, &this->screen_vbo_id);
@@ -684,7 +696,7 @@ namespace pk
         glBindVertexArray(this->screen_vao_id);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->screen_vbo_id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(screen_vertices), &screen_vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, this->screen_vertices_size, screen_vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat))); // position
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat))); // uv
         glEnableVertexAttribArray(0);
@@ -712,11 +724,6 @@ namespace pk
     renderer::~renderer()
     {
 
-    }
-
-    void renderer::set_mode(pk::render_mode render_mode)
-    {
-        this->render_mode = render_mode;
     }
 
     void renderer::add_object(pk::object *object)
@@ -771,20 +778,11 @@ namespace pk
         // render scene to the screen framebuffer
         this->render_scene(this->screen_fbo_id, camera, aspect, elapsed_time, glm::vec4(0.0f));
 
-        // DEBUG_render_point_lights(this->screen_fbo_id, camera, aspect);
-        if (this->render_mode == RENDER_MODE_DEFERRED)
-        {
-            // DEBUG_render_geometry_fbos(this->screen_fbo_id, camera, aspect);
-        }
-        // DEBUG_render_depthmap_fbo(this->screen_fbo_id, camera, aspect);
-
         // render water
         if (this->waters.size() > 0)
         {
             render_waters(this->screen_fbo_id, camera, aspect, elapsed_time);
         }
-
-        // DEBUG_render_water_fbos(this->screen_fbo_id, camera, aspect);
 
         // render sprites
         if (this->sprites.size() > 0)
@@ -825,13 +823,10 @@ namespace pk
         if (this->sun)
         {
             // calculate sun projection matrix
-            sun_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
-
-            // calculate sun "position"
-            glm::vec3 sun_position = glm::vec3(0.0f) - this->sun->direction;
+            sun_projection = this->sun->calc_projection();
 
             // calculate sun view matrix
-            sun_view = glm::lookAt(sun_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            sun_view = this->sun->calc_view();
 
             // render sun shadows to depthmap
             glBindFramebuffer(GL_FRAMEBUFFER, this->depthmap_fbo_id);
@@ -858,250 +853,142 @@ namespace pk
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
-        switch (this->render_mode)
+        if (this->objects.size() > 0)
         {
-        case RENDER_MODE_FORWARD:
-        {
+#if LIGHTING_MODE == LIGHTING_COLOR
             // draw objects to the specified framebuffer
-            if (this->objects.size() > 0)
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+            glViewport(0, 0, this->render_width, this->render_height);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CLIP_DISTANCE0);
+
+            for (auto &object : this->objects)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+                glm::mat4 object_model = object->calc_model();
 
-                glViewport(0, 0, this->render_width, this->render_height);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glEnable(GL_CLIP_DISTANCE0);
+                this->color_program->bind();
 
-                for (auto &object : this->objects)
+                this->color_program->set_mat4("camera.projection", camera_projection);
+                this->color_program->set_mat4("camera.view", camera_view);
+
+                this->color_program->set_mat4("object.model", object_model);
+
+                this->color_program->set_vec4("clipping_plane", clipping_plane);
+
+                this->color_program->set_vec3("color", object->material->color);
+
+                object->mesh->draw();
+
+                this->color_program->unbind();
+            }
+
+            glDisable(GL_CLIP_DISTANCE0);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif LIGHTING_MODE == LIGHTING_TEXTURE
+            // draw objects to the specified framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+            glViewport(0, 0, this->render_width, this->render_height);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CLIP_DISTANCE0);
+
+            for (auto &object : this->objects)
+            {
+                glm::mat4 object_model = object->calc_model();
+
+                this->texture_program->bind();
+
+                this->texture_program->set_mat4("camera.projection", camera_projection);
+                this->texture_program->set_mat4("camera.view", camera_view);
+
+                this->texture_program->set_mat4("object.model", object_model);
+
+                this->texture_program->set_vec4("clipping_plane", clipping_plane);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
+
+                object->mesh->draw();
+
+                this->texture_program->unbind();
+            }
+
+            glDisable(GL_CLIP_DISTANCE0);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif LIGHTING_MODE == LIGHTING_FORWARD
+            // draw objects to the specified framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+            glViewport(0, 0, this->render_width, this->render_height);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CLIP_DISTANCE0);
+
+            for (auto &object : this->objects)
+            {
+                glm::mat4 object_model = object->calc_model();
+
+                if (this->sun)
                 {
-                    glm::mat4 object_model = object->calc_model();
+                    this->forward_sun_program->bind();
 
-                    if (this->sun)
-                    {
-                        this->forward_sun_program->bind();
+                    this->forward_sun_program->set_mat4("camera.projection", camera_projection);
+                    this->forward_sun_program->set_mat4("camera.view", camera_view);
+                    this->forward_sun_program->set_vec3("camera.position", camera->position);
 
-                        this->forward_sun_program->set_mat4("camera.projection", camera_projection);
-                        this->forward_sun_program->set_mat4("camera.view", camera_view);
-                        this->forward_sun_program->set_vec3("camera.position", camera->position);
+                    this->forward_sun_program->set_mat4("object.model", object_model);
 
-                        this->forward_sun_program->set_mat4("object.model", object_model);
+                    this->forward_sun_program->set_vec4("clipping_plane", clipping_plane);
 
-                        this->forward_sun_program->set_vec4("clipping_plane", clipping_plane);
+                    this->forward_sun_program->set_vec3("material.color", object->material->color);
+                    this->forward_sun_program->set_float("material.shininess", object->material->shininess);
+                    this->forward_sun_program->set_float("material.glow", object->material->glow);
 
-                        this->forward_sun_program->set_vec3("material.color", object->material->color);
-                        this->forward_sun_program->set_float("material.shininess", object->material->shininess);
-                        this->forward_sun_program->set_float("material.glow", object->material->glow);
+                    this->forward_sun_program->set_vec3("sun.direction", this->sun->direction);
+                    this->forward_sun_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
+                    this->forward_sun_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
+                    this->forward_sun_program->set_vec3("sun.specular_color", this->sun->specular_color);
+                    this->forward_sun_program->set_mat4("sun.projection", sun_projection);
+                    this->forward_sun_program->set_mat4("sun.view", sun_view);
 
-                        this->forward_sun_program->set_vec3("sun.direction", this->sun->direction);
-                        this->forward_sun_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
-                        this->forward_sun_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
-                        this->forward_sun_program->set_vec3("sun.specular_color", this->sun->specular_color);
-                        this->forward_sun_program->set_mat4("sun.projection", sun_projection);
-                        this->forward_sun_program->set_mat4("sun.view", sun_view);
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE2);
+                    glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
 
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE1);
-                        glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE2);
-                        glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE3);
-                        glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE4);
-                        glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
+                    object->mesh->draw();
 
-                        object->mesh->draw();
-
-                        this->forward_sun_program->unbind();
-                    }
-
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_ONE, GL_ONE);
-                    glDepthMask(GL_FALSE);
-                    glDepthFunc(GL_EQUAL);
-
-                    if (this->directional_lights.size() > 0)
-                    {
-                        this->forward_directional_program->bind();
-
-                        this->forward_directional_program->set_mat4("camera.projection", camera_projection);
-                        this->forward_directional_program->set_mat4("camera.view", camera_view);
-                        this->forward_directional_program->set_vec3("camera.position", camera->position);
-
-                        this->forward_directional_program->set_mat4("object.model", object_model);
-
-                        this->forward_directional_program->set_vec4("clipping_plane", clipping_plane);
-
-                        this->forward_directional_program->set_vec3("material.color", object->material->color);
-                        this->forward_directional_program->set_float("material.shininess", object->material->shininess);
-                        this->forward_directional_program->set_float("material.glow", object->material->glow);
-
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE1);
-                        glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE2);
-                        glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE3);
-                        glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-
-                        for (auto &directional_light : this->directional_lights)
-                        {
-                            this->forward_directional_program->set_vec3("directional_light.direction", directional_light->direction);
-                            this->forward_directional_program->set_vec3("directional_light.ambient", directional_light->ambient_color);
-                            this->forward_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
-                            this->forward_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
-
-                            object->mesh->draw();
-                        }
-
-                        this->forward_directional_program->unbind();
-                    }
-
-                    if (this->point_lights.size() > 0)
-                    {
-                        this->forward_point_program->bind();
-
-                        this->forward_point_program->set_mat4("camera.projection", camera_projection);
-                        this->forward_point_program->set_mat4("camera.view", camera_view);
-                        this->forward_point_program->set_vec3("camera.position", camera->position);
-
-                        this->forward_point_program->set_mat4("object.model", object_model);
-
-                        this->forward_point_program->set_vec4("clipping_plane", clipping_plane);
-
-                        this->forward_point_program->set_vec3("material.color", object->material->color);
-                        this->forward_point_program->set_float("material.shininess", object->material->shininess);
-                        this->forward_point_program->set_float("material.glow", object->material->glow);
-
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE1);
-                        glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE2);
-                        glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE3);
-                        glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-
-                        for (auto &point_light : this->point_lights)
-                        {
-                            this->forward_point_program->set_vec3("point_light.position", point_light->position);
-                            this->forward_point_program->set_vec3("point_light.ambient_color", point_light->ambient_color);
-                            this->forward_point_program->set_vec3("point_light.diffuse_color", point_light->diffuse_color);
-                            this->forward_point_program->set_vec3("point_light.specular_color", point_light->specular_color);
-                            this->forward_point_program->set_vec3("point_light.attenuation", point_light->attenuation);
-
-                            object->mesh->draw();
-                        }
-
-                        this->forward_point_program->unbind();
-                    }
-
-                    if (this->spot_lights.size() > 0)
-                    {
-                        this->forward_spot_program->bind();
-
-                        this->forward_spot_program->set_mat4("camera.projection", camera_projection);
-                        this->forward_spot_program->set_mat4("camera.view", camera_view);
-                        this->forward_spot_program->set_vec3("camera.position", camera->position);
-
-                        this->forward_spot_program->set_mat4("object.model", object_model);
-
-                        this->forward_spot_program->set_vec4("clipping_plane", clipping_plane);
-
-                        this->forward_spot_program->set_vec3("material.color", object->material->color);
-                        this->forward_spot_program->set_float("material.shininess", object->material->shininess);
-                        this->forward_spot_program->set_float("material.glow", object->material->glow);
-
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE1);
-                        glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE2);
-                        glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE3);
-                        glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-
-                        for (auto &spot_light : this->spot_lights)
-                        {
-                            this->forward_spot_program->set_vec3("spot_light.position", spot_light->position);
-                            this->forward_spot_program->set_vec3("spot_light.direction", spot_light->direction);
-                            this->forward_spot_program->set_vec3("spot_light.ambient_color", spot_light->ambient_color);
-                            this->forward_spot_program->set_vec3("spot_light.diffuse_color", spot_light->diffuse_color);
-                            this->forward_spot_program->set_vec3("spot_light.specular_color", spot_light->specular_color);
-                            this->forward_spot_program->set_vec3("spot_light.attenuation", spot_light->attenuation);
-                            this->forward_spot_program->set_float("spot_light.inner_cutoff", spot_light->inner_cutoff);
-                            this->forward_spot_program->set_float("spot_light.outer_cutoff", spot_light->outer_cutoff);
-
-                            object->mesh->draw();
-                        }
-
-                        this->forward_spot_program->unbind();
-                    }
-
-                    if (this->skybox)
-                    {
-                        this->forward_reflection_program->bind();
-
-                        this->forward_reflection_program->set_mat4("camera.projection", camera_projection);
-                        this->forward_reflection_program->set_mat4("camera.view", camera_view);
-                        this->forward_reflection_program->set_vec3("camera.position", camera->position);
-
-                        this->forward_reflection_program->set_mat4("object.model", object_model);
-
-                        this->forward_reflection_program->set_vec4("clipping_plane", clipping_plane);
-
-                        this->forward_reflection_program->set_float("material.reflectivity", 0.0f);
-
-                        // TEMPORARY: use specular texture for reflectivity
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                        glActiveTexture(GL_TEXTURE1);
-                        glBindTexture(GL_TEXTURE_CUBE_MAP, this->skybox->texture_id);
-
-                        object->mesh->draw();
-
-                        this->forward_reflection_program->unbind();
-                    }
-
-                    glDepthFunc(GL_LESS);
-                    glDepthMask(GL_TRUE);
-                    glDisable(GL_BLEND);
+                    this->forward_sun_program->unbind();
                 }
 
-                glDisable(GL_CLIP_DISTANCE0);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE);
+                glDepthMask(GL_FALSE);
+                glDepthFunc(GL_EQUAL);
 
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            }
-        }
-        break;
-        case RENDER_MODE_DEFERRED:
-        {
-            // draw objects to the gbuffer
-            if (this->objects.size() > 0)
-            {
-                glBindFramebuffer(GL_FRAMEBUFFER, this->geometry_fbo_id);
-
-                glViewport(0, 0, (GLsizei)(this->render_width * this->render_scale), (GLsizei)(this->render_height * this->render_scale));
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glEnable(GL_CLIP_DISTANCE0);
-
-                this->geometry_program->bind();
-
-                this->geometry_program->set_mat4("camera.projection", camera_projection);
-                this->geometry_program->set_mat4("camera.view", camera_view);
-                this->geometry_program->set_vec3("camera.position", camera->position);
-
-                for (auto &object : this->objects)
+                if (this->directional_lights.size() > 0)
                 {
-                    glm::mat4 object_model = object->calc_model();
+                    this->forward_directional_program->bind();
 
-                    this->geometry_program->set_mat4("object.model", object_model);
+                    this->forward_directional_program->set_mat4("camera.projection", camera_projection);
+                    this->forward_directional_program->set_mat4("camera.view", camera_view);
+                    this->forward_directional_program->set_vec3("camera.position", camera->position);
 
-                    this->geometry_program->set_vec4("clipping_plane", clipping_plane);
+                    this->forward_directional_program->set_mat4("object.model", object_model);
 
-                    this->geometry_program->set_vec3("material.color", object->material->color);
-                    this->geometry_program->set_float("material.shininess", object->material->shininess);
-                    this->geometry_program->set_float("material.glow", object->material->glow);
+                    this->forward_directional_program->set_vec4("clipping_plane", clipping_plane);
+
+                    this->forward_directional_program->set_vec3("material.color", object->material->color);
+                    this->forward_directional_program->set_float("material.shininess", object->material->shininess);
+                    this->forward_directional_program->set_float("material.glow", object->material->glow);
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
@@ -1112,162 +999,322 @@ namespace pk
                     glActiveTexture(GL_TEXTURE3);
                     glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
 
-                    object->mesh->draw();
-                }
-
-                this->geometry_program->unbind();
-
-                glDisable(GL_CLIP_DISTANCE0);
-
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-                // draw the gbuffer to the specified framebuffer
-                glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
-                glViewport(0, 0, this->render_width, this->render_height);
-                glClear(GL_COLOR_BUFFER_BIT);
-                glDisable(GL_DEPTH_TEST);
-
-                if (this->sun)
-                {
-                    this->deferred_sun_program->bind();
-
-                    this->deferred_sun_program->set_vec3("camera.position", camera->position);
-
-                    this->deferred_sun_program->set_vec3("sun.direction", this->sun->direction);
-                    this->deferred_sun_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
-                    this->deferred_sun_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
-                    this->deferred_sun_program->set_vec3("sun.specular_color", this->sun->specular_color);
-                    this->deferred_sun_program->set_mat4("sun.projection", sun_projection);
-                    this->deferred_sun_program->set_mat4("sun.view", sun_view);
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-                    glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-                    glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-                    glActiveTexture(GL_TEXTURE3);
-                    glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
-
-                    glBindVertexArray(this->screen_vao_id);
-                    glDrawArrays(GL_TRIANGLES, 0, this->num_screen_vertices);
-                    glBindVertexArray(0);
-
-                    this->deferred_sun_program->unbind();
-                }
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_ONE, GL_ONE);
-                glDepthMask(GL_FALSE);
-                glDepthFunc(GL_EQUAL);
-
-                if (this->directional_lights.size() > 0)
-                {
-                    this->deferred_directional_program->bind();
-
-                    this->deferred_directional_program->set_vec3("camera.position", camera->position);
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-                    glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-                    glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-
                     for (auto &directional_light : this->directional_lights)
                     {
-                        this->deferred_directional_program->set_vec3("directional_light.direction", directional_light->direction);
-                        this->deferred_directional_program->set_vec3("directional_light.ambient_color", directional_light->ambient_color);
-                        this->deferred_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
-                        this->deferred_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
+                        this->forward_directional_program->set_vec3("directional_light.direction", directional_light->direction);
+                        this->forward_directional_program->set_vec3("directional_light.ambient", directional_light->ambient_color);
+                        this->forward_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
+                        this->forward_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
 
-                        glBindVertexArray(this->screen_vao_id);
-                        glDrawArrays(GL_TRIANGLES, 0, this->num_screen_vertices);
-                        glBindVertexArray(0);
+                        object->mesh->draw();
                     }
 
-                    this->deferred_directional_program->unbind();
+                    this->forward_directional_program->unbind();
                 }
 
                 if (this->point_lights.size() > 0)
                 {
-                    this->deferred_point_program->bind();
+                    this->forward_point_program->bind();
 
-                    this->deferred_point_program->set_vec3("camera.position", camera->position);
+                    this->forward_point_program->set_mat4("camera.projection", camera_projection);
+                    this->forward_point_program->set_mat4("camera.view", camera_view);
+                    this->forward_point_program->set_vec3("camera.position", camera->position);
+
+                    this->forward_point_program->set_mat4("object.model", object_model);
+
+                    this->forward_point_program->set_vec4("clipping_plane", clipping_plane);
+
+                    this->forward_point_program->set_vec3("material.color", object->material->color);
+                    this->forward_point_program->set_float("material.shininess", object->material->shininess);
+                    this->forward_point_program->set_float("material.glow", object->material->glow);
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
 
                     for (auto &point_light : this->point_lights)
                     {
-                        this->deferred_point_program->set_vec3("point_light.position", point_light->position);
-                        this->deferred_point_program->set_vec3("point_light.ambient_color", point_light->ambient_color);
-                        this->deferred_point_program->set_vec3("point_light.diffuse_color", point_light->diffuse_color);
-                        this->deferred_point_program->set_vec3("point_light.specular_color", point_light->specular_color);
-                        this->deferred_point_program->set_vec3("point_light.attenuation", point_light->attenuation);
+                        this->forward_point_program->set_vec3("point_light.position", point_light->position);
+                        this->forward_point_program->set_vec3("point_light.ambient_color", point_light->ambient_color);
+                        this->forward_point_program->set_vec3("point_light.diffuse_color", point_light->diffuse_color);
+                        this->forward_point_program->set_vec3("point_light.specular_color", point_light->specular_color);
+                        this->forward_point_program->set_vec3("point_light.attenuation", point_light->attenuation);
 
-                        glBindVertexArray(this->screen_vao_id);
-                        glDrawArrays(GL_TRIANGLES, 0, this->num_screen_vertices);
-                        glBindVertexArray(0);
+                        object->mesh->draw();
                     }
 
-                    this->deferred_point_program->unbind();
+                    this->forward_point_program->unbind();
                 }
 
                 if (this->spot_lights.size() > 0)
                 {
-                    this->deferred_spot_program->bind();
+                    this->forward_spot_program->bind();
 
-                    this->deferred_spot_program->set_vec3("camera.position", camera->position);
+                    this->forward_spot_program->set_mat4("camera.projection", camera_projection);
+                    this->forward_spot_program->set_mat4("camera.view", camera_view);
+                    this->forward_spot_program->set_vec3("camera.position", camera->position);
+
+                    this->forward_spot_program->set_mat4("object.model", object_model);
+
+                    this->forward_spot_program->set_vec4("clipping_plane", clipping_plane);
+
+                    this->forward_spot_program->set_vec3("material.color", object->material->color);
+                    this->forward_spot_program->set_float("material.shininess", object->material->shininess);
+                    this->forward_spot_program->set_float("material.glow", object->material->glow);
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
                     glActiveTexture(GL_TEXTURE1);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
                     glActiveTexture(GL_TEXTURE2);
-                    glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE3);
+                    glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
 
                     for (auto &spot_light : this->spot_lights)
                     {
-                        this->deferred_spot_program->set_vec3("spot_light.position", spot_light->position);
-                        this->deferred_spot_program->set_vec3("spot_light.direction", spot_light->direction);
-                        this->deferred_spot_program->set_vec3("spot_light.ambient_color", spot_light->ambient_color);
-                        this->deferred_spot_program->set_vec3("spot_light.diffuse_color", spot_light->diffuse_color);
-                        this->deferred_spot_program->set_vec3("spot_light.specular_color", spot_light->specular_color);
-                        this->deferred_spot_program->set_vec3("spot_light.attenuation", spot_light->attenuation);
-                        this->deferred_spot_program->set_float("spot_light.inner_cutoff", spot_light->inner_cutoff);
-                        this->deferred_spot_program->set_float("spot_light.outer_cutoff", spot_light->outer_cutoff);
+                        this->forward_spot_program->set_vec3("spot_light.position", spot_light->position);
+                        this->forward_spot_program->set_vec3("spot_light.direction", spot_light->direction);
+                        this->forward_spot_program->set_vec3("spot_light.ambient_color", spot_light->ambient_color);
+                        this->forward_spot_program->set_vec3("spot_light.diffuse_color", spot_light->diffuse_color);
+                        this->forward_spot_program->set_vec3("spot_light.specular_color", spot_light->specular_color);
+                        this->forward_spot_program->set_vec3("spot_light.attenuation", spot_light->attenuation);
+                        this->forward_spot_program->set_float("spot_light.inner_cutoff", spot_light->inner_cutoff);
+                        this->forward_spot_program->set_float("spot_light.outer_cutoff", spot_light->outer_cutoff);
 
-                        glBindVertexArray(this->screen_vao_id);
-                        glDrawArrays(GL_TRIANGLES, 0, this->num_screen_vertices);
-                        glBindVertexArray(0);
+                        object->mesh->draw();
                     }
 
-                    this->deferred_spot_program->unbind();
+                    this->forward_spot_program->unbind();
+                }
+
+                if (this->skybox)
+                {
+                    this->forward_reflection_program->bind();
+
+                    this->forward_reflection_program->set_mat4("camera.projection", camera_projection);
+                    this->forward_reflection_program->set_mat4("camera.view", camera_view);
+                    this->forward_reflection_program->set_vec3("camera.position", camera->position);
+
+                    this->forward_reflection_program->set_mat4("object.model", object_model);
+
+                    this->forward_reflection_program->set_vec4("clipping_plane", clipping_plane);
+
+                    this->forward_reflection_program->set_float("material.reflectivity", 0.0f);
+
+                    // TEMPORARY: use specular texture for reflectivity
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, this->skybox->texture_id);
+
+                    object->mesh->draw();
+
+                    this->forward_reflection_program->unbind();
                 }
 
                 glDepthFunc(GL_LESS);
                 glDepthMask(GL_TRUE);
                 glDisable(GL_BLEND);
-
-                glEnable(GL_DEPTH_TEST);
-
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-                // copy depth information to specified framebuffer
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, this->geometry_fbo_id);
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
-                glBlitFramebuffer(0, 0, this->render_width, this->render_height, 0, 0, this->render_width, this->render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
-        }
-        break;
-        }
+
+            glDisable(GL_CLIP_DISTANCE0);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif LIGHTING_MODE == LIGHTING_DEFERRED
+            // draw objects to the gbuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, this->geometry_fbo_id);
+
+            glViewport(0, 0, (GLsizei)(this->render_width * this->render_scale), (GLsizei)(this->render_height * this->render_scale));
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CLIP_DISTANCE0);
+
+            this->geometry_program->bind();
+
+            this->geometry_program->set_mat4("camera.projection", camera_projection);
+            this->geometry_program->set_mat4("camera.view", camera_view);
+            this->geometry_program->set_vec3("camera.position", camera->position);
+
+            for (auto &object : this->objects)
+            {
+                glm::mat4 object_model = object->calc_model();
+
+                this->geometry_program->set_mat4("object.model", object_model);
+
+                this->geometry_program->set_vec4("clipping_plane", clipping_plane);
+
+                this->geometry_program->set_vec3("material.color", object->material->color);
+                this->geometry_program->set_float("material.shininess", object->material->shininess);
+                this->geometry_program->set_float("material.glow", object->material->glow);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
+
+                object->mesh->draw();
+            }
+
+            this->geometry_program->unbind();
+
+            glDisable(GL_CLIP_DISTANCE0);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            // draw the gbuffer to the specified framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
+            glViewport(0, 0, this->render_width, this->render_height);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glDisable(GL_DEPTH_TEST);
+
+            if (this->sun)
+            {
+                this->deferred_sun_program->bind();
+
+                this->deferred_sun_program->set_vec3("camera.position", camera->position);
+
+                this->deferred_sun_program->set_vec3("sun.direction", this->sun->direction);
+                this->deferred_sun_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
+                this->deferred_sun_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
+                this->deferred_sun_program->set_vec3("sun.specular_color", this->sun->specular_color);
+                this->deferred_sun_program->set_mat4("sun.projection", sun_projection);
+                this->deferred_sun_program->set_mat4("sun.view", sun_view);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
+
+                glBindVertexArray(this->screen_vao_id);
+                glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
+                glBindVertexArray(0);
+
+                this->deferred_sun_program->unbind();
+            }
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE);
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_EQUAL);
+
+            if (this->directional_lights.size() > 0)
+            {
+                this->deferred_directional_program->bind();
+
+                this->deferred_directional_program->set_vec3("camera.position", camera->position);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
+
+                for (auto &directional_light : this->directional_lights)
+                {
+                    this->deferred_directional_program->set_vec3("directional_light.direction", directional_light->direction);
+                    this->deferred_directional_program->set_vec3("directional_light.ambient_color", directional_light->ambient_color);
+                    this->deferred_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
+                    this->deferred_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
+
+                    glBindVertexArray(this->screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
+                    glBindVertexArray(0);
+                }
+
+                this->deferred_directional_program->unbind();
+            }
+
+            if (this->point_lights.size() > 0)
+            {
+                this->deferred_point_program->bind();
+
+                this->deferred_point_program->set_vec3("camera.position", camera->position);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
+
+                for (auto &point_light : this->point_lights)
+                {
+                    this->deferred_point_program->set_vec3("point_light.position", point_light->position);
+                    this->deferred_point_program->set_vec3("point_light.ambient_color", point_light->ambient_color);
+                    this->deferred_point_program->set_vec3("point_light.diffuse_color", point_light->diffuse_color);
+                    this->deferred_point_program->set_vec3("point_light.specular_color", point_light->specular_color);
+                    this->deferred_point_program->set_vec3("point_light.attenuation", point_light->attenuation);
+
+                    glBindVertexArray(this->screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
+                    glBindVertexArray(0);
+                }
+
+                this->deferred_point_program->unbind();
+            }
+
+            if (this->spot_lights.size() > 0)
+            {
+                this->deferred_spot_program->bind();
+
+                this->deferred_spot_program->set_vec3("camera.position", camera->position);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
+
+                for (auto &spot_light : this->spot_lights)
+                {
+                    this->deferred_spot_program->set_vec3("spot_light.position", spot_light->position);
+                    this->deferred_spot_program->set_vec3("spot_light.direction", spot_light->direction);
+                    this->deferred_spot_program->set_vec3("spot_light.ambient_color", spot_light->ambient_color);
+                    this->deferred_spot_program->set_vec3("spot_light.diffuse_color", spot_light->diffuse_color);
+                    this->deferred_spot_program->set_vec3("spot_light.specular_color", spot_light->specular_color);
+                    this->deferred_spot_program->set_vec3("spot_light.attenuation", spot_light->attenuation);
+                    this->deferred_spot_program->set_float("spot_light.inner_cutoff", spot_light->inner_cutoff);
+                    this->deferred_spot_program->set_float("spot_light.outer_cutoff", spot_light->outer_cutoff);
+
+                    glBindVertexArray(this->screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
+                    glBindVertexArray(0);
+                }
+
+                this->deferred_spot_program->unbind();
+            }
+
+            glDepthFunc(GL_LESS);
+            glDepthMask(GL_TRUE);
+            glDisable(GL_BLEND);
+
+            glEnable(GL_DEPTH_TEST);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            // copy depth information to specified framebuffer
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, this->geometry_fbo_id);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
+            glBlitFramebuffer(0, 0, this->render_width, this->render_height, 0, 0, this->render_width, this->render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+    }
 
         // draw other things that need to be drawn after the deferred rendering pass
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
@@ -1294,7 +1341,7 @@ namespace pk
             glBindTexture(GL_TEXTURE_CUBE_MAP, this->skybox->texture_id);
 
             glBindVertexArray(this->skybox_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, this->num_skybox_vertices);
+            glDrawArrays(GL_TRIANGLES, 0, this->skybox_vertices_size);
             glBindVertexArray(0);
 
             this->skybox_program->unbind();
@@ -1303,7 +1350,7 @@ namespace pk
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
+}
 
     void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time)
     {
@@ -1318,13 +1365,10 @@ namespace pk
         if (this->sun)
         {
             // calculate sun projection matrix
-            sun_projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
-
-            // calculate sun "position"
-            glm::vec3 sun_position = glm::vec3(0.0f) - this->sun->direction;
+            sun_projection = this->sun->calc_projection();
 
             // calculate sun view matrix
-            sun_view = glm::lookAt(sun_position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            sun_view = this->sun->calc_view();
         }
 
         // send camera transformations to water program
@@ -1403,7 +1447,7 @@ namespace pk
             glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
 
             glBindVertexArray(this->water_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, this->num_water_vertices);
+            glDrawArrays(GL_TRIANGLES, 0, this->water_vertices_size);
             glBindVertexArray(0);
 
             this->water_program->unbind();
@@ -1414,35 +1458,33 @@ namespace pk
 
     void renderer::render_sprites(GLuint fbo_id, float aspect)
     {
-        //glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
-        //this->sprite_program->bind();
+        this->sprite_program->bind();
 
-        //// calculate ortho projection
-        //mat4 camera_projection_ortho;
-        //glm_ortho_default(aspect, camera_projection_ortho);
+        // calculate ortho projection
+        glm::mat4 camera_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
 
-        //this->sprite_program->set_mat4("camera.projection", camera_projection_ortho);
+        this->sprite_program->set_mat4("camera.projection", camera_projection);
 
-        //for (auto &sprite : this->sprites)
-        //{
-        //    mat4 sprite_model = GLM_MAT4_IDENTITY_INIT;
-        //    sprite->calc_model(sprite_model);
+        for (auto &sprite : this->sprites)
+        {
+            glm::mat4 sprite_model = sprite->calc_model();
 
-        //    this->sprite_program->set_mat4("sprite.model", sprite_model);
-        //    this->sprite_program->set_vec3("sprite.color", sprite->color);
+            this->sprite_program->set_mat4("sprite.model", sprite_model);
+            this->sprite_program->set_vec3("sprite.color", sprite->color);
 
-        //    glActiveTexture(GL_TEXTURE0);
-        //    glBindTexture(GL_TEXTURE_2D, sprite->color_map->texture_id);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, sprite->color_map->texture_id);
 
-        //    glBindVertexArray(this->sprite_vao_id);
-        //    glDrawArrays(GL_TRIANGLES, 0, this->num_sprite_vertices);
-        //    glBindVertexArray(0);
-        //}
+            glBindVertexArray(this->sprite_vao_id);
+            glDrawArrays(GL_TRIANGLES, 0, this->sprite_vertices_size);
+            glBindVertexArray(0);
+        }
 
-        //this->sprite_program->unbind();
+        this->sprite_program->unbind();
 
-        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void renderer::render_screen(GLuint fbo_id)
@@ -1459,7 +1501,7 @@ namespace pk
         glBindTexture(GL_TEXTURE_2D, this->screen_texture_id);
 
         glBindVertexArray(this->screen_vao_id);
-        glDrawArrays(GL_TRIANGLES, 0, this->num_screen_vertices);
+        glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
         glBindVertexArray(0);
 
         this->screen_program->unbind();

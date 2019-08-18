@@ -17,19 +17,12 @@
 
 namespace pk
 {
-    enum render_mode
-    {
-        RENDER_MODE_FORWARD,
-        RENDER_MODE_DEFERRED
-    };
-
     class renderer
     {
     public:
         renderer(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height);
         ~renderer();
 
-        void set_mode(pk::render_mode render_mode);
         void add_object(pk::object *object);
         void set_sun(pk::sun *sun);
         void add_directional_light(pk::directional_light *directional_light);
@@ -50,11 +43,11 @@ namespace pk
         int reflection_height;
         int refraction_width;
         int refraction_height;
-        pk::render_mode render_mode;
 
         // shader programs
         pk::program *depth_program;
-        pk::program *forward_color_program;
+        pk::program *color_program;
+        pk::program *texture_program;
         pk::program *forward_sun_program;
         pk::program *forward_directional_program;
         pk::program *forward_point_program;
@@ -95,22 +88,22 @@ namespace pk
         GLuint water_refraction_depth_rbo_id;
 
         // water mesh
-        unsigned int num_water_vertices;
+        GLsizei water_vertices_size;
         GLuint water_vao_id;
         GLuint water_vbo_id;
 
         // skybox mesh
-        unsigned int num_skybox_vertices;
+        GLsizei skybox_vertices_size;
         GLuint skybox_vao_id;
         GLuint skybox_vbo_id;
 
         // sprite mesh
-        unsigned int num_sprite_vertices;
+        GLsizei sprite_vertices_size;
         GLuint sprite_vao_id;
         GLuint sprite_vbo_id;
 
         // screen mesh
-        unsigned int num_screen_vertices;
+        GLsizei screen_vertices_size;
         GLuint screen_vao_id;
         GLuint screen_vbo_id;
 

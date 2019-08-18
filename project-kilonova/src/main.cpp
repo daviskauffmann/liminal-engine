@@ -311,7 +311,6 @@ int main(int argc, char *argv[])
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GL_SetSwapInterval(0);
-    // renderer.set_mode(pk::render_mode::RENDER_MODE_DEFERRED);
 
     // main loop
     bool quit = false;
@@ -358,16 +357,6 @@ int main(int argc, char *argv[])
             {
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_F1:
-                {
-                    renderer.set_mode(pk::render_mode::RENDER_MODE_FORWARD);
-                }
-                break;
-                case SDLK_F2:
-                {
-                    renderer.set_mode(pk::render_mode::RENDER_MODE_DEFERRED);
-                }
-                break;
                 case SDLK_F4:
                 {
                     if (keys[SDL_SCANCODE_LALT])
@@ -524,8 +513,8 @@ int main(int argc, char *argv[])
         box_1_object.rotation[1] = angle_cos;
 
         // update lights
-        sun.direction[0] = angle_sin;
-        sun.direction[2] = angle_cos;
+        // sun.direction[0] = angle_sin;
+        // sun.direction[2] = angle_cos;
 
         torch_spot_light.position = main_camera.position;
         torch_spot_light.direction = main_camera_front;
@@ -584,7 +573,7 @@ int main(int argc, char *argv[])
 
         renderer.set_skybox(&skybox_cubemap);
 
-        renderer.add_water(&test_water);
+        // renderer.add_water(&test_water);
 
         // renderer.add_sprite(&grass_sprite);
 

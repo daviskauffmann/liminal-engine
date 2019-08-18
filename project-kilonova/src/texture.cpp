@@ -16,7 +16,7 @@ namespace pk
 
         if (!surface)
         {
-            std::cout<< "Error: Couldn't load image" << std::endl;
+            std::cout << "Error: Couldn't load image " << filename << std::endl;
         }
 
         glTexImage2D(

@@ -18,7 +18,7 @@ namespace pk
 
             if (!surface)
             {
-                std::cout << "Error: Couldn't load image" << std::endl;
+                std::cout << "Error: Couldn't load image " << filenames[i] << std::endl;
             }
 
             // create texture
