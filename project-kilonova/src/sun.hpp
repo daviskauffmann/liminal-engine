@@ -6,23 +6,23 @@
 
 namespace pk
 {
-    struct sun
-    {
-        glm::vec3 direction;
-        glm::vec3 ambient_color;
-        glm::vec3 diffuse_color;
-        glm::vec3 specular_color;
+struct sun
+{
+    glm::vec3 direction;
+    glm::vec3 ambient_color;
+    glm::vec3 diffuse_color;
+    glm::vec3 specular_color;
 
-        sun(
-            glm::vec3 direction,
-            glm::vec3 ambient_color,
-            glm::vec3 diffuse_color,
-            glm::vec3 specular_color);
-        ~sun();
+    sun(
+        glm::vec3 direction,
+        glm::vec3 ambient_color,
+        glm::vec3 diffuse_color,
+        glm::vec3 specular_color);
+    ~sun();
 
-        glm::mat4 calc_projection() const;
-        glm::mat4 calc_view() const;
-    };
-}
+    glm::mat4 calc_projection() const;
+    glm::mat4 calc_view() const;
+};
+} // namespace pk
 
 #endif

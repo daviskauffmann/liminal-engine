@@ -5,22 +5,22 @@
 
 namespace pk
 {
-    struct point_light
-    {
-        glm::vec3 position;
-        glm::vec3 ambient_color;
-        glm::vec3 diffuse_color;
-        glm::vec3 specular_color;
-        glm::vec3 attenuation;
+struct point_light
+{
+    glm::vec3 position;
+    glm::vec3 ambient_color;
+    glm::vec3 diffuse_color;
+    glm::vec3 specular_color;
+    glm::vec3 attenuation;
 
-        point_light(
-            glm::vec3 position,
-            glm::vec3 ambient_color,
-            glm::vec3 diffuse_color,
-            glm::vec3 specular_color,
-            glm::vec3 attenuation);
-        ~point_light();
-    };
-}
+    point_light(
+        glm::vec3 position,
+        glm::vec3 ambient_color,
+        glm::vec3 diffuse_color,
+        glm::vec3 specular_color,
+        glm::vec3 attenuation);
+    ~point_light();
+};
+} // namespace pk
 
 #endif

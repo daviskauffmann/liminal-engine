@@ -9,24 +9,24 @@
 
 namespace pk
 {
-    struct sprite
-    {
-        glm::vec3 color;
-        pk::texture *color_map;
-        glm::vec2 position;
-        float rotation;
-        glm::vec2 scale;
+struct sprite
+{
+    glm::vec3 color;
+    pk::texture *color_map;
+    glm::vec2 position;
+    float rotation;
+    glm::vec2 scale;
 
-        sprite(
-            glm::vec3 color,
-            pk::texture *colorMap,
-            glm::vec2 position,
-            float rotation,
-            glm::vec2 scale);
-        ~sprite();
+    sprite(
+        glm::vec3 color,
+        pk::texture *colorMap,
+        glm::vec2 position,
+        float rotation,
+        glm::vec2 scale);
+    ~sprite();
 
-        glm::mat4 calc_model() const;
-    };
-}
+    glm::mat4 calc_model() const;
+};
+} // namespace pk
 
 #endif

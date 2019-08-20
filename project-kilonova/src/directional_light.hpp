@@ -5,20 +5,20 @@
 
 namespace pk
 {
-    struct directional_light
-    {
-        glm::vec3 direction;
-        glm::vec3 ambient_color;
-        glm::vec3 diffuse_color;
-        glm::vec3 specular_color;
+struct directional_light
+{
+    glm::vec3 direction;
+    glm::vec3 ambient_color;
+    glm::vec3 diffuse_color;
+    glm::vec3 specular_color;
 
-        directional_light(
-            glm::vec3 direction,
-            glm::vec3 ambient_color,
-            glm::vec3 diffuse_color,
-            glm::vec3 specular_color);
-        ~directional_light();
-    };
-}
+    directional_light(
+        glm::vec3 direction,
+        glm::vec3 ambient_color,
+        glm::vec3 diffuse_color,
+        glm::vec3 specular_color);
+    ~directional_light();
+};
+} // namespace pk
 
 #endif

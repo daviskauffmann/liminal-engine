@@ -7,13 +7,13 @@
 
 namespace pk
 {
-    struct sound
-    {
-        ALuint buffer_id;
+struct sound
+{
+    ALuint buffer_id;
 
-        sound(const std::string &filename);
-        ~sound();
-    };
-}
+    sound(const std::string &filename);
+    ~sound();
+};
+} // namespace pk
 
 #endif
