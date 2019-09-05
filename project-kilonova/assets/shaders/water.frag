@@ -29,12 +29,7 @@ uniform struct Water
 uniform struct Sun
 {
     vec3 direction;
-    vec3 ambient_color;
-    vec3 diffuse_color;
     vec3 specular_color;
-	mat4 projection;
-	mat4 view;
-	sampler2D depth_map;
 } sun;
 
 out vec4 frag_color;
@@ -87,26 +82,8 @@ void main()
 	vec3 specular_color = vec3(1.0, 1.0, 1.0);
     vec3 final_specular_color = sun.specular_color * specular_color * specular_factor;
 
-    // shadow
-    vec4 sun_space_position = sun.projection * sun.view * vec4(vertex.position, 1.0);
-    vec3 sun_space_proj_coords = (sun_space_position.xyz / sun_space_position.w) * 0.5 + 0.5;
-    float current_depth = sun_space_proj_coords.z;
-    float bias = max(0.05 * (1.0 - dot(normal, light_direction)), 0.005); 
-    float shadow = 0.0;
-    vec2 texel_size = 1.0 / textureSize(sun.depth_map, 0);
-    for (int x = -1; x <= 1; x++)
-    {
-        for (int y = -1; y <= 1; y++)
-        {
-            float pcf_depth = texture(sun.depth_map, sun_space_proj_coords.xy + vec2(x, y) * texel_size).r;
-            shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
-        }
-    }
-    shadow /= 9.0;
-    if (sun_space_proj_coords.z > 1.0) shadow = 0.0;
-
 	// final water color
-	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor); // + (1 - shadow) * vec4(final_specular_color, 0.0);
+	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor); // + vec4(final_specular_color, 0.0);
 
 	// blue tint
 	vec4 blue_color = vec4(0.0, 0.3, 0.5, 1.0);

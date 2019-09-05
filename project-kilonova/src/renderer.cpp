@@ -182,7 +182,6 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->water_program->set_int("water.refraction_map", 1);
     this->water_program->set_int("water.dudv_map", 2);
     this->water_program->set_int("water.normal_map", 3);
-    this->water_program->set_int("sun.depth_map", 4);
     this->water_program->unbind();
 
     this->sprite_program->bind();
@@ -1373,11 +1372,7 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
     if (this->sun)
     {
         this->water_program->set_vec3("sun.direction", this->sun->direction);
-        this->water_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
-        this->water_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
         this->water_program->set_vec3("sun.specular_color", this->sun->specular_color);
-        this->water_program->set_mat4("sun.projection", sun_projection);
-        this->water_program->set_mat4("sun.view", sun_view);
     }
 
     this->water_program->set_unsigned_int("elapsed_time", elapsed_time);
