@@ -26,12 +26,6 @@ uniform struct Water
 	sampler2D normal_map;
 } water;
 
-uniform struct Sun
-{
-    vec3 direction;
-    vec3 specular_color;
-} sun;
-
 out vec4 frag_color;
 
 void main()
@@ -73,17 +67,8 @@ void main()
 	vec3 modified_normal = vec3(normal_color.r * 2.0 - 1.0, normal_color.b, normal_color.g * 2.0 - 1.0);
 	modified_normal = normalize(modified_normal);
 
-	// specular
-    vec3 light_direction = normalize(-sun.direction);
-    vec3 halfway_direction = normalize(light_direction + view_direction);
-	float specular_angle = max(dot(modified_normal, halfway_direction), 0.0);
-	float shine_damper = 20.0;
-    float specular_factor = pow(specular_angle, shine_damper) * 0.6;
-	vec3 specular_color = vec3(1.0, 1.0, 1.0);
-    vec3 final_specular_color = sun.specular_color * specular_color * specular_factor;
-
 	// final water color
-	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor); // + vec4(final_specular_color, 0.0);
+	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor);
 
 	// blue tint
 	vec4 blue_color = vec4(0.0, 0.3, 0.5, 1.0);

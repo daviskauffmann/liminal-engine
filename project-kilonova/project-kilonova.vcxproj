@@ -122,7 +122,6 @@
     <ClCompile Include="src\source.cpp" />
     <ClCompile Include="src\spot_light.cpp" />
     <ClCompile Include="src\sprite.cpp" />
-    <ClCompile Include="src\sun.cpp" />
     <ClCompile Include="src\vertex.cpp" />
     <ClCompile Include="src\water.cpp" />
     <ClCompile Include="src\texture.cpp" />
@@ -143,7 +142,6 @@
     <ClInclude Include="src\source.hpp" />
     <ClInclude Include="src\spot_light.hpp" />
     <ClInclude Include="src\sprite.hpp" />
-    <ClInclude Include="src\sun.hpp" />
     <ClInclude Include="src\texture.hpp" />
     <ClInclude Include="src\vertex.hpp" />
     <ClInclude Include="src\water.hpp" />

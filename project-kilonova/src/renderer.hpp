@@ -11,7 +11,6 @@
 #include "program.hpp"
 #include "spot_light.hpp"
 #include "sprite.hpp"
-#include "sun.hpp"
 #include "texture.hpp"
 #include "water.hpp"
 
@@ -24,7 +23,6 @@ public:
     ~renderer();
 
     void add_object(pk::object *object);
-    void set_sun(pk::sun *sun);
     void add_directional_light(pk::directional_light *directional_light);
     void add_point_light(pk::point_light *point_light);
     void add_spot_light(pk::spot_light *spot_light);
@@ -49,13 +47,11 @@ private:
     pk::program *depth_program;
     pk::program *color_program;
     pk::program *texture_program;
-    pk::program *forward_sun_program;
     pk::program *forward_directional_program;
     pk::program *forward_point_program;
     pk::program *forward_spot_program;
     pk::program *forward_reflection_program;
     pk::program *geometry_program;
-    pk::program *deferred_sun_program;
     pk::program *deferred_directional_program;
     pk::program *deferred_point_program;
     pk::program *deferred_spot_program;
@@ -68,9 +64,6 @@ private:
     GLuint screen_fbo_id;
     GLuint screen_texture_id;
     GLuint screen_rbo_id;
-
-    GLuint depthmap_fbo_id;
-    GLuint depthmap_texture_id;
 
     GLuint geometry_fbo_id;
     GLuint geometry_position_texture_id;
@@ -114,7 +107,6 @@ private:
 
     // renderables
     std::vector<pk::object *> objects;
-    pk::sun *sun;
     std::vector<pk::directional_light *> directional_lights;
     std::vector<pk::point_light *> point_lights;
     std::vector<pk::spot_light *> spot_lights;

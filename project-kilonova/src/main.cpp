@@ -21,7 +21,6 @@
 #include "source.hpp"
 #include "spot_light.hpp"
 #include "sprite.hpp"
-#include "sun.hpp"
 #include "texture.hpp"
 #include "vertex.hpp"
 #include "water.hpp"
@@ -219,8 +218,8 @@ int main(int argc, char *argv[])
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.5f, 0.5f, 0.5f));
 
-    // create sun
-    pk::sun sun(
+    // create directional lights
+    pk::directional_light main_directional_light(
         glm::vec3(-0.2f, -1.0f, -0.3f),
         glm::vec3(0.1f, 0.1f, 0.1f),
         glm::vec3(0.8f, 0.8f, 0.8f),
@@ -499,8 +498,8 @@ int main(int argc, char *argv[])
         box_1_object.rotation[1] = angle_cos;
 
         // update lights
-        // sun.direction[0] = angle_sin;
-        // sun.direction[2] = angle_cos;
+        main_directional_light.direction[0] = angle_sin;
+        main_directional_light.direction[2] = angle_cos;
 
         torch_spot_light.position = main_camera.position;
         torch_spot_light.direction = main_camera_front;
@@ -545,7 +544,7 @@ int main(int argc, char *argv[])
         renderer.add_object(&box_4_object);
         renderer.add_object(&box_5_object);
 
-        renderer.set_sun(&sun);
+        renderer.add_directional_light(&main_directional_light);
 
         renderer.add_point_light(&red_point_light);
         renderer.add_point_light(&yellow_point_light);

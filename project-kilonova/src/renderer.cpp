@@ -59,9 +59,6 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->texture_program = new pk::program(
         "assets/shaders/texture.vert",
         "assets/shaders/texture.frag");
-    this->forward_sun_program = new pk::program(
-        "assets/shaders/forward.vert",
-        "assets/shaders/forward_sun.frag");
     this->forward_directional_program = new pk::program(
         "assets/shaders/forward.vert",
         "assets/shaders/forward_directional.frag");
@@ -77,9 +74,6 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->geometry_program = new pk::program(
         "assets/shaders/geometry.vert",
         "assets/shaders/geometry.frag");
-    this->deferred_sun_program = new pk::program(
-        "assets/shaders/deferred.vert",
-        "assets/shaders/deferred_sun.frag");
     this->deferred_directional_program = new pk::program(
         "assets/shaders/deferred.vert",
         "assets/shaders/deferred_directional.frag");
@@ -107,19 +101,12 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->texture_program->set_int("color_map", 0);
     this->texture_program->unbind();
 
-    this->forward_sun_program->bind();
-    this->forward_sun_program->set_int("material.diffuse_map", 0);
-    this->forward_sun_program->set_int("material.specular_map", 1);
-    this->forward_sun_program->set_int("material.normal_map", 2);
-    this->forward_sun_program->set_int("material.emission_map", 3);
-    this->forward_sun_program->set_int("sun.depth_map", 4);
-    this->forward_sun_program->unbind();
-
     this->forward_directional_program->bind();
     this->forward_directional_program->set_int("material.diffuse_map", 0);
     this->forward_directional_program->set_int("material.specular_map", 1);
     this->forward_directional_program->set_int("material.normal_map", 2);
     this->forward_directional_program->set_int("material.emission_map", 3);
+    this->forward_directional_program->set_int("directional_light.depth_map", 4);
     this->forward_directional_program->unbind();
 
     this->forward_point_program->bind();
@@ -148,17 +135,11 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->geometry_program->set_int("material.emission_map", 3);
     this->geometry_program->unbind();
 
-    this->deferred_sun_program->bind();
-    this->deferred_sun_program->set_int("geometry.position_map", 0);
-    this->deferred_sun_program->set_int("geometry.normal_map", 1);
-    this->deferred_sun_program->set_int("geometry.albedo_specular_map", 2);
-    this->deferred_sun_program->set_int("sun.depth_map", 3);
-    this->deferred_sun_program->unbind();
-
     this->deferred_directional_program->bind();
     this->deferred_directional_program->set_int("geometry.position_map", 0);
     this->deferred_directional_program->set_int("geometry.normal_map", 1);
     this->deferred_directional_program->set_int("geometry.albedo_specular_map", 2);
+    this->deferred_directional_program->set_int("directional_light.depth_map", 3);
     this->deferred_directional_program->unbind();
 
     this->deferred_point_program->bind();
@@ -245,52 +226,6 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete screen framebuffer" << std::endl;
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // setup depthmap fbo
-    glGenFramebuffers(1, &this->depthmap_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->depthmap_fbo_id);
-
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-
-    glGenTextures(1, &this->depthmap_texture_id);
-    glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
-
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_DEPTH_COMPONENT,
-        shadow_width,
-        shadow_height,
-        0,
-        GL_DEPTH_COMPONENT,
-        GL_FLOAT,
-        nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    GLfloat border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_TEXTURE_2D,
-        this->depthmap_texture_id,
-        0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "Error: Couldn't complete depthmap framebuffer" << std::endl;
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -722,11 +657,6 @@ void renderer::add_object(pk::object *object)
     this->objects.push_back(object);
 }
 
-void renderer::set_sun(pk::sun *sun)
-{
-    this->sun = sun;
-}
-
 void renderer::add_directional_light(pk::directional_light *directional_light)
 {
     this->directional_lights.push_back(directional_light);
@@ -809,26 +739,24 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
     // calculate camera view matrix
     glm::mat4 camera_view = camera->calc_view();
 
-    glm::mat4 sun_projection;
-    glm::mat4 sun_view;
-    if (this->sun)
+    for (auto &directional_light : this->directional_lights)
     {
         // calculate sun projection matrix
-        sun_projection = this->sun->calc_projection();
+        directional_light->projection = directional_light->calc_projection();
 
         // calculate sun view matrix
-        sun_view = this->sun->calc_view();
+        directional_light->view = directional_light->calc_view();
 
         // render sun shadows to depthmap
-        glBindFramebuffer(GL_FRAMEBUFFER, this->depthmap_fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depthmap_fbo_id);
 
         glViewport(0, 0, this->shadow_width, this->shadow_height);
         glClear(GL_DEPTH_BUFFER_BIT);
 
         this->depth_program->bind();
 
-        this->depth_program->set_mat4("sun.projection", sun_projection);
-        this->depth_program->set_mat4("sun.view", sun_view);
+        this->depth_program->set_mat4("projection", directional_light->projection);
+        this->depth_program->set_mat4("view", directional_light->view);
 
         for (auto &object : this->objects)
         {
@@ -921,44 +849,20 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         {
             glm::mat4 object_model = object->calc_model();
 
-            if (this->sun)
-            {
-                this->forward_sun_program->bind();
+            this->color_program->bind();
 
-                this->forward_sun_program->set_mat4("camera.projection", camera_projection);
-                this->forward_sun_program->set_mat4("camera.view", camera_view);
-                this->forward_sun_program->set_vec3("camera.position", camera->position);
+            this->color_program->set_mat4("camera.projection", camera_projection);
+            this->color_program->set_mat4("camera.view", camera_view);
 
-                this->forward_sun_program->set_mat4("object.model", object_model);
+            this->color_program->set_mat4("object.model", object_model);
 
-                this->forward_sun_program->set_vec4("clipping_plane", clipping_plane);
+            this->color_program->set_vec4("clipping_plane", clipping_plane);
 
-                this->forward_sun_program->set_vec3("material.color", object->material->color);
-                this->forward_sun_program->set_float("material.shininess", object->material->shininess);
-                this->forward_sun_program->set_float("material.glow", object->material->glow);
+            this->color_program->set_vec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
 
-                this->forward_sun_program->set_vec3("sun.direction", this->sun->direction);
-                this->forward_sun_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
-                this->forward_sun_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
-                this->forward_sun_program->set_vec3("sun.specular_color", this->sun->specular_color);
-                this->forward_sun_program->set_mat4("sun.projection", sun_projection);
-                this->forward_sun_program->set_mat4("sun.view", sun_view);
+            object->mesh->draw();
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
-
-                object->mesh->draw();
-
-                this->forward_sun_program->unbind();
-            }
+            this->color_program->unbind();
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
@@ -996,6 +900,11 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                     this->forward_directional_program->set_vec3("directional_light.ambient", directional_light->ambient_color);
                     this->forward_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
                     this->forward_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
+                    this->forward_directional_program->set_mat4("directional_light.projection", directional_light->projection);
+                    this->forward_directional_program->set_mat4("directional_light.view", directional_light->view);
+
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, directional_light->depthmap_texture_id);
 
                     object->mesh->draw();
                 }
@@ -1168,33 +1077,22 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
-        if (this->sun)
+        for (auto &object : this->objects)
         {
-            this->deferred_sun_program->bind();
+            glm::mat4 object_model = object->calc_model();
 
-            this->deferred_sun_program->set_vec3("camera.position", camera->position);
+            this->color_program->bind();
 
-            this->deferred_sun_program->set_vec3("sun.direction", this->sun->direction);
-            this->deferred_sun_program->set_vec3("sun.ambient_color", this->sun->ambient_color);
-            this->deferred_sun_program->set_vec3("sun.diffuse_color", this->sun->diffuse_color);
-            this->deferred_sun_program->set_vec3("sun.specular_color", this->sun->specular_color);
-            this->deferred_sun_program->set_mat4("sun.projection", sun_projection);
-            this->deferred_sun_program->set_mat4("sun.view", sun_view);
+            this->color_program->set_mat4("camera.projection", camera_projection);
+            this->color_program->set_mat4("camera.view", camera_view);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
+            this->color_program->set_mat4("object.model", object_model);
 
-            glBindVertexArray(this->screen_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
-            glBindVertexArray(0);
+            this->color_program->set_vec4("clipping_plane", clipping_plane);
 
-            this->deferred_sun_program->unbind();
+            this->color_program->set_vec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
+
+            object->mesh->draw();
         }
 
         glEnable(GL_BLEND);
@@ -1221,6 +1119,11 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 this->deferred_directional_program->set_vec3("directional_light.ambient_color", directional_light->ambient_color);
                 this->deferred_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
                 this->deferred_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
+                this->deferred_directional_program->set_mat4("directional_light.projection", directional_light->projection);
+                this->deferred_directional_program->set_mat4("directional_light.view", directional_light->view);
+
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, directional_light->depthmap_texture_id);
 
                 glBindVertexArray(this->screen_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
@@ -1351,29 +1254,12 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
     // calculate camera view matrix
     glm::mat4 camera_view = camera->calc_view();
 
-    glm::mat4 sun_projection;
-    glm::mat4 sun_view;
-    if (this->sun)
-    {
-        // calculate sun projection matrix
-        sun_projection = this->sun->calc_projection();
-
-        // calculate sun view matrix
-        sun_view = this->sun->calc_view();
-    }
-
     // send camera transformations to water program
     this->water_program->bind();
 
     this->water_program->set_mat4("camera.projection", camera_projection);
     this->water_program->set_mat4("camera.view", camera_view);
     this->water_program->set_vec3("camera.position", camera->position);
-
-    if (this->sun)
-    {
-        this->water_program->set_vec3("sun.direction", this->sun->direction);
-        this->water_program->set_vec3("sun.specular_color", this->sun->specular_color);
-    }
 
     this->water_program->set_unsigned_int("elapsed_time", elapsed_time);
 
@@ -1430,8 +1316,6 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
         glBindTexture(GL_TEXTURE_2D, this->water_dudv_texture ? this->water_dudv_texture->texture_id : 0);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, this->water_normal_texture ? this->water_normal_texture->texture_id : 0);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, this->depthmap_texture_id);
 
         glBindVertexArray(this->water_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, this->water_vertices_size);
