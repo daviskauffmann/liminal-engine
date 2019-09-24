@@ -25,8 +25,13 @@ uniform struct Material
 
 uniform struct Light
 {
+    int type;
     vec3 position;
+    vec3 direction;
     vec3 color;
+	mat4 projection;
+	mat4 view;
+    sampler2D depth_map;
 } light;
 
 out vec4 frag_color;
@@ -105,11 +110,27 @@ void main()
 
     vec3 lo = vec3(0.0);
 
-    vec3 l = normalize(light.position - vertex.position);
+    vec3 l;
+    if (light.type == 0)
+    {
+        l = normalize(-light.direction);
+    }
+    else if (light.type == 1)
+    {
+        l = normalize(light.position - vertex.position);
+    }
     vec3 h = normalize(v + l);
-    float distance = length(light.position - vertex.position);
-    float attenuation = 1.0 / (distance * distance);
-    vec3 radiance = light.color * attenuation;
+    vec3 radiance;
+    if (light.type == 0)
+    {
+        radiance = light.color;
+    }
+    else if (light.type == 1)
+    {
+        float distance = length(light.position - vertex.position);
+        float attenuation = 1.0 / (distance * distance);
+        radiance = light.color * attenuation;
+    }
 
     float ndf = distribution_ggx(n, h, roughness);
     float g = geometry_smith(n, v, l, roughness);
@@ -133,6 +154,28 @@ void main()
     vec3 color = ambient + lo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
+    
+    if (light.type == 0)
+    {
+        vec4 light_space_position = light.projection * light.view * vec4(vertex.position, 1.0);
+        vec3 light_space_proj_coords = (light_space_position.xyz / light_space_position.w) * 0.5 + 0.5;
+        float current_depth = light_space_proj_coords.z;
+        float bias = max(0.05 * (1.0 - dot(n, l)), 0.005); 
+        float shadow = 0.0;
+        vec2 texel_size = 1.0 / textureSize(light.depth_map, 0);
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                float pcf_depth = texture(light.depth_map, light_space_proj_coords.xy + vec2(x, y) * texel_size).r;
+                shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+            }
+        }
+        shadow /= 9.0;
+        if (light_space_proj_coords.z > 1.0) shadow = 0.0;
+
+        color = ambient + (1.0 - shadow) * color;
+    }
 
     frag_color = vec4(color, 1.0);
 }

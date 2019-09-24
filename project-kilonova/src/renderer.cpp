@@ -89,6 +89,7 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->forward_program->set_int("material.metallic_map", 2);
     this->forward_program->set_int("material.roughness_map", 3);
     this->forward_program->set_int("material.ao_map", 4);
+    this->forward_program->set_int("light.depth_map", 5);
     this->forward_program->unbind();
 
     this->geometry_program->bind();
@@ -813,6 +814,47 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             glDepthMask(GL_FALSE);
             glDepthFunc(GL_EQUAL);
 
+            if (this->directional_lights.size() > 0)
+            {
+                this->forward_program->bind();
+
+                this->forward_program->set_mat4("camera.projection", camera_projection);
+                this->forward_program->set_mat4("camera.view", camera_view);
+                this->forward_program->set_vec3("camera.position", camera->position);
+
+                this->forward_program->set_mat4("object.model", object_model);
+
+                this->forward_program->set_vec4("clipping_plane", clipping_plane);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, object->material->metallic_map ? object->material->metallic_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+
+                this->forward_program->set_int("light.type", 0);
+
+                for (auto &directional_light : this->directional_lights)
+                {
+                    this->forward_program->set_vec3("light.direction", directional_light->direction);
+                    this->forward_program->set_vec3("light.color", directional_light->specular_color);
+                    this->forward_program->set_mat4("light.projection", directional_light->projection);
+                    this->forward_program->set_mat4("light.view", directional_light->view);
+
+                    glActiveTexture(GL_TEXTURE5);
+                    glBindTexture(GL_TEXTURE_2D, directional_light->depthmap_texture_id);
+
+                    object->mesh->draw();
+                }
+
+                this->forward_program->unbind();
+            }
+
             if (this->point_lights.size() > 0)
             {
                 this->forward_program->bind();
@@ -835,6 +877,8 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+
+                this->forward_program->set_int("light.type", 1);
 
                 for (auto &point_light : this->point_lights)
                 {
