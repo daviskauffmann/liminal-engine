@@ -8,10 +8,8 @@ namespace pk
 {
 directional_light::directional_light(
     glm::vec3 direction,
-    glm::vec3 ambient_color,
-    glm::vec3 diffuse_color,
-    glm::vec3 specular_color)
-    : direction(direction), ambient_color(ambient_color), diffuse_color(diffuse_color), specular_color(specular_color)
+    glm::vec3 color)
+    : direction(direction), color(color)
 {
     glGenFramebuffers(1, &this->depthmap_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, this->depthmap_fbo_id);

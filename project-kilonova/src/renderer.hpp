@@ -45,6 +45,7 @@ private:
 
     // shader programs
     pk::program *depth_program;
+    pk::program *depth_cube_program;
     pk::program *color_program;
     pk::program *texture_program;
     pk::program *forward_program;

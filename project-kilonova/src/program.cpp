@@ -8,13 +8,20 @@
 
 namespace pk
 {
-program::program(const std::string &vertex_filename, const std::string &fragment_filename)
+program::program(const std::string &vertex_filename, const std::string &geometry_filename, const std::string &fragment_filename)
 {
     this->program_id = glCreateProgram();
 
     // compile shaders and attach to program
     GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
     glAttachShader(this->program_id, vertex_shader);
+
+    GLuint geometry_shader = 0;
+    if (!geometry_filename.empty())
+    {
+        geometry_shader = create_shader(GL_GEOMETRY_SHADER, geometry_filename);
+        glAttachShader(this->program_id, geometry_shader);
+    }
 
     GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
     glAttachShader(this->program_id, fragment_shader);
@@ -38,6 +45,12 @@ program::program(const std::string &vertex_filename, const std::string &fragment
     // detach and delete shaders, we're done with them now
     glDetachShader(this->program_id, vertex_shader);
     glDeleteShader(vertex_shader);
+
+    if (geometry_shader)
+    {
+        glDetachShader(this->program_id, geometry_shader);
+        glDeleteShader(geometry_shader);
+    }
 
     glDetachShader(this->program_id, fragment_shader);
     glDeleteShader(fragment_shader);

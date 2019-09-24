@@ -52,30 +52,43 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     // create programs
     this->depth_program = new pk::program(
         "assets/shaders/depth.vert",
+        "",
         "assets/shaders/depth.frag");
+    this->depth_cube_program = new pk::program(
+        "assets/shaders/depth_cube.vert",
+        "assets/shaders/depth_cube.geom",
+        "assets/shaders/depth_cube.frag");
     this->color_program = new pk::program(
         "assets/shaders/color.vert",
+        "",
         "assets/shaders/color.frag");
     this->texture_program = new pk::program(
         "assets/shaders/texture.vert",
+        "",
         "assets/shaders/texture.frag");
     this->forward_program = new pk::program(
         "assets/shaders/forward.vert",
+        "",
         "assets/shaders/forward.frag");
     this->geometry_program = new pk::program(
         "assets/shaders/geometry.vert",
+        "",
         "assets/shaders/geometry.frag");
     this->skybox_program = new pk::program(
         "assets/shaders/skybox.vert",
+        "",
         "assets/shaders/skybox.frag");
     this->water_program = new pk::program(
         "assets/shaders/water.vert",
+        "",
         "assets/shaders/water.frag");
     this->sprite_program = new pk::program(
         "assets/shaders/sprite.vert",
+        "",
         "assets/shaders/sprite.frag");
     this->screen_program = new pk::program(
         "assets/shaders/screen.vert",
+        "",
         "assets/shaders/screen.frag");
 
     // setup shader samplers
@@ -90,6 +103,7 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->forward_program->set_int("material.roughness_map", 3);
     this->forward_program->set_int("material.ao_map", 4);
     this->forward_program->set_int("light.depth_map", 5);
+    this->forward_program->set_int("light.depth_cubemap", 6);
     this->forward_program->unbind();
 
     this->geometry_program->bind();
@@ -717,6 +731,48 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    // for (auto &point_light : this->point_lights)
+    // {
+    //     glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)4096 / (float)4096, 1.0f, 25.0f);
+
+    //     std::vector<glm::mat4> shadow_matrices;
+    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+
+    //     glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
+
+    //     glViewport(0, 0, this->shadow_width, this->shadow_height);
+    //     glClear(GL_DEPTH_BUFFER_BIT);
+
+    //     this->depth_cube_program->bind();
+
+    //     for (unsigned int i = 0; i < 6; i++)
+    //     {
+    //         this->depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
+    //     }
+
+    //     this->depth_cube_program->set_vec3("light.position", point_light->position);
+
+    //     this->depth_cube_program->set_float("far_plane", 25.0f);
+
+    //     for (auto &object : this->objects)
+    //     {
+    //         glm::mat4 object_model = object->calc_model();
+
+    //         this->depth_cube_program->set_mat4("object.model", object_model);
+
+    //         object->mesh->draw();
+    //     }
+
+    //     this->depth_cube_program->unbind();
+
+    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // }
+
     if (this->objects.size() > 0)
     {
 #if LIGHTING_MODE == LIGHTING_COLOR
@@ -842,7 +898,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 for (auto &directional_light : this->directional_lights)
                 {
                     this->forward_program->set_vec3("light.direction", directional_light->direction);
-                    this->forward_program->set_vec3("light.color", directional_light->specular_color);
+                    this->forward_program->set_vec3("light.color", directional_light->color);
                     this->forward_program->set_mat4("light.projection", directional_light->projection);
                     this->forward_program->set_mat4("light.view", directional_light->view);
 
@@ -867,6 +923,8 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
 
                 this->forward_program->set_vec4("clipping_plane", clipping_plane);
 
+                this->forward_program->set_float("far_plane", 25.0f);
+
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -883,7 +941,10 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 for (auto &point_light : this->point_lights)
                 {
                     this->forward_program->set_vec3("light.position", point_light->position);
-                    this->forward_program->set_vec3("light.color", point_light->specular_color);
+                    this->forward_program->set_vec3("light.color", point_light->color);
+
+                    glActiveTexture(GL_TEXTURE6);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, point_light->depth_cubemap_texture_id);
 
                     object->mesh->draw();
                 }

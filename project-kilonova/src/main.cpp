@@ -202,35 +202,21 @@ int main(int argc, char *argv[])
     // create directional lights
     pk::directional_light main_directional_light(
         glm::vec3(-0.2f, -1.0f, -0.3f),
-        glm::vec3(0.1f, 0.1f, 0.1f),
-        glm::vec3(0.8f, 0.8f, 0.8f),
         glm::vec3(1.0f, 1.0f, 1.0f));
 
     // create point lights
     pk::point_light red_point_light(
         glm::vec3(2.0f, 0.0f, 2.0f),
-        glm::vec3(0.1f, 0.0f, 0.0f),
-        glm::vec3(0.8f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 0.09f, 0.32f));
+        glm::vec3(1.0f, 0.0f, 0.0f));
     pk::point_light yellow_point_light(
         glm::vec3(-2.0f, 0.0f, -2.0f),
-        glm::vec3(0.1f, 0.1f, 0.0f),
-        glm::vec3(0.8f, 0.8f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 0.0f),
-        glm::vec3(1.0f, 0.09f, 0.32f));
+        glm::vec3(1.0f, 1.0f, 0.0f));
     pk::point_light green_point_light(
         glm::vec3(2.0f, 0.0f, -2.0f),
-        glm::vec3(0.0f, 0.1f, 0.0f),
-        glm::vec3(0.0f, 0.8f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f),
-        glm::vec3(1.0f, 0.09f, 0.32f));
+        glm::vec3(0.0f, 1.0f, 0.0f));
     pk::point_light blue_point_light(
         glm::vec3(-2.0f, 0.0f, 2.0f),
-        glm::vec3(0.0f, 0.0f, 0.1f),
-        glm::vec3(0.0f, 0.0f, 0.8f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(1.0f, 0.09f, 0.32f));
+        glm::vec3(0.0f, 0.0f, 1.0f));
 
     // create spot lights
     pk::spot_light torch_spot_light(
@@ -475,12 +461,12 @@ int main(int argc, char *argv[])
         float angle_cos = cosf(angle);
 
         // update objects
-        box_1_object.rotation[0] = angle_sin;
-        box_1_object.rotation[1] = angle_cos;
+        box_1_object.rotation.x = angle_sin;
+        box_1_object.rotation.y = angle_cos;
 
         // update lights
-        main_directional_light.direction[0] = angle_sin;
-        main_directional_light.direction[2] = angle_cos;
+        main_directional_light.direction.x = angle_sin;
+        main_directional_light.direction.z = angle_cos;
 
         torch_spot_light.position = main_camera.position;
         torch_spot_light.direction = main_camera_front;
