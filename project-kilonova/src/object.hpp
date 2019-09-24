@@ -27,10 +27,11 @@ struct object
 
     glm::mat4 calc_model() const;
     void draw(
-        unsigned int diffuse_map_index,
-        unsigned int specular_map_index,
+        unsigned int albedo_map_index,
         unsigned int normal_map_index,
-        unsigned int emission_map_index) const;
+        unsigned int metallic_map_index,
+        unsigned int roughness_map_index,
+        unsigned int ao_map_index) const;
 };
 } // namespace pk
 

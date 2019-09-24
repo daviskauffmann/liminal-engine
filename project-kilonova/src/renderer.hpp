@@ -47,14 +47,8 @@ private:
     pk::program *depth_program;
     pk::program *color_program;
     pk::program *texture_program;
-    pk::program *forward_directional_program;
-    pk::program *forward_point_program;
-    pk::program *forward_spot_program;
-    pk::program *forward_reflection_program;
+    pk::program *forward_program;
     pk::program *geometry_program;
-    pk::program *deferred_directional_program;
-    pk::program *deferred_point_program;
-    pk::program *deferred_spot_program;
     pk::program *skybox_program;
     pk::program *water_program;
     pk::program *sprite_program;

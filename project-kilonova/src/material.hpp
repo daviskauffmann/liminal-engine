@@ -9,29 +9,26 @@ namespace pk
 {
 struct material
 {
-    glm::vec3 color;
-    pk::texture *diffuse_map;
-    pk::texture *specular_map;
-    float shininess;
+    pk::texture *albedo_map;
     pk::texture *normal_map;
-    pk::texture *emission_map;
-    float glow;
+    pk::texture *metallic_map;
+    pk::texture *roughness_map;
+    pk::texture *ao_map;
 
     material(
-        glm::vec3 color,
-        pk::texture *diffuseMap,
-        pk::texture *specularMap,
-        float shininess,
-        pk::texture *normalMap,
-        pk::texture *emissionMap,
-        float glow);
+        pk::texture *albedo_map,
+        pk::texture *normal_map,
+        pk::texture *metallic_map,
+        pk::texture *roughness_map,
+        pk::texture *ao_map);
     ~material();
 
     void bind(
-        unsigned int diffuse_map_index,
-        unsigned int specular_map_index,
+        unsigned int albedo_map_index,
         unsigned int normal_map_index,
-        unsigned int emission_map_index) const;
+        unsigned int metallic_map_index,
+        unsigned int roughness_map_index,
+        unsigned int ao_map_index) const;
 };
 } // namespace pk
 

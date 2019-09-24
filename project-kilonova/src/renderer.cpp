@@ -9,7 +9,7 @@
 #define LIGHTING_TEXTURE 2
 #define LIGHTING_FORWARD 3
 #define LIGHTING_DEFERRED 4
-#define LIGHTING_MODE LIGHTING_DEFERRED
+#define LIGHTING_MODE LIGHTING_FORWARD
 
 namespace pk
 {
@@ -59,30 +59,12 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->texture_program = new pk::program(
         "assets/shaders/texture.vert",
         "assets/shaders/texture.frag");
-    this->forward_directional_program = new pk::program(
+    this->forward_program = new pk::program(
         "assets/shaders/forward.vert",
-        "assets/shaders/forward_directional.frag");
-    this->forward_point_program = new pk::program(
-        "assets/shaders/forward.vert",
-        "assets/shaders/forward_point.frag");
-    this->forward_spot_program = new pk::program(
-        "assets/shaders/forward.vert",
-        "assets/shaders/forward_spot.frag");
-    this->forward_reflection_program = new pk::program(
-        "assets/shaders/forward.vert",
-        "assets/shaders/forward_reflection.frag");
+        "assets/shaders/forward.frag");
     this->geometry_program = new pk::program(
         "assets/shaders/geometry.vert",
         "assets/shaders/geometry.frag");
-    this->deferred_directional_program = new pk::program(
-        "assets/shaders/deferred.vert",
-        "assets/shaders/deferred_directional.frag");
-    this->deferred_point_program = new pk::program(
-        "assets/shaders/deferred.vert",
-        "assets/shaders/deferred_point.frag");
-    this->deferred_spot_program = new pk::program(
-        "assets/shaders/deferred.vert",
-        "assets/shaders/deferred_spot.frag");
     this->skybox_program = new pk::program(
         "assets/shaders/skybox.vert",
         "assets/shaders/skybox.frag");
@@ -101,32 +83,13 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->texture_program->set_int("color_map", 0);
     this->texture_program->unbind();
 
-    this->forward_directional_program->bind();
-    this->forward_directional_program->set_int("material.diffuse_map", 0);
-    this->forward_directional_program->set_int("material.specular_map", 1);
-    this->forward_directional_program->set_int("material.normal_map", 2);
-    this->forward_directional_program->set_int("material.emission_map", 3);
-    this->forward_directional_program->set_int("directional_light.depth_map", 4);
-    this->forward_directional_program->unbind();
-
-    this->forward_point_program->bind();
-    this->forward_point_program->set_int("material.diffuse_map", 0);
-    this->forward_point_program->set_int("material.specular_map", 1);
-    this->forward_point_program->set_int("material.normal_map", 2);
-    this->forward_point_program->set_int("material.emission_map", 3);
-    this->forward_point_program->unbind();
-
-    this->forward_spot_program->bind();
-    this->forward_spot_program->set_int("material.diffuse_map", 0);
-    this->forward_spot_program->set_int("material.specular_map", 1);
-    this->forward_spot_program->set_int("material.normal_map", 2);
-    this->forward_spot_program->set_int("material.emission_map", 3);
-    this->forward_spot_program->unbind();
-
-    this->forward_reflection_program->bind();
-    this->forward_reflection_program->set_int("material.reflectivity_map", 0);
-    this->forward_reflection_program->set_int("skybox.color_map", 1);
-    this->forward_reflection_program->unbind();
+    this->forward_program->bind();
+    this->forward_program->set_int("material.albedo_map", 0);
+    this->forward_program->set_int("material.normal_map", 1);
+    this->forward_program->set_int("material.metallic_map", 2);
+    this->forward_program->set_int("material.roughness_map", 3);
+    this->forward_program->set_int("material.ao_map", 4);
+    this->forward_program->unbind();
 
     this->geometry_program->bind();
     this->geometry_program->set_int("material.diffuse_map", 0);
@@ -134,25 +97,6 @@ renderer::renderer(int render_width, int render_height, float render_scale, int 
     this->geometry_program->set_int("material.normal_map", 2);
     this->geometry_program->set_int("material.emission_map", 3);
     this->geometry_program->unbind();
-
-    this->deferred_directional_program->bind();
-    this->deferred_directional_program->set_int("geometry.position_map", 0);
-    this->deferred_directional_program->set_int("geometry.normal_map", 1);
-    this->deferred_directional_program->set_int("geometry.albedo_specular_map", 2);
-    this->deferred_directional_program->set_int("directional_light.depth_map", 3);
-    this->deferred_directional_program->unbind();
-
-    this->deferred_point_program->bind();
-    this->deferred_point_program->set_int("geometry.position_map", 0);
-    this->deferred_point_program->set_int("geometry.normal_map", 1);
-    this->deferred_point_program->set_int("geometry.albedo_specular_map", 2);
-    this->deferred_point_program->unbind();
-
-    this->deferred_spot_program->bind();
-    this->deferred_spot_program->set_int("geometry.position_map", 0);
-    this->deferred_spot_program->set_int("geometry.normal_map", 1);
-    this->deferred_spot_program->set_int("geometry.albedo_specular_map", 2);
-    this->deferred_spot_program->unbind();
 
     this->skybox_program->bind();
     this->skybox_program->set_int("skybox.color_map", 0);
@@ -869,153 +813,38 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             glDepthMask(GL_FALSE);
             glDepthFunc(GL_EQUAL);
 
-            if (this->directional_lights.size() > 0)
-            {
-                this->forward_directional_program->bind();
-
-                this->forward_directional_program->set_mat4("camera.projection", camera_projection);
-                this->forward_directional_program->set_mat4("camera.view", camera_view);
-                this->forward_directional_program->set_vec3("camera.position", camera->position);
-
-                this->forward_directional_program->set_mat4("object.model", object_model);
-
-                this->forward_directional_program->set_vec4("clipping_plane", clipping_plane);
-
-                this->forward_directional_program->set_vec3("material.color", object->material->color);
-                this->forward_directional_program->set_float("material.shininess", object->material->shininess);
-                this->forward_directional_program->set_float("material.glow", object->material->glow);
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-
-                for (auto &directional_light : this->directional_lights)
-                {
-                    this->forward_directional_program->set_vec3("directional_light.direction", directional_light->direction);
-                    this->forward_directional_program->set_vec3("directional_light.ambient", directional_light->ambient_color);
-                    this->forward_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
-                    this->forward_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
-                    this->forward_directional_program->set_mat4("directional_light.projection", directional_light->projection);
-                    this->forward_directional_program->set_mat4("directional_light.view", directional_light->view);
-
-                    glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, directional_light->depthmap_texture_id);
-
-                    object->mesh->draw();
-                }
-
-                this->forward_directional_program->unbind();
-            }
-
             if (this->point_lights.size() > 0)
             {
-                this->forward_point_program->bind();
+                this->forward_program->bind();
 
-                this->forward_point_program->set_mat4("camera.projection", camera_projection);
-                this->forward_point_program->set_mat4("camera.view", camera_view);
-                this->forward_point_program->set_vec3("camera.position", camera->position);
+                this->forward_program->set_mat4("camera.projection", camera_projection);
+                this->forward_program->set_mat4("camera.view", camera_view);
+                this->forward_program->set_vec3("camera.position", camera->position);
 
-                this->forward_point_program->set_mat4("object.model", object_model);
+                this->forward_program->set_mat4("object.model", object_model);
 
-                this->forward_point_program->set_vec4("clipping_plane", clipping_plane);
-
-                this->forward_point_program->set_vec3("material.color", object->material->color);
-                this->forward_point_program->set_float("material.shininess", object->material->shininess);
-                this->forward_point_program->set_float("material.glow", object->material->glow);
+                this->forward_program->set_vec4("clipping_plane", clipping_plane);
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
+                glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE2);
                 glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, object->material->metallic_map ? object->material->metallic_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
+                glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
 
                 for (auto &point_light : this->point_lights)
                 {
-                    this->forward_point_program->set_vec3("point_light.position", point_light->position);
-                    this->forward_point_program->set_vec3("point_light.ambient_color", point_light->ambient_color);
-                    this->forward_point_program->set_vec3("point_light.diffuse_color", point_light->diffuse_color);
-                    this->forward_point_program->set_vec3("point_light.specular_color", point_light->specular_color);
-                    this->forward_point_program->set_vec3("point_light.attenuation", point_light->attenuation);
+                    this->forward_program->set_vec3("light.position", point_light->position);
+                    this->forward_program->set_vec3("light.color", point_light->specular_color);
 
                     object->mesh->draw();
                 }
 
-                this->forward_point_program->unbind();
-            }
-
-            if (this->spot_lights.size() > 0)
-            {
-                this->forward_spot_program->bind();
-
-                this->forward_spot_program->set_mat4("camera.projection", camera_projection);
-                this->forward_spot_program->set_mat4("camera.view", camera_view);
-                this->forward_spot_program->set_vec3("camera.position", camera->position);
-
-                this->forward_spot_program->set_mat4("object.model", object_model);
-
-                this->forward_spot_program->set_vec4("clipping_plane", clipping_plane);
-
-                this->forward_spot_program->set_vec3("material.color", object->material->color);
-                this->forward_spot_program->set_float("material.shininess", object->material->shininess);
-                this->forward_spot_program->set_float("material.glow", object->material->glow);
-
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
-
-                for (auto &spot_light : this->spot_lights)
-                {
-                    this->forward_spot_program->set_vec3("spot_light.position", spot_light->position);
-                    this->forward_spot_program->set_vec3("spot_light.direction", spot_light->direction);
-                    this->forward_spot_program->set_vec3("spot_light.ambient_color", spot_light->ambient_color);
-                    this->forward_spot_program->set_vec3("spot_light.diffuse_color", spot_light->diffuse_color);
-                    this->forward_spot_program->set_vec3("spot_light.specular_color", spot_light->specular_color);
-                    this->forward_spot_program->set_vec3("spot_light.attenuation", spot_light->attenuation);
-                    this->forward_spot_program->set_float("spot_light.inner_cutoff", spot_light->inner_cutoff);
-                    this->forward_spot_program->set_float("spot_light.outer_cutoff", spot_light->outer_cutoff);
-
-                    object->mesh->draw();
-                }
-
-                this->forward_spot_program->unbind();
-            }
-
-            if (this->skybox)
-            {
-                this->forward_reflection_program->bind();
-
-                this->forward_reflection_program->set_mat4("camera.projection", camera_projection);
-                this->forward_reflection_program->set_mat4("camera.view", camera_view);
-                this->forward_reflection_program->set_vec3("camera.position", camera->position);
-
-                this->forward_reflection_program->set_mat4("object.model", object_model);
-
-                this->forward_reflection_program->set_vec4("clipping_plane", clipping_plane);
-
-                this->forward_reflection_program->set_float("material.reflectivity", 0.0f);
-
-                // TEMPORARY: use specular texture for reflectivity
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_CUBE_MAP, this->skybox->texture_id);
-
-                object->mesh->draw();
-
-                this->forward_reflection_program->unbind();
+                this->forward_program->unbind();
             }
 
             glDepthFunc(GL_LESS);
@@ -1100,99 +929,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_EQUAL);
 
-        if (this->directional_lights.size() > 0)
-        {
-            this->deferred_directional_program->bind();
-
-            this->deferred_directional_program->set_vec3("camera.position", camera->position);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-
-            for (auto &directional_light : this->directional_lights)
-            {
-                this->deferred_directional_program->set_vec3("directional_light.direction", directional_light->direction);
-                this->deferred_directional_program->set_vec3("directional_light.ambient_color", directional_light->ambient_color);
-                this->deferred_directional_program->set_vec3("directional_light.diffuse_color", directional_light->diffuse_color);
-                this->deferred_directional_program->set_vec3("directional_light.specular_color", directional_light->specular_color);
-                this->deferred_directional_program->set_mat4("directional_light.projection", directional_light->projection);
-                this->deferred_directional_program->set_mat4("directional_light.view", directional_light->view);
-
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, directional_light->depthmap_texture_id);
-
-                glBindVertexArray(this->screen_vao_id);
-                glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
-                glBindVertexArray(0);
-            }
-
-            this->deferred_directional_program->unbind();
-        }
-
-        if (this->point_lights.size() > 0)
-        {
-            this->deferred_point_program->bind();
-
-            this->deferred_point_program->set_vec3("camera.position", camera->position);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-
-            for (auto &point_light : this->point_lights)
-            {
-                this->deferred_point_program->set_vec3("point_light.position", point_light->position);
-                this->deferred_point_program->set_vec3("point_light.ambient_color", point_light->ambient_color);
-                this->deferred_point_program->set_vec3("point_light.diffuse_color", point_light->diffuse_color);
-                this->deferred_point_program->set_vec3("point_light.specular_color", point_light->specular_color);
-                this->deferred_point_program->set_vec3("point_light.attenuation", point_light->attenuation);
-
-                glBindVertexArray(this->screen_vao_id);
-                glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
-                glBindVertexArray(0);
-            }
-
-            this->deferred_point_program->unbind();
-        }
-
-        if (this->spot_lights.size() > 0)
-        {
-            this->deferred_spot_program->bind();
-
-            this->deferred_spot_program->set_vec3("camera.position", camera->position);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-
-            for (auto &spot_light : this->spot_lights)
-            {
-                this->deferred_spot_program->set_vec3("spot_light.position", spot_light->position);
-                this->deferred_spot_program->set_vec3("spot_light.direction", spot_light->direction);
-                this->deferred_spot_program->set_vec3("spot_light.ambient_color", spot_light->ambient_color);
-                this->deferred_spot_program->set_vec3("spot_light.diffuse_color", spot_light->diffuse_color);
-                this->deferred_spot_program->set_vec3("spot_light.specular_color", spot_light->specular_color);
-                this->deferred_spot_program->set_vec3("spot_light.attenuation", spot_light->attenuation);
-                this->deferred_spot_program->set_float("spot_light.inner_cutoff", spot_light->inner_cutoff);
-                this->deferred_spot_program->set_float("spot_light.outer_cutoff", spot_light->outer_cutoff);
-
-                glBindVertexArray(this->screen_vao_id);
-                glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
-                glBindVertexArray(0);
-            }
-
-            this->deferred_spot_program->unbind();
-        }
+        // TODO: deferred pbr lighting
 
         glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);

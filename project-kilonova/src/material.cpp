@@ -3,14 +3,16 @@
 namespace pk
 {
 material::material(
-    glm::vec3 color,
-    pk::texture *diffuse_map,
-    pk::texture *specular_map,
-    float shininess,
+    pk::texture *albedo_map,
     pk::texture *normal_map,
-    pk::texture *emission_map,
-    float glow)
-    : color(color), diffuse_map(diffuse_map), specular_map(specular_map), shininess(shininess), normal_map(normal_map), emission_map(emission_map), glow(glow)
+    pk::texture *metallic_map,
+    pk::texture *roughness_map,
+    pk::texture *ao_map)
+    : albedo_map(albedo_map),
+      normal_map(normal_map),
+      metallic_map(metallic_map),
+      roughness_map(roughness_map),
+      ao_map(ao_map)
 {
 }
 
@@ -19,19 +21,15 @@ material::~material()
 }
 
 void material::bind(
-    unsigned int diffuse_map_index,
-    unsigned int specular_map_index,
+    unsigned int albedo_map_index,
     unsigned int normal_map_index,
-    unsigned int emission_map_index) const
+    unsigned int metallic_map_index,
+    unsigned int roughness_map_index,
+    unsigned int ao_map_index) const
 {
-    if (this->diffuse_map)
+    if (this->albedo_map)
     {
-        this->diffuse_map->bind(diffuse_map_index);
-    }
-
-    if (this->specular_map)
-    {
-        this->specular_map->bind(specular_map_index);
+        this->albedo_map->bind(albedo_map_index);
     }
 
     if (this->normal_map)
@@ -39,9 +37,19 @@ void material::bind(
         this->normal_map->bind(normal_map_index);
     }
 
-    if (this->emission_map)
+    if (this->metallic_map)
     {
-        this->emission_map->bind(emission_map_index);
+        this->metallic_map->bind(metallic_map_index);
+    }
+
+    if (this->roughness_map)
+    {
+        this->roughness_map->bind(roughness_map_index);
+    }
+
+    if (this->ao_map)
+    {
+        this->ao_map->bind(ao_map_index);
     }
 }
 } // namespace pk

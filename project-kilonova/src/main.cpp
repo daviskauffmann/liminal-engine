@@ -134,12 +134,11 @@ int main(int argc, char *argv[])
          33, 34, 35});
 
     // create textures
-    pk::texture default_texture("assets/images/default.png");
-    pk::texture box_diffuse_texture("assets/images/box_diffuse.png");
-    pk::texture box_specular_texture("assets/images/box_specular.png");
-    pk::texture cobble_diffuse_texture("assets/images/cobble_diffuse.jpg");
-    pk::texture cobble_specular_texture("assets/images/cobble_specular.jpg");
-    pk::texture grass_texture("assets/images/grass.png");
+    pk::texture iron_albedo("assets/images/iron_albedo.png");
+    pk::texture iron_normal("assets/images/iron_normal.png");
+    pk::texture iron_metallic("assets/images/iron_metallic.png");
+    pk::texture iron_roughness("assets/images/iron_roughness.png");
+    pk::texture iron_ao("assets/images/iron_ao.png");
 
     // create cubemaps
     pk::cubemap skybox_cubemap(
@@ -156,34 +155,16 @@ int main(int argc, char *argv[])
 
     // create materials
     pk::material default_material(
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        &default_texture,
-        &default_texture,
-        16.0f,
-        nullptr,
-        nullptr,
-        1.0f);
-    pk::material box_material(
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        &box_diffuse_texture,
-        &box_specular_texture,
-        16.0f,
-        nullptr,
-        nullptr,
-        1.0f);
-    pk::material cobble_material(
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        &cobble_diffuse_texture,
-        &cobble_specular_texture,
-        16.0f,
-        nullptr,
-        nullptr,
-        1.0f);
+        &iron_albedo,
+        &iron_normal,
+        &iron_metallic,
+        &iron_roughness,
+        &iron_ao);
 
     // create objects
     pk::object floor_object(
         &cube_mesh,
-        &cobble_material,
+        &default_material,
         glm::vec3(0.0f, -4.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(10.0f, 1.0f, 10.0f));
@@ -195,25 +176,25 @@ int main(int argc, char *argv[])
         glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_2_object(
         &cube_mesh,
-        &box_material,
+        &default_material,
         glm::vec3(2.0f, -0.5f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.5f, 0.5f, 0.5f));
     pk::object box_3_object(
         &cube_mesh,
-        &box_material,
+        &default_material,
         glm::vec3(0.0f, -0.5f, 2.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.5f, 0.5f, 0.5f));
     pk::object box_4_object(
         &cube_mesh,
-        &box_material,
+        &default_material,
         glm::vec3(-2.0f, -0.5f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.5f, 0.5f, 0.5f));
     pk::object box_5_object(
         &cube_mesh,
-        &box_material,
+        &default_material,
         glm::vec3(0.0f, -0.5f, -2.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.5f, 0.5f, 0.5f));
@@ -270,7 +251,7 @@ int main(int argc, char *argv[])
     // create sprites
     pk::sprite grass_sprite(
         glm::vec3(1.0f, 1.0f, 1.0f),
-        &grass_texture,
+        &iron_albedo,
         glm::vec2(0.0f, 0.0f),
         0.0f,
         glm::vec2(1.0f, 1.0f));

@@ -30,14 +30,20 @@ glm::mat4 object::calc_model() const
 }
 
 void object::draw(
-    unsigned int diffuse_map_index,
-    unsigned int specular_map_index,
+    unsigned int albedo_map_index,
     unsigned int normal_map_index,
-    unsigned int emission_map_index) const
+    unsigned int metallic_map_index,
+    unsigned int roughness_map_index,
+    unsigned int ao_map_index) const
 {
     if (this->material)
     {
-        this->material->bind(diffuse_map_index, specular_map_index, normal_map_index, emission_map_index);
+        this->material->bind(
+            albedo_map_index,
+            normal_map_index,
+            metallic_map_index,
+            roughness_map_index,
+            ao_map_index);
     }
 
     this->mesh->draw();
