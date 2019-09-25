@@ -21,6 +21,7 @@
 #include "source.hpp"
 #include "spot_light.hpp"
 #include "sprite.hpp"
+#include "terrain.hpp"
 #include "texture.hpp"
 #include "vertex.hpp"
 #include "water.hpp"
@@ -233,6 +234,9 @@ int main(int argc, char *argv[])
     pk::water test_water(
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec2(100.0f, 100.0f));
+
+    // create terrains
+    pk::terrain test_terrain(0, 0, &default_material);
 
     // create sprites
     pk::sprite grass_sprite(

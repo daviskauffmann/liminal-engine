@@ -57,5 +57,7 @@ point_light::point_light(
 
 point_light::~point_light()
 {
+    glDeleteTextures(1, &this->depth_cubemap_texture_id);
+    glDeleteFramebuffers(1, &this->depth_cubemap_fbo_id);
 }
 } // namespace pk

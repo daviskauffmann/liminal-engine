@@ -179,36 +179,36 @@ void main()
 
         color = ambient + (1.0 - shadow) * color;
     }
-    // else if (light.type == 1)
-    // {
-    //     vec3 frag_to_light = vertex.position - light.position;
-    //     float current_depth = length(frag_to_light);
-    //     float shadow = 0.0;
-    //     float bias = 0.15;
-    //     int samples = 20;
-    //     float view_distance = length(camera.position - vertex.position);
-    //     float disk_radius = (1.0 + (view_distance / far_plane)) / 25.0;
-    //     for (int i = 0; i < samples; i++)
-    //     {
-    //         vec3 grid_sampling_disk[20] = vec3[]
-    //         (
-    //            vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
-    //            vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
-    //            vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
-    //            vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
-    //            vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
-    //         );
-    //         float closest_depth = texture(light.depth_cubemap, frag_to_light + grid_sampling_disk[i] * disk_radius).r;
-    //         closest_depth *= far_plane;
-    //         if (current_depth - bias > closest_depth)
-    //         {
-    //             shadow += 1.0;
-    //         }
-    //     }
-    //     shadow /= float(samples);
+    else if (light.type == 1)
+    {
+        vec3 frag_to_light = vertex.position - light.position;
+        float current_depth = length(frag_to_light);
+        float shadow = 0.0;
+        float bias = 0.15;
+        int samples = 20;
+        float view_distance = length(camera.position - vertex.position);
+        float disk_radius = (1.0 + (view_distance / far_plane)) / 25.0;
+        for (int i = 0; i < samples; i++)
+        {
+            vec3 grid_sampling_disk[20] = vec3[]
+            (
+               vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+               vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+               vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+               vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+               vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+            );
+            float closest_depth = texture(light.depth_cubemap, frag_to_light + grid_sampling_disk[i] * disk_radius).r;
+            closest_depth *= far_plane;
+            if (current_depth - bias > closest_depth)
+            {
+                shadow += 1.0;
+            }
+        }
+        shadow /= float(samples);
 
-    //     color = ambient + (1.0 - shadow) * color;
-    // }
+        color = ambient + (1.0 - shadow) * color;
+    }
 
     frag_color = vec4(color, 1.0);
 }

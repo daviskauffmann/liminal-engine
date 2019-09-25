@@ -731,47 +731,47 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    // for (auto &point_light : this->point_lights)
-    // {
-    //     glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)4096 / (float)4096, 1.0f, 25.0f);
+    for (auto &point_light : this->point_lights)
+    {
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)4096 / (float)4096, 1.0f, 25.0f);
 
-    //     std::vector<glm::mat4> shadow_matrices;
-    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-    //     shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        std::vector<glm::mat4> shadow_matrices;
+        shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+        shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+        shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 
-    //     glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
 
-    //     glViewport(0, 0, this->shadow_width, this->shadow_height);
-    //     glClear(GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, this->shadow_width, this->shadow_height);
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-    //     this->depth_cube_program->bind();
+        this->depth_cube_program->bind();
 
-    //     for (unsigned int i = 0; i < 6; i++)
-    //     {
-    //         this->depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
-    //     }
+        for (unsigned int i = 0; i < 6; i++)
+        {
+            this->depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
+        }
 
-    //     this->depth_cube_program->set_vec3("light.position", point_light->position);
+        this->depth_cube_program->set_vec3("light.position", point_light->position);
 
-    //     this->depth_cube_program->set_float("far_plane", 25.0f);
+        this->depth_cube_program->set_float("far_plane", 25.0f);
 
-    //     for (auto &object : this->objects)
-    //     {
-    //         glm::mat4 object_model = object->calc_model();
+        for (auto &object : this->objects)
+        {
+            glm::mat4 object_model = object->calc_model();
 
-    //         this->depth_cube_program->set_mat4("object.model", object_model);
+            this->depth_cube_program->set_mat4("object.model", object_model);
 
-    //         object->mesh->draw();
-    //     }
+            object->mesh->draw();
+        }
 
-    //     this->depth_cube_program->unbind();
+        this->depth_cube_program->unbind();
 
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     if (this->objects.size() > 0)
     {
@@ -828,7 +828,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             this->texture_program->set_vec4("clipping_plane", clipping_plane);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
+            glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
 
             object->mesh->draw();
 
