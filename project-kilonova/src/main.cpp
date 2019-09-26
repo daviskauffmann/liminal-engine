@@ -32,9 +32,6 @@ constexpr auto window_height = 720;
 
 constexpr auto render_scale = 1.0f;
 
-constexpr auto shadow_width = 4096;
-constexpr auto shadow_height = 4096;
-
 constexpr auto fps_cap = 300;
 constexpr auto frame_delay = 1000 / fps_cap;
 
@@ -73,7 +70,7 @@ int main(int argc, char *argv[])
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     // setup renderer and audio
-    pk::renderer renderer(window_width, window_height, render_scale, shadow_width, shadow_height);
+    pk::renderer renderer(window_width, window_height, render_scale);
     pk::audio audio;
 
     // create meshes

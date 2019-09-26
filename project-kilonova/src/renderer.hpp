@@ -19,7 +19,7 @@ namespace pk
 class renderer
 {
 public:
-    renderer(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height);
+    renderer(int render_width, int render_height, float render_scale);
     ~renderer();
 
     void add_object(pk::object *object);
@@ -36,8 +36,6 @@ private:
     int render_width;
     int render_height;
     float render_scale;
-    int shadow_width;
-    int shadow_height;
     int reflection_width;
     int reflection_height;
     int refraction_width;

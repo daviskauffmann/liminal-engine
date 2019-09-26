@@ -13,13 +13,11 @@
 
 namespace pk
 {
-renderer::renderer(int render_width, int render_height, float render_scale, int shadow_width, int shadow_height)
+renderer::renderer(int render_width, int render_height, float render_scale)
 {
     this->render_width = render_width;
     this->render_height = render_height;
     this->render_scale = render_scale;
-    this->shadow_width = shadow_width;
-    this->shadow_height = shadow_height;
     this->reflection_width = render_width;
     this->reflection_height = render_height;
     this->refraction_width = render_width;
@@ -709,7 +707,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         // render sun shadows to depthmap
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depthmap_fbo_id);
 
-        glViewport(0, 0, this->shadow_width, this->shadow_height);
+        glViewport(0, 0, 4096, 4096);
         glClear(GL_DEPTH_BUFFER_BIT);
 
         this->depth_program->bind();
@@ -745,7 +743,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
 
-        glViewport(0, 0, this->shadow_width, this->shadow_height);
+        glViewport(0, 0, 512, 512);
         glClear(GL_DEPTH_BUFFER_BIT);
 
         this->depth_cube_program->bind();
