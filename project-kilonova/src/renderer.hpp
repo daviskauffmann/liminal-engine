@@ -11,6 +11,7 @@
 #include "program.hpp"
 #include "spot_light.hpp"
 #include "sprite.hpp"
+#include "terrain.hpp"
 #include "texture.hpp"
 #include "water.hpp"
 
@@ -19,15 +20,17 @@ namespace pk
 class renderer
 {
 public:
-    renderer(int render_width, int render_height, float render_scale);
+    renderer(int render_width, int render_height);
     ~renderer();
 
+    void resize(int render_width, int render_height);
     void add_object(pk::object *object);
     void add_directional_light(pk::directional_light *directional_light);
     void add_point_light(pk::point_light *point_light);
     void add_spot_light(pk::spot_light *spot_light);
     void set_skybox(pk::cubemap *skybox);
     void add_water(pk::water *water);
+    void add_terrain(pk::terrain *terrain);
     void add_sprite(pk::sprite *sprite);
     void draw(pk::camera *camera, float aspect, unsigned int elapsed_time, float delta_time);
 
@@ -35,11 +38,6 @@ private:
     // settings
     int render_width;
     int render_height;
-    float render_scale;
-    int reflection_width;
-    int reflection_height;
-    int refraction_width;
-    int refraction_height;
 
     // shader programs
     pk::program *depth_program;
@@ -50,6 +48,7 @@ private:
     pk::program *geometry_program;
     pk::program *skybox_program;
     pk::program *water_program;
+    pk::program *terrain_program;
     pk::program *sprite_program;
     pk::program *screen_program;
 
@@ -105,6 +104,7 @@ private:
     std::vector<pk::spot_light *> spot_lights;
     pk::cubemap *skybox;
     std::vector<pk::water *> waters;
+    std::vector<pk::terrain *> terrains;
     std::vector<pk::sprite *> sprites;
 
     void render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane);

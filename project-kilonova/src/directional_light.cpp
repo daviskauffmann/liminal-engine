@@ -63,12 +63,12 @@ directional_light::~directional_light()
 
 glm::mat4 directional_light::calc_projection() const
 {
-    glm::mat4 projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
+    glm::mat4 projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f);
 
     return projection;
 }
 
-glm::mat4 directional_light::calc_view() const
+glm::mat4 directional_light::calc_view(glm::vec3 center) const
 {
     glm::vec3 position = glm::vec3(0.0f) - this->direction;
     glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));

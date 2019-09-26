@@ -23,7 +23,7 @@ struct directional_light
     ~directional_light();
 
     glm::mat4 calc_projection() const;
-    glm::mat4 calc_view() const;
+    glm::mat4 calc_view(glm::vec3 center) const;
 };
 } // namespace pk
 

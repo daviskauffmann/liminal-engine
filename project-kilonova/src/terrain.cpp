@@ -1,5 +1,7 @@
 #include "terrain.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 constexpr float size = 100;
 constexpr int vertex_count = 128;
 
@@ -8,7 +10,7 @@ namespace pk
 terrain::terrain(int grid_x, int grid_z, pk::material *material)
     : material(material)
 {
-    this->position = glm::vec2(grid_x * size, grid_z * size);
+    this->position = glm::vec3(grid_x * size, 0, grid_z * size);
 
     std::vector<pk::vertex> vertices;
     std::vector<unsigned int> indices;
@@ -18,7 +20,7 @@ terrain::terrain(int grid_x, int grid_z, pk::material *material)
         {
             glm::vec3 position(
                 -(float)j / ((float)vertex_count - 1) * size,
-                0,
+                sinf((float)(rand() % RAND_MAX)) - 2.0f,
                 -(float)i / ((float)vertex_count - 1) * size);
             glm::vec3 normal(0.0f, 1.0f, 0.0f);
             glm::vec2 uv(
@@ -50,5 +52,14 @@ terrain::terrain(int grid_x, int grid_z, pk::material *material)
 terrain::~terrain()
 {
     delete this->mesh;
+}
+
+glm::mat4 terrain::calc_model() const
+{
+    glm::mat4 model(1.0f);
+
+    model = glm::translate(model, this->position);
+
+    return model;
 }
 } // namespace pk

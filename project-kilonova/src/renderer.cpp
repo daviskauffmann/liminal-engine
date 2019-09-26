@@ -13,15 +13,10 @@
 
 namespace pk
 {
-renderer::renderer(int render_width, int render_height, float render_scale)
+renderer::renderer(int render_width, int render_height)
 {
     this->render_width = render_width;
     this->render_height = render_height;
-    this->render_scale = render_scale;
-    this->reflection_width = render_width;
-    this->reflection_height = render_height;
-    this->refraction_width = render_width;
-    this->refraction_height = render_height;
 
     // init GLEW
     {
@@ -80,6 +75,10 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         "assets/shaders/water.vert",
         "",
         "assets/shaders/water.frag");
+    this->terrain_program = new pk::program(
+        "assets/shaders/terrain.vert",
+        "",
+        "assets/shaders/terrain.frag");
     this->sprite_program = new pk::program(
         "assets/shaders/sprite.vert",
         "",
@@ -121,6 +120,10 @@ renderer::renderer(int render_width, int render_height, float render_scale)
     this->water_program->set_int("water.dudv_map", 2);
     this->water_program->set_int("water.normal_map", 3);
     this->water_program->unbind();
+
+    this->terrain_program->bind();
+    this->terrain_program->set_int("material.albedo_map", 0);
+    this->terrain_program->unbind();
 
     this->sprite_program->bind();
     this->sprite_program->set_int("sprite.color_map", 0);
@@ -198,8 +201,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_RGB16F,
-        (GLsizei)(render_width * render_scale),
-        (GLsizei)(render_height * render_scale),
+        render_width,
+        render_height,
         0,
         GL_RGB,
         GL_FLOAT,
@@ -224,8 +227,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_RGB16F,
-        (GLsizei)(render_width * render_scale),
-        (GLsizei)(render_height * render_scale),
+        render_width,
+        render_height,
         0,
         GL_RGB,
         GL_FLOAT,
@@ -250,8 +253,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_RGBA8,
-        (GLsizei)(render_width * render_scale),
-        (GLsizei)(render_height * render_scale),
+        render_width,
+        render_height,
         0,
         GL_RGBA,
         GL_UNSIGNED_BYTE,
@@ -278,8 +281,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
-        (GLsizei)(render_width * render_scale),
-        (GLsizei)(render_height * render_scale));
+        render_width,
+        render_height);
 
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
@@ -305,8 +308,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_RGB8,
-        this->reflection_width,
-        this->reflection_height,
+        this->render_width,
+        this->render_height,
         0,
         GL_RGB,
         GL_UNSIGNED_BYTE,
@@ -334,8 +337,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_DEPTH_COMPONENT32,
-        this->reflection_width,
-        this->reflection_height,
+        this->render_height,
+        this->render_height,
         0,
         GL_DEPTH_COMPONENT,
         GL_FLOAT,
@@ -359,8 +362,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
-        this->reflection_width,
-        this->reflection_height);
+        this->render_width,
+        this->render_height);
 
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
@@ -388,8 +391,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_RGB8,
-        this->refraction_width,
-        this->refraction_height,
+        this->render_width,
+        this->render_height,
         0,
         GL_RGB,
         GL_UNSIGNED_BYTE,
@@ -417,8 +420,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
         GL_TEXTURE_2D,
         0,
         GL_DEPTH_COMPONENT32,
-        this->refraction_width,
-        this->refraction_height,
+        this->render_width,
+        this->render_height,
         0,
         GL_DEPTH_COMPONENT,
         GL_FLOAT,
@@ -442,8 +445,8 @@ renderer::renderer(int render_width, int render_height, float render_scale)
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
-        this->refraction_width,
-        this->refraction_height);
+        this->render_width,
+        this->render_height);
 
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
@@ -609,6 +612,12 @@ renderer::~renderer()
 {
 }
 
+void renderer::resize(int render_width, int render_height)
+{
+    this->render_width = render_width;
+    this->render_height = render_height;
+}
+
 void renderer::add_object(pk::object *object)
 {
     this->objects.push_back(object);
@@ -637,6 +646,11 @@ void renderer::set_skybox(pk::cubemap *skybox)
 void renderer::add_water(pk::water *water)
 {
     this->waters.push_back(water);
+}
+
+void renderer::add_terrain(pk::terrain *terrain)
+{
+    this->terrains.push_back(terrain);
 }
 
 void renderer::add_sprite(pk::sprite *sprite)
@@ -677,6 +691,7 @@ void renderer::draw(pk::camera *camera, float aspect, unsigned int elapsed_time,
     this->point_lights.clear();
     this->spot_lights.clear();
     this->waters.clear();
+    this->terrains.clear();
     this->sprites.clear();
 }
 
@@ -702,7 +717,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         directional_light->projection = directional_light->calc_projection();
 
         // calculate sun view matrix
-        directional_light->view = directional_light->calc_view();
+        directional_light->view = directional_light->calc_view(camera->position);
 
         // render sun shadows to depthmap
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depthmap_fbo_id);
@@ -1004,7 +1019,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         // draw objects to the gbuffer
         glBindFramebuffer(GL_FRAMEBUFFER, this->geometry_fbo_id);
 
-        glViewport(0, 0, (GLsizei)(this->render_width * this->render_scale), (GLsizei)(this->render_height * this->render_scale));
+        glViewport(0, 0, this->render_width, this->render_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
 
@@ -1022,18 +1037,16 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
 
             this->geometry_program->set_vec4("clipping_plane", clipping_plane);
 
-            this->geometry_program->set_vec3("material.color", object->material->color);
-            this->geometry_program->set_float("material.shininess", object->material->shininess);
-            this->geometry_program->set_float("material.glow", object->material->glow);
-
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, object->material->diffuse_map ? object->material->diffuse_map->texture_id : 0);
+            glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, object->material->specular_map ? object->material->specular_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, object->material->metallic_map ? object->material->metallic_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, object->material->emission_map ? object->material->emission_map->texture_id : 0);
+            glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
 
             object->mesh->draw();
         }
@@ -1096,6 +1109,32 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
     glViewport(0, 0, this->render_width, this->render_height);
+
+    // render terrains
+    if (this->terrains.size() > 0)
+    {
+        this->terrain_program->bind();
+
+        this->terrain_program->set_mat4("camera.projection", camera_projection);
+        this->terrain_program->set_mat4("camera.view", camera_view);
+        this->terrain_program->set_vec3("camera.position", camera->position);
+
+        this->terrain_program->set_vec4("clipping_plane", clipping_plane);
+
+        for (auto &terrain : this->terrains)
+        {
+            glm::mat4 terrain_model = terrain->calc_model();
+
+            this->terrain_program->set_mat4("terrain.model", terrain_model);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, terrain->material->albedo_map ? terrain->material->albedo_map->texture_id : 0);
+
+            terrain->mesh->draw();
+        }
+
+        this->terrain_program->unbind();
+    }
 
     // render skybox
     if (this->skybox)

@@ -27,10 +27,6 @@
 #include "water.hpp"
 
 constexpr auto window_title = "Project Kilonova";
-constexpr auto window_width = 1280;
-constexpr auto window_height = 720;
-
-constexpr auto render_scale = 1.0f;
 
 constexpr auto fps_cap = 300;
 constexpr auto frame_delay = 1000 / fps_cap;
@@ -54,6 +50,9 @@ int main(int argc, char *argv[])
     TTF_Init();
     SDLNet_Init();
 
+    int window_width = 1280;
+    int window_height = 720;
+
     // create window
     SDL_Window *window = SDL_CreateWindow(
         window_title,
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     // setup renderer and audio
-    pk::renderer renderer(window_width, window_height, render_scale);
+    pk::renderer renderer(window_width, window_height);
     pk::audio audio;
 
     // create meshes
@@ -163,13 +162,13 @@ int main(int argc, char *argv[])
     pk::object floor_object(
         &cube_mesh,
         &default_material,
-        glm::vec3(0.0f, -4.0f, 0.0f),
+        glm::vec3(-100.0f, -4.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(10.0f, 1.0f, 10.0f));
     pk::object box_1_object(
         &cube_mesh,
         &default_material,
-        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(-100.0f, 1.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_2_object(
@@ -392,12 +391,13 @@ int main(int argc, char *argv[])
                 {
                 case SDL_WINDOWEVENT_RESIZED:
                 {
-                    int width = event.window.data1;
-                    int height = event.window.data2;
+                    window_width = event.window.data1;
+                    window_height = event.window.data2;
 
-                    SDL_SetWindowSize(window, width, height);
+                    SDL_SetWindowSize(window, window_width, window_height);
+                    renderer.resize(window_width, window_height);
 
-                    std::cout << "Window resized to " << width << "x" << height << std::endl;
+                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
                 }
                 break;
                 }
@@ -524,6 +524,8 @@ int main(int argc, char *argv[])
         renderer.set_skybox(&skybox_cubemap);
 
         renderer.add_water(&test_water);
+
+        renderer.add_terrain(&test_terrain);
 
         // renderer.add_sprite(&grass_sprite);
 
