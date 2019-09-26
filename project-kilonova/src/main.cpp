@@ -220,10 +220,7 @@ int main(int argc, char *argv[])
     pk::spot_light torch_spot_light(
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.5f, 0.5f, 0.5f),
         glm::vec3(1.0f, 1.0f, 1.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        glm::vec3(1.0f, 0.09f, 0.32f),
         cosf(glm::radians(12.5f)),
         cosf(glm::radians(15.0f)));
 

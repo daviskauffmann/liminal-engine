@@ -29,6 +29,8 @@ uniform struct Light
     vec3 position;
     vec3 direction;
     vec3 color;
+    float inner_cutoff;
+    float outer_cutoff;
 	mat4 projection;
 	mat4 view;
     sampler2D depth_map;
@@ -122,6 +124,10 @@ void main()
     {
         l = normalize(light.position - vertex.position);
     }
+    else if (light.type == 2)
+    {
+        l = normalize(-light.direction);
+    }
     vec3 h = normalize(v + l);
     vec3 radiance;
     if (light.type == 0)
@@ -133,6 +139,16 @@ void main()
         float distance = length(light.position - vertex.position);
         float attenuation = 1.0 / (distance * distance);
         radiance = light.color * attenuation;
+    }
+    else if (light.type == 2)
+    {
+        float distance = length(light.position - vertex.position);
+        float attenuation = 1.0 / (distance * distance);
+        vec3 light_direction = normalize(light.position - vertex.position);
+        float theta = dot(light_direction, l);
+        float epsilon = light.inner_cutoff - light.outer_cutoff;
+        float intensity = clamp((theta - light.outer_cutoff) / epsilon, 0.0, 1.0);
+        radiance = light.color * attenuation * intensity;
     }
 
     float ndf = distribution_ggx(n, h, roughness);

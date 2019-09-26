@@ -950,6 +950,48 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 this->forward_program->unbind();
             }
 
+            if (this->spot_lights.size() > 0)
+            {
+                this->forward_program->bind();
+
+                this->forward_program->set_mat4("camera.projection", camera_projection);
+                this->forward_program->set_mat4("camera.view", camera_view);
+                this->forward_program->set_vec3("camera.position", camera->position);
+
+                this->forward_program->set_mat4("object.model", object_model);
+
+                this->forward_program->set_vec4("clipping_plane", clipping_plane);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, object->material->metallic_map ? object->material->metallic_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+
+                this->forward_program->set_int("light.type", 2);
+
+                for (auto &spot_light : this->spot_lights)
+                {
+                    this->forward_program->set_vec3("light.position", spot_light->position);
+                    this->forward_program->set_vec3("light.direction", spot_light->direction);
+                    this->forward_program->set_vec3("light.color", spot_light->color);
+                    this->forward_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
+                    this->forward_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
+
+                    // glActiveTexture(GL_TEXTURE5);
+                    // glBindTexture(GL_TEXTURE_2D, spot_light->depthmap_texture_id);
+
+                    object->mesh->draw();
+                }
+
+                this->forward_program->unbind();
+            }
+
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
