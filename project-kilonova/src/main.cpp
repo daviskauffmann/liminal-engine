@@ -162,13 +162,13 @@ int main(int argc, char *argv[])
     pk::object floor_object(
         &cube_mesh,
         &default_material,
-        glm::vec3(-100.0f, -4.0f, 0.0f),
+        glm::vec3(0.0f, -4.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(10.0f, 1.0f, 10.0f));
     pk::object box_1_object(
         &cube_mesh,
         &default_material,
-        glm::vec3(-100.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_2_object(

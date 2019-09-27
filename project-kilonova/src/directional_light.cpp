@@ -63,7 +63,7 @@ directional_light::~directional_light()
 
 glm::mat4 directional_light::calc_projection() const
 {
-    glm::mat4 projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f);
+    glm::mat4 projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
 
     return projection;
 }

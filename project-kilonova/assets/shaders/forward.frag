@@ -126,7 +126,7 @@ void main()
     }
     else if (light.type == 2)
     {
-        l = normalize(-light.direction);
+        l = normalize(light.position - vertex.position);
     }
     vec3 h = normalize(v + l);
     vec3 radiance;
@@ -145,7 +145,7 @@ void main()
         float distance = length(light.position - vertex.position);
         float attenuation = 1.0 / (distance * distance);
         vec3 light_direction = normalize(light.position - vertex.position);
-        float theta = dot(light_direction, l);
+        float theta = dot(light_direction, normalize(-light.direction));
         float epsilon = light.inner_cutoff - light.outer_cutoff;
         float intensity = clamp((theta - light.outer_cutoff) / epsilon, 0.0, 1.0);
         radiance = light.color * attenuation * intensity;
