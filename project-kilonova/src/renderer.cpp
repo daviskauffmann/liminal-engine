@@ -1109,6 +1109,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
     glViewport(0, 0, this->render_width, this->render_height);
+    glEnable(GL_CLIP_DISTANCE0);
 
     // render terrains
     if (this->terrains.size() > 0)
@@ -1135,6 +1136,8 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
 
         this->terrain_program->unbind();
     }
+
+    glDisable(GL_CLIP_DISTANCE0);
 
     // render skybox
     if (this->skybox)

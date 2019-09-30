@@ -324,7 +324,6 @@ int main(int argc, char *argv[])
                     if (keys[SDL_SCANCODE_LALT])
                     {
                         unsigned int flags = SDL_GetWindowFlags(window);
-
                         if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
                         {
                             SDL_SetWindowFullscreen(window, 0);
