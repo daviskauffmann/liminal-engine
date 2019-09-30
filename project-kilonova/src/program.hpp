@@ -12,7 +12,10 @@ namespace pk
 class program
 {
 public:
-    program(const std::string &vertex_filename, const std::string &geometry_filename, const std::string &fragment_filename);
+    program(
+        const std::string &vertex_filename,
+        const std::string &geometry_filename,
+        const std::string &fragment_filename);
     ~program();
 
     void bind() const;

@@ -12,7 +12,6 @@ struct water
     glm::vec2 scale;
 
     water(glm::vec3 position, glm::vec2 scale);
-    ~water();
 };
 } // namespace pk
 

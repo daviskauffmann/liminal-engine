@@ -8,10 +8,9 @@ constexpr int vertex_count = 128;
 namespace pk
 {
 terrain::terrain(int grid_x, int grid_z, pk::material *material)
-    : material(material)
+    : position(glm::vec3(grid_x * size, 0, grid_z * size)),
+      material(material)
 {
-    this->position = glm::vec3(grid_x * size, 0, grid_z * size);
-
     std::vector<pk::vertex> vertices;
     std::vector<unsigned int> indices;
     for (int i = 0; i < vertex_count; i++)
@@ -56,10 +55,8 @@ terrain::~terrain()
 
 glm::mat4 terrain::calc_model() const
 {
-    glm::mat4 model(1.0f);
-
+    glm::mat4 model = glm::identity<glm::mat4>();
     model = glm::translate(model, this->position);
-
     return model;
 }
 } // namespace pk

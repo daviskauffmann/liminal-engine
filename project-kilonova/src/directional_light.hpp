@@ -14,8 +14,8 @@ struct directional_light
     glm::vec3 color;
     glm::mat4 projection;
     glm::mat4 view;
-    GLuint depthmap_fbo_id;
-    GLuint depthmap_texture_id;
+    GLuint depth_map_fbo_id;
+    GLuint depth_map_texture_id;
 
     directional_light(
         glm::vec3 direction,

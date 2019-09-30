@@ -8,15 +8,11 @@ spot_light::spot_light(
     glm::vec3 color,
     float inner_cutoff,
     float outer_cutoff)
-{
-    this->position = position;
-    this->direction = direction;
-    this->color = color;
-    this->inner_cutoff = inner_cutoff;
-    this->outer_cutoff = outer_cutoff;
-}
-
-spot_light::~spot_light()
+    : position(position),
+      direction(direction),
+      color(color),
+      inner_cutoff(inner_cutoff),
+      outer_cutoff(outer_cutoff)
 {
 }
 } // namespace pk

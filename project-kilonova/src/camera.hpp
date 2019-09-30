@@ -14,8 +14,12 @@ struct camera
     float roll;
     float fov;
 
-    camera(glm::vec3 position, float pitch, float yaw, float roll, float fov);
-    ~camera();
+    camera(
+        glm::vec3 position,
+        float pitch,
+        float yaw,
+        float roll,
+        float fov);
 
     glm::vec3 calc_front() const;
     glm::vec3 calc_up() const;

@@ -720,7 +720,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         directional_light->view = directional_light->calc_view(camera->position);
 
         // render sun shadows to depthmap
-        glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depthmap_fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
 
         glViewport(0, 0, 4096, 4096);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -916,7 +916,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                     this->forward_program->set_mat4("light.view", directional_light->view);
 
                     glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, directional_light->depthmap_texture_id);
+                    glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
 
                     object->mesh->draw();
                 }

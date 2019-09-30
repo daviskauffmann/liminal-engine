@@ -10,32 +10,22 @@ sprite::sprite(
     glm::vec2 position,
     float rotation,
     glm::vec2 scale)
-{
-    this->color = color;
-    this->color_map = color_map;
-    this->position = position;
-    this->rotation = rotation;
-    this->scale = scale;
-}
-
-sprite::~sprite()
+    : color(color),
+      color_map(color_map),
+      position(position),
+      rotation(rotation),
+      scale(scale)
 {
 }
 
 glm::mat4 sprite::calc_model() const
 {
-    glm::mat4 model(1.0f);
-
+    glm::mat4 model = glm::identity<glm::mat4>();
     model = glm::translate(model, glm::vec3(this->position.x, this->position.y, 0.0f));
-    //model = glm::rotate(model, );
+    model = glm::translate(model, glm::vec3(this->scale.x * 0.5f, this->scale.y * 0.5f, 0.0f));
+    model = glm::rotate(model, this->rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::translate(model, glm::vec3(this->scale.x * -0.5f, this->scale.y * -0.5f, 0.0f));
     model = glm::scale(model, glm::vec3(this->scale.x, this->scale.y, 1.0f));
-
     return model;
-
-    //glm_translate(model, this->position);
-    //glm_translate(model, vec3{ this->scale[0] * 0.5f, this->scale[1] * 0.5f, 0.0f });
-    //glm_rotate(model, this->rotation, vec3{ 0.0f, 0.0f, 1.0f });
-    //glm_translate(model, vec3{ this->scale[0] * -0.5f, this->scale[1] * -0.5f, 0.0f });
-    //glm_scale(model, this->scale);
 }
 } // namespace pk

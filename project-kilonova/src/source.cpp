@@ -32,10 +32,8 @@ void source::set_pitch(float pitch) const
 void source::set_position(glm::vec3 position) const
 {
     glm::vec3 velocity = this->position - position;
-
     alSourcefv(this->source_id, AL_POSITION, glm::value_ptr(position));
     alSourcefv(this->source_id, AL_VELOCITY, glm::value_ptr(velocity));
-
     this->position = position;
 }
 
@@ -43,7 +41,6 @@ bool source::is_playing() const
 {
     ALint value;
     alGetSourcei(this->source_id, AL_SOURCE_STATE, &value);
-
     return value == AL_PLAYING;
 }
 

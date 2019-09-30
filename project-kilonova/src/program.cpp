@@ -8,64 +8,51 @@
 
 namespace pk
 {
-program::program(const std::string &vertex_filename, const std::string &geometry_filename, const std::string &fragment_filename)
+program::program(
+    const std::string &vertex_filename,
+    const std::string &geometry_filename,
+    const std::string &fragment_filename)
 {
     this->program_id = glCreateProgram();
-
-    // compile shaders and attach to program
     GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
     glAttachShader(this->program_id, vertex_shader);
-
     GLuint geometry_shader = 0;
     if (!geometry_filename.empty())
     {
         geometry_shader = create_shader(GL_GEOMETRY_SHADER, geometry_filename);
         glAttachShader(this->program_id, geometry_shader);
     }
-
     GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
     glAttachShader(this->program_id, fragment_shader);
-
-    // link program
     glLinkProgram(this->program_id);
     {
         GLint success;
         glGetProgramiv(this->program_id, GL_LINK_STATUS, &success);
-
         if (!success)
         {
             GLchar info_log[1024];
             glGetProgramInfoLog(this->program_id, sizeof(info_log), nullptr, info_log);
-
             std::cout << "Error: Program linking failed\n"
                       << info_log << std::endl;
         }
     }
-
-    // detach and delete shaders, we're done with them now
     glDetachShader(this->program_id, vertex_shader);
     glDeleteShader(vertex_shader);
-
     if (geometry_shader)
     {
         glDetachShader(this->program_id, geometry_shader);
         glDeleteShader(geometry_shader);
     }
-
     glDetachShader(this->program_id, fragment_shader);
     glDeleteShader(fragment_shader);
-
-    // check for errors
     glValidateProgram(this->program_id);
     {
         GLint success;
         glGetProgramiv(this->program_id, GL_VALIDATE_STATUS, &success);
-
         if (!success)
         {
             GLchar info_log[1024];
             glGetProgramInfoLog(this->program_id, sizeof(info_log), nullptr, info_log);
-
             std::cout << "Error: Program validation failed\n"
                       << info_log << std::endl;
         }
@@ -90,18 +77,15 @@ void program::unbind(void) const
 GLint program::get_location(const std::string &name) const
 {
     GLint location;
-
     if (this->uniforms.find(name) == this->uniforms.end())
     {
         location = glGetUniformLocation(this->program_id, name.c_str());
-
         this->uniforms[name] = location;
     }
     else
     {
         location = this->uniforms[name];
     }
-
     return location;
 }
 
@@ -137,40 +121,25 @@ void program::set_mat4(const std::string &name, glm::mat4 mat4) const
 
 GLuint program::create_shader(GLenum type, const std::string &filename) const
 {
-    // create shader
     GLuint shader = glCreateShader(type);
-
-    // read file
     std::ifstream file;
     file.open(filename);
-
     std::stringstream stream;
     stream << file.rdbuf();
-
     file.close();
-
     std::string source_str = stream.str();
     const char *source_c_str = source_str.c_str();
-
-    // set shader source
     glShaderSource(shader, 1, &source_c_str, nullptr);
-
-    // compile the shader
     glCompileShader(shader);
-
-    // check errors
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
     if (!success)
     {
         GLchar info_log[1024];
         glGetShaderInfoLog(shader, sizeof(info_log), nullptr, info_log);
-
         std::cout << "Error: Shader compilation failed\n"
                   << info_log << std::endl;
     }
-
     return shader;
 }
 } // namespace pk

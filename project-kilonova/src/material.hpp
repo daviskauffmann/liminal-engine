@@ -21,14 +21,6 @@ struct material
         pk::texture *metallic_map,
         pk::texture *roughness_map,
         pk::texture *ao_map);
-    ~material();
-
-    void bind(
-        unsigned int albedo_map_index,
-        unsigned int normal_map_index,
-        unsigned int metallic_map_index,
-        unsigned int roughness_map_index,
-        unsigned int ao_map_index) const;
 };
 } // namespace pk
 

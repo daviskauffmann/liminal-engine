@@ -23,7 +23,6 @@ struct sprite
         glm::vec2 position,
         float rotation,
         glm::vec2 scale);
-    ~sprite();
 
     glm::mat4 calc_model() const;
 };
