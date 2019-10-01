@@ -27,6 +27,7 @@
 #include "water.hpp"
 
 constexpr auto window_title = "Project Kilonova";
+constexpr auto version_str = "v0.0.1";
 
 constexpr auto fps_cap = 300;
 constexpr auto frame_delay = 1000 / fps_cap;
@@ -40,6 +41,11 @@ int main(int argc, char *argv[])
         {
             std::cout << "Options:" << std::endl;
             std::cout << "  -h, --help\tPrint this message" << std::endl;
+            std::cout << "  -v, --version\tPrint version information" << std::endl;
+        }
+        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
+        {
+            std::cout << version_str << std::endl;
         }
     }
 
@@ -284,7 +290,7 @@ int main(int argc, char *argv[])
             fps_update_timer = 0.0f;
 
             char title[256];
-            sprintf_s(title, sizeof(title), "%s - FPS: %d", window_title, fps);
+            sprintf_s(title, sizeof(title), "%s %s - FPS: %d", window_title, version_str, fps);
             SDL_SetWindowTitle(window, title);
         }
 
