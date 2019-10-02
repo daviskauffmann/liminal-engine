@@ -18,15 +18,11 @@ renderer::renderer(int render_width, int render_height)
     this->render_width = render_width;
     this->render_height = render_height;
 
-    // init GLEW
+    GLenum glewError = glewInit();
+    if (glewError != GLEW_OK)
     {
-        GLenum glewError = glewInit();
-
-        if (glewError != GLEW_OK)
-        {
-            std::cout << "Error: Couldn't initialize GLEW\n"
-                      << glewGetErrorString(glewError) << std::endl;
-        }
+        std::cout << "Error: Couldn't initialize GLEW\n"
+                  << glewGetErrorString(glewError) << std::endl;
     }
 
     std::cout << "GLEW " << glewGetString(GLEW_VERSION) << std::endl;
@@ -35,64 +31,49 @@ renderer::renderer(int render_width, int render_height)
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    // setup opengl
     glViewport(0, 0, render_width, render_height);
     glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
 
-    // create programs
     this->depth_program = new pk::program(
-        "assets/shaders/depth.vert",
-        "",
-        "assets/shaders/depth.frag");
+        "assets/shaders/depth.vs",
+        "assets/shaders/depth.fs");
     this->depth_cube_program = new pk::program(
-        "assets/shaders/depth_cube.vert",
-        "assets/shaders/depth_cube.geom",
-        "assets/shaders/depth_cube.frag");
+        "assets/shaders/depth_cube.vs",
+        "assets/shaders/depth_cube.gs",
+        "assets/shaders/depth_cube.fs");
     this->color_program = new pk::program(
-        "assets/shaders/color.vert",
-        "",
-        "assets/shaders/color.frag");
+        "assets/shaders/color.vs",
+        "assets/shaders/color.fs");
     this->texture_program = new pk::program(
-        "assets/shaders/texture.vert",
-        "",
-        "assets/shaders/texture.frag");
+        "assets/shaders/texture.vs",
+        "assets/shaders/texture.fs");
     this->forward_program = new pk::program(
-        "assets/shaders/forward.vert",
-        "",
-        "assets/shaders/forward.frag");
+        "assets/shaders/forward.vs",
+        "assets/shaders/forward.fs");
     this->geometry_program = new pk::program(
-        "assets/shaders/geometry.vert",
-        "",
-        "assets/shaders/geometry.frag");
+        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry.fs");
     this->skybox_program = new pk::program(
-        "assets/shaders/skybox.vert",
-        "",
-        "assets/shaders/skybox.frag");
+        "assets/shaders/skybox.vs",
+        "assets/shaders/skybox.fs");
     this->water_program = new pk::program(
-        "assets/shaders/water.vert",
-        "",
-        "assets/shaders/water.frag");
+        "assets/shaders/water.vs",
+        "assets/shaders/water.fs");
     this->terrain_program = new pk::program(
-        "assets/shaders/terrain.vert",
-        "",
-        "assets/shaders/terrain.frag");
+        "assets/shaders/terrain.vs",
+        "assets/shaders/terrain.fs");
     this->sprite_program = new pk::program(
-        "assets/shaders/sprite.vert",
-        "",
-        "assets/shaders/sprite.frag");
+        "assets/shaders/sprite.vs",
+        "assets/shaders/sprite.fs");
     this->screen_program = new pk::program(
-        "assets/shaders/screen.vert",
-        "",
-        "assets/shaders/screen.frag");
+        "assets/shaders/screen.vs",
+        "assets/shaders/screen.fs");
 
-    // setup shader samplers
     this->texture_program->bind();
     this->texture_program->set_int("color_map", 0);
     this->texture_program->unbind();
-
     this->forward_program->bind();
     this->forward_program->set_int("material.albedo_map", 0);
     this->forward_program->set_int("material.normal_map", 1);
@@ -102,43 +83,35 @@ renderer::renderer(int render_width, int render_height)
     this->forward_program->set_int("light.depth_map", 5);
     this->forward_program->set_int("light.depth_cubemap", 6);
     this->forward_program->unbind();
-
     this->geometry_program->bind();
     this->geometry_program->set_int("material.diffuse_map", 0);
     this->geometry_program->set_int("material.specular_map", 1);
     this->geometry_program->set_int("material.normal_map", 2);
     this->geometry_program->set_int("material.emission_map", 3);
     this->geometry_program->unbind();
-
     this->skybox_program->bind();
     this->skybox_program->set_int("skybox.color_map", 0);
     this->skybox_program->unbind();
-
     this->water_program->bind();
     this->water_program->set_int("water.reflection_map", 0);
     this->water_program->set_int("water.refraction_map", 1);
     this->water_program->set_int("water.dudv_map", 2);
     this->water_program->set_int("water.normal_map", 3);
     this->water_program->unbind();
-
     this->terrain_program->bind();
     this->terrain_program->set_int("material.albedo_map", 0);
     this->terrain_program->unbind();
-
     this->sprite_program->bind();
     this->sprite_program->set_int("sprite.color_map", 0);
     this->sprite_program->unbind();
-
     this->screen_program->bind();
     this->screen_program->set_int("screen.color_map", 0);
     this->screen_program->unbind();
 
-    // setup screen fbo
     glGenFramebuffers(1, &this->screen_fbo_id);
-
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->screen_fbo_id);
     glGenTextures(1, &this->screen_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->screen_texture_id);
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -149,28 +122,19 @@ renderer::renderer(int render_width, int render_height)
         GL_RGB,
         GL_UNSIGNED_BYTE,
         nullptr);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
     glBindTexture(GL_TEXTURE_2D, 0);
-
     glGenRenderbuffers(1, &this->screen_rbo_id);
     glBindRenderbuffer(GL_RENDERBUFFER, this->screen_rbo_id);
-
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH24_STENCIL8,
         render_width,
         render_height);
-
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->screen_fbo_id);
-
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
@@ -182,12 +146,10 @@ renderer::renderer(int render_width, int render_height)
         GL_DEPTH_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER,
         this->screen_rbo_id);
-
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete screen framebuffer" << std::endl;
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup geometry fbo
@@ -610,6 +572,21 @@ renderer::renderer(int render_width, int render_height)
 
 renderer::~renderer()
 {
+    delete this->depth_program;
+    delete this->depth_cube_program;
+    delete this->color_program;
+    delete this->texture_program;
+    delete this->forward_program;
+    delete this->geometry_program;
+    delete this->skybox_program;
+    delete this->water_program;
+    delete this->terrain_program;
+    delete this->sprite_program;
+    delete this->screen_program;
+
+    glDeleteFramebuffers(1, &this->screen_fbo_id);
+    glDeleteTextures(1, &this->screen_texture_id);
+    glDeleteRenderbuffers(1, &this->screen_rbo_id);
 }
 
 void renderer::resize(int render_width, int render_height)

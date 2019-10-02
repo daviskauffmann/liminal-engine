@@ -59,6 +59,13 @@ program::program(
     }
 }
 
+program::program(
+    const std::string &vertex_filename,
+    const std::string &fragment_filename)
+    : program(vertex_filename, "", fragment_filename)
+{
+}
+
 program::~program()
 {
     glDeleteProgram(this->program_id);

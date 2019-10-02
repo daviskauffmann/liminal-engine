@@ -27,6 +27,8 @@
 #include "water.hpp"
 
 constexpr auto window_title = "Project Kilonova";
+constexpr int window_width = 1280;
+constexpr int window_height = 720;
 constexpr auto version_str = "v0.0.1";
 
 constexpr auto fps_cap = 300;
@@ -55,9 +57,6 @@ int main(int argc, char *argv[])
     Mix_Init(0);
     TTF_Init();
     SDLNet_Init();
-
-    int window_width = 1280;
-    int window_height = 720;
 
     // create window
     SDL_Window *window = SDL_CreateWindow(
@@ -356,7 +355,6 @@ int main(int argc, char *argv[])
                     // mouselook
                     main_camera.pitch -= event.motion.yrel * 0.1f;
                     main_camera.yaw += event.motion.xrel * 0.1f;
-
                     if (main_camera.pitch > 89.0f)
                     {
                         main_camera.pitch = 89.0f;
@@ -396,13 +394,11 @@ int main(int argc, char *argv[])
                 {
                 case SDL_WINDOWEVENT_RESIZED:
                 {
-                    window_width = event.window.data1;
-                    window_height = event.window.data2;
-
-                    SDL_SetWindowSize(window, window_width, window_height);
-                    renderer.resize(window_width, window_height);
-
-                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
+                    int width = event.window.data1;
+                    int height = event.window.data2;
+                    SDL_SetWindowSize(window, width, height);
+                    renderer.resize(width, height);
+                    std::cout << "Window resized to " << width << "x" << height << std::endl;
                 }
                 break;
                 }
@@ -535,7 +531,9 @@ int main(int argc, char *argv[])
         // renderer.add_sprite(&grass_sprite);
 
         // render everything
-        renderer.draw(&main_camera, (float)window_width / (float)window_height, SDL_GetTicks(), delta_time);
+        int width, height;
+        SDL_GetWindowSize(window, &width, &height);
+        renderer.draw(&main_camera, (float)width / (float)height, SDL_GetTicks(), delta_time);
 
         // display the window
         SDL_GL_SwapWindow(window);
