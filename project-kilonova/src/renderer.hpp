@@ -60,7 +60,6 @@ private:
     GLuint geometry_fbo_id;
     GLuint geometry_position_texture_id;
     GLuint geometry_normal_texture_id;
-    GLuint geometry_albedo_specular_texture_id;
     GLuint geometry_rbo_id;
 
     GLuint water_reflection_fbo_id;

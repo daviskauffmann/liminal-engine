@@ -10,10 +10,6 @@ point_light::point_light(
     : position(position),
       color(color)
 {
-    glGenFramebuffers(1, &this->depth_cubemap_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->depth_cubemap_fbo_id);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
     glGenTextures(1, &this->depth_cubemap_texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, this->depth_cubemap_texture_id);
     for (unsigned int i = 0; i < 6; i++)
@@ -34,12 +30,17 @@ point_light::point_light(
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    glGenFramebuffers(1, &this->depth_cubemap_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->depth_cubemap_fbo_id);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
     glFramebufferTexture(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         this->depth_cubemap_texture_id,
         0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete depth cubemap framebuffer" << std::endl;

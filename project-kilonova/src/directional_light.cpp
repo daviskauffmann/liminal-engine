@@ -12,10 +12,6 @@ directional_light::directional_light(
     : direction(direction),
       color(color)
 {
-    glGenFramebuffers(1, &this->depth_map_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->depth_map_fbo_id);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
     glGenTextures(1, &this->depth_map_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->depth_map_texture_id);
     glTexImage2D(
@@ -34,13 +30,18 @@ directional_light::directional_light(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     GLfloat border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenFramebuffers(1, &this->depth_map_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->depth_map_fbo_id);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
         this->depth_map_texture_id,
         0);
-    glBindTexture(GL_TEXTURE_2D, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete depth map framebuffer" << std::endl;

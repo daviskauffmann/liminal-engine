@@ -18,6 +18,7 @@ renderer::renderer(int render_width, int render_height)
     this->render_width = render_width;
     this->render_height = render_height;
 
+    // init GLEW
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK)
     {
@@ -31,11 +32,13 @@ renderer::renderer(int render_width, int render_height)
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
+    // setup OpenGL
     glViewport(0, 0, render_width, render_height);
     glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
 
+    // create shader programs
     this->depth_program = new pk::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
@@ -71,6 +74,7 @@ renderer::renderer(int render_width, int render_height)
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
 
+    // setup shader samplers
     this->texture_program->bind();
     this->texture_program->set_int("color_map", 0);
     this->texture_program->unbind();
@@ -108,8 +112,7 @@ renderer::renderer(int render_width, int render_height)
     this->screen_program->set_int("screen.color_map", 0);
     this->screen_program->unbind();
 
-    glGenFramebuffers(1, &this->screen_fbo_id);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->screen_fbo_id);
+    // setup screen fbo
     glGenTextures(1, &this->screen_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->screen_texture_id);
     glTexImage2D(
@@ -127,6 +130,7 @@ renderer::renderer(int render_width, int render_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
+
     glGenRenderbuffers(1, &this->screen_rbo_id);
     glBindRenderbuffer(GL_RENDERBUFFER, this->screen_rbo_id);
     glRenderbufferStorage(
@@ -135,6 +139,9 @@ renderer::renderer(int render_width, int render_height)
         render_width,
         render_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glGenFramebuffers(1, &this->screen_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->screen_fbo_id);
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
@@ -146,6 +153,7 @@ renderer::renderer(int render_width, int render_height)
         GL_DEPTH_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER,
         this->screen_rbo_id);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete screen framebuffer" << std::endl;
@@ -153,12 +161,8 @@ renderer::renderer(int render_width, int render_height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup geometry fbo
-    glGenFramebuffers(1, &this->geometry_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->geometry_fbo_id);
-
     glGenTextures(1, &this->geometry_position_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->geometry_position_texture_id);
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -169,103 +173,67 @@ renderer::renderer(int render_width, int render_height)
         GL_RGB,
         GL_FLOAT,
         nullptr);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    glGenTextures(1, &this->geometry_normal_texture_id);
+    glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB16F,
+        render_width,
+        render_height,
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenRenderbuffers(1, &this->geometry_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, this->geometry_rbo_id);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH_COMPONENT,
+        render_width,
+        render_height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glGenFramebuffers(1, &this->geometry_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->geometry_fbo_id);
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
         this->geometry_position_texture_id,
         0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenTextures(1, &this->geometry_normal_texture_id);
-    glBindTexture(GL_TEXTURE_2D, this->geometry_normal_texture_id);
-
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGB16F,
-        render_width,
-        render_height,
-        0,
-        GL_RGB,
-        GL_FLOAT,
-        nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT1,
         GL_TEXTURE_2D,
         this->geometry_normal_texture_id,
         0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenTextures(1, &this->geometry_albedo_specular_texture_id);
-    glBindTexture(GL_TEXTURE_2D, this->geometry_albedo_specular_texture_id);
-
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA8,
-        render_width,
-        render_height,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT2,
-        GL_TEXTURE_2D,
-        this->geometry_albedo_specular_texture_id,
-        0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    GLenum geometry_fbo_attachments[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(sizeof(geometry_fbo_attachments) / sizeof(GLenum), geometry_fbo_attachments);
-
-    glGenRenderbuffers(1, &this->geometry_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, this->geometry_rbo_id);
-
-    glRenderbufferStorage(
-        GL_RENDERBUFFER,
-        GL_DEPTH_COMPONENT,
-        render_width,
-        render_height);
-
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
         this->geometry_rbo_id);
-
+    GLenum geometry_color_attachments[] = {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(sizeof(geometry_color_attachments) / sizeof(GLenum), geometry_color_attachments);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup water reflection fbo
-    glGenFramebuffers(1, &this->water_reflection_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->water_reflection_fbo_id);
-
     glGenTextures(1, &this->water_reflection_color_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->water_reflection_color_texture_id);
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -276,79 +244,64 @@ renderer::renderer(int render_width, int render_height)
         GL_RGB,
         GL_UNSIGNED_BYTE,
         nullptr);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    glGenTextures(1, &this->water_reflection_depth_texture_id);
+    glBindTexture(GL_TEXTURE_2D, this->water_reflection_depth_texture_id);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_DEPTH_COMPONENT32,
+        this->render_height,
+        this->render_height,
+        0,
+        GL_DEPTH_COMPONENT,
+        GL_FLOAT,
+        nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenRenderbuffers(1, &this->water_reflection_depth_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, this->water_reflection_depth_rbo_id);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH_COMPONENT,
+        this->render_width,
+        this->render_height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glGenFramebuffers(1, &this->water_reflection_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->water_reflection_fbo_id);
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
         this->water_reflection_color_texture_id,
         0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    GLenum water_reflection_fbo_attachments[] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(sizeof(water_reflection_fbo_attachments) / sizeof(GLenum), water_reflection_fbo_attachments);
-
-    glGenTextures(1, &this->water_reflection_depth_texture_id);
-    glBindTexture(GL_TEXTURE_2D, this->water_reflection_depth_texture_id);
-
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_DEPTH_COMPONENT32,
-        this->render_height,
-        this->render_height,
-        0,
-        GL_DEPTH_COMPONENT,
-        GL_FLOAT,
-        nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
         this->water_reflection_depth_texture_id,
         0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenRenderbuffers(1, &this->water_reflection_depth_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, this->water_reflection_depth_rbo_id);
-
-    glRenderbufferStorage(
-        GL_RENDERBUFFER,
-        GL_DEPTH_COMPONENT,
-        this->render_width,
-        this->render_height);
-
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
         this->water_reflection_depth_rbo_id);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup water refraction fbo
-    glGenFramebuffers(1, &this->water_refraction_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->water_refraction_fbo_id);
-
     glGenTextures(1, &this->water_refraction_color_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->water_refraction_color_texture_id);
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -359,25 +312,12 @@ renderer::renderer(int render_width, int render_height)
         GL_RGB,
         GL_UNSIGNED_BYTE,
         nullptr);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        this->water_refraction_color_texture_id,
-        0);
-
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    GLenum water_refraction_fbo_attachments[] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(sizeof(water_refraction_fbo_attachments) / sizeof(GLenum), water_refraction_fbo_attachments);
 
     glGenTextures(1, &this->water_refraction_depth_texture_id);
     glBindTexture(GL_TEXTURE_2D, this->water_refraction_depth_texture_id);
-
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -388,41 +328,43 @@ renderer::renderer(int render_width, int render_height)
         GL_DEPTH_COMPONENT,
         GL_FLOAT,
         nullptr);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    glGenRenderbuffers(1, &this->water_refraction_depth_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, this->water_refraction_depth_rbo_id);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH_COMPONENT,
+        this->render_width,
+        this->render_height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glGenFramebuffers(1, &this->water_refraction_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->water_refraction_fbo_id);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        this->water_refraction_color_texture_id,
+        0);
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
         this->water_refraction_depth_texture_id,
         0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenRenderbuffers(1, &this->water_refraction_depth_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, this->water_refraction_depth_rbo_id);
-
-    glRenderbufferStorage(
-        GL_RENDERBUFFER,
-        GL_DEPTH_COMPONENT,
-        this->render_width,
-        this->render_height);
-
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
         this->water_refraction_depth_rbo_id);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cout << "Error: Couldn't complete water refraction framebuffer" << std::endl;
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // create water mesh
@@ -434,17 +376,13 @@ renderer::renderer(int render_width, int render_height)
          -1.0f, +1.0f,
          +1.0f, +1.0f};
     this->water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(float));
-
     glGenVertexArrays(1, &this->water_vao_id);
-    glGenBuffers(1, &this->water_vbo_id);
-
     glBindVertexArray(this->water_vao_id);
-
+    glGenBuffers(1, &this->water_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, this->water_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, this->water_vertices_size, water_vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
     glEnableVertexAttribArray(0);
-
     glBindVertexArray(0);
 
     // create skybox mesh
@@ -491,17 +429,13 @@ renderer::renderer(int render_width, int render_height)
          -1.0f, -1.0f, +1.0f,
          +1.0f, -1.0f, +1.0f};
     this->skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(float));
-
     glGenVertexArrays(1, &this->skybox_vao_id);
-    glGenBuffers(1, &this->skybox_vbo_id);
-
     glBindVertexArray(this->skybox_vao_id);
-
+    glGenBuffers(1, &this->skybox_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, this->skybox_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, this->skybox_vertices_size, skybox_vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
     glEnableVertexAttribArray(0);
-
     glBindVertexArray(0);
 
     // create sprite mesh
@@ -514,19 +448,15 @@ renderer::renderer(int render_width, int render_height)
          +1.0f, +1.0f, +1.0f, +1.0f,
          +1.0f, +0.0f, +1.0f, +0.0f};
     this->sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(float));
-
     glGenVertexArrays(1, &this->sprite_vao_id);
-    glGenBuffers(1, &this->sprite_vbo_id);
-
     glBindVertexArray(this->sprite_vao_id);
-
+    glGenBuffers(1, &this->sprite_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, this->sprite_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, this->sprite_vertices_size, sprite_vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-
     glBindVertexArray(0);
 
     // create screen mesh
@@ -538,24 +468,19 @@ renderer::renderer(int render_width, int render_height)
          -1.0f, +1.0f, +0.0f, +1.0f,
          +1.0f, +1.0f, +1.0f, +1.0f};
     this->screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(float));
-
     glGenVertexArrays(1, &this->screen_vao_id);
-    glGenBuffers(1, &this->screen_vbo_id);
-
     glBindVertexArray(this->screen_vao_id);
-
+    glGenBuffers(1, &this->screen_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, this->screen_vbo_id);
     glBufferData(GL_ARRAY_BUFFER, this->screen_vertices_size, screen_vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-
     glBindVertexArray(0);
 
     // create water dudv texture
     this->water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
-
     if (!this->water_dudv_texture)
     {
         std::cout << "Error: Couldn't load water dudv texture" << std::endl;
@@ -563,7 +488,6 @@ renderer::renderer(int render_width, int render_height)
 
     // create water normal texture
     this->water_normal_texture = new pk::texture("assets/images/water_normal.png");
-
     if (!this->water_normal_texture)
     {
         std::cout << "Error: Couldn't load water normal texture" << std::endl;
@@ -584,9 +508,39 @@ renderer::~renderer()
     delete this->sprite_program;
     delete this->screen_program;
 
-    glDeleteFramebuffers(1, &this->screen_fbo_id);
     glDeleteTextures(1, &this->screen_texture_id);
     glDeleteRenderbuffers(1, &this->screen_rbo_id);
+    glDeleteFramebuffers(1, &this->screen_fbo_id);
+
+    glDeleteTextures(1, &this->geometry_position_texture_id);
+    glDeleteTextures(1, &this->geometry_normal_texture_id);
+    glDeleteRenderbuffers(1, &this->geometry_rbo_id);
+    glDeleteFramebuffers(1, &this->geometry_fbo_id);
+
+    glDeleteTextures(1, &this->water_reflection_color_texture_id);
+    glDeleteTextures(1, &this->water_reflection_depth_texture_id);
+    glDeleteRenderbuffers(1, &this->water_reflection_depth_rbo_id);
+    glDeleteFramebuffers(1, &this->water_reflection_fbo_id);
+
+    glDeleteTextures(1, &this->water_refraction_color_texture_id);
+    glDeleteTextures(1, &this->water_refraction_depth_texture_id);
+    glDeleteRenderbuffers(1, &this->water_refraction_depth_rbo_id);
+    glDeleteFramebuffers(1, &this->water_refraction_fbo_id);
+
+    glDeleteBuffers(1, &this->water_vbo_id);
+    glDeleteVertexArrays(1, &this->water_vao_id);
+
+    glDeleteBuffers(1, &this->skybox_vbo_id);
+    glDeleteVertexArrays(1, &this->skybox_vao_id);
+
+    glDeleteBuffers(1, &this->sprite_vbo_id);
+    glDeleteVertexArrays(1, &this->sprite_vao_id);
+
+    glDeleteBuffers(1, &this->screen_vbo_id);
+    glDeleteVertexArrays(1, &this->screen_vao_id);
+
+    delete this->water_dudv_texture;
+    delete this->water_normal_texture;
 }
 
 void renderer::resize(int render_width, int render_height)
