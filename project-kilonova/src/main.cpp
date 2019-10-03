@@ -136,11 +136,11 @@ int main(int argc, char *argv[])
          33, 34, 35});
 
     // create textures
-    pk::texture iron_albedo("assets/images/iron_albedo.png");
-    pk::texture iron_normal("assets/images/iron_normal.png");
-    pk::texture iron_metallic("assets/images/iron_metallic.png");
-    pk::texture iron_roughness("assets/images/iron_roughness.png");
-    pk::texture iron_ao("assets/images/iron_ao.png");
+    pk::texture iron_albedo_texture("assets/images/iron_albedo.png");
+    pk::texture iron_normal_texture("assets/images/iron_normal.png");
+    pk::texture iron_metallic_texture("assets/images/iron_metallic.png");
+    pk::texture iron_roughness_texture("assets/images/iron_roughness.png");
+    pk::texture iron_ao_texture("assets/images/iron_ao.png");
 
     // create cubemaps
     pk::cubemap skybox_cubemap(
@@ -157,11 +157,11 @@ int main(int argc, char *argv[])
 
     // create materials
     pk::material default_material(
-        &iron_albedo,
-        &iron_normal,
-        &iron_metallic,
-        &iron_roughness,
-        &iron_ao);
+        &iron_albedo_texture,
+        &iron_normal_texture,
+        &iron_metallic_texture,
+        &iron_roughness_texture,
+        &iron_ao_texture);
 
     // create objects
     pk::object floor_object(
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
     // create sprites
     pk::sprite grass_sprite(
         glm::vec3(1.0f, 1.0f, 1.0f),
-        &iron_albedo,
+        &iron_albedo_texture,
         glm::vec2(0.0f, 0.0f),
         0.0f,
         glm::vec2(1.0f, 1.0f));
@@ -283,13 +283,11 @@ int main(int argc, char *argv[])
 
         // update window title
         fps_update_timer += delta_time;
-
         if (fps_update_timer > 0.25f)
         {
             fps_update_timer = 0.0f;
-
             char title[256];
-            sprintf_s(title, sizeof(title), "%s %s - FPS: %d", window_title, version_str, fps);
+            sprintf(title, "%s %s - FPS: %d", window_title, version_str, fps);
             SDL_SetWindowTitle(window, title);
         }
 
@@ -541,7 +539,6 @@ int main(int argc, char *argv[])
         // apply fps cap
         unsigned int frame_end = SDL_GetTicks();
         unsigned int frame_time = frame_end - frame_start;
-
         if (frame_delay > frame_time)
         {
             SDL_Delay(frame_delay - frame_time);
