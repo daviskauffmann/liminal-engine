@@ -18,7 +18,6 @@ renderer::renderer(int render_width, int render_height)
     this->render_width = render_width;
     this->render_height = render_height;
 
-    // init GLEW
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK)
     {
@@ -32,13 +31,11 @@ renderer::renderer(int render_width, int render_height)
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    // setup OpenGL
     glViewport(0, 0, render_width, render_height);
     glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
 
-    // create shader programs
     this->depth_program = new pk::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
@@ -74,10 +71,10 @@ renderer::renderer(int render_width, int render_height)
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
 
-    // setup shader samplers
     this->texture_program->bind();
     this->texture_program->set_int("color_map", 0);
     this->texture_program->unbind();
+
     this->forward_program->bind();
     this->forward_program->set_int("material.albedo_map", 0);
     this->forward_program->set_int("material.normal_map", 1);
@@ -87,27 +84,33 @@ renderer::renderer(int render_width, int render_height)
     this->forward_program->set_int("light.depth_map", 5);
     this->forward_program->set_int("light.depth_cubemap", 6);
     this->forward_program->unbind();
+
     this->geometry_program->bind();
     this->geometry_program->set_int("material.diffuse_map", 0);
     this->geometry_program->set_int("material.specular_map", 1);
     this->geometry_program->set_int("material.normal_map", 2);
     this->geometry_program->set_int("material.emission_map", 3);
     this->geometry_program->unbind();
+
     this->skybox_program->bind();
     this->skybox_program->set_int("skybox.color_map", 0);
     this->skybox_program->unbind();
+
     this->water_program->bind();
     this->water_program->set_int("water.reflection_map", 0);
     this->water_program->set_int("water.refraction_map", 1);
     this->water_program->set_int("water.dudv_map", 2);
     this->water_program->set_int("water.normal_map", 3);
     this->water_program->unbind();
+
     this->terrain_program->bind();
     this->terrain_program->set_int("material.albedo_map", 0);
     this->terrain_program->unbind();
+
     this->sprite_program->bind();
     this->sprite_program->set_int("sprite.color_map", 0);
     this->sprite_program->unbind();
+
     this->screen_program->bind();
     this->screen_program->set_int("screen.color_map", 0);
     this->screen_program->unbind();
@@ -367,7 +370,6 @@ renderer::renderer(int render_width, int render_height)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // create water mesh
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
          -1.0f, +1.0f,
@@ -385,7 +387,6 @@ renderer::renderer(int render_width, int render_height)
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
-    // create skybox mesh
     std::vector<float> skybox_vertices =
         {-1.0f, +1.0f, -1.0f,
          -1.0f, -1.0f, -1.0f,
@@ -438,7 +439,6 @@ renderer::renderer(int render_width, int render_height)
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
-    // create sprite mesh
     std::vector<float> sprite_vertices =
         {+0.0f, +1.0f, +0.0f, +1.0f,
          +1.0f, +0.0f, +1.0f, +0.0f,
@@ -459,7 +459,6 @@ renderer::renderer(int render_width, int render_height)
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
-    // create screen mesh
     std::vector<float> screen_vertices =
         {-1.0f, -1.0f, +0.0f, +0.0f,
          -1.0f, +1.0f, +0.0f, +1.0f,
@@ -479,14 +478,12 @@ renderer::renderer(int render_width, int render_height)
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
-    // create water dudv texture
     this->water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
     if (!this->water_dudv_texture)
     {
         std::cout << "Error: Couldn't load water dudv texture" << std::endl;
     }
 
-    // create water normal texture
     this->water_normal_texture = new pk::texture("assets/images/water_normal.png");
     if (!this->water_normal_texture)
     {
@@ -594,29 +591,20 @@ void renderer::draw(pk::camera *camera, float aspect, unsigned int elapsed_time,
     if (!camera)
     {
         std::cout << "Error: Camera cannot be null" << std::endl;
-
         return;
     }
 
-    // render scene to the screen framebuffer
     this->render_scene(this->screen_fbo_id, camera, aspect, elapsed_time, glm::vec4(0.0f));
-
-    // render water
     if (this->waters.size() > 0)
     {
         render_waters(this->screen_fbo_id, camera, aspect, elapsed_time);
     }
-
-    // render sprites
     if (this->sprites.size() > 0)
     {
         render_sprites(this->screen_fbo_id, aspect);
     }
-
-    // render the screen framebuffer to the default framebuffer and apply post-processing
     render_screen(0);
 
-    // clear renderables
     this->objects.clear();
     this->directional_lights.clear();
     this->point_lights.clear();
@@ -628,57 +616,38 @@ void renderer::draw(pk::camera *camera, float aspect, unsigned int elapsed_time,
 
 void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane)
 {
-    // clear the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
     glViewport(0, 0, this->render_width, this->render_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // calculate camera projection matrix
     glm::mat4 camera_projection = camera->calc_projection(aspect);
-
-    // calculate camera view matrix
     glm::mat4 camera_view = camera->calc_view();
 
     for (auto &directional_light : this->directional_lights)
     {
-        // calculate sun projection matrix
         directional_light->projection = directional_light->calc_projection();
-
-        // calculate sun view matrix
         directional_light->view = directional_light->calc_view(camera->position);
 
-        // render sun shadows to depthmap
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
-
         glViewport(0, 0, 4096, 4096);
         glClear(GL_DEPTH_BUFFER_BIT);
-
         this->depth_program->bind();
-
         this->depth_program->set_mat4("projection", directional_light->projection);
         this->depth_program->set_mat4("view", directional_light->view);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->depth_program->set_mat4("object.model", object_model);
-
             object->mesh->draw();
         }
-
         this->depth_program->unbind();
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     for (auto &point_light : this->point_lights)
     {
         glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)4096 / (float)4096, 1.0f, 25.0f);
-
         std::vector<glm::mat4> shadow_matrices;
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -688,144 +657,95 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
-
         glViewport(0, 0, 512, 512);
         glClear(GL_DEPTH_BUFFER_BIT);
-
         this->depth_cube_program->bind();
-
         for (unsigned int i = 0; i < 6; i++)
         {
             this->depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
         }
-
         this->depth_cube_program->set_vec3("light.position", point_light->position);
-
         this->depth_cube_program->set_float("far_plane", 25.0f);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->depth_cube_program->set_mat4("object.model", object_model);
-
             object->mesh->draw();
         }
-
         this->depth_cube_program->unbind();
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     if (this->objects.size() > 0)
     {
 #if LIGHTING_MODE == LIGHTING_COLOR
-        // draw objects to the specified framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
         glViewport(0, 0, this->render_width, this->render_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->color_program->bind();
-
             this->color_program->set_mat4("camera.projection", camera_projection);
             this->color_program->set_mat4("camera.view", camera_view);
-
             this->color_program->set_mat4("object.model", object_model);
-
             this->color_program->set_vec4("clipping_plane", clipping_plane);
-
             this->color_program->set_vec3("color", object->material->color);
-
             object->mesh->draw();
-
             this->color_program->unbind();
         }
-
         glDisable(GL_CLIP_DISTANCE0);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_TEXTURE
-        // draw objects to the specified framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
         glViewport(0, 0, this->render_width, this->render_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->texture_program->bind();
-
             this->texture_program->set_mat4("camera.projection", camera_projection);
             this->texture_program->set_mat4("camera.view", camera_view);
-
             this->texture_program->set_mat4("object.model", object_model);
-
             this->texture_program->set_vec4("clipping_plane", clipping_plane);
-
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
-
             object->mesh->draw();
-
             this->texture_program->unbind();
         }
-
         glDisable(GL_CLIP_DISTANCE0);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_FORWARD
-        // draw objects to the specified framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
         glViewport(0, 0, this->render_width, this->render_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->color_program->bind();
-
             this->color_program->set_mat4("camera.projection", camera_projection);
             this->color_program->set_mat4("camera.view", camera_view);
-
             this->color_program->set_mat4("object.model", object_model);
-
             this->color_program->set_vec4("clipping_plane", clipping_plane);
-
             this->color_program->set_vec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
-
             object->mesh->draw();
-
             this->color_program->unbind();
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glDepthMask(GL_FALSE);
             glDepthFunc(GL_EQUAL);
-
             if (this->directional_lights.size() > 0)
             {
                 this->forward_program->bind();
-
                 this->forward_program->set_mat4("camera.projection", camera_projection);
                 this->forward_program->set_mat4("camera.view", camera_view);
                 this->forward_program->set_vec3("camera.position", camera->position);
-
                 this->forward_program->set_mat4("object.model", object_model);
-
                 this->forward_program->set_vec4("clipping_plane", clipping_plane);
-
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -836,39 +756,28 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
-
                 this->forward_program->set_int("light.type", 0);
-
                 for (auto &directional_light : this->directional_lights)
                 {
                     this->forward_program->set_vec3("light.direction", directional_light->direction);
                     this->forward_program->set_vec3("light.color", directional_light->color);
                     this->forward_program->set_mat4("light.projection", directional_light->projection);
                     this->forward_program->set_mat4("light.view", directional_light->view);
-
                     glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
-
                     object->mesh->draw();
                 }
-
                 this->forward_program->unbind();
             }
-
             if (this->point_lights.size() > 0)
             {
                 this->forward_program->bind();
-
                 this->forward_program->set_mat4("camera.projection", camera_projection);
                 this->forward_program->set_mat4("camera.view", camera_view);
                 this->forward_program->set_vec3("camera.position", camera->position);
-
                 this->forward_program->set_mat4("object.model", object_model);
-
                 this->forward_program->set_vec4("clipping_plane", clipping_plane);
-
                 this->forward_program->set_float("far_plane", 25.0f);
-
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -879,35 +788,25 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
-
                 this->forward_program->set_int("light.type", 1);
-
                 for (auto &point_light : this->point_lights)
                 {
                     this->forward_program->set_vec3("light.position", point_light->position);
                     this->forward_program->set_vec3("light.color", point_light->color);
-
                     glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, point_light->depth_cubemap_texture_id);
-
                     object->mesh->draw();
                 }
-
                 this->forward_program->unbind();
             }
-
             if (this->spot_lights.size() > 0)
             {
                 this->forward_program->bind();
-
                 this->forward_program->set_mat4("camera.projection", camera_projection);
                 this->forward_program->set_mat4("camera.view", camera_view);
                 this->forward_program->set_vec3("camera.position", camera->position);
-
                 this->forward_program->set_mat4("object.model", object_model);
-
                 this->forward_program->set_vec4("clipping_plane", clipping_plane);
-
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -918,9 +817,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
-
                 this->forward_program->set_int("light.type", 2);
-
                 for (auto &spot_light : this->spot_lights)
                 {
                     this->forward_program->set_vec3("light.position", spot_light->position);
@@ -928,46 +825,32 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                     this->forward_program->set_vec3("light.color", spot_light->color);
                     this->forward_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
                     this->forward_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
-
                     // glActiveTexture(GL_TEXTURE5);
                     // glBindTexture(GL_TEXTURE_2D, spot_light->depthmap_texture_id);
-
                     object->mesh->draw();
                 }
-
                 this->forward_program->unbind();
             }
-
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);
             glDisable(GL_BLEND);
         }
-
         glDisable(GL_CLIP_DISTANCE0);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_DEFERRED
-        // draw objects to the gbuffer
         glBindFramebuffer(GL_FRAMEBUFFER, this->geometry_fbo_id);
-
         glViewport(0, 0, this->render_width, this->render_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
-
         this->geometry_program->bind();
-
         this->geometry_program->set_mat4("camera.projection", camera_projection);
         this->geometry_program->set_mat4("camera.view", camera_view);
         this->geometry_program->set_vec3("camera.position", camera->position);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->geometry_program->set_mat4("object.model", object_model);
-
             this->geometry_program->set_vec4("clipping_plane", clipping_plane);
-
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE1);
@@ -978,57 +861,38 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
-
             object->mesh->draw();
         }
-
         this->geometry_program->unbind();
-
         glDisable(GL_CLIP_DISTANCE0);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // draw the gbuffer to the specified framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
         glViewport(0, 0, this->render_width, this->render_height);
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
-
         for (auto &object : this->objects)
         {
             glm::mat4 object_model = object->calc_model();
-
             this->color_program->bind();
-
             this->color_program->set_mat4("camera.projection", camera_projection);
             this->color_program->set_mat4("camera.view", camera_view);
-
             this->color_program->set_mat4("object.model", object_model);
-
             this->color_program->set_vec4("clipping_plane", clipping_plane);
-
             this->color_program->set_vec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
-
             object->mesh->draw();
         }
-
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_EQUAL);
-
         // TODO: deferred pbr lighting
-
         glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
-
         glEnable(GL_DEPTH_TEST);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // copy depth information to specified framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, this->geometry_fbo_id);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
         glBlitFramebuffer(0, 0, this->render_width, this->render_height, 0, 0, this->render_width, this->render_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -1036,133 +900,90 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
 #endif
     }
 
-    // draw other things that need to be drawn after the deferred rendering pass
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
     glViewport(0, 0, this->render_width, this->render_height);
-    glEnable(GL_CLIP_DISTANCE0);
-
-    // render terrains
     if (this->terrains.size() > 0)
     {
+        glEnable(GL_CLIP_DISTANCE0);
         this->terrain_program->bind();
-
         this->terrain_program->set_mat4("camera.projection", camera_projection);
         this->terrain_program->set_mat4("camera.view", camera_view);
         this->terrain_program->set_vec3("camera.position", camera->position);
-
         this->terrain_program->set_vec4("clipping_plane", clipping_plane);
-
         for (auto &terrain : this->terrains)
         {
             glm::mat4 terrain_model = terrain->calc_model();
-
             this->terrain_program->set_mat4("terrain.model", terrain_model);
-
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, terrain->material->albedo_map ? terrain->material->albedo_map->texture_id : 0);
-
             terrain->mesh->draw();
         }
-
         this->terrain_program->unbind();
+        glDisable(GL_CLIP_DISTANCE0);
     }
-
-    glDisable(GL_CLIP_DISTANCE0);
-
-    // render skybox
     if (this->skybox)
     {
         glDepthFunc(GL_LEQUAL);
-
         glm::mat4 camera_view_no_translate = camera_view;
         // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)elapsed_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
         camera_view_no_translate[3][0] = 0.0f;
         camera_view_no_translate[3][1] = 0.0f;
         camera_view_no_translate[3][2] = 0.0f;
-
         this->skybox_program->bind();
-
         this->skybox_program->set_mat4("camera.projection", camera_projection);
         this->skybox_program->set_mat4("camera.view", camera_view_no_translate);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, this->skybox->texture_id);
-
         glBindVertexArray(this->skybox_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, this->skybox_vertices_size);
         glBindVertexArray(0);
-
         this->skybox_program->unbind();
-
         glDepthFunc(GL_LESS);
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time)
 {
-    // calculate camera projection matrix
     glm::mat4 camera_projection = camera->calc_projection(aspect);
-
-    // calculate camera view matrix
     glm::mat4 camera_view = camera->calc_view();
 
-    // send camera transformations to water program
     this->water_program->bind();
-
     this->water_program->set_mat4("camera.projection", camera_projection);
     this->water_program->set_mat4("camera.view", camera_view);
     this->water_program->set_vec3("camera.position", camera->position);
-
     this->water_program->set_unsigned_int("elapsed_time", elapsed_time);
-
     this->water_program->unbind();
-
     for (auto &water : this->waters)
     {
-        // render water reflection
         glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position[1]};
         bool reflect = false;
-
         if (camera->position[1] > water->position[1]) // don't draw reflections if under the water
         {
             reflect = true;
-
             float old_camera_y = camera->position[1];
             float old_camera_pitch = camera->pitch;
-
             camera->position[1] -= 2 * (camera->position[1] - water->position[1]);
             camera->pitch = -camera->pitch;
-
             render_scene(this->water_reflection_fbo_id, camera, aspect, elapsed_time, reflection_clipping_plane);
-
             camera->position[1] = old_camera_y;
             camera->pitch = old_camera_pitch;
         }
 
-        // render water refraction
         glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, water->position[1]};
-
         if (camera->position[1] < water->position[1]) // flip refraction clipping plane if under the water
         {
             refraction_clipping_plane[1] = 1.0f;
             refraction_clipping_plane[3] = -water->position[1];
         }
-
         render_scene(this->water_refraction_fbo_id, camera, aspect, elapsed_time, refraction_clipping_plane);
-
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
 
         this->water_program->bind();
-
         glm::mat4 water_model(1.0f);
         water_model = glm::translate(water_model, water->position);
         water_model = glm::scale(water_model, {water->scale.x, 1.0f, water->scale.y});
-
         this->water_program->set_mat4("water.model", water_model);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, reflect ? this->water_reflection_color_texture_id : 0);
         glActiveTexture(GL_TEXTURE1);
@@ -1171,13 +992,10 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
         glBindTexture(GL_TEXTURE_2D, this->water_dudv_texture ? this->water_dudv_texture->texture_id : 0);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, this->water_normal_texture ? this->water_normal_texture->texture_id : 0);
-
         glBindVertexArray(this->water_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, this->water_vertices_size);
         glBindVertexArray(0);
-
         this->water_program->unbind();
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
@@ -1185,53 +1003,38 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
 void renderer::render_sprites(GLuint fbo_id, float aspect)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
     this->sprite_program->bind();
-
-    // calculate ortho projection
     glm::mat4 camera_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
-
     this->sprite_program->set_mat4("camera.projection", camera_projection);
 
     for (auto &sprite : this->sprites)
     {
         glm::mat4 sprite_model = sprite->calc_model();
-
         this->sprite_program->set_mat4("sprite.model", sprite_model);
         this->sprite_program->set_vec3("sprite.color", sprite->color);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, sprite->color_map->texture_id);
-
         glBindVertexArray(this->sprite_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, this->sprite_vertices_size);
         glBindVertexArray(0);
     }
-
     this->sprite_program->unbind();
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void renderer::render_screen(GLuint fbo_id)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-
     glViewport(0, 0, this->render_width, this->render_height);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
-
     this->screen_program->bind();
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->screen_texture_id);
-
     glBindVertexArray(this->screen_vao_id);
     glDrawArrays(GL_TRIANGLES, 0, this->screen_vertices_size);
     glBindVertexArray(0);
-
     this->screen_program->unbind();
-
     glEnable(GL_DEPTH_TEST);
 }
 } // namespace pk
