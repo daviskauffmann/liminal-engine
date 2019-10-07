@@ -10,6 +10,7 @@ namespace pk
 struct material
 {
     pk::texture *albedo_map;
+    glm::vec3 albedo_color;
     pk::texture *normal_map;
     pk::texture *metallic_map;
     pk::texture *roughness_map;
@@ -17,6 +18,7 @@ struct material
 
     material(
         pk::texture *albedo_map,
+        glm::vec3 albedo_color,
         pk::texture *normal_map,
         pk::texture *metallic_map,
         pk::texture *roughness_map,

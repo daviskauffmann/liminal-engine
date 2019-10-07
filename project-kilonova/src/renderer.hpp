@@ -40,19 +40,6 @@ private:
     int render_width;
     int render_height;
 
-    // shader programs
-    pk::program *depth_program;
-    pk::program *depth_cube_program;
-    pk::program *color_program;
-    pk::program *texture_program;
-    pk::program *forward_program;
-    pk::program *geometry_program;
-    pk::program *skybox_program;
-    pk::program *water_program;
-    pk::program *terrain_program;
-    pk::program *sprite_program;
-    pk::program *screen_program;
-
     // framebuffers
     GLuint screen_fbo_id;
     GLuint screen_texture_id;
@@ -65,13 +52,12 @@ private:
 
     GLuint water_reflection_fbo_id;
     GLuint water_reflection_color_texture_id;
-    GLuint water_reflection_depth_texture_id;
-    GLuint water_reflection_depth_rbo_id;
+    GLuint water_reflection_rbo_id;
 
     GLuint water_refraction_fbo_id;
     GLuint water_refraction_color_texture_id;
     GLuint water_refraction_depth_texture_id;
-    GLuint water_refraction_depth_rbo_id;
+    GLuint water_refraction_rbo_id;
 
     // water mesh
     GLsizei water_vertices_size;
@@ -96,6 +82,19 @@ private:
     // textures
     texture *water_dudv_texture;
     texture *water_normal_texture;
+
+    // shader programs
+    pk::program *depth_program;
+    pk::program *depth_cube_program;
+    pk::program *color_program;
+    pk::program *texture_program;
+    pk::program *forward_program;
+    pk::program *geometry_program;
+    pk::program *skybox_program;
+    pk::program *water_program;
+    pk::program *terrain_program;
+    pk::program *sprite_program;
+    pk::program *screen_program;
 
     // renderables
     std::vector<pk::object *> objects;

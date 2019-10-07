@@ -17,6 +17,7 @@ uniform struct Camera
 uniform struct Material
 {
     sampler2D albedo_map;
+    vec3 albedo_color;
     sampler2D normal_map;
     sampler2D metallic_map;
     sampler2D roughness_map;
@@ -102,7 +103,7 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0)
 
 void main()
 {
-    vec3 albedo = pow(texture(material.albedo_map, vertex.uv).rgb, vec3(2.2));
+    vec3 albedo = pow(texture(material.albedo_map, vertex.uv).rgb * material.albedo_color, vec3(2.2));
     float metallic = texture(material.metallic_map, vertex.uv).r;
     float roughness = texture(material.roughness_map, vertex.uv).r;
     float ao = texture(material.ao_map, vertex.uv).r;

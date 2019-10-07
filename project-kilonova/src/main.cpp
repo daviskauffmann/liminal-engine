@@ -29,7 +29,7 @@
 constexpr const char *window_title = "Project Kilonova";
 constexpr int window_width = 1280;
 constexpr int window_height = 720;
-constexpr const char *version_str = "v0.0.1";
+constexpr const char *version = "0.0.1";
 
 constexpr int fps_cap = 300;
 constexpr int frame_delay = 1000 / fps_cap;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         }
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
         {
-            std::cout << version_str << std::endl;
+            std::cout << version << std::endl;
         }
     }
 
@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
 
     pk::material default_material(
         &iron_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
         &iron_normal_texture,
         &iron_metallic_texture,
         &iron_roughness_texture,
@@ -254,7 +255,7 @@ int main(int argc, char *argv[])
         {
             fps_update_timer = 0.0f;
             char title[256];
-            sprintf(title, "%s %s - FPS: %d", window_title, version_str, (int)(1 / delta_time));
+            sprintf(title, "%s %s - FPS: %d", window_title, version, (int)(1 / delta_time));
             SDL_SetWindowTitle(window, title);
         }
 

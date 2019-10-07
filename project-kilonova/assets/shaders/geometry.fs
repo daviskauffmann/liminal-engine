@@ -10,6 +10,7 @@ in struct Vertex
 uniform struct Material
 {
     sampler2D albedo_map;
+    vec3 albedo_color;
     sampler2D normal_map;
     sampler2D metallic_map;
     sampler2D roughness_map;

@@ -34,13 +34,13 @@ audio::~audio()
 
 void audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const
 {
-    glm::vec3 velocity = position - position;
+    glm::vec3 velocity = this->position - position;
     float orientation[] = {
         front.x, front.y, front.z,
         up.x, up.y, up.z};
     alListenerfv(AL_POSITION, glm::value_ptr(position));
     alListenerfv(AL_VELOCITY, glm::value_ptr(velocity));
     alListenerfv(AL_ORIENTATION, orientation);
-    position = position;
+    this->position = position;
 }
 } // namespace pk

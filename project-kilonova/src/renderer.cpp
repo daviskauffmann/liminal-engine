@@ -35,86 +35,6 @@ renderer::renderer(int render_width, int render_height)
 
     set_render_size(render_width, render_height);
 
-    depth_program = new pk::program(
-        "assets/shaders/depth.vs",
-        "assets/shaders/depth.fs");
-    depth_cube_program = new pk::program(
-        "assets/shaders/depth_cube.vs",
-        "assets/shaders/depth_cube.gs",
-        "assets/shaders/depth_cube.fs");
-    color_program = new pk::program(
-        "assets/shaders/color.vs",
-        "assets/shaders/color.fs");
-    texture_program = new pk::program(
-        "assets/shaders/texture.vs",
-        "assets/shaders/texture.fs");
-    forward_program = new pk::program(
-        "assets/shaders/forward.vs",
-        "assets/shaders/forward.fs");
-    geometry_program = new pk::program(
-        "assets/shaders/geometry.vs",
-        "assets/shaders/geometry.fs");
-    skybox_program = new pk::program(
-        "assets/shaders/skybox.vs",
-        "assets/shaders/skybox.fs");
-    water_program = new pk::program(
-        "assets/shaders/water.vs",
-        "assets/shaders/water.fs");
-    terrain_program = new pk::program(
-        "assets/shaders/terrain.vs",
-        "assets/shaders/terrain.fs");
-    sprite_program = new pk::program(
-        "assets/shaders/sprite.vs",
-        "assets/shaders/sprite.fs");
-    screen_program = new pk::program(
-        "assets/shaders/screen.vs",
-        "assets/shaders/screen.fs");
-
-    texture_program->bind();
-    texture_program->set_int("color_map", 0);
-    texture_program->unbind();
-
-    forward_program->bind();
-    forward_program->set_int("material.albedo_map", 0);
-    forward_program->set_int("material.normal_map", 1);
-    forward_program->set_int("material.metallic_map", 2);
-    forward_program->set_int("material.roughness_map", 3);
-    forward_program->set_int("material.ao_map", 4);
-    forward_program->set_int("light.depth_map", 5);
-    forward_program->set_int("light.depth_cubemap", 6);
-    forward_program->unbind();
-
-    geometry_program->bind();
-    geometry_program->set_int("material.diffuse_map", 0);
-    geometry_program->set_int("material.specular_map", 1);
-    geometry_program->set_int("material.normal_map", 2);
-    geometry_program->set_int("material.emission_map", 3);
-    geometry_program->unbind();
-
-    skybox_program->bind();
-    skybox_program->set_int("skybox.color_map", 0);
-    skybox_program->unbind();
-
-    water_program->bind();
-    water_program->set_int("water.reflection_map", 0);
-    water_program->set_int("water.refraction_map", 1);
-    water_program->set_int("water.depth_map", 2);
-    water_program->set_int("water.dudv_map", 3);
-    water_program->set_int("water.normal_map", 4);
-    water_program->unbind();
-
-    terrain_program->bind();
-    terrain_program->set_int("material.albedo_map", 0);
-    terrain_program->unbind();
-
-    sprite_program->bind();
-    sprite_program->set_int("sprite.color_map", 0);
-    sprite_program->unbind();
-
-    screen_program->bind();
-    screen_program->set_int("screen.color_map", 0);
-    screen_program->unbind();
-
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
          -1.0f, +1.0f,
@@ -224,49 +144,107 @@ renderer::renderer(int render_width, int render_height)
     glBindVertexArray(0);
 
     water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
-    if (!water_dudv_texture)
-    {
-        std::cout << "Error: Couldn't load water dudv texture" << std::endl;
-    }
-
     water_normal_texture = new pk::texture("assets/images/water_normal.png");
-    if (!water_normal_texture)
-    {
-        std::cout << "Error: Couldn't load water normal texture" << std::endl;
-    }
+
+    depth_program = new pk::program(
+        "assets/shaders/depth.vs",
+        "assets/shaders/depth.fs");
+    depth_cube_program = new pk::program(
+        "assets/shaders/depth_cube.vs",
+        "assets/shaders/depth_cube.gs",
+        "assets/shaders/depth_cube.fs");
+    color_program = new pk::program(
+        "assets/shaders/color.vs",
+        "assets/shaders/color.fs");
+    texture_program = new pk::program(
+        "assets/shaders/texture.vs",
+        "assets/shaders/texture.fs");
+    forward_program = new pk::program(
+        "assets/shaders/forward.vs",
+        "assets/shaders/forward.fs");
+    geometry_program = new pk::program(
+        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry.fs");
+    skybox_program = new pk::program(
+        "assets/shaders/skybox.vs",
+        "assets/shaders/skybox.fs");
+    water_program = new pk::program(
+        "assets/shaders/water.vs",
+        "assets/shaders/water.fs");
+    terrain_program = new pk::program(
+        "assets/shaders/terrain.vs",
+        "assets/shaders/terrain.fs");
+    sprite_program = new pk::program(
+        "assets/shaders/sprite.vs",
+        "assets/shaders/sprite.fs");
+    screen_program = new pk::program(
+        "assets/shaders/screen.vs",
+        "assets/shaders/screen.fs");
+
+    texture_program->bind();
+    texture_program->set_int("color_map", 0);
+    texture_program->unbind();
+
+    forward_program->bind();
+    forward_program->set_int("material.albedo_map", 0);
+    forward_program->set_int("material.normal_map", 1);
+    forward_program->set_int("material.metallic_map", 2);
+    forward_program->set_int("material.roughness_map", 3);
+    forward_program->set_int("material.ao_map", 4);
+    forward_program->set_int("light.depth_map", 5);
+    forward_program->set_int("light.depth_cubemap", 6);
+    forward_program->unbind();
+
+    geometry_program->bind();
+    geometry_program->set_int("material.diffuse_map", 0);
+    geometry_program->set_int("material.specular_map", 1);
+    geometry_program->set_int("material.normal_map", 2);
+    geometry_program->set_int("material.emission_map", 3);
+    geometry_program->unbind();
+
+    skybox_program->bind();
+    skybox_program->set_int("skybox.color_map", 0);
+    skybox_program->unbind();
+
+    water_program->bind();
+    water_program->set_int("water.reflection_map", 0);
+    water_program->set_int("water.refraction_map", 1);
+    water_program->set_int("water.depth_map", 2);
+    water_program->set_int("water.dudv_map", 3);
+    water_program->set_int("water.normal_map", 4);
+    water_program->unbind();
+
+    terrain_program->bind();
+    terrain_program->set_int("material.albedo_map", 0);
+    terrain_program->unbind();
+
+    sprite_program->bind();
+    sprite_program->set_int("sprite.color_map", 0);
+    sprite_program->unbind();
+
+    screen_program->bind();
+    screen_program->set_int("screen.color_map", 0);
+    screen_program->unbind();
 }
 
 renderer::~renderer()
 {
-    delete depth_program;
-    delete depth_cube_program;
-    delete color_program;
-    delete texture_program;
-    delete forward_program;
-    delete geometry_program;
-    delete skybox_program;
-    delete water_program;
-    delete terrain_program;
-    delete sprite_program;
-    delete screen_program;
-
-    glDeleteTextures(1, &screen_texture_id);
     glDeleteRenderbuffers(1, &screen_rbo_id);
+    glDeleteTextures(1, &screen_texture_id);
     glDeleteFramebuffers(1, &screen_fbo_id);
 
-    glDeleteTextures(1, &geometry_position_texture_id);
-    glDeleteTextures(1, &geometry_normal_texture_id);
     glDeleteRenderbuffers(1, &geometry_rbo_id);
+    glDeleteTextures(1, &geometry_normal_texture_id);
+    glDeleteTextures(1, &geometry_position_texture_id);
     glDeleteFramebuffers(1, &geometry_fbo_id);
 
+    glDeleteRenderbuffers(1, &water_reflection_rbo_id);
     glDeleteTextures(1, &water_reflection_color_texture_id);
     glDeleteFramebuffers(1, &water_reflection_fbo_id);
-    glDeleteRenderbuffers(1, &water_reflection_depth_rbo_id);
-    glDeleteFramebuffers(1, &water_reflection_fbo_id);
 
-    glDeleteTextures(1, &water_refraction_color_texture_id);
+    glDeleteRenderbuffers(1, &water_refraction_rbo_id);
     glDeleteTextures(1, &water_refraction_depth_texture_id);
-    glDeleteRenderbuffers(1, &water_refraction_depth_rbo_id);
+    glDeleteTextures(1, &water_refraction_color_texture_id);
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
 
     glDeleteBuffers(1, &water_vbo_id);
@@ -283,6 +261,18 @@ renderer::~renderer()
 
     delete water_dudv_texture;
     delete water_normal_texture;
+
+    delete depth_program;
+    delete depth_cube_program;
+    delete color_program;
+    delete texture_program;
+    delete forward_program;
+    delete geometry_program;
+    delete skybox_program;
+    delete water_program;
+    delete terrain_program;
+    delete sprite_program;
+    delete screen_program;
 }
 
 void renderer::set_render_size(int render_width, int render_height)
@@ -290,23 +280,22 @@ void renderer::set_render_size(int render_width, int render_height)
     this->render_width = render_width;
     this->render_height = render_height;
 
-    glDeleteTextures(1, &screen_texture_id);
     glDeleteRenderbuffers(1, &screen_rbo_id);
+    glDeleteTextures(1, &screen_texture_id);
     glDeleteFramebuffers(1, &screen_fbo_id);
 
-    glDeleteTextures(1, &geometry_position_texture_id);
-    glDeleteTextures(1, &geometry_normal_texture_id);
     glDeleteRenderbuffers(1, &geometry_rbo_id);
+    glDeleteTextures(1, &geometry_normal_texture_id);
+    glDeleteTextures(1, &geometry_position_texture_id);
     glDeleteFramebuffers(1, &geometry_fbo_id);
 
+    glDeleteRenderbuffers(1, &water_reflection_rbo_id);
     glDeleteTextures(1, &water_reflection_color_texture_id);
     glDeleteFramebuffers(1, &water_reflection_fbo_id);
-    glDeleteRenderbuffers(1, &water_reflection_depth_rbo_id);
-    glDeleteFramebuffers(1, &water_reflection_fbo_id);
 
-    glDeleteTextures(1, &water_refraction_color_texture_id);
+    glDeleteRenderbuffers(1, &water_refraction_rbo_id);
     glDeleteTextures(1, &water_refraction_depth_texture_id);
-    glDeleteRenderbuffers(1, &water_refraction_depth_rbo_id);
+    glDeleteTextures(1, &water_refraction_color_texture_id);
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
 
     // setup screen fbo
@@ -445,24 +434,8 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenTextures(1, &water_reflection_depth_texture_id);
-    glBindTexture(GL_TEXTURE_2D, water_reflection_depth_texture_id);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_DEPTH_COMPONENT32,
-        render_height,
-        render_height,
-        0,
-        GL_DEPTH_COMPONENT,
-        GL_FLOAT,
-        nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenRenderbuffers(1, &water_reflection_depth_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, water_reflection_depth_rbo_id);
+    glGenRenderbuffers(1, &water_reflection_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, water_reflection_rbo_id);
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
@@ -478,17 +451,11 @@ void renderer::set_render_size(int render_width, int render_height)
         GL_TEXTURE_2D,
         water_reflection_color_texture_id,
         0);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_TEXTURE_2D,
-        water_reflection_depth_texture_id,
-        0);
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
-        water_reflection_depth_rbo_id);
+        water_reflection_rbo_id);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -529,8 +496,8 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenRenderbuffers(1, &water_refraction_depth_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, water_refraction_depth_rbo_id);
+    glGenRenderbuffers(1, &water_refraction_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, water_refraction_rbo_id);
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
@@ -556,7 +523,7 @@ void renderer::set_render_size(int render_width, int render_height)
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
-        water_refraction_depth_rbo_id);
+        water_refraction_rbo_id);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -709,8 +676,8 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             color_program->set_mat4("camera.projection", camera_projection);
             color_program->set_mat4("camera.view", camera_view);
             color_program->set_mat4("object.model", object_model);
+            color_program->set_vec3("color", object->material->albedo_color);
             color_program->set_vec4("clipping_plane", clipping_plane);
-            color_program->set_vec3("color", object->material->color);
             object->mesh->draw();
             color_program->unbind();
         }
@@ -727,6 +694,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             texture_program->set_mat4("camera.projection", camera_projection);
             texture_program->set_mat4("camera.view", camera_view);
             texture_program->set_mat4("object.model", object_model);
+            texture_program->set_vec3("color", object->material->albedo_color);
             texture_program->set_vec4("clipping_plane", clipping_plane);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
@@ -746,8 +714,8 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             color_program->set_mat4("camera.projection", camera_projection);
             color_program->set_mat4("camera.view", camera_view);
             color_program->set_mat4("object.model", object_model);
+            color_program->set_vec3("color", glm::vec3(0.0f));
             color_program->set_vec4("clipping_plane", clipping_plane);
-            color_program->set_vec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
             object->mesh->draw();
             color_program->unbind();
 
@@ -762,6 +730,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 forward_program->set_mat4("camera.view", camera_view);
                 forward_program->set_vec3("camera.position", camera->position);
                 forward_program->set_mat4("object.model", object_model);
+                forward_program->set_vec3("material.albedo_color", object->material->albedo_color);
                 forward_program->set_vec4("clipping_plane", clipping_plane);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
@@ -793,6 +762,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 forward_program->set_mat4("camera.view", camera_view);
                 forward_program->set_vec3("camera.position", camera->position);
                 forward_program->set_mat4("object.model", object_model);
+                forward_program->set_vec3("material.albedo_color", object->material->albedo_color);
                 forward_program->set_vec4("clipping_plane", clipping_plane);
                 forward_program->set_float("far_plane", 25.0f);
                 glActiveTexture(GL_TEXTURE0);
@@ -823,6 +793,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
                 forward_program->set_mat4("camera.view", camera_view);
                 forward_program->set_vec3("camera.position", camera->position);
                 forward_program->set_mat4("object.model", object_model);
+                forward_program->set_vec3("material.albedo_color", object->material->albedo_color);
                 forward_program->set_vec4("clipping_plane", clipping_plane);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
@@ -866,6 +837,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         {
             glm::mat4 object_model = object->calc_model();
             geometry_program->set_mat4("object.model", object_model);
+            geometry_program->set_vec3("material.albedo_color", object->material->albedo_color);
             geometry_program->set_vec4("clipping_plane", clipping_plane);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
@@ -894,7 +866,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             color_program->set_mat4("camera.view", camera_view);
             color_program->set_mat4("object.model", object_model);
             color_program->set_vec4("clipping_plane", clipping_plane);
-            color_program->set_vec3("color", glm::vec3(0.0f, 0.0f, 0.0f));
+            color_program->set_vec3("color", glm::vec3(0.0f));
             object->mesh->draw();
         }
         glEnable(GL_BLEND);
