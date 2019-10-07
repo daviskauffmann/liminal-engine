@@ -9,8 +9,8 @@ namespace pk
 {
 texture::texture(const std::string &filename)
 {
-    glGenTextures(1, &this->texture_id);
-    glBindTexture(GL_TEXTURE_2D, this->texture_id);
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
     {
@@ -38,12 +38,12 @@ texture::texture(const std::string &filename)
 
 texture::~texture()
 {
-    glDeleteTextures(1, &this->texture_id);
+    glDeleteTextures(1, &texture_id);
 }
 
 void texture::bind(unsigned int index) const
 {
     glActiveTexture(GL_TEXTURE0 + index);
-    glBindTexture(GL_TEXTURE_2D, this->texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
 }
 } // namespace pk

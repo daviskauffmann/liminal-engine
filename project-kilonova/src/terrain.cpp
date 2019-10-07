@@ -45,18 +45,18 @@ terrain::terrain(int grid_x, int grid_z, pk::material *material)
             indices.push_back(bottom_right);
         }
     }
-    this->mesh = new pk::mesh(vertices, indices);
+    mesh = new pk::mesh(vertices, indices);
 }
 
 terrain::~terrain()
 {
-    delete this->mesh;
+    delete mesh;
 }
 
 glm::mat4 terrain::calc_model() const
 {
     glm::mat4 model = glm::identity<glm::mat4>();
-    model = glm::translate(model, this->position);
+    model = glm::translate(model, position);
     return model;
 }
 } // namespace pk

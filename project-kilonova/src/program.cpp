@@ -13,46 +13,46 @@ program::program(
     const std::string &geometry_filename,
     const std::string &fragment_filename)
 {
-    this->program_id = glCreateProgram();
+    program_id = glCreateProgram();
     GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
-    glAttachShader(this->program_id, vertex_shader);
+    glAttachShader(program_id, vertex_shader);
     GLuint geometry_shader = 0;
     if (!geometry_filename.empty())
     {
         geometry_shader = create_shader(GL_GEOMETRY_SHADER, geometry_filename);
-        glAttachShader(this->program_id, geometry_shader);
+        glAttachShader(program_id, geometry_shader);
     }
     GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
-    glAttachShader(this->program_id, fragment_shader);
-    glLinkProgram(this->program_id);
+    glAttachShader(program_id, fragment_shader);
+    glLinkProgram(program_id);
     {
         GLint success;
-        glGetProgramiv(this->program_id, GL_LINK_STATUS, &success);
+        glGetProgramiv(program_id, GL_LINK_STATUS, &success);
         if (!success)
         {
             GLchar info_log[1024];
-            glGetProgramInfoLog(this->program_id, sizeof(info_log), nullptr, info_log);
+            glGetProgramInfoLog(program_id, sizeof(info_log), nullptr, info_log);
             std::cout << "Error: Program linking failed\n"
                       << info_log << std::endl;
         }
     }
-    glDetachShader(this->program_id, vertex_shader);
+    glDetachShader(program_id, vertex_shader);
     glDeleteShader(vertex_shader);
     if (geometry_shader)
     {
-        glDetachShader(this->program_id, geometry_shader);
+        glDetachShader(program_id, geometry_shader);
         glDeleteShader(geometry_shader);
     }
-    glDetachShader(this->program_id, fragment_shader);
+    glDetachShader(program_id, fragment_shader);
     glDeleteShader(fragment_shader);
-    glValidateProgram(this->program_id);
+    glValidateProgram(program_id);
     {
         GLint success;
-        glGetProgramiv(this->program_id, GL_VALIDATE_STATUS, &success);
+        glGetProgramiv(program_id, GL_VALIDATE_STATUS, &success);
         if (!success)
         {
             GLchar info_log[1024];
-            glGetProgramInfoLog(this->program_id, sizeof(info_log), nullptr, info_log);
+            glGetProgramInfoLog(program_id, sizeof(info_log), nullptr, info_log);
             std::cout << "Error: Program validation failed\n"
                       << info_log << std::endl;
         }
@@ -68,12 +68,12 @@ program::program(
 
 program::~program()
 {
-    glDeleteProgram(this->program_id);
+    glDeleteProgram(program_id);
 }
 
 void program::bind() const
 {
-    glUseProgram(this->program_id);
+    glUseProgram(program_id);
 }
 
 void program::unbind(void) const
@@ -84,46 +84,46 @@ void program::unbind(void) const
 GLint program::get_location(const std::string &name) const
 {
     GLint location;
-    if (this->uniforms.find(name) == this->uniforms.end())
+    if (uniforms.find(name) == uniforms.end())
     {
-        location = glGetUniformLocation(this->program_id, name.c_str());
-        this->uniforms[name] = location;
+        location = glGetUniformLocation(program_id, name.c_str());
+        uniforms[name] = location;
     }
     else
     {
-        location = this->uniforms[name];
+        location = uniforms[name];
     }
     return location;
 }
 
 void program::set_int(const std::string &name, int value) const
 {
-    glUniform1i(this->get_location(name), value);
+    glUniform1i(get_location(name), value);
 }
 
 void program::set_unsigned_int(const std::string &name, unsigned int value) const
 {
-    glUniform1ui(this->get_location(name), value);
+    glUniform1ui(get_location(name), value);
 }
 
 void program::set_float(const std::string &name, float value) const
 {
-    glUniform1f(this->get_location(name), value);
+    glUniform1f(get_location(name), value);
 }
 
 void program::set_vec3(const std::string &name, glm::vec3 vec3) const
 {
-    glUniform3fv(this->get_location(name), 1, glm::value_ptr(vec3));
+    glUniform3fv(get_location(name), 1, glm::value_ptr(vec3));
 }
 
 void program::set_vec4(const std::string &name, glm::vec4 vec4) const
 {
-    glUniform4fv(this->get_location(name), 1, glm::value_ptr(vec4));
+    glUniform4fv(get_location(name), 1, glm::value_ptr(vec4));
 }
 
 void program::set_mat4(const std::string &name, glm::mat4 mat4) const
 {
-    glUniformMatrix4fv(this->get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
+    glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
 GLuint program::create_shader(GLenum type, const std::string &filename) const

@@ -16,9 +16,9 @@ camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float fov
 glm::vec3 camera::calc_front() const
 {
     glm::vec3 front(
-        cosf(glm::radians(this->yaw)) * cosf(glm::radians(this->pitch)),
-        sinf(glm::radians(this->pitch)),
-        sinf(glm::radians(this->yaw)) * cosf(glm::radians(this->pitch)));
+        cosf(glm::radians(yaw)) * cosf(glm::radians(pitch)),
+        sinf(glm::radians(pitch)),
+        sinf(glm::radians(yaw)) * cosf(glm::radians(pitch)));
     return glm::normalize(front);
 }
 
@@ -30,16 +30,16 @@ glm::vec3 camera::calc_up() const
 
 glm::mat4 camera::calc_projection(float aspect) const
 {
-    glm::mat4 projection = glm::perspective(glm::radians(this->fov), aspect, 0.01f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, 0.1f, 1000.0f);
     return projection;
 }
 
 glm::mat4 camera::calc_view() const
 {
-    glm::vec3 front = this->calc_front();
-    glm::vec3 target = this->position + front;
-    glm::vec3 up = this->calc_up();
-    glm::mat4 view = glm::lookAt(this->position, target, up);
+    glm::vec3 front = calc_front();
+    glm::vec3 target = position + front;
+    glm::vec3 up = calc_up();
+    glm::mat4 view = glm::lookAt(position, target, up);
     return view;
 }
 } // namespace pk

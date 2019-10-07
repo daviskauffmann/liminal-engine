@@ -23,7 +23,8 @@ public:
     renderer(int render_width, int render_height);
     ~renderer();
 
-    void resize(int render_width, int render_height);
+    void set_render_size(int render_width, int render_height);
+
     void add_object(pk::object *object);
     void add_directional_light(pk::directional_light *directional_light);
     void add_point_light(pk::point_light *point_light);
@@ -32,7 +33,7 @@ public:
     void add_water(pk::water *water);
     void add_terrain(pk::terrain *terrain);
     void add_sprite(pk::sprite *sprite);
-    void draw(pk::camera *camera, float aspect, unsigned int elapsed_time, float delta_time);
+    void flush(pk::camera *camera, float aspect, unsigned int elapsed_time, float delta_time);
 
 private:
     // settings

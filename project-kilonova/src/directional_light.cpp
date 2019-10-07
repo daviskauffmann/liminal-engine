@@ -12,8 +12,8 @@ directional_light::directional_light(
     : direction(direction),
       color(color)
 {
-    glGenTextures(1, &this->depth_map_texture_id);
-    glBindTexture(GL_TEXTURE_2D, this->depth_map_texture_id);
+    glGenTextures(1, &depth_map_texture_id);
+    glBindTexture(GL_TEXTURE_2D, depth_map_texture_id);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -32,15 +32,15 @@ directional_light::directional_light(
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenFramebuffers(1, &this->depth_map_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, this->depth_map_fbo_id);
+    glGenFramebuffers(1, &depth_map_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo_id);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glFramebufferTexture2D(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
-        this->depth_map_texture_id,
+        depth_map_texture_id,
         0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -51,8 +51,8 @@ directional_light::directional_light(
 
 directional_light::~directional_light()
 {
-    glDeleteTextures(1, &this->depth_map_texture_id);
-    glDeleteFramebuffers(1, &this->depth_map_fbo_id);
+    glDeleteTextures(1, &depth_map_texture_id);
+    glDeleteFramebuffers(1, &depth_map_fbo_id);
 }
 
 glm::mat4 directional_light::calc_projection() const
@@ -63,7 +63,7 @@ glm::mat4 directional_light::calc_projection() const
 
 glm::mat4 directional_light::calc_view(glm::vec3 center) const
 {
-    glm::vec3 position = glm::vec3(0.0f) - this->direction;
+    glm::vec3 position = glm::vec3(0.0f) - direction;
     glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     return view;
 }

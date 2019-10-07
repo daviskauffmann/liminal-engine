@@ -26,13 +26,13 @@
 #include "vertex.hpp"
 #include "water.hpp"
 
-constexpr auto window_title = "Project Kilonova";
+constexpr const char *window_title = "Project Kilonova";
 constexpr int window_width = 1280;
 constexpr int window_height = 720;
-constexpr auto version_str = "v0.0.1";
+constexpr const char *version_str = "v0.0.1";
 
-constexpr auto fps_cap = 300;
-constexpr auto frame_delay = 1000 / fps_cap;
+constexpr int fps_cap = 300;
+constexpr int frame_delay = 1000 / fps_cap;
 
 int main(int argc, char *argv[])
 {
@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
                     SDL_SetWindowSize(window, width, height);
-                    renderer.resize(width, height);
+                    renderer.set_render_size(width, height);
                     std::cout << "Window resized to " << width << "x" << height << std::endl;
                 }
                 break;
@@ -378,10 +378,8 @@ int main(int argc, char *argv[])
             // precomputed 1 / sqrt(2)
             speed *= 0.71f;
         }
-
         glm::vec3 main_camera_front = main_camera.calc_front();
         glm::vec3 main_camera_up = main_camera.calc_up();
-
         if (keys[SDL_SCANCODE_W])
         {
             main_camera.position += main_camera_front * speed;
@@ -453,7 +451,7 @@ int main(int argc, char *argv[])
         // renderer.add_sprite(&grass_sprite);
         int width, height;
         SDL_GetWindowSize(window, &width, &height);
-        renderer.draw(&main_camera, (float)width / (float)height, SDL_GetTicks(), delta_time);
+        renderer.flush(&main_camera, (float)width / (float)height, SDL_GetTicks(), delta_time);
 
         SDL_GL_SwapWindow(window);
 
