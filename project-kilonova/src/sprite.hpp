@@ -11,15 +11,15 @@ namespace pk
 {
 struct sprite
 {
-    glm::vec3 color;
     pk::texture *color_map;
+    glm::vec3 color;
     glm::vec2 position;
     float rotation;
     glm::vec2 scale;
 
     sprite(
+        pk::texture *color_map,
         glm::vec3 color,
-        pk::texture *colorMap,
         glm::vec2 position,
         float rotation,
         glm::vec2 scale);

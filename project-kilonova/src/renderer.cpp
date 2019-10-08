@@ -336,7 +336,7 @@ void renderer::set_render_size(int render_width, int render_height)
         0);
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
-        GL_DEPTH_STENCIL_ATTACHMENT,
+        GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
         screen_rbo_id);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -423,11 +423,11 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB8,
+        GL_RGBA8,
         render_width,
         render_height,
         0,
-        GL_RGB,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
         nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -469,11 +469,11 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB8,
+        GL_RGBA8,
         render_width,
         render_height,
         0,
-        GL_RGB,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
         nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -485,7 +485,7 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_DEPTH_COMPONENT32,
+        GL_DEPTH_COMPONENT24,
         render_width,
         render_height,
         0,
@@ -580,6 +580,10 @@ void renderer::flush(pk::camera *camera, float aspect, unsigned int elapsed_time
         return;
     }
 
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     render_scene(screen_fbo_id, camera, aspect, elapsed_time, glm::vec4(0.0f));
     if (waters.size() > 0)
     {
@@ -602,10 +606,6 @@ void renderer::flush(pk::camera *camera, float aspect, unsigned int elapsed_time
 
 void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     glm::mat4 camera_projection = camera->calc_projection(aspect);
     glm::mat4 camera_view = camera->calc_view();
 
@@ -633,7 +633,7 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
 
     for (auto &point_light : point_lights)
     {
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)4096 / (float)4096, 1.0f, 25.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)512 / (float)512, 1.0f, 25.0f);
         std::vector<glm::mat4> shadow_matrices;
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -667,7 +667,6 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
     {
 #if LIGHTING_MODE == LIGHTING_COLOR
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
         for (auto &object : objects)
         {
@@ -685,7 +684,6 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_TEXTURE
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
         for (auto &object : objects)
         {
@@ -705,7 +703,6 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_FORWARD
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
         for (auto &object : objects)
         {
@@ -856,7 +853,6 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-        glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
         for (auto &object : objects)
         {
@@ -955,6 +951,9 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
             camera->position.y -= 2 * (camera->position.y - water->position.y);
             camera->pitch = -camera->pitch;
             glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
+            glBindFramebuffer(GL_FRAMEBUFFER, water_reflection_fbo_id);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             render_scene(water_reflection_fbo_id, camera, aspect, elapsed_time, reflection_clipping_plane);
             camera->position.y = old_camera_y;
             camera->pitch = old_camera_pitch;
@@ -966,6 +965,9 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
             refraction_clipping_plane.y = 1.0f;
             refraction_clipping_plane.w = -water->position.y;
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         render_scene(water_refraction_fbo_id, camera, aspect, elapsed_time, refraction_clipping_plane);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);

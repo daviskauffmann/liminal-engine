@@ -220,8 +220,8 @@ int main(int argc, char *argv[])
     pk::terrain test_terrain(0, 0, &default_material);
 
     pk::sprite grass_sprite(
-        glm::vec3(1.0f, 1.0f, 1.0f),
         &iron_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
         glm::vec2(0.0f, 0.0f),
         0.0f,
         glm::vec2(1.0f, 1.0f));

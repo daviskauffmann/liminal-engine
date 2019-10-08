@@ -50,7 +50,7 @@ void main()
 	float move_factor = float(elapsed_time) / 1000 * 0.03;
 	vec2 distorted_uv = texture(water.dudv_map, vec2(vertex.uv.x + move_factor, vertex.uv.y)).rg * 0.1;
 	distorted_uv += vertex.uv + vec2(distorted_uv.x, distorted_uv.y + move_factor);
-	vec2 distortion = (texture(water.dudv_map, distorted_uv).rg * 2.0 - 1.0) * wave_strength; // * clamp(water_depth / 20.0, 0.0, 1.0);
+	vec2 distortion = (texture(water.dudv_map, distorted_uv).rg * 2.0 - 1.0) * wave_strength; // clamp(water_depth / 20.0, 0.0, 1.0);
 
 	reflection_uv += distortion;
 	reflection_uv.x = clamp(reflection_uv.x, 0.001, 0.999);

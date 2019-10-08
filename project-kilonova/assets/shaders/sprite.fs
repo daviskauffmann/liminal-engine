@@ -7,8 +7,8 @@ in struct Vertex
 
 uniform struct Sprite
 {
-	vec3 color;
 	sampler2D color_map;
+	vec3 color;
 	mat4 model;
 } sprite;
 
@@ -16,12 +16,11 @@ out vec4 frag_color;
 
 void main()
 {    
-	vec4 color = texture(sprite.color_map, vertex.uv);
-
+	vec4 color = texture(sprite.color_map, vertex.uv) * vec4(sprite.color, 1.0);
 	if (color.a < 0.1)
 	{
 		discard;
 	}
 
-    frag_color = vec4(sprite.color, 1.0) * color;
+    frag_color = color;
 }
