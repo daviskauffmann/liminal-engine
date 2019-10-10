@@ -35,10 +35,6 @@ renderer::renderer(
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
 
-    set_screen_size(display_width, display_height, render_scale);
-    set_reflection_size(reflection_width, reflection_height);
-    set_refraction_size(refraction_width, refraction_height);
-
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
          -1.0f, +1.0f,
@@ -229,10 +225,29 @@ renderer::renderer(
     screen_program->bind();
     screen_program->set_int("screen.color_map", 0);
     screen_program->unbind();
+
+    set_screen_size(display_width, display_height, render_scale);
+    set_reflection_size(reflection_width, reflection_height);
+    set_refraction_size(refraction_width, refraction_height);
 }
 
 renderer::~renderer()
 {
+    delete water_dudv_texture;
+    delete water_normal_texture;
+
+    delete depth_program;
+    delete depth_cube_program;
+    delete color_program;
+    delete texture_program;
+    delete forward_program;
+    delete geometry_program;
+    delete skybox_program;
+    delete water_program;
+    delete terrain_program;
+    delete sprite_program;
+    delete screen_program;
+
     glDeleteRenderbuffers(1, &screen_rbo_id);
     glDeleteTextures(1, &screen_texture_id);
     glDeleteFramebuffers(1, &screen_fbo_id);
@@ -262,21 +277,6 @@ renderer::~renderer()
 
     glDeleteBuffers(1, &screen_vbo_id);
     glDeleteVertexArrays(1, &screen_vao_id);
-
-    delete water_dudv_texture;
-    delete water_normal_texture;
-
-    delete depth_program;
-    delete depth_cube_program;
-    delete color_program;
-    delete texture_program;
-    delete forward_program;
-    delete geometry_program;
-    delete skybox_program;
-    delete water_program;
-    delete terrain_program;
-    delete sprite_program;
-    delete screen_program;
 }
 
 void renderer::set_screen_size(int display_width, int display_height, float render_scale)
