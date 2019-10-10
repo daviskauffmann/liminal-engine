@@ -50,6 +50,11 @@ int main(int argc, char *argv[])
 
     int window_width = 1280;
     int window_height = 720;
+    float render_scale = 1.0f;
+    int depth_map_width = 4096;
+    int depth_map_height = 4096;
+    int depth_cube_width = 512;
+    int depth_cube_height = 512;
 
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -67,8 +72,6 @@ int main(int argc, char *argv[])
     Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
     TTF_Init();
     SDLNet_Init();
-
-    float render_scale = 1.0f;
 
     pk::renderer renderer(
         window_width, window_height, render_scale,
@@ -197,20 +200,25 @@ int main(int argc, char *argv[])
 
     pk::directional_light main_directional_light(
         glm::vec3(-0.2f, -1.0f, -0.3f),
-        glm::vec3(1.0f, 1.0f, 1.0f));
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        depth_map_width, depth_map_height);
 
     pk::point_light red_point_light(
         glm::vec3(2.0f, 0.0f, 2.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        depth_cube_width, depth_cube_height);
     pk::point_light yellow_point_light(
         glm::vec3(-2.0f, 0.0f, -2.0f),
-        glm::vec3(1.0f, 1.0f, 0.0f));
+        glm::vec3(1.0f, 1.0f, 0.0f),
+        depth_cube_width, depth_cube_height);
     pk::point_light green_point_light(
         glm::vec3(2.0f, 0.0f, -2.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        depth_cube_width, depth_cube_height);
     pk::point_light blue_point_light(
         glm::vec3(-2.0f, 0.0f, 2.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        depth_cube_width, depth_cube_height);
 
     pk::spot_light torch_spot_light(
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -475,7 +483,7 @@ int main(int argc, char *argv[])
         renderer.set_skybox(&skybox_cubemap);
         renderer.add_water(&test_water);
         renderer.add_terrain(&test_terrain);
-        // renderer.add_sprite(&grass_sprite);
+        renderer.add_sprite(&grass_sprite);
         renderer.flush(&main_camera, current_time, delta_time);
 
         SDL_GL_SwapWindow(window);

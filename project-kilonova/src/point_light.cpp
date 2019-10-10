@@ -6,10 +6,28 @@ namespace pk
 {
 point_light::point_light(
     glm::vec3 position,
-    glm::vec3 color)
+    glm::vec3 color,
+    int depth_cube_width, int depth_cube_height)
     : position(position),
       color(color)
 {
+    set_depth_cube_size(depth_cube_width, depth_cube_height);
+}
+
+point_light::~point_light()
+{
+    glDeleteTextures(1, &depth_cubemap_texture_id);
+    glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
+}
+
+void point_light::set_depth_cube_size(int depth_cube_width, int depth_cube_height)
+{
+    this->depth_cube_width = depth_cube_width;
+    this->depth_cube_height = depth_cube_height;
+
+    glDeleteTextures(1, &depth_cubemap_texture_id);
+    glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
+
     glGenTextures(1, &depth_cubemap_texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap_texture_id);
     for (unsigned int i = 0; i < 6; i++)
@@ -48,9 +66,4 @@ point_light::point_light(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-point_light::~point_light()
-{
-    glDeleteTextures(1, &depth_cubemap_texture_id);
-    glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
-}
 } // namespace pk

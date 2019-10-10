@@ -633,7 +633,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         directional_light->view = directional_light->calc_view(camera->position);
 
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
-        glViewport(0, 0, 4096, 4096);
+        glViewport(0, 0, directional_light->depth_map_width, directional_light->depth_map_height);
         glClear(GL_DEPTH_BUFFER_BIT);
         depth_program->bind();
         depth_program->set_mat4("projection", directional_light->projection);
@@ -650,7 +650,9 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
 
     for (auto &point_light : point_lights)
     {
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)512 / (float)512, 1.0f, 25.0f);
+        float far_plane = 25.0f;
+
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)point_light->depth_cube_width / (float)point_light->depth_cube_height, 1.0f, far_plane);
         std::vector<glm::mat4> shadow_matrices;
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -660,7 +662,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
-        glViewport(0, 0, 512, 512);
+        glViewport(0, 0, point_light->depth_cube_width, point_light->depth_cube_height);
         glClear(GL_DEPTH_BUFFER_BIT);
         depth_cube_program->bind();
         for (unsigned int i = 0; i < 6; i++)
@@ -668,7 +670,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
         }
         depth_cube_program->set_vec3("light.position", point_light->position);
-        depth_cube_program->set_float("far_plane", 25.0f);
+        depth_cube_program->set_float("far_plane", far_plane);
         for (auto &object : objects)
         {
             glm::mat4 object_model = object->calc_model();
@@ -1031,7 +1033,7 @@ void renderer::render_sprites(GLuint fbo_id)
         sprite_program->set_mat4("sprite.model", sprite_model);
         sprite_program->set_vec3("sprite.color", sprite->color);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, sprite->color_map->texture_id);
+        glBindTexture(GL_TEXTURE_2D, directional_lights[0]->depth_map_texture_id);
         glBindVertexArray(sprite_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, sprite_vertices_size);
         glBindVertexArray(0);
