@@ -13,7 +13,10 @@
 
 namespace pk
 {
-renderer::renderer(int render_width, int render_height)
+renderer::renderer(
+    int display_width, int display_height, float render_scale,
+    int reflection_width, int reflection_height,
+    int refraction_width, int refraction_height)
 {
     GLenum error = glewInit();
     if (error != GLEW_OK)
@@ -28,12 +31,13 @@ renderer::renderer(int render_width, int render_height)
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    glViewport(0, 0, render_width, render_height);
     glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
 
-    set_render_size(render_width, render_height);
+    set_screen_size(display_width, display_height, render_scale);
+    set_reflection_size(reflection_width, reflection_height);
+    set_refraction_size(refraction_width, refraction_height);
 
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
@@ -275,10 +279,12 @@ renderer::~renderer()
     delete screen_program;
 }
 
-void renderer::set_render_size(int render_width, int render_height)
+void renderer::set_screen_size(int display_width, int display_height, float render_scale)
 {
-    this->render_width = render_width;
-    this->render_height = render_height;
+    this->display_width = display_width;
+    this->display_height = display_height;
+    this->render_width = (int)(display_width * render_scale);
+    this->render_height = (int)(display_height * render_scale);
 
     glDeleteRenderbuffers(1, &screen_rbo_id);
     glDeleteTextures(1, &screen_texture_id);
@@ -288,15 +294,6 @@ void renderer::set_render_size(int render_width, int render_height)
     glDeleteTextures(1, &geometry_normal_texture_id);
     glDeleteTextures(1, &geometry_position_texture_id);
     glDeleteFramebuffers(1, &geometry_fbo_id);
-
-    glDeleteRenderbuffers(1, &water_reflection_rbo_id);
-    glDeleteTextures(1, &water_reflection_color_texture_id);
-    glDeleteFramebuffers(1, &water_reflection_fbo_id);
-
-    glDeleteRenderbuffers(1, &water_refraction_rbo_id);
-    glDeleteTextures(1, &water_refraction_depth_texture_id);
-    glDeleteTextures(1, &water_refraction_color_texture_id);
-    glDeleteFramebuffers(1, &water_refraction_fbo_id);
 
     // setup screen fbo
     glGenTextures(1, &screen_texture_id);
@@ -321,9 +318,9 @@ void renderer::set_render_size(int render_width, int render_height)
     glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo_id);
     glRenderbufferStorage(
         GL_RENDERBUFFER,
-        GL_DEPTH24_STENCIL8,
-        render_width,
-        render_height);
+        GL_DEPTH_STENCIL,
+        display_width,
+        display_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glGenFramebuffers(1, &screen_fbo_id);
@@ -344,9 +341,9 @@ void renderer::set_render_size(int render_width, int render_height)
     {
         std::cout << "Error: Couldn't complete screen framebuffer" << std::endl;
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup geometry fbo
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glGenTextures(1, &geometry_position_texture_id);
     glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
     glTexImage2D(
@@ -416,6 +413,16 @@ void renderer::set_render_size(int render_width, int render_height)
         std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void renderer::set_reflection_size(int reflection_width, int reflection_height)
+{
+    this->reflection_width = reflection_width;
+    this->reflection_height = reflection_height;
+
+    glDeleteRenderbuffers(1, &water_reflection_rbo_id);
+    glDeleteTextures(1, &water_reflection_color_texture_id);
+    glDeleteFramebuffers(1, &water_reflection_fbo_id);
 
     // setup water reflection fbo
     glGenTextures(1, &water_reflection_color_texture_id);
@@ -423,9 +430,9 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA8,
-        render_width,
-        render_height,
+        GL_RGBA,
+        reflection_width,
+        reflection_height,
         0,
         GL_RGBA,
         GL_UNSIGNED_BYTE,
@@ -439,8 +446,8 @@ void renderer::set_render_size(int render_width, int render_height)
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
-        render_width,
-        render_height);
+        reflection_width,
+        reflection_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glGenFramebuffers(1, &water_reflection_fbo_id);
@@ -462,6 +469,17 @@ void renderer::set_render_size(int render_width, int render_height)
         std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void renderer::set_refraction_size(int refraction_width, int refraction_height)
+{
+    this->refraction_width = refraction_width;
+    this->refraction_height = refraction_height;
+
+    glDeleteRenderbuffers(1, &water_refraction_rbo_id);
+    glDeleteTextures(1, &water_refraction_depth_texture_id);
+    glDeleteTextures(1, &water_refraction_color_texture_id);
+    glDeleteFramebuffers(1, &water_refraction_fbo_id);
 
     // setup water refraction fbo
     glGenTextures(1, &water_refraction_color_texture_id);
@@ -469,15 +487,17 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA8,
-        render_width,
-        render_height,
+        GL_RGBA,
+        refraction_width,
+        refraction_height,
         0,
         GL_RGBA,
         GL_UNSIGNED_BYTE,
         nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glGenTextures(1, &water_refraction_depth_texture_id);
@@ -485,9 +505,9 @@ void renderer::set_render_size(int render_width, int render_height)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_DEPTH_COMPONENT24,
-        render_width,
-        render_height,
+        GL_DEPTH_COMPONENT,
+        refraction_width,
+        refraction_height,
         0,
         GL_DEPTH_COMPONENT,
         GL_FLOAT,
@@ -501,8 +521,8 @@ void renderer::set_render_size(int render_width, int render_height)
     glRenderbufferStorage(
         GL_RENDERBUFFER,
         GL_DEPTH_COMPONENT,
-        render_width,
-        render_height);
+        refraction_width,
+        refraction_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glGenFramebuffers(1, &water_refraction_fbo_id);
@@ -572,7 +592,7 @@ void renderer::add_sprite(pk::sprite *sprite)
     sprites.push_back(sprite);
 }
 
-void renderer::flush(pk::camera *camera, float aspect, unsigned int elapsed_time, float delta_time)
+void renderer::flush(pk::camera *camera, unsigned int elapsed_time, float delta_time)
 {
     if (!camera)
     {
@@ -584,14 +604,14 @@ void renderer::flush(pk::camera *camera, float aspect, unsigned int elapsed_time
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    render_scene(screen_fbo_id, camera, aspect, elapsed_time, glm::vec4(0.0f));
+    render_scene(screen_fbo_id, render_width, render_height, camera, elapsed_time, glm::vec4(0.0f));
     if (waters.size() > 0)
     {
-        render_waters(screen_fbo_id, camera, aspect, elapsed_time);
+        render_waters(screen_fbo_id, camera, elapsed_time);
     }
     if (sprites.size() > 0)
     {
-        render_sprites(screen_fbo_id, aspect);
+        render_sprites(screen_fbo_id);
     }
     render_screen(0);
 
@@ -604,11 +624,9 @@ void renderer::flush(pk::camera *camera, float aspect, unsigned int elapsed_time
     sprites.clear();
 }
 
-void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane)
+void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane)
 {
-    glm::mat4 camera_projection = camera->calc_projection(aspect);
-    glm::mat4 camera_view = camera->calc_view();
-
+#if LIGHTING_MODE == LIGHTING_FORWARD || LIGHTING_MODE == LIGHTING_DEFERRED
     for (auto &directional_light : directional_lights)
     {
         directional_light->projection = directional_light->calc_projection();
@@ -627,7 +645,6 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             object->mesh->draw();
         }
         depth_program->unbind();
-        glViewport(0, 0, render_width, render_height);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -659,10 +676,14 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
             object->mesh->draw();
         }
         depth_cube_program->unbind();
-        glViewport(0, 0, render_width, render_height);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+#endif
 
+    glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
+    glm::mat4 camera_view = camera->calc_view();
+
+    glViewport(0, 0, width, height);
     if (objects.size() > 0)
     {
 #if LIGHTING_MODE == LIGHTING_COLOR
@@ -925,9 +946,9 @@ void renderer::render_scene(GLuint fbo_id, pk::camera *camera, float aspect, uns
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time)
+void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int elapsed_time)
 {
-    glm::mat4 camera_projection = camera->calc_projection(aspect);
+    glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
     glm::mat4 camera_view = camera->calc_view();
 
     water_program->bind();
@@ -954,7 +975,7 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
             glBindFramebuffer(GL_FRAMEBUFFER, water_reflection_fbo_id);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            render_scene(water_reflection_fbo_id, camera, aspect, elapsed_time, reflection_clipping_plane);
+            render_scene(water_reflection_fbo_id, reflection_width, reflection_height, camera, elapsed_time, reflection_clipping_plane);
             camera->position.y = old_camera_y;
             camera->pitch = old_camera_pitch;
         }
@@ -968,8 +989,9 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
         glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        render_scene(water_refraction_fbo_id, camera, aspect, elapsed_time, refraction_clipping_plane);
+        render_scene(water_refraction_fbo_id, refraction_width, refraction_height, camera, elapsed_time, refraction_clipping_plane);
 
+        glViewport(0, 0, render_width, render_height);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -996,8 +1018,9 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, float aspect, un
     }
 }
 
-void renderer::render_sprites(GLuint fbo_id, float aspect)
+void renderer::render_sprites(GLuint fbo_id)
 {
+    glViewport(0, 0, display_width, display_height);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
     sprite_program->bind();
     glm::mat4 camera_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
@@ -1019,6 +1042,7 @@ void renderer::render_sprites(GLuint fbo_id, float aspect)
 
 void renderer::render_screen(GLuint fbo_id)
 {
+    glViewport(0, 0, display_width, display_height);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);

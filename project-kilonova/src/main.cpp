@@ -27,8 +27,6 @@
 #include "water.hpp"
 
 constexpr const char *window_title = "Project Kilonova";
-constexpr int window_width = 1280;
-constexpr int window_height = 720;
 constexpr const char *version = "0.0.1";
 
 constexpr int fps_cap = 300;
@@ -50,6 +48,9 @@ int main(int argc, char *argv[])
         }
     }
 
+    int window_width = 1280;
+    int window_height = 720;
+
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GL_SetSwapInterval(0);
@@ -67,7 +68,12 @@ int main(int argc, char *argv[])
     TTF_Init();
     SDLNet_Init();
 
-    pk::renderer renderer(window_width, window_height);
+    float render_scale = 1.0f;
+
+    pk::renderer renderer(
+        window_width, window_height, render_scale,
+        window_width / 2, window_height / 2,
+        window_width / 2, window_height / 2);
     pk::audio audio;
 
     pk::mesh quad_mesh(
@@ -285,6 +291,24 @@ int main(int argc, char *argv[])
                     torch = !torch;
                 }
                 break;
+                case SDLK_MINUS:
+                {
+                    if (render_scale > 0.2f)
+                    {
+                        render_scale -= 0.1f;
+                    }
+                    renderer.set_screen_size(window_width, window_height, render_scale);
+                }
+                break;
+                case SDLK_EQUALS:
+                {
+                    if (render_scale < 1.0f)
+                    {
+                        render_scale += 0.1f;
+                    }
+                    renderer.set_screen_size(window_width, window_height, render_scale);
+                }
+                break;
                 case SDLK_RETURN:
                 {
                     if (keys[SDL_SCANCODE_LALT])
@@ -356,7 +380,9 @@ int main(int argc, char *argv[])
                     int width = event.window.data1;
                     int height = event.window.data2;
                     SDL_SetWindowSize(window, width, height);
-                    renderer.set_render_size(width, height);
+                    renderer.set_screen_size(width, height, render_scale);
+                    renderer.set_reflection_size(width / 2, height / 2);
+                    renderer.set_refraction_size(width / 2, height / 2);
                     std::cout << "Window resized to " << width << "x" << height << std::endl;
                 }
                 break;
@@ -450,9 +476,7 @@ int main(int argc, char *argv[])
         renderer.add_water(&test_water);
         renderer.add_terrain(&test_terrain);
         // renderer.add_sprite(&grass_sprite);
-        int width, height;
-        SDL_GetWindowSize(window, &width, &height);
-        renderer.flush(&main_camera, (float)width / (float)height, SDL_GetTicks(), delta_time);
+        renderer.flush(&main_camera, current_time, delta_time);
 
         SDL_GL_SwapWindow(window);
 

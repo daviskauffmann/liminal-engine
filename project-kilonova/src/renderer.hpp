@@ -20,10 +20,15 @@ namespace pk
 class renderer
 {
 public:
-    renderer(int render_width, int render_height);
+    renderer(
+        int display_width, int display_height, float render_scale,
+        int reflection_width, int reflection_height,
+        int refraction_width, int refraction_height);
     ~renderer();
 
-    void set_render_size(int render_width, int render_height);
+    void set_screen_size(int display_width, int display_height, float render_scale);
+    void set_reflection_size(int reflection_width, int reflection_height);
+    void set_refraction_size(int refraction_width, int refraction_height);
 
     void add_object(pk::object *object);
     void add_directional_light(pk::directional_light *directional_light);
@@ -33,12 +38,18 @@ public:
     void add_water(pk::water *water);
     void add_terrain(pk::terrain *terrain);
     void add_sprite(pk::sprite *sprite);
-    void flush(pk::camera *camera, float aspect, unsigned int elapsed_time, float delta_time);
+    void flush(pk::camera *camera, unsigned int elapsed_time, float delta_time);
 
 private:
     // settings
+    int display_width;
+    int display_height;
     int render_width;
     int render_height;
+    int reflection_width;
+    int reflection_height;
+    int refraction_width;
+    int refraction_height;
 
     // framebuffers
     GLuint screen_fbo_id;
@@ -106,9 +117,9 @@ private:
     std::vector<pk::terrain *> terrains;
     std::vector<pk::sprite *> sprites;
 
-    void render_scene(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time, glm::vec4 clipping_plane);
-    void render_waters(GLuint fbo_id, pk::camera *camera, float aspect, unsigned int elapsed_time);
-    void render_sprites(GLuint fbo_id, float aspect);
+    void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane);
+    void render_waters(GLuint fbo_id, pk::camera *camera, unsigned int elapsed_time);
+    void render_sprites(GLuint fbo_id);
     void render_screen(GLuint fbo_id);
 };
 } // namespace pk
