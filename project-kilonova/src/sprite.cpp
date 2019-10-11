@@ -5,12 +5,12 @@
 namespace pk
 {
 sprite::sprite(
-    pk::texture *color_map,
+    pk::texture *texture,
     glm::vec3 color,
     glm::vec2 position,
     float rotation,
     glm::vec2 scale)
-    : color_map(color_map),
+    : texture(texture),
       color(color),
       position(position),
       rotation(rotation),

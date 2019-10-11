@@ -6,14 +6,14 @@ in struct Vertex
 } vertex;
 
 uniform struct Screen {
-    sampler2D color_map;
+    sampler2D texture;
 } screen;
 
 out vec4 frag_color;
 
 void main()
 {
-	vec4 color = texture(screen.color_map, vertex.uv);
+	vec4 color = texture(screen.texture, vertex.uv);
 
 	// grayscale
 	float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
@@ -35,7 +35,7 @@ void main()
     vec3 sample_texture[9];
     for(int i = 0; i < 9; i++)
     {
-        sample_texture[i] = vec3(texture(screen.color_map, vertex.uv + offsets[i]));
+        sample_texture[i] = vec3(texture(screen.texture, vertex.uv + offsets[i]));
     }
 
 	// sharpen

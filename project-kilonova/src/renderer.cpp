@@ -203,7 +203,7 @@ renderer::renderer(
     geometry_program->unbind();
 
     skybox_program->bind();
-    skybox_program->set_int("skybox.color_map", 0);
+    skybox_program->set_int("skybox.texture", 0);
     skybox_program->unbind();
 
     water_program->bind();
@@ -219,11 +219,11 @@ renderer::renderer(
     terrain_program->unbind();
 
     sprite_program->bind();
-    sprite_program->set_int("sprite.color_map", 0);
+    sprite_program->set_int("sprite.texture", 0);
     sprite_program->unbind();
 
     screen_program->bind();
-    screen_program->set_int("screen.color_map", 0);
+    screen_program->set_int("screen.texture", 0);
     screen_program->unbind();
 
     set_screen_size(display_width, display_height, render_scale);
@@ -1033,7 +1033,7 @@ void renderer::render_sprites(GLuint fbo_id)
         sprite_program->set_mat4("sprite.model", sprite_model);
         sprite_program->set_vec3("sprite.color", sprite->color);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, directional_lights[0]->depth_map_texture_id);
+        glBindTexture(GL_TEXTURE_2D, sprite->texture->texture_id);
         glBindVertexArray(sprite_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, sprite_vertices_size);
         glBindVertexArray(0);
