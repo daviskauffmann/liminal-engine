@@ -21,7 +21,7 @@ uniform struct Material
     sampler2D normal_map;
     sampler2D metallic_map;
     sampler2D roughness_map;
-    sampler2D ao_map;
+    sampler2D occlusion_map;
 } material;
 
 uniform struct Light
@@ -106,7 +106,7 @@ void main()
     vec3 albedo = pow(texture(material.albedo_map, vertex.uv).rgb * material.albedo_color, vec3(2.2));
     float metallic = texture(material.metallic_map, vertex.uv).r;
     float roughness = texture(material.roughness_map, vertex.uv).r;
-    float ao = texture(material.ao_map, vertex.uv).r;
+    float ao = texture(material.occlusion_map, vertex.uv).r;
 
     vec3 n = calc_normal();
     vec3 v = normalize(camera.position - vertex.position);

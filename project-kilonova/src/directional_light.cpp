@@ -4,7 +4,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-constexpr float shadow_map_size = 10.0f;
+constexpr float shadow_map_size = 20.0f;
 
 namespace pk
 {

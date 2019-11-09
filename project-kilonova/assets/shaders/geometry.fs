@@ -14,7 +14,7 @@ uniform struct Material
     sampler2D normal_map;
     sampler2D metallic_map;
     sampler2D roughness_map;
-    sampler2D ao_map;
+    sampler2D occlusion_map;
 } material;
 
 layout (location = 0) out vec3 position_map;

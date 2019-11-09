@@ -14,7 +14,7 @@ struct material
     pk::texture *normal_map;
     pk::texture *metallic_map;
     pk::texture *roughness_map;
-    pk::texture *ao_map;
+    pk::texture *occlusion_map;
 
     material(
         pk::texture *albedo_map,
@@ -22,7 +22,7 @@ struct material
         pk::texture *normal_map,
         pk::texture *metallic_map,
         pk::texture *roughness_map,
-        pk::texture *ao_map);
+        pk::texture *occlusion_map);
 };
 } // namespace pk
 

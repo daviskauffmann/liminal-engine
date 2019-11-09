@@ -190,7 +190,7 @@ renderer::renderer(
     forward_program->set_int("material.normal_map", 1);
     forward_program->set_int("material.metallic_map", 2);
     forward_program->set_int("material.roughness_map", 3);
-    forward_program->set_int("material.ao_map", 4);
+    forward_program->set_int("material.occlusion_map", 4);
     forward_program->set_int("light.depth_map", 5);
     forward_program->set_int("light.depth_cubemap", 6);
     forward_program->unbind();
@@ -761,7 +761,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+                glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
                 forward_program->set_int("light.type", 0);
                 for (auto &directional_light : directional_lights)
                 {
@@ -794,7 +794,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+                glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
                 forward_program->set_int("light.type", 1);
                 for (auto &point_light : point_lights)
                 {
@@ -824,7 +824,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+                glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
                 forward_program->set_int("light.type", 2);
                 for (auto &spot_light : spot_lights)
                 {
@@ -868,7 +868,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             glActiveTexture(GL_TEXTURE3);
             glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, object->material->ao_map ? object->material->ao_map->texture_id : 0);
+            glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
             object->mesh->draw();
         }
         geometry_program->unbind();

@@ -400,6 +400,9 @@ int main(int argc, char *argv[])
             }
         }
 
+		glm::vec3 main_camera_front = main_camera.calc_front();
+		glm::vec3 main_camera_up = main_camera.calc_up();
+
         float speed = 5.0f * delta_time;
         if (keys[SDL_SCANCODE_LSHIFT])
         {
@@ -413,8 +416,6 @@ int main(int argc, char *argv[])
             // precomputed 1 / sqrt(2)
             speed *= 0.71f;
         }
-        glm::vec3 main_camera_front = main_camera.calc_front();
-        glm::vec3 main_camera_up = main_camera.calc_up();
         if (keys[SDL_SCANCODE_W])
         {
             main_camera.position += main_camera_front * speed;
@@ -440,7 +441,7 @@ int main(int argc, char *argv[])
         main_directional_light.direction.x = angle_sin;
         main_directional_light.direction.z = angle_cos;
         torch_spot_light.position = main_camera.position;
-        torch_spot_light.direction = main_camera_front;
+		torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 0.25f);
 
         audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
         camera_source.set_position(main_camera.position);
@@ -483,7 +484,7 @@ int main(int argc, char *argv[])
         renderer.set_skybox(&skybox_cubemap);
         renderer.add_water(&test_water);
         renderer.add_terrain(&test_terrain);
-        renderer.add_sprite(&grass_sprite);
+        // renderer.add_sprite(&grass_sprite);
         renderer.flush(&main_camera, current_time, delta_time);
 
         SDL_GL_SwapWindow(window);
@@ -492,7 +493,7 @@ int main(int argc, char *argv[])
         unsigned int frame_time = frame_end - frame_start;
         if (frame_delay > frame_time)
         {
-            SDL_Delay(frame_delay - frame_time);
+           SDL_Delay(frame_delay - frame_time);
         }
     }
 

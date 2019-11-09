@@ -13,18 +13,18 @@ terrain::terrain(int grid_x, int grid_z, pk::material *material)
 {
     std::vector<pk::vertex> vertices;
     std::vector<unsigned int> indices;
-    for (int i = 0; i < vertex_count; i++)
+    for (int y = 0; y < vertex_count; y++)
     {
-        for (int j = 0; j < vertex_count; j++)
+        for (int x = 0; x < vertex_count; x++)
         {
             glm::vec3 position(
-                -(float)j / ((float)vertex_count - 1) * size,
+                -(float)x / ((float)vertex_count - 1) * size,
                 sinf((float)(rand() % RAND_MAX)) - 2.0f,
-                -(float)i / ((float)vertex_count - 1) * size);
+                -(float)y / ((float)vertex_count - 1) * size);
             glm::vec3 normal(0.0f, 1.0f, 0.0f);
             glm::vec2 uv(
-                (float)j / ((float)vertex_count - 1),
-                (float)i / ((float)vertex_count - 1));
+                (float)x / ((float)vertex_count - 1),
+                (float)y / ((float)vertex_count - 1));
             auto vertex = pk::vertex(position, normal, uv);
             vertices.push_back(vertex);
         }
