@@ -680,6 +680,27 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         depth_cube_program->unbind();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
+    for (auto &spot_light : spot_lights)
+    {
+        spot_light->projection = spot_light->calc_projection(camera->fov, (float)width / (float)height);
+        spot_light->view = spot_light->calc_view(camera->pitch, camera->yaw, camera->roll);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, spot_light->depth_map_fbo_id);
+        glViewport(0, 0, spot_light->depth_map_width, spot_light->depth_map_height);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        depth_program->bind();
+        depth_program->set_mat4("projection", spot_light->projection);
+        depth_program->set_mat4("view", spot_light->view);
+        for (auto &object : objects)
+        {
+            glm::mat4 object_model = object->calc_model();
+            depth_program->set_mat4("object.model", object_model);
+            object->mesh->draw();
+        }
+        depth_program->unbind();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 #endif
 
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
@@ -833,8 +854,10 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                     forward_program->set_vec3("light.color", spot_light->color);
                     forward_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
                     forward_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
-                    // glActiveTexture(GL_TEXTURE5);
-                    // glBindTexture(GL_TEXTURE_2D, spot_light->depthmap_texture_id);
+                    forward_program->set_mat4("light.projection", spot_light->projection);
+                    forward_program->set_mat4("light.view", spot_light->view);
+                    glActiveTexture(GL_TEXTURE5);
+                    glBindTexture(GL_TEXTURE_2D, spot_light->depth_map_texture_id);
                     object->mesh->draw();
                 }
                 forward_program->unbind();

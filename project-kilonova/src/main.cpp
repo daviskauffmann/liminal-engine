@@ -225,7 +225,8 @@ int main(int argc, char *argv[])
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         cosf(glm::radians(12.5f)),
-        cosf(glm::radians(15.0f)));
+        cosf(glm::radians(15.0f)),
+		depth_map_width, depth_map_height);
 
     pk::water test_water(
         glm::vec3(0.0f, -2.0f, 0.0f),
@@ -400,8 +401,8 @@ int main(int argc, char *argv[])
             }
         }
 
-		glm::vec3 main_camera_front = main_camera.calc_front();
-		glm::vec3 main_camera_up = main_camera.calc_up();
+        glm::vec3 main_camera_front = main_camera.calc_front();
+        glm::vec3 main_camera_up = main_camera.calc_up();
 
         float speed = 5.0f * delta_time;
         if (keys[SDL_SCANCODE_LSHIFT])
@@ -441,7 +442,7 @@ int main(int argc, char *argv[])
         main_directional_light.direction.x = angle_sin;
         main_directional_light.direction.z = angle_cos;
         torch_spot_light.position = main_camera.position;
-		torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 0.25f);
+        torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 0.25f);
 
         audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
         camera_source.set_position(main_camera.position);
@@ -493,7 +494,7 @@ int main(int argc, char *argv[])
         unsigned int frame_time = frame_end - frame_start;
         if (frame_delay > frame_time)
         {
-           SDL_Delay(frame_delay - frame_time);
+            SDL_Delay(frame_delay - frame_time);
         }
     }
 

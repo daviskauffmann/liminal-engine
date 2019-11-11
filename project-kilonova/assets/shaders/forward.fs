@@ -175,7 +175,7 @@ void main()
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     
-    if (light.type == 0)
+    if (light.type == 0 || light.type == 2)
     {
         vec4 light_space_position = light.projection * light.view * vec4(vertex.position, 1.0);
         vec3 light_space_proj_coords = (light_space_position.xyz / light_space_position.w) * 0.5 + 0.5;
