@@ -5,7 +5,6 @@
 #include "cubemap.hpp"
 #include "directional_light.hpp"
 #include "display.hpp"
-#include "hdr_texture.hpp"
 #include "material.hpp"
 #include "mesh.hpp"
 #include "object.hpp"
@@ -120,14 +119,6 @@ int main(int argc, char *argv[])
     pk::texture iron_metallic_texture("assets/images/iron_metallic.png");
     pk::texture iron_roughness_texture("assets/images/iron_roughness.png");
     pk::texture iron_ao_texture("assets/images/iron_ao.png");
-
-    pk::cubemap skybox_cubemap(
-        {"assets/images/sky/right.jpg",
-         "assets/images/sky/left.jpg",
-         "assets/images/sky/top.jpg",
-         "assets/images/sky/bottom.jpg",
-         "assets/images/sky/front.jpg",
-         "assets/images/sky/back.jpg"});
 
     pk::sound bounce_sound("assets/audio/bounce.wav");
     pk::sound shoot_sound("assets/audio/shoot.wav");
@@ -456,7 +447,6 @@ int main(int argc, char *argv[])
         {
             renderer.add_spot_light(&torch_spot_light);
         }
-        renderer.set_skybox(&skybox_cubemap);
         renderer.add_water(&test_water);
         // renderer.add_terrain(&test_terrain);
         // renderer.add_sprite(&grass_sprite);

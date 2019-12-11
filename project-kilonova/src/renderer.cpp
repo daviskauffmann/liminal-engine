@@ -5,6 +5,8 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SDL/SDL_image.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #define LIGHTING_COLOR 1
 #define LIGHTING_TEXTURE 2
@@ -145,8 +147,13 @@ renderer::renderer(
 
     water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
     water_normal_texture = new pk::texture("assets/images/water_normal.png");
-    circus_backstage_hdr_texture = new pk::hdr_texture("assets/images/circus/Circus_Backstage_3k.hdr");
 
+    equirectangular_to_cubemap_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/equirectangular_to_cubemap.fs");
+    irradiance_convolution_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/irradiance_convolution_program.fs");
     depth_program = new pk::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
@@ -166,9 +173,9 @@ renderer::renderer(
     geometry_program = new pk::program(
         "assets/shaders/geometry.vs",
         "assets/shaders/geometry.fs");
-    skybox_program = new pk::program(
-        "assets/shaders/skybox.vs",
-        "assets/shaders/skybox.fs");
+    background_program = new pk::program(
+        "assets/shaders/background.vs",
+        "assets/shaders/background.fs");
     water_program = new pk::program(
         "assets/shaders/water.vs",
         "assets/shaders/water.fs");
@@ -181,9 +188,14 @@ renderer::renderer(
     screen_program = new pk::program(
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
-    equirectangular_to_cubemap_program = new pk::program(
-        "assets/shaders/hdr_cubemap.vs",
-        "assets/shaders/hdr_cubemap.fs");
+
+    equirectangular_to_cubemap_program->bind();
+    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
+    equirectangular_to_cubemap_program->unbind();
+
+    irradiance_convolution_program->bind();
+    irradiance_convolution_program->set_int("environment_cubemap", 0);
+    irradiance_convolution_program->unbind();
 
     texture_program->bind();
     texture_program->set_int("color_map", 0);
@@ -206,9 +218,9 @@ renderer::renderer(
     geometry_program->set_int("material.emission_map", 3);
     geometry_program->unbind();
 
-    skybox_program->bind();
-    skybox_program->set_int("skybox.texture", 0);
-    skybox_program->unbind();
+    background_program->bind();
+    background_program->set_int("environment_cubemap", 0);
+    background_program->unbind();
 
     water_program->bind();
     water_program->set_int("water.reflection_map", 0);
@@ -230,13 +242,33 @@ renderer::renderer(
     screen_program->set_int("screen.texture", 0);
     screen_program->unbind();
 
-    equirectangular_to_cubemap_program->bind();
-    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
-    equirectangular_to_cubemap_program->unbind();
-
     set_screen_size(display_width, display_height, render_scale);
     set_reflection_size(reflection_width, reflection_height);
     set_refraction_size(refraction_width, refraction_height);
+
+    // TODO: move below function so this can be recalculated during runtime
+    GLuint equirectangular_texture_id;
+    glGenTextures(1, &equirectangular_texture_id);
+    glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, num_components;
+    float *image = stbi_loadf("assets/images/circus/Circus_Backstage_3k.hdr", &width, &height, &num_components, 0);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB16F,
+        width,
+        height,
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        image);
+    stbi_image_free(image);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glGenTextures(1, &environment_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
@@ -251,16 +283,6 @@ renderer::renderer(
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    glGenRenderbuffers(1, &equirectangular_to_cubemap_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, equirectangular_to_cubemap_rbo_id);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    glGenFramebuffers(1, &equirectangular_to_cubemap_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, equirectangular_to_cubemap_fbo_id);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, equirectangular_to_cubemap_rbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 capture_views[] =
         {glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -269,12 +291,25 @@ renderer::renderer(
          glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
          glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
          glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+
+    GLuint capture_rbo_id;
+    glGenRenderbuffers(1, &capture_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    GLuint capture_fbo_id;
+    glGenFramebuffers(1, &capture_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, capture_rbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     equirectangular_to_cubemap_program->bind();
     equirectangular_to_cubemap_program->set_mat4("capture.projection", capture_projection);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, circus_backstage_hdr_texture->texture_id);
+    glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
     glViewport(0, 0, 512, 512);
-    glBindFramebuffer(GL_FRAMEBUFFER, equirectangular_to_cubemap_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     for (unsigned int i = 0; i < 6; i++)
     {
         equirectangular_to_cubemap_program->set_mat4("capture.view", capture_views[i]);
@@ -286,26 +321,67 @@ renderer::renderer(
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     equirectangular_to_cubemap_program->unbind();
+
+    glDeleteTextures(1, &equirectangular_texture_id);
+
+    glGenTextures(1, &irradiance_cubemap_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
+    for (unsigned int i = 0; i < 6; i++)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    irradiance_convolution_program->bind();
+    irradiance_convolution_program->set_mat4("capture.projection", capture_projection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
+    glViewport(0, 0, 32, 32);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+    for (unsigned int i = 0; i < 6; i++)
+    {
+        irradiance_convolution_program->set_mat4("capture.view", capture_views[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradiance_cubemap_id, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindVertexArray(skybox_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
+        glBindVertexArray(0);
+    }
+    irradiance_convolution_program->unbind();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glDeleteRenderbuffers(1, &capture_rbo_id);
+    glDeleteFramebuffers(1, &capture_fbo_id);
 }
 
 renderer::~renderer()
 {
     delete water_dudv_texture;
     delete water_normal_texture;
-    delete circus_backstage_hdr_texture;
 
+    delete equirectangular_to_cubemap_program;
+    delete irradiance_convolution_program;
     delete depth_program;
     delete depth_cube_program;
     delete color_program;
     delete texture_program;
     delete forward_program;
     delete geometry_program;
-    delete skybox_program;
+    delete background_program;
     delete water_program;
     delete terrain_program;
     delete sprite_program;
     delete screen_program;
-    delete equirectangular_to_cubemap_program;
 
     glDeleteRenderbuffers(1, &screen_rbo_id);
     glDeleteTextures(1, &screen_texture_id);
@@ -635,11 +711,6 @@ void renderer::add_point_light(pk::point_light *point_light)
 void renderer::add_spot_light(pk::spot_light *spot_light)
 {
     spot_lights.push_back(spot_light);
-}
-
-void renderer::set_skybox(pk::cubemap *skybox)
-{
-    this->skybox = skybox;
 }
 
 void renderer::add_water(pk::water *water)
@@ -1014,25 +1085,22 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         terrain_program->unbind();
         glDisable(GL_CLIP_DISTANCE0);
     }
-    if (skybox)
-    {
-        glDepthFunc(GL_LEQUAL);
-        glm::mat4 camera_view_no_translate = camera_view;
-        // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)elapsed_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
-        camera_view_no_translate[3][0] = 0.0f;
-        camera_view_no_translate[3][1] = 0.0f;
-        camera_view_no_translate[3][2] = 0.0f;
-        skybox_program->bind();
-        skybox_program->set_mat4("camera.projection", camera_projection);
-        skybox_program->set_mat4("camera.view", camera_view_no_translate);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
-        glBindVertexArray(skybox_vao_id);
-        glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
-        glBindVertexArray(0);
-        skybox_program->unbind();
-        glDepthFunc(GL_LESS);
-    }
+    glDepthFunc(GL_LEQUAL);
+    glm::mat4 camera_view_no_translate = camera_view;
+    // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)elapsed_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
+    camera_view_no_translate[3][0] = 0.0f;
+    camera_view_no_translate[3][1] = 0.0f;
+    camera_view_no_translate[3][2] = 0.0f;
+    background_program->bind();
+    background_program->set_mat4("camera.projection", camera_projection);
+    background_program->set_mat4("camera.view", camera_view_no_translate);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
+    glBindVertexArray(skybox_vao_id);
+    glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
+    glBindVertexArray(0);
+    background_program->unbind();
+    glDepthFunc(GL_LESS);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
