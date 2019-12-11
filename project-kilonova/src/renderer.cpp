@@ -4,6 +4,7 @@
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <SDL/SDL_image.h>
 
 #define LIGHTING_COLOR 1
 #define LIGHTING_TEXTURE 2
@@ -18,22 +19,21 @@ renderer::renderer(
     int reflection_width, int reflection_height,
     int refraction_width, int refraction_height)
 {
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+    const SDL_version *version = IMG_Linked_Version();
+    std::cout << "SDL_image " << std::to_string(version->major) << "." << std::to_string(version->minor) << "." << std::to_string(version->patch) << std::endl;
+
     GLenum error = glewInit();
     if (error != GLEW_OK)
     {
         std::cout << "Error: Couldn't initialize GLEW\n"
                   << glewGetErrorString(error) << std::endl;
     }
-
     std::cout << "GLEW " << glewGetString(GLEW_VERSION) << std::endl;
     std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
     std::cout << "Vendor " << glGetString(GL_VENDOR) << std::endl;
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-
-    glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
 
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
@@ -145,6 +145,7 @@ renderer::renderer(
 
     water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
     water_normal_texture = new pk::texture("assets/images/water_normal.png");
+    circus_backstage_hdr_texture = new pk::hdr_texture("assets/images/circus/Circus_Backstage_3k.hdr");
 
     depth_program = new pk::program(
         "assets/shaders/depth.vs",
@@ -180,6 +181,9 @@ renderer::renderer(
     screen_program = new pk::program(
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
+    equirectangular_to_cubemap_program = new pk::program(
+        "assets/shaders/hdr_cubemap.vs",
+        "assets/shaders/hdr_cubemap.fs");
 
     texture_program->bind();
     texture_program->set_int("color_map", 0);
@@ -226,15 +230,69 @@ renderer::renderer(
     screen_program->set_int("screen.texture", 0);
     screen_program->unbind();
 
+    equirectangular_to_cubemap_program->bind();
+    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
+    equirectangular_to_cubemap_program->unbind();
+
     set_screen_size(display_width, display_height, render_scale);
     set_reflection_size(reflection_width, reflection_height);
     set_refraction_size(refraction_width, refraction_height);
+
+    glGenTextures(1, &environment_cubemap_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
+    for (unsigned int i = 0; i < 6; i++)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    glGenRenderbuffers(1, &equirectangular_to_cubemap_rbo_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, equirectangular_to_cubemap_rbo_id);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glGenFramebuffers(1, &equirectangular_to_cubemap_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, equirectangular_to_cubemap_fbo_id);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, equirectangular_to_cubemap_rbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 capture_views[] =
+        {glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+    equirectangular_to_cubemap_program->bind();
+    equirectangular_to_cubemap_program->set_mat4("capture.projection", capture_projection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, circus_backstage_hdr_texture->texture_id);
+    glViewport(0, 0, 512, 512);
+    glBindFramebuffer(GL_FRAMEBUFFER, equirectangular_to_cubemap_fbo_id);
+    for (unsigned int i = 0; i < 6; i++)
+    {
+        equirectangular_to_cubemap_program->set_mat4("capture.view", capture_views[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, environment_cubemap_id, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindVertexArray(skybox_vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
+        glBindVertexArray(0);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    equirectangular_to_cubemap_program->unbind();
 }
 
 renderer::~renderer()
 {
     delete water_dudv_texture;
     delete water_normal_texture;
+    delete circus_backstage_hdr_texture;
 
     delete depth_program;
     delete depth_cube_program;
@@ -247,6 +305,7 @@ renderer::~renderer()
     delete terrain_program;
     delete sprite_program;
     delete screen_program;
+    delete equirectangular_to_cubemap_program;
 
     glDeleteRenderbuffers(1, &screen_rbo_id);
     glDeleteTextures(1, &screen_texture_id);
@@ -277,6 +336,8 @@ renderer::~renderer()
 
     glDeleteBuffers(1, &screen_vbo_id);
     glDeleteVertexArrays(1, &screen_vao_id);
+
+    IMG_Quit();
 }
 
 void renderer::set_screen_size(int display_width, int display_height, float render_scale)
@@ -469,6 +530,10 @@ void renderer::set_reflection_size(int reflection_width, int reflection_height)
         std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
 }
 
 void renderer::set_refraction_size(int refraction_width, int refraction_height)
@@ -961,7 +1026,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         skybox_program->set_mat4("camera.projection", camera_projection);
         skybox_program->set_mat4("camera.view", camera_view_no_translate);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture_id);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
         glBindVertexArray(skybox_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
         glBindVertexArray(0);

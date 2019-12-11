@@ -30,10 +30,12 @@ program::program(
         glGetProgramiv(program_id, GL_LINK_STATUS, &success);
         if (!success)
         {
-            GLchar info_log[1024];
-            glGetProgramInfoLog(program_id, sizeof(info_log), nullptr, info_log);
+            GLint length;
+            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+            std::vector<GLchar> info_log(length);
+            glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
             std::cout << "Error: Program linking failed\n"
-                      << info_log << std::endl;
+                      << &info_log[0] << std::endl;
         }
     }
     glDetachShader(program_id, vertex_shader);
@@ -51,10 +53,12 @@ program::program(
         glGetProgramiv(program_id, GL_VALIDATE_STATUS, &success);
         if (!success)
         {
-            GLchar info_log[1024];
-            glGetProgramInfoLog(program_id, sizeof(info_log), nullptr, info_log);
+            GLint length;
+            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+            std::vector<GLchar> info_log(length);
+            glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
             std::cout << "Error: Program validation failed\n"
-                      << info_log << std::endl;
+                      << &info_log[0] << std::endl;
         }
     }
 }
@@ -128,7 +132,7 @@ void program::set_mat4(const std::string &name, glm::mat4 mat4) const
 
 GLuint program::create_shader(GLenum type, const std::string &filename) const
 {
-    GLuint shader = glCreateShader(type);
+    GLuint shader_id = glCreateShader(type);
     std::ifstream file;
     file.open(filename);
     std::stringstream stream;
@@ -136,17 +140,19 @@ GLuint program::create_shader(GLenum type, const std::string &filename) const
     file.close();
     std::string source_str = stream.str();
     const char *source_c_str = source_str.c_str();
-    glShaderSource(shader, 1, &source_c_str, nullptr);
-    glCompileShader(shader);
+    glShaderSource(shader_id, 1, &source_c_str, nullptr);
+    glCompileShader(shader_id);
     GLint success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        GLchar info_log[1024];
-        glGetShaderInfoLog(shader, sizeof(info_log), nullptr, info_log);
+        GLint length;
+        glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
+        std::vector<GLchar> info_log(length);
+        glGetShaderInfoLog(shader_id, length, &length, &info_log[0]);
         std::cout << "Error: Shader compilation failed\n"
-                  << info_log << std::endl;
+                  << &info_log[0] << std::endl;
     }
-    return shader;
+    return shader_id;
 }
 } // namespace pk

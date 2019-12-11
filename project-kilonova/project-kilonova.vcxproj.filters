@@ -72,6 +72,15 @@
     <ClCompile Include="src\terrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\atlas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\display.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hdr_texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\water.hpp">
@@ -126,6 +135,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\terrain.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\atlas.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\display.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hdr_texture.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

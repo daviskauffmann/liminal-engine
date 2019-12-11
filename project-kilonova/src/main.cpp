@@ -1,16 +1,11 @@
 #include <iostream>
 
-#include <glm/glm.hpp>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_mixer.h>
-#include <SDL/SDL_net.h>
-#include <SDL/SDL_ttf.h>
-
 #include "audio.hpp"
 #include "camera.hpp"
 #include "cubemap.hpp"
 #include "directional_light.hpp"
+#include "display.hpp"
+#include "hdr_texture.hpp"
 #include "material.hpp"
 #include "mesh.hpp"
 #include "object.hpp"
@@ -44,7 +39,7 @@ int main(int argc, char *argv[])
         }
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
         {
-            std::cout << version << std::endl;
+            std::cout << window_title << " " << version << std::endl;
         }
     }
 
@@ -56,23 +51,7 @@ int main(int argc, char *argv[])
     int depth_cube_width = 512;
     int depth_cube_height = 512;
 
-    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_GL_SetSwapInterval(0);
-    SDL_Window *window = SDL_CreateWindow(
-        window_title,
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        window_width,
-        window_height,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    SDL_GLContext context = SDL_GL_CreateContext(window);
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-    Mix_Init(0);
-    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
-    TTF_Init();
-    SDLNet_Init();
-
+    pk::display display(window_title, window_width, window_height);
     pk::renderer renderer(
         window_width, window_height, render_scale,
         window_width / 2, window_height / 2,
@@ -226,7 +205,7 @@ int main(int argc, char *argv[])
         glm::vec3(1.0f, 1.0f, 1.0f),
         cosf(glm::radians(12.5f)),
         cosf(glm::radians(15.0f)),
-		depth_map_width, depth_map_height);
+        depth_map_width, depth_map_height);
 
     pk::water test_water(
         glm::vec3(0.0f, -2.0f, 0.0f),
@@ -251,6 +230,9 @@ int main(int argc, char *argv[])
     pk::source origin_source;
     pk::source camera_source;
 
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_GL_SetSwapInterval(0);
+
     unsigned int current_time = 0;
     float fps_update_timer = 0.0f;
     bool torch = true;
@@ -271,7 +253,7 @@ int main(int argc, char *argv[])
             fps_update_timer = 0.0f;
             char title[256];
             sprintf(title, "%s %s - FPS: %d", window_title, version, (int)(1 / delta_time));
-            SDL_SetWindowTitle(window, title);
+            display.set_title(title);
         }
 
         int num_keys;
@@ -322,15 +304,7 @@ int main(int argc, char *argv[])
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        unsigned int flags = SDL_GetWindowFlags(window);
-                        if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
-                        {
-                            SDL_SetWindowFullscreen(window, 0);
-                        }
-                        else
-                        {
-                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-                        }
+                        display.toggle_fullscreen();
                     }
                 }
                 break;
@@ -388,7 +362,7 @@ int main(int argc, char *argv[])
                 {
                     int width = event.window.data1;
                     int height = event.window.data2;
-                    SDL_SetWindowSize(window, width, height);
+                    display.set_window_size(width, height);
                     renderer.set_screen_size(width, height, render_scale);
                     renderer.set_reflection_size(width / 2, height / 2);
                     renderer.set_refraction_size(width / 2, height / 2);
@@ -442,7 +416,7 @@ int main(int argc, char *argv[])
         main_directional_light.direction.x = angle_sin;
         main_directional_light.direction.z = angle_cos;
         torch_spot_light.position = main_camera.position;
-        torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 0.25f);
+        torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 30.0f * delta_time);
 
         audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
         camera_source.set_position(main_camera.position);
@@ -484,11 +458,11 @@ int main(int argc, char *argv[])
         }
         renderer.set_skybox(&skybox_cubemap);
         renderer.add_water(&test_water);
-        renderer.add_terrain(&test_terrain);
+        // renderer.add_terrain(&test_terrain);
         // renderer.add_sprite(&grass_sprite);
         renderer.flush(&main_camera, current_time, delta_time);
 
-        SDL_GL_SwapWindow(window);
+        display.swap();
 
         unsigned int frame_end = SDL_GetTicks();
         unsigned int frame_time = frame_end - frame_start;
@@ -497,15 +471,6 @@ int main(int argc, char *argv[])
             SDL_Delay(frame_delay - frame_time);
         }
     }
-
-    SDLNet_Quit();
-    TTF_Quit();
-    Mix_CloseAudio();
-    Mix_Quit();
-    IMG_Quit();
-    SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 
     return 0;
 }
