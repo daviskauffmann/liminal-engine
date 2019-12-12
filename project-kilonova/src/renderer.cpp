@@ -37,6 +37,10 @@ renderer::renderer(
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
+    glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
          -1.0f, +1.0f,
@@ -153,7 +157,7 @@ renderer::renderer(
         "assets/shaders/equirectangular_to_cubemap.fs");
     irradiance_convolution_program = new pk::program(
         "assets/shaders/cubemap.vs",
-        "assets/shaders/irradiance_convolution_program.fs");
+        "assets/shaders/irradiance_convolution.fs");
     depth_program = new pk::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
@@ -167,9 +171,12 @@ renderer::renderer(
     texture_program = new pk::program(
         "assets/shaders/texture.vs",
         "assets/shaders/texture.fs");
-    forward_program = new pk::program(
+    forward_ambient_program = new pk::program(
         "assets/shaders/forward.vs",
-        "assets/shaders/forward.fs");
+        "assets/shaders/forward_ambient.fs");
+    forward_lighting_program = new pk::program(
+        "assets/shaders/forward.vs",
+        "assets/shaders/forward_lighting.fs");
     geometry_program = new pk::program(
         "assets/shaders/geometry.vs",
         "assets/shaders/geometry.fs");
@@ -201,15 +208,24 @@ renderer::renderer(
     texture_program->set_int("color_map", 0);
     texture_program->unbind();
 
-    forward_program->bind();
-    forward_program->set_int("material.albedo_map", 0);
-    forward_program->set_int("material.normal_map", 1);
-    forward_program->set_int("material.metallic_map", 2);
-    forward_program->set_int("material.roughness_map", 3);
-    forward_program->set_int("material.occlusion_map", 4);
-    forward_program->set_int("light.depth_map", 5);
-    forward_program->set_int("light.depth_cubemap", 6);
-    forward_program->unbind();
+    forward_ambient_program->bind();
+    forward_ambient_program->set_int("material.albedo_map", 0);
+    forward_ambient_program->set_int("material.normal_map", 1);
+    forward_ambient_program->set_int("material.metallic_map", 2);
+    forward_ambient_program->set_int("material.roughness_map", 3);
+    forward_ambient_program->set_int("material.occlusion_map", 4);
+    forward_ambient_program->set_int("irradiance_cubemap", 5);
+    forward_ambient_program->unbind();
+
+    forward_lighting_program->bind();
+    forward_lighting_program->set_int("material.albedo_map", 0);
+    forward_lighting_program->set_int("material.normal_map", 1);
+    forward_lighting_program->set_int("material.metallic_map", 2);
+    forward_lighting_program->set_int("material.roughness_map", 3);
+    forward_lighting_program->set_int("material.occlusion_map", 4);
+    forward_lighting_program->set_int("light.depth_map", 5);
+    forward_lighting_program->set_int("light.depth_cubemap", 6);
+    forward_lighting_program->unbind();
 
     geometry_program->bind();
     geometry_program->set_int("material.diffuse_map", 0);
@@ -252,7 +268,7 @@ renderer::renderer(
     glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
     stbi_set_flip_vertically_on_load(true);
     int width, height, num_components;
-    float *image = stbi_loadf("assets/images/circus/Circus_Backstage_3k.hdr", &width, &height, &num_components, 0);
+    float *image = stbi_loadf("assets/images/env/GCanyon_C_YumaPoint_3k.hdr", &width, &height, &num_components, 0);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -375,7 +391,8 @@ renderer::~renderer()
     delete depth_cube_program;
     delete color_program;
     delete texture_program;
-    delete forward_program;
+    delete forward_ambient_program;
+    delete forward_lighting_program;
     delete geometry_program;
     delete background_program;
     delete water_program;
@@ -606,10 +623,6 @@ void renderer::set_reflection_size(int reflection_width, int reflection_height)
         std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
 }
 
 void renderer::set_refraction_size(int refraction_width, int refraction_height)
@@ -887,14 +900,27 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         for (auto &object : objects)
         {
             glm::mat4 object_model = object->calc_model();
-            color_program->bind();
-            color_program->set_mat4("camera.projection", camera_projection);
-            color_program->set_mat4("camera.view", camera_view);
-            color_program->set_mat4("object.model", object_model);
-            color_program->set_vec3("color", glm::vec3(0.0f));
-            color_program->set_vec4("clipping_plane", clipping_plane);
+            forward_ambient_program->bind();
+            forward_ambient_program->set_mat4("camera.projection", camera_projection);
+            forward_ambient_program->set_mat4("camera.view", camera_view);
+            forward_ambient_program->set_vec3("camera.position", camera->position);
+            forward_ambient_program->set_mat4("object.model", object_model);
+            forward_ambient_program->set_vec3("material.albedo_color", object->material->albedo_color);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, object->material->metallic_map ? object->material->metallic_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
+            forward_ambient_program->set_vec4("clipping_plane", clipping_plane);
             object->mesh->draw();
-            color_program->unbind();
+            forward_ambient_program->unbind();
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
@@ -902,13 +928,13 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             glDepthFunc(GL_EQUAL);
             if (directional_lights.size() > 0)
             {
-                forward_program->bind();
-                forward_program->set_mat4("camera.projection", camera_projection);
-                forward_program->set_mat4("camera.view", camera_view);
-                forward_program->set_vec3("camera.position", camera->position);
-                forward_program->set_mat4("object.model", object_model);
-                forward_program->set_vec3("material.albedo_color", object->material->albedo_color);
-                forward_program->set_vec4("clipping_plane", clipping_plane);
+                forward_lighting_program->bind();
+                forward_lighting_program->set_mat4("camera.projection", camera_projection);
+                forward_lighting_program->set_mat4("camera.view", camera_view);
+                forward_lighting_program->set_vec3("camera.position", camera->position);
+                forward_lighting_program->set_mat4("object.model", object_model);
+                forward_lighting_program->set_vec3("material.albedo_color", object->material->albedo_color);
+                forward_lighting_program->set_vec4("clipping_plane", clipping_plane);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -919,29 +945,29 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
-                forward_program->set_int("light.type", 0);
+                forward_lighting_program->set_int("light.type", 0);
                 for (auto &directional_light : directional_lights)
                 {
-                    forward_program->set_vec3("light.direction", directional_light->direction);
-                    forward_program->set_vec3("light.color", directional_light->color);
-                    forward_program->set_mat4("light.projection", directional_light->projection);
-                    forward_program->set_mat4("light.view", directional_light->view);
+                    forward_lighting_program->set_vec3("light.direction", directional_light->direction);
+                    forward_lighting_program->set_vec3("light.color", directional_light->color);
+                    forward_lighting_program->set_mat4("light.projection", directional_light->projection);
+                    forward_lighting_program->set_mat4("light.view", directional_light->view);
                     glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
                     object->mesh->draw();
                 }
-                forward_program->unbind();
+                forward_lighting_program->unbind();
             }
             if (point_lights.size() > 0)
             {
-                forward_program->bind();
-                forward_program->set_mat4("camera.projection", camera_projection);
-                forward_program->set_mat4("camera.view", camera_view);
-                forward_program->set_vec3("camera.position", camera->position);
-                forward_program->set_mat4("object.model", object_model);
-                forward_program->set_vec3("material.albedo_color", object->material->albedo_color);
-                forward_program->set_vec4("clipping_plane", clipping_plane);
-                forward_program->set_float("far_plane", 25.0f);
+                forward_lighting_program->bind();
+                forward_lighting_program->set_mat4("camera.projection", camera_projection);
+                forward_lighting_program->set_mat4("camera.view", camera_view);
+                forward_lighting_program->set_vec3("camera.position", camera->position);
+                forward_lighting_program->set_mat4("object.model", object_model);
+                forward_lighting_program->set_vec3("material.albedo_color", object->material->albedo_color);
+                forward_lighting_program->set_vec4("clipping_plane", clipping_plane);
+                forward_lighting_program->set_float("far_plane", 25.0f);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -952,26 +978,26 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
-                forward_program->set_int("light.type", 1);
+                forward_lighting_program->set_int("light.type", 1);
                 for (auto &point_light : point_lights)
                 {
-                    forward_program->set_vec3("light.position", point_light->position);
-                    forward_program->set_vec3("light.color", point_light->color);
+                    forward_lighting_program->set_vec3("light.position", point_light->position);
+                    forward_lighting_program->set_vec3("light.color", point_light->color);
                     glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, point_light->depth_cubemap_texture_id);
                     object->mesh->draw();
                 }
-                forward_program->unbind();
+                forward_lighting_program->unbind();
             }
             if (spot_lights.size() > 0)
             {
-                forward_program->bind();
-                forward_program->set_mat4("camera.projection", camera_projection);
-                forward_program->set_mat4("camera.view", camera_view);
-                forward_program->set_vec3("camera.position", camera->position);
-                forward_program->set_mat4("object.model", object_model);
-                forward_program->set_vec3("material.albedo_color", object->material->albedo_color);
-                forward_program->set_vec4("clipping_plane", clipping_plane);
+                forward_lighting_program->bind();
+                forward_lighting_program->set_mat4("camera.projection", camera_projection);
+                forward_lighting_program->set_mat4("camera.view", camera_view);
+                forward_lighting_program->set_vec3("camera.position", camera->position);
+                forward_lighting_program->set_mat4("object.model", object_model);
+                forward_lighting_program->set_vec3("material.albedo_color", object->material->albedo_color);
+                forward_lighting_program->set_vec4("clipping_plane", clipping_plane);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE1);
@@ -982,21 +1008,21 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
-                forward_program->set_int("light.type", 2);
+                forward_lighting_program->set_int("light.type", 2);
                 for (auto &spot_light : spot_lights)
                 {
-                    forward_program->set_vec3("light.position", spot_light->position);
-                    forward_program->set_vec3("light.direction", spot_light->direction);
-                    forward_program->set_vec3("light.color", spot_light->color);
-                    forward_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
-                    forward_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
-                    forward_program->set_mat4("light.projection", spot_light->projection);
-                    forward_program->set_mat4("light.view", spot_light->view);
+                    forward_lighting_program->set_vec3("light.position", spot_light->position);
+                    forward_lighting_program->set_vec3("light.direction", spot_light->direction);
+                    forward_lighting_program->set_vec3("light.color", spot_light->color);
+                    forward_lighting_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
+                    forward_lighting_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
+                    forward_lighting_program->set_mat4("light.projection", spot_light->projection);
+                    forward_lighting_program->set_mat4("light.view", spot_light->view);
                     glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, spot_light->depth_map_texture_id);
                     object->mesh->draw();
                 }
-                forward_program->unbind();
+                forward_lighting_program->unbind();
             }
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);

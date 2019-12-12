@@ -100,7 +100,8 @@ private:
     pk::program *depth_cube_program;
     pk::program *color_program;
     pk::program *texture_program;
-    pk::program *forward_program;
+    pk::program *forward_ambient_program;
+    pk::program *forward_lighting_program;
     pk::program *geometry_program;
     pk::program *background_program;
     pk::program *water_program;

@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
     pk::object floor_object(
         &cube_mesh,
         &default_material,
-        glm::vec3(0.0f, -4.0f, 0.0f),
+        glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(10.0f, 1.0f, 10.0f));
     pk::object box_1_object(
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
         glm::vec3(0.5f, 0.5f, 0.5f));
 
     pk::directional_light main_directional_light(
-        glm::vec3(-0.2f, -1.0f, -0.3f),
+        glm::vec3(0.352286f, -0.547564f, -0.758992f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         depth_map_width, depth_map_height);
 
@@ -266,6 +266,12 @@ int main(int argc, char *argv[])
                     {
                         quit = true;
                     }
+                }
+                break;
+                case SDLK_e:
+                {
+                    std::cout << main_camera.position.x << ", " << main_camera.position.y << ", " << main_camera.position.z << std::endl;
+                    std::cout << main_camera.calc_front().x << ", " << main_camera.calc_front().y << ", " << main_camera.calc_front().z << std::endl;
                 }
                 break;
                 case SDLK_f:
@@ -404,8 +410,8 @@ int main(int argc, char *argv[])
         float angle_cos = cosf(angle);
         box_1_object.rotation.x = angle_sin;
         box_1_object.rotation.y = angle_cos;
-        main_directional_light.direction.x = angle_sin;
-        main_directional_light.direction.z = angle_cos;
+        // main_directional_light.direction.x = angle_sin;
+        // main_directional_light.direction.z = angle_cos;
         torch_spot_light.position = main_camera.position;
         torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 30.0f * delta_time);
 
@@ -439,10 +445,10 @@ int main(int argc, char *argv[])
         renderer.add_object(&box_4_object);
         renderer.add_object(&box_5_object);
         renderer.add_directional_light(&main_directional_light);
-        renderer.add_point_light(&red_point_light);
-        renderer.add_point_light(&yellow_point_light);
-        renderer.add_point_light(&green_point_light);
-        renderer.add_point_light(&blue_point_light);
+        // renderer.add_point_light(&red_point_light);
+        // renderer.add_point_light(&yellow_point_light);
+        // renderer.add_point_light(&green_point_light);
+        // renderer.add_point_light(&blue_point_light);
         if (torch)
         {
             renderer.add_spot_light(&torch_spot_light);
