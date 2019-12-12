@@ -33,6 +33,5 @@ void main()
     }
     irradiance = PI * irradiance * (1.0 / float(num_samples));
     
-    irradiance = texture(environment_cubemap, vertex.position).rgb;
     frag_color = vec4(irradiance, 1.0);
 }

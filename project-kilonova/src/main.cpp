@@ -114,59 +114,128 @@ int main(int argc, char *argv[])
          30, 31, 32,
          33, 34, 35});
 
+    pk::texture aluminum_albedo_texture("assets/images/aluminum_albedo.png");
+    pk::texture aluminum_normal_texture("assets/images/aluminum_normal.png");
+    pk::texture aluminum_metallic_texture("assets/images/aluminum_metallic.png");
+    pk::texture aluminum_roughness_texture("assets/images/aluminum_roughness.png");
+    pk::texture aluminum_ao_texture("assets/images/aluminum_ao.png");
+    pk::texture cloth_albedo_texture("assets/images/cloth_albedo.png");
+    pk::texture cloth_normal_texture("assets/images/cloth_normal.png");
+    pk::texture cloth_metallic_texture("assets/images/cloth_metallic.png");
+    pk::texture cloth_roughness_texture("assets/images/cloth_roughness.png");
+    pk::texture cloth_ao_texture("assets/images/cloth_ao.png");
     pk::texture iron_albedo_texture("assets/images/iron_albedo.png");
     pk::texture iron_normal_texture("assets/images/iron_normal.png");
     pk::texture iron_metallic_texture("assets/images/iron_metallic.png");
     pk::texture iron_roughness_texture("assets/images/iron_roughness.png");
     pk::texture iron_ao_texture("assets/images/iron_ao.png");
+    pk::texture ground_albedo_texture("assets/images/ground_albedo.png");
+    pk::texture ground_normal_texture("assets/images/ground_normal.png");
+    pk::texture ground_metallic_texture("assets/images/ground_metallic.png");
+    pk::texture ground_roughness_texture("assets/images/ground_roughness.png");
+    pk::texture ground_ao_texture("assets/images/ground_ao.png");
+    pk::texture rock_albedo_texture("assets/images/rock_albedo.png");
+    pk::texture rock_normal_texture("assets/images/rock_normal.png");
+    pk::texture rock_metallic_texture("assets/images/rock_metallic.png");
+    pk::texture rock_roughness_texture("assets/images/rock_roughness.png");
+    pk::texture rock_ao_texture("assets/images/rock_ao.png");
+    pk::texture grass_albedo_texture("assets/images/grass_albedo.png");
+    pk::texture grass_normal_texture("assets/images/grass_normal.png");
+    pk::texture grass_metallic_texture("assets/images/grass_metallic.png");
+    pk::texture grass_roughness_texture("assets/images/grass_roughness.png");
+    pk::texture grass_ao_texture("assets/images/grass_ao.png");
+    pk::texture wood_albedo_texture("assets/images/wood_albedo.png");
+    pk::texture wood_normal_texture("assets/images/wood_normal.png");
+    pk::texture wood_metallic_texture("assets/images/wood_metallic.png");
+    pk::texture wood_roughness_texture("assets/images/wood_roughness.png");
+    pk::texture wood_ao_texture("assets/images/wood_ao.png");
 
-    pk::sound bounce_sound("assets/audio/bounce.wav");
-    pk::sound shoot_sound("assets/audio/shoot.wav");
-
-    pk::material default_material(
+    pk::material aluminum_material(
+        &aluminum_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        &aluminum_normal_texture,
+        &aluminum_metallic_texture,
+        &aluminum_roughness_texture,
+        &aluminum_ao_texture);
+    pk::material cloth_material(
+        &cloth_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        &cloth_normal_texture,
+        &cloth_metallic_texture,
+        &cloth_roughness_texture,
+        &cloth_ao_texture);
+    pk::material iron_material(
         &iron_albedo_texture,
         glm::vec3(1.0f, 1.0f, 1.0f),
         &iron_normal_texture,
         &iron_metallic_texture,
         &iron_roughness_texture,
         &iron_ao_texture);
+    pk::material ground_material(
+        &ground_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        &ground_normal_texture,
+        &ground_metallic_texture,
+        &ground_roughness_texture,
+        &ground_ao_texture);
+    pk::material rock_material(
+        &rock_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        &rock_normal_texture,
+        &rock_metallic_texture,
+        &rock_roughness_texture,
+        &rock_ao_texture);
+    pk::material grass_material(
+        &grass_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        &grass_normal_texture,
+        &grass_metallic_texture,
+        &grass_roughness_texture,
+        &grass_ao_texture);
+    pk::material wood_material(
+        &wood_albedo_texture,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        &wood_normal_texture,
+        &wood_metallic_texture,
+        &wood_roughness_texture,
+        &wood_ao_texture);
 
     pk::object floor_object(
         &cube_mesh,
-        &default_material,
+        &ground_material,
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(10.0f, 1.0f, 10.0f));
     pk::object box_1_object(
         &cube_mesh,
-        &default_material,
-        glm::vec3(0.0f, 1.0f, 0.0f),
+        &iron_material,
+        glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_2_object(
         &cube_mesh,
-        &default_material,
-        glm::vec3(2.0f, -0.5f, 0.0f),
+        &cloth_material,
+        glm::vec3(4.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.5f, 0.5f, 0.5f));
+        glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_3_object(
         &cube_mesh,
-        &default_material,
-        glm::vec3(0.0f, -0.5f, 2.0f),
+        &rock_material,
+        glm::vec3(0.0f, 0.0f, 4.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.5f, 0.5f, 0.5f));
+        glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_4_object(
         &cube_mesh,
-        &default_material,
-        glm::vec3(-2.0f, -0.5f, 0.0f),
+        &wood_material,
+        glm::vec3(-4.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.5f, 0.5f, 0.5f));
+        glm::vec3(1.0f, 1.0f, 1.0f));
     pk::object box_5_object(
         &cube_mesh,
-        &default_material,
-        glm::vec3(0.0f, -0.5f, -2.0f),
+        &aluminum_material,
+        glm::vec3(0.0f, 0.0f, -4.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.5f, 0.5f, 0.5f));
+        glm::vec3(1.0f, 1.0f, 1.0f));
 
     pk::directional_light main_directional_light(
         glm::vec3(0.352286f, -0.547564f, -0.758992f),
@@ -202,14 +271,20 @@ int main(int argc, char *argv[])
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec2(100.0f, 100.0f));
 
-    pk::terrain test_terrain(0, 0, &default_material);
+    pk::terrain test_terrain(0, 0, &grass_material);
 
     pk::sprite grass_sprite(
-        &iron_albedo_texture,
+        nullptr,
         glm::vec3(1.0f, 1.0f, 1.0f),
         glm::vec2(0.0f, 0.0f),
         0.0f,
         glm::vec2(1.0f, 1.0f));
+
+    pk::sound bounce_sound("assets/audio/bounce.wav");
+    pk::sound shoot_sound("assets/audio/shoot.wav");
+
+    pk::source origin_source;
+    pk::source camera_source;
 
     pk::camera main_camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
@@ -217,9 +292,6 @@ int main(int argc, char *argv[])
         -90.0f,
         0.0f,
         45.0f);
-
-    pk::source origin_source;
-    pk::source camera_source;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GL_SetSwapInterval(0);
@@ -405,11 +477,11 @@ int main(int argc, char *argv[])
             main_camera.position += glm::normalize(glm::cross(main_camera_front, main_camera_up)) * speed;
         }
 
-        float angle = current_time * 0.001f;
-        float angle_sin = sinf(angle);
-        float angle_cos = cosf(angle);
-        box_1_object.rotation.x = angle_sin;
-        box_1_object.rotation.y = angle_cos;
+        // float angle = current_time * 0.001f;
+        // float angle_sin = sinf(angle);
+        // float angle_cos = cosf(angle);
+        // box_1_object.rotation.x = angle_sin;
+        // box_1_object.rotation.y = angle_cos;
         // main_directional_light.direction.x = angle_sin;
         // main_directional_light.direction.z = angle_cos;
         torch_spot_light.position = main_camera.position;

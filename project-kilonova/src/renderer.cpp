@@ -268,7 +268,7 @@ renderer::renderer(
     glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
     stbi_set_flip_vertically_on_load(true);
     int width, height, num_components;
-    float *image = stbi_loadf("assets/images/env/GCanyon_C_YumaPoint_3k.hdr", &width, &height, &num_components, 0);
+    float *image = stbi_loadf("assets/images/GCanyon_C_YumaPoint_3k.hdr", &width, &height, &num_components, 0);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,

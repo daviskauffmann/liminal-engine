@@ -62,7 +62,7 @@ void main()
 	vec4 refraction_color = texture(water.refraction_map, refraction_uv);
 
 	vec4 normal_color = texture(water.normal_map, distorted_uv);
-	vec3 normal = vec3(normal_color.r * 2.0 - 1.0, normal_color.b * 3.0, normal_color.g * 2.0 - 1.0);
+	vec3 normal = vec3(normal_color.r * 2.0 - 1.0, normal_color.b, normal_color.g * 2.0 - 1.0);
 	normal = normalize(normal);
 	
 	vec3 view_direction = normalize(camera.position - vertex.position);
@@ -71,6 +71,7 @@ void main()
 	view_direction.z = abs(view_direction.z);
 	float refractive_factor = dot(view_direction, normal);
 	refractive_factor = pow(refractive_factor, reflectivity);
+	refractive_factor = clamp(refractive_factor, 0.0, 1.0);
 
 	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor);
 	vec4 blue_color = vec4(0.0, 0.3, 0.5, 1.0);

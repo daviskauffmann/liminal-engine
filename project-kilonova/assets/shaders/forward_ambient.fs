@@ -49,42 +49,7 @@ vec3 calc_normal()
     return normalize(tbn * tangent_normal);
 }
 
-float distribution_ggx(vec3 n, vec3 h, float roughness)
-{
-    float a = roughness * roughness;
-    float a_sq = a * a;
-    float n_dot_h = max(dot(n, h), 0.0);
-    float n_dot_h_sq = n_dot_h * n_dot_h;
-
-    float nom = a_sq;
-    float denom = (n_dot_h_sq * (a_sq - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return nom / max(denom, 0.001);
-}
-
-float geometry_schlick_ggx(float n_dot_v, float roughness)
-{
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-
-    float nom = n_dot_v;
-    float denom = n_dot_v * (1.0 - k) + k;
-
-    return nom / denom;
-}
-
-float geometry_smith(vec3 n, vec3 v, vec3 l, float roughness)
-{
-    float n_dot_v = max(dot(n, v), 0.0);
-    float n_dot_l = max(dot(n, l), 0.0);
-    float ggx1 = geometry_schlick_ggx(n_dot_l, roughness);
-    float ggx2 = geometry_schlick_ggx(n_dot_v, roughness);
-
-    return ggx1 * ggx2;
-}
-
-vec3 fresnel_schlick(float cos_theta, vec3 f0, float roughness)
+vec3 fresnel_schlick_roughness(float cos_theta, vec3 f0, float roughness)
 {
     return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - cos_theta, 5.0);
 }
@@ -102,7 +67,7 @@ void main()
     vec3 f0 = vec3(0.04);
     f0 = mix(f0, albedo, metallic);
 
-    vec3 ks = fresnel_schlick(max(dot(n, v), 0.0), f0, roughness);
+    vec3 ks = fresnel_schlick_roughness(max(dot(n, v), 0.0), f0, roughness);
     vec3 kd = 1.0 - ks;
     kd *= 1.0 - metallic;
     vec3 irradiance = texture(irradiance_cubemap, n).rgb;
