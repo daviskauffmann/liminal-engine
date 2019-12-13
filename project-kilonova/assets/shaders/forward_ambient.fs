@@ -27,6 +27,8 @@ uniform struct Material
 uniform float far_plane;
 
 uniform samplerCube irradiance_cubemap;
+uniform samplerCube prefilter_cubemap;
+uniform sampler2D brdf_map;
 
 out vec4 frag_color;
 
@@ -63,18 +65,22 @@ void main()
 
     vec3 n = calc_normal();
     vec3 v = normalize(camera.position - vertex.position);
+    vec3 r = reflect(-v, n);
 
     vec3 f0 = vec3(0.04);
     f0 = mix(f0, albedo, metallic);
 
-    vec3 ks = fresnel_schlick_roughness(max(dot(n, v), 0.0), f0, roughness);
+    vec3 f = fresnel_schlick_roughness(max(dot(n, v), 0.0), f0, roughness);
+    vec3 ks = f;
     vec3 kd = 1.0 - ks;
     kd *= 1.0 - metallic;
     vec3 irradiance = texture(irradiance_cubemap, n).rgb;
     vec3 diffuse = irradiance * albedo;
-    vec3 ambient = (kd * diffuse) * ao;
-
-    vec3 color = ambient;
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilter = textureLod(prefilter_cubemap, r,  roughness * MAX_REFLECTION_LOD).rgb;    
+    vec2 brdf  = texture(brdf_map, vec2(max(dot(n, v), 0.0), roughness)).rg;
+    vec3 specular = prefilter * (f * brdf.x + brdf.y);
+    vec3 color = (kd * diffuse + specular) * ao;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
 

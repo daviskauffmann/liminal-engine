@@ -96,12 +96,16 @@ private:
     // shader programs
     pk::program *equirectangular_to_cubemap_program;
     pk::program *irradiance_convolution_program;
+    pk::program *prefilter_convolution_program;
+    pk::program *brdf_program;
     pk::program *depth_program;
     pk::program *depth_cube_program;
     pk::program *color_program;
     pk::program *texture_program;
     pk::program *forward_ambient_program;
-    pk::program *forward_lighting_program;
+    pk::program *forward_directional_program;
+    pk::program *forward_point_program;
+    pk::program *forward_spot_program;
     pk::program *geometry_program;
     pk::program *background_program;
     pk::program *water_program;
@@ -120,6 +124,8 @@ private:
 
     GLuint environment_cubemap_id;
     GLuint irradiance_cubemap_id;
+    GLuint prefilter_cubemap_id;
+    GLuint brdf_map_id;
 
     void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane);
     void render_waters(GLuint fbo_id, pk::camera *camera, unsigned int elapsed_time);
