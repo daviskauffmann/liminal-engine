@@ -46,6 +46,7 @@ renderer::renderer(
         {-1.0f, -1.0f,
          -1.0f, +1.0f,
          +1.0f, -1.0f,
+
          +1.0f, -1.0f,
          -1.0f, +1.0f,
          +1.0f, +1.0f};
@@ -153,18 +154,6 @@ renderer::renderer(
     water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
     water_normal_texture = new pk::texture("assets/images/water_normal.png");
 
-    equirectangular_to_cubemap_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/equirectangular_to_cubemap.fs");
-    irradiance_convolution_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/irradiance_convolution.fs");
-    prefilter_convolution_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/prefilter_convolution.fs");
-    brdf_program = new pk::program(
-        "assets/shaders/brdf.vs",
-        "assets/shaders/brdf.fs");
     depth_program = new pk::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
@@ -208,18 +197,6 @@ renderer::renderer(
     screen_program = new pk::program(
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
-
-    equirectangular_to_cubemap_program->bind();
-    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
-    equirectangular_to_cubemap_program->unbind();
-
-    irradiance_convolution_program->bind();
-    irradiance_convolution_program->set_int("environment_cubemap", 0);
-    irradiance_convolution_program->unbind();
-
-    prefilter_convolution_program->bind();
-    prefilter_convolution_program->set_int("environment_cubemap", 0);
-    prefilter_convolution_program->unbind();
 
     texture_program->bind();
     texture_program->set_int("color_map", 0);
@@ -299,6 +276,31 @@ renderer::renderer(
     set_refraction_size(refraction_width, refraction_height);
 
     // TODO: move below function so this can be recalculated during runtime
+    pk::program *equirectangular_to_cubemap_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/equirectangular_to_cubemap.fs");
+    pk::program *irradiance_convolution_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/irradiance_convolution.fs");
+    pk::program *prefilter_convolution_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/prefilter_convolution.fs");
+    pk::program *brdf_program = new pk::program(
+        "assets/shaders/brdf.vs",
+        "assets/shaders/brdf.fs");
+
+    equirectangular_to_cubemap_program->bind();
+    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
+    equirectangular_to_cubemap_program->unbind();
+
+    irradiance_convolution_program->bind();
+    irradiance_convolution_program->set_int("environment_cubemap", 0);
+    irradiance_convolution_program->unbind();
+
+    prefilter_convolution_program->bind();
+    prefilter_convolution_program->set_int("environment_cubemap", 0);
+    prefilter_convolution_program->unbind();
+
     glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 capture_views[] =
         {glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -313,7 +315,7 @@ renderer::renderer(
     glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
     stbi_set_flip_vertically_on_load(true);
     int width, height, num_components;
-    float *image = stbi_loadf("assets/images/GCanyon_C_YumaPoint_3k.hdr", &width, &height, &num_components, 0);
+    float *image = stbi_loadf("assets/images/GCanyon_C_YumaPoint_8k.jpg", &width, &height, &num_components, 0);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -335,7 +337,7 @@ renderer::renderer(
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
     for (unsigned int i = 0; i < 6; i++)
     {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 4096, 4096, 0, GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -347,7 +349,7 @@ renderer::renderer(
     GLuint capture_rbo_id;
     glGenRenderbuffers(1, &capture_rbo_id);
     glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 4096, 4096);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     GLuint capture_fbo_id;
@@ -360,7 +362,7 @@ renderer::renderer(
     equirectangular_to_cubemap_program->set_mat4("capture.projection", capture_projection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
-    glViewport(0, 0, 512, 512);
+    glViewport(0, 0, 4096, 4096);
     glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     for (unsigned int i = 0; i < 6; i++)
     {
@@ -485,6 +487,11 @@ renderer::renderer(
 
     glDeleteRenderbuffers(1, &capture_rbo_id);
     glDeleteFramebuffers(1, &capture_fbo_id);
+
+    delete equirectangular_to_cubemap_program;
+    delete irradiance_convolution_program;
+    delete prefilter_convolution_program;
+    delete brdf_program;
 }
 
 renderer::~renderer()
@@ -492,10 +499,6 @@ renderer::~renderer()
     delete water_dudv_texture;
     delete water_normal_texture;
 
-    delete equirectangular_to_cubemap_program;
-    delete irradiance_convolution_program;
-    delete prefilter_convolution_program;
-    delete brdf_program;
     delete depth_program;
     delete depth_cube_program;
     delete color_program;
@@ -943,8 +946,8 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
 
     for (auto &spot_light : spot_lights)
     {
-        spot_light->projection = spot_light->calc_projection(camera->fov, (float)width / (float)height);
-        spot_light->view = spot_light->calc_view(camera->pitch, camera->yaw, camera->roll);
+        spot_light->projection = spot_light->calc_projection();
+        spot_light->view = spot_light->calc_view();
 
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light->depth_map_fbo_id);
         glViewport(0, 0, spot_light->depth_map_width, spot_light->depth_map_height);
@@ -1204,6 +1207,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+
     if (terrains.size() > 0)
     {
         glEnable(GL_CLIP_DISTANCE0);
@@ -1223,6 +1227,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         terrain_program->unbind();
         glDisable(GL_CLIP_DISTANCE0);
     }
+
     glDepthFunc(GL_LEQUAL);
     glm::mat4 camera_view_no_translate = camera_view;
     // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)elapsed_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1239,6 +1244,29 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     glBindVertexArray(0);
     background_program->unbind();
     glDepthFunc(GL_LESS);
+
+    if (point_lights.size() > 0)
+    {
+        glEnable(GL_CLIP_DISTANCE0);
+        for (auto &point_light : point_lights)
+        {
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, point_light->position);
+            model = glm::scale(model, {0.25f, 0.25f, 0.25f});
+            color_program->bind();
+            color_program->set_mat4("camera.projection", camera_projection);
+            color_program->set_mat4("camera.view", camera_view);
+            color_program->set_mat4("object.model", model);
+            color_program->set_vec3("color", point_light->color);
+            color_program->set_vec4("clipping_plane", clipping_plane);
+            glBindVertexArray(skybox_vao_id);
+            glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
+            glBindVertexArray(0);
+            color_program->unbind();
+        }
+        glDisable(GL_CLIP_DISTANCE0);
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

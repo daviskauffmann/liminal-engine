@@ -73,19 +73,15 @@ void spot_light::set_depth_map_size(int depth_map_width, int depth_map_height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-glm::mat4 spot_light::calc_projection(float fov, float aspect) const
+glm::mat4 spot_light::calc_projection() const
 {
-    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, 0.1f, 1000.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     return projection;
 }
 
-glm::mat4 spot_light::calc_view(float pitch, float yaw, float roll) const
+glm::mat4 spot_light::calc_view() const
 {
-    glm::vec3 front(
-        cosf(glm::radians(yaw)) * cosf(glm::radians(pitch)),
-        sinf(glm::radians(pitch)),
-        sinf(glm::radians(yaw)) * cosf(glm::radians(pitch)));
-    front = glm::normalize(front);
+    glm::vec3 front = glm::normalize(direction);
     glm::vec3 target = position + front;
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     glm::mat4 view = glm::lookAt(position, target, up);

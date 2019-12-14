@@ -33,8 +33,8 @@ struct spot_light
 
     void set_depth_map_size(int depth_map_width, int depth_map_height);
 
-    glm::mat4 calc_projection(float fov, float aspect) const;
-    glm::mat4 calc_view(float pitch, float yaw, float roll) const;
+    glm::mat4 calc_projection() const;
+    glm::mat4 calc_view() const;
 };
 } // namespace pk
 

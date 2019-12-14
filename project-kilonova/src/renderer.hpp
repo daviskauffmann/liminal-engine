@@ -94,10 +94,6 @@ private:
     pk::texture *water_normal_texture;
 
     // shader programs
-    pk::program *equirectangular_to_cubemap_program;
-    pk::program *irradiance_convolution_program;
-    pk::program *prefilter_convolution_program;
-    pk::program *brdf_program;
     pk::program *depth_program;
     pk::program *depth_cube_program;
     pk::program *color_program;
@@ -122,6 +118,7 @@ private:
     std::vector<pk::terrain *> terrains;
     std::vector<pk::sprite *> sprites;
 
+    // TODO: move to class for environment data
     GLuint environment_cubemap_id;
     GLuint irradiance_cubemap_id;
     GLuint prefilter_cubemap_id;

@@ -23,7 +23,7 @@
 constexpr const char *window_title = "Project Kilonova";
 constexpr const char *version = "0.0.1";
 
-constexpr int fps_cap = 300;
+constexpr int fps_cap = 1000;
 constexpr int frame_delay = 1000 / fps_cap;
 
 int main(int argc, char *argv[])
@@ -237,32 +237,35 @@ int main(int argc, char *argv[])
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f));
 
+    const float sun_intensity = 1.0f;
     pk::directional_light main_directional_light(
         glm::vec3(0.352286f, -0.547564f, -0.758992f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
         depth_map_width, depth_map_height);
 
+    const float point_light_intensity = 10.0f;
     pk::point_light red_point_light(
         glm::vec3(2.0f, 0.0f, 2.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f) * point_light_intensity,
         depth_cube_width, depth_cube_height);
     pk::point_light yellow_point_light(
         glm::vec3(-2.0f, 0.0f, -2.0f),
-        glm::vec3(1.0f, 1.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 0.0f) * point_light_intensity,
         depth_cube_width, depth_cube_height);
     pk::point_light green_point_light(
         glm::vec3(2.0f, 0.0f, -2.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f) * point_light_intensity,
         depth_cube_width, depth_cube_height);
     pk::point_light blue_point_light(
         glm::vec3(-2.0f, 0.0f, 2.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f) * point_light_intensity,
         depth_cube_width, depth_cube_height);
 
+    const float torch_intensity = 20.0f;
     pk::spot_light torch_spot_light(
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f) * torch_intensity,
         cosf(glm::radians(12.5f)),
         cosf(glm::radians(15.0f)),
         depth_map_width, depth_map_height);
@@ -280,6 +283,7 @@ int main(int argc, char *argv[])
         0.0f,
         glm::vec2(1.0f, 1.0f));
 
+    pk::sound ambient_sound("assets/audio/ambient.wav");
     pk::sound bounce_sound("assets/audio/bounce.wav");
     pk::sound shoot_sound("assets/audio/shoot.wav");
 
@@ -299,6 +303,7 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float fps_update_timer = 0.0f;
     bool torch = true;
+    bool torch_follow = true;
     float bounce_timer = 0.0f;
     float shoot_timer = 0.0f;
 
@@ -349,6 +354,11 @@ int main(int argc, char *argv[])
                 case SDLK_f:
                 {
                     torch = !torch;
+                }
+                break;
+                case SDLK_t:
+                {
+                    torch_follow = !torch_follow;
                 }
                 break;
                 case SDLK_MINUS:
@@ -477,15 +487,32 @@ int main(int argc, char *argv[])
             main_camera.position += glm::normalize(glm::cross(main_camera_front, main_camera_up)) * speed;
         }
 
-        // float angle = current_time * 0.001f;
+        float angle = current_time * 0.0005f;
         // float angle_sin = sinf(angle);
         // float angle_cos = cosf(angle);
-        // box_1_object.rotation.x = angle_sin;
-        // box_1_object.rotation.y = angle_cos;
-        // main_directional_light.direction.x = angle_sin;
-        // main_directional_light.direction.z = angle_cos;
-        torch_spot_light.position = main_camera.position;
-        torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 30.0f * delta_time);
+        // red_point_light.position.x = 2 + angle_sin;
+        // red_point_light.position.z = 2 + angle_cos;
+        // yellow_point_light.position.x = -2 + angle_sin;
+        // yellow_point_light.position.z = -2 + angle_cos;
+        // green_point_light.position.x = 2 + angle_sin;
+        // green_point_light.position.z = -2 + angle_cos;
+        // blue_point_light.position.x = -2 + angle_sin;
+        // blue_point_light.position.z = 2 + angle_cos;
+        float distance = 6.0f;
+        red_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 0));
+        red_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 0));
+        yellow_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 1));
+        yellow_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 1));
+        green_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 2));
+        green_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 2));
+        blue_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 3));
+        blue_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 3));
+
+        if (torch_follow)
+        {
+            torch_spot_light.position = main_camera.position;
+            torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 30.0f * delta_time);
+        }
 
         audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
         camera_source.set_position(main_camera.position);
@@ -517,10 +544,10 @@ int main(int argc, char *argv[])
         renderer.add_object(&box_4_object);
         renderer.add_object(&box_5_object);
         renderer.add_directional_light(&main_directional_light);
-        // renderer.add_point_light(&red_point_light);
-        // renderer.add_point_light(&yellow_point_light);
-        // renderer.add_point_light(&green_point_light);
-        // renderer.add_point_light(&blue_point_light);
+        renderer.add_point_light(&red_point_light);
+        renderer.add_point_light(&yellow_point_light);
+        renderer.add_point_light(&green_point_light);
+        renderer.add_point_light(&blue_point_light);
         if (torch)
         {
             renderer.add_spot_light(&torch_spot_light);
