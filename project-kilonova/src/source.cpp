@@ -4,9 +4,12 @@
 
 namespace pk
 {
-source::source()
+source::source(glm::vec3 position)
 {
     alGenSources(1, &source_id);
+    this->position = position;
+
+    alSourcefv(source_id, AL_POSITION, glm::value_ptr(position));
 }
 
 source::~source()

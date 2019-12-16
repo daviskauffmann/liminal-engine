@@ -41,6 +41,7 @@ renderer::renderer(
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    // glEnable(GL_FRAMEBUFFER_SRGB);
 
     std::vector<float> water_vertices =
         {-1.0f, -1.0f,
@@ -569,11 +570,11 @@ void renderer::set_screen_size(int display_width, int display_height, float rend
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB,
+        GL_RGBA16F,
         render_width,
         render_height,
         0,
-        GL_RGB,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
         nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

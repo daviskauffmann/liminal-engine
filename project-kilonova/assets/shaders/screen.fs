@@ -11,58 +11,21 @@ uniform struct Screen {
 
 out vec4 frag_color;
 
+const float gamma = 2.2;
+const float exposure = 1.0;
+const float white = 1.0;
+
 void main()
 {
-	vec4 color = texture(screen.texture, vertex.uv);
+	vec3 color = texture(screen.texture, vertex.uv).rgb * exposure;
+	float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+	float mapped_luminance = (luminance * (1.0 + luminance / (white * white))) / (1.0 + luminance);
+    color = (mapped_luminance / luminance) * color;
+    color = pow(color, vec3(1.0 / gamma));
 
-	// grayscale
-	float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-	vec3 grayscale_color = vec3(average);
-    vec4 final_grayscale_color = vec4(grayscale_color, 1.0);
+	// // grayscale
+	// float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+	// vec3 grayscale_color = vec3(average);
 
-	const float offset = 1.0 / 600.0;  
-    vec2 offsets[9] = vec2[](
-        vec2(-offset,  offset),
-        vec2( 0.0f,    offset),
-        vec2( offset,  offset),
-        vec2(-offset,  0.0f),  
-        vec2( 0.0f,    0.0f),  
-        vec2( offset,  0.0f),  
-        vec2(-offset, -offset),
-        vec2( 0.0f,   -offset),
-        vec2( offset, -offset)    
-    );
-    vec3 sample_texture[9];
-    for(int i = 0; i < 9; i++)
-    {
-        sample_texture[i] = vec3(texture(screen.texture, vertex.uv + offsets[i]));
-    }
-
-	// sharpen
-	float sharpen_kernel[9] = float[](
-		-1, -1, -1,
-		-1,  9, -1,
-		-1, -1, -1
-	);
-    vec3 sharpen_color = vec3(0.0);
-    for(int i = 0; i < 9; i++)
-	{
-        sharpen_color += sample_texture[i] * sharpen_kernel[i];
-	}
-	vec4 final_sharpen_color = vec4(sharpen_color, 1.0);
-
-	// blur
-	float blur_kernel[9] = float[](
-		1.0 / 16, 2.0 / 16, 1.0 / 16,
-		2.0 / 16, 4.0 / 16, 2.0 / 16,
-		1.0 / 16, 2.0 / 16, 1.0 / 16  
-	);
-    vec3 blur_color = vec3(0.0);
-    for(int i = 0; i < 9; i++)
-	{
-        blur_color += sample_texture[i] * blur_kernel[i];
-	}
-	vec4 final_blur_color = vec4(blur_color, 1.0);
-
-	frag_color = color;
+    frag_color = vec4(color, 1.0);
 }

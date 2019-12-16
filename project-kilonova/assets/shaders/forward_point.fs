@@ -65,7 +65,7 @@ float distribution_ggx(vec3 n, vec3 h, float roughness)
     float denominator = (n_dot_h_sq * (a_sq - 1.0) + 1.0);
     denominator = PI * denominator * denominator;
 
-    return numerator / max(denominator, 0.001);
+    return numerator / denominator;
 }
 
 float geometry_schlick_ggx(float n_dot_v, float roughness)
@@ -96,7 +96,7 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0)
 
 void main()
 {
-    vec3 albedo = pow(texture(material.albedo_map, vertex.uv).rgb * material.albedo_color, vec3(2.2));
+    vec3 albedo = texture(material.albedo_map, vertex.uv).rgb * material.albedo_color;
     float metallic = texture(material.metallic_map, vertex.uv).r;
     float roughness = texture(material.roughness_map, vertex.uv).r;
     float ao = texture(material.occlusion_map, vertex.uv).r;
@@ -126,8 +126,6 @@ void main()
     kd *= 1.0 - metallic;
     float n_dot_l = max(dot(n, l), 0.0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l;
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
     
     vec3 frag_to_light = vertex.position - light.position;
     float current_depth = length(frag_to_light);

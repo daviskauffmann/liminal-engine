@@ -10,7 +10,7 @@ namespace pk
 class source
 {
 public:
-    source();
+    source(glm::vec3 position);
     ~source();
 
     void set_loop(bool loop) const;

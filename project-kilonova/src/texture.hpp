@@ -11,7 +11,7 @@ struct texture
 {
     GLuint texture_id;
 
-    texture(const std::string &filename);
+    texture(const std::string &filename, bool srgb = false);
     ~texture();
 
     void bind(unsigned int index) const;

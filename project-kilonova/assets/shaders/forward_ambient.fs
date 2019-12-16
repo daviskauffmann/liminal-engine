@@ -58,7 +58,7 @@ vec3 fresnel_schlick_roughness(float cos_theta, vec3 f0, float roughness)
 
 void main()
 {
-    vec3 albedo = pow(texture(material.albedo_map, vertex.uv).rgb * material.albedo_color, vec3(2.2));
+    vec3 albedo = texture(material.albedo_map, vertex.uv).rgb * material.albedo_color;
     float metallic = texture(material.metallic_map, vertex.uv).r;
     float roughness = texture(material.roughness_map, vertex.uv).r;
     float ao = texture(material.occlusion_map, vertex.uv).r;
@@ -81,8 +81,6 @@ void main()
     vec2 brdf  = texture(brdf_map, vec2(max(dot(n, v), 0.0), roughness)).rg;
     vec3 specular = prefilter * (f * brdf.x + brdf.y);
     vec3 color = (kd * diffuse + specular) * ao;
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
 
     frag_color = vec4(color, 1.0);
 }

@@ -85,7 +85,7 @@ void main()
             float h_dot_v = max(dot(h, v), 0.0);
             float pdf = d * n_dot_h / (4.0 * h_dot_v) + 0.0001; 
 
-            float resolution = 512.0;
+            float resolution = 4096.0;
             float sa_texel = 4.0 * PI / (6.0 * resolution * resolution);
             float sa_sample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
 

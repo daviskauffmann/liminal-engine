@@ -2,7 +2,6 @@
 
 #include "audio.hpp"
 #include "camera.hpp"
-#include "cubemap.hpp"
 #include "directional_light.hpp"
 #include "display.hpp"
 #include "material.hpp"
@@ -23,7 +22,7 @@
 constexpr const char *window_title = "Project Kilonova";
 constexpr const char *version = "0.0.1";
 
-constexpr int fps_cap = 1000;
+constexpr int fps_cap = 300;
 constexpr int frame_delay = 1000 / fps_cap;
 
 int main(int argc, char *argv[])
@@ -53,8 +52,8 @@ int main(int argc, char *argv[])
     pk::display display(window_title, window_width, window_height);
     pk::renderer renderer(
         window_width, window_height, render_scale,
-        window_width / 2, window_height / 2,
-        window_width / 2, window_height / 2);
+        window_width, window_height,
+        window_width, window_height);
     pk::audio audio;
 
     pk::mesh quad_mesh(
@@ -114,41 +113,42 @@ int main(int argc, char *argv[])
          30, 31, 32,
          33, 34, 35});
 
-    pk::texture aluminum_albedo_texture("assets/images/aluminum_albedo.png");
+    pk::texture aluminum_albedo_texture("assets/images/aluminum_albedo.png", true);
     pk::texture aluminum_normal_texture("assets/images/aluminum_normal.png");
     pk::texture aluminum_metallic_texture("assets/images/aluminum_metallic.png");
     pk::texture aluminum_roughness_texture("assets/images/aluminum_roughness.png");
     pk::texture aluminum_ao_texture("assets/images/aluminum_ao.png");
-    pk::texture cloth_albedo_texture("assets/images/cloth_albedo.png");
+    pk::texture cloth_albedo_texture("assets/images/cloth_albedo.png", true);
     pk::texture cloth_normal_texture("assets/images/cloth_normal.png");
     pk::texture cloth_metallic_texture("assets/images/cloth_metallic.png");
     pk::texture cloth_roughness_texture("assets/images/cloth_roughness.png");
     pk::texture cloth_ao_texture("assets/images/cloth_ao.png");
-    pk::texture iron_albedo_texture("assets/images/iron_albedo.png");
+    pk::texture iron_albedo_texture("assets/images/iron_albedo.png", true);
     pk::texture iron_normal_texture("assets/images/iron_normal.png");
     pk::texture iron_metallic_texture("assets/images/iron_metallic.png");
     pk::texture iron_roughness_texture("assets/images/iron_roughness.png");
     pk::texture iron_ao_texture("assets/images/iron_ao.png");
-    pk::texture ground_albedo_texture("assets/images/ground_albedo.png");
+    pk::texture ground_albedo_texture("assets/images/ground_albedo.png", true);
     pk::texture ground_normal_texture("assets/images/ground_normal.png");
     pk::texture ground_metallic_texture("assets/images/ground_metallic.png");
     pk::texture ground_roughness_texture("assets/images/ground_roughness.png");
     pk::texture ground_ao_texture("assets/images/ground_ao.png");
-    pk::texture rock_albedo_texture("assets/images/rock_albedo.png");
+    pk::texture rock_albedo_texture("assets/images/rock_albedo.png", true);
     pk::texture rock_normal_texture("assets/images/rock_normal.png");
     pk::texture rock_metallic_texture("assets/images/rock_metallic.png");
     pk::texture rock_roughness_texture("assets/images/rock_roughness.png");
     pk::texture rock_ao_texture("assets/images/rock_ao.png");
-    pk::texture grass_albedo_texture("assets/images/grass_albedo.png");
+    pk::texture grass_albedo_texture("assets/images/grass_albedo.png", true);
     pk::texture grass_normal_texture("assets/images/grass_normal.png");
     pk::texture grass_metallic_texture("assets/images/grass_metallic.png");
     pk::texture grass_roughness_texture("assets/images/grass_roughness.png");
     pk::texture grass_ao_texture("assets/images/grass_ao.png");
-    pk::texture wood_albedo_texture("assets/images/wood_albedo.png");
+    pk::texture wood_albedo_texture("assets/images/wood_albedo.png", true);
     pk::texture wood_normal_texture("assets/images/wood_normal.png");
     pk::texture wood_metallic_texture("assets/images/wood_metallic.png");
     pk::texture wood_roughness_texture("assets/images/wood_roughness.png");
     pk::texture wood_ao_texture("assets/images/wood_ao.png");
+    pk::texture grass_texture("assets/images/grass_sprite.png", true);
 
     pk::material aluminum_material(
         &aluminum_albedo_texture,
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f));
 
-    const float sun_intensity = 1.0f;
+    const float sun_intensity = 10.0f;
     pk::directional_light main_directional_light(
         glm::vec3(0.352286f, -0.547564f, -0.758992f),
         glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
     pk::terrain test_terrain(0, 0, &grass_material);
 
     pk::sprite grass_sprite(
-        nullptr,
+        &grass_texture,
         glm::vec3(1.0f, 1.0f, 1.0f),
         glm::vec2(0.0f, 0.0f),
         0.0f,
@@ -287,8 +287,9 @@ int main(int argc, char *argv[])
     pk::sound bounce_sound("assets/audio/bounce.wav");
     pk::sound shoot_sound("assets/audio/shoot.wav");
 
-    pk::source origin_source;
-    pk::source camera_source;
+    pk::source ambient_source(glm::vec3(0.0, 0.0, 0.0));
+    pk::source bounce_source(glm::vec3(0.0, 0.0, 0.0));
+    pk::source shoot_source(glm::vec3(0.0, 0.0, 0.0));
 
     pk::camera main_camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
@@ -300,8 +301,13 @@ int main(int argc, char *argv[])
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_GL_SetSwapInterval(0);
 
+    ambient_source.set_loop(true);
+    ambient_source.set_gain(0.5f);
+    ambient_source.play(&ambient_sound);
+
     unsigned int current_time = 0;
     float fps_update_timer = 0.0f;
+    float time_scale = 1.0f;
     bool torch = true;
     bool torch_follow = true;
     float bounce_timer = 0.0f;
@@ -323,6 +329,8 @@ int main(int argc, char *argv[])
             sprintf(title, "%s %s - FPS: %d", window_title, version, (int)(1 / delta_time));
             display.set_title(title);
         }
+
+        delta_time *= time_scale;
 
         int num_keys;
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
@@ -356,9 +364,21 @@ int main(int argc, char *argv[])
                     torch = !torch;
                 }
                 break;
-                case SDLK_t:
+                case SDLK_g:
                 {
                     torch_follow = !torch_follow;
+                }
+                break;
+                case SDLK_t:
+                {
+                    if (time_scale > 0.25f)
+                    {
+                        time_scale = 0.25f;
+                    }
+                    else
+                    {
+                        time_scale = 1.0f;
+                    }
                 }
                 break;
                 case SDLK_MINUS:
@@ -439,13 +459,13 @@ int main(int argc, char *argv[])
                 {
                 case SDL_WINDOWEVENT_RESIZED:
                 {
-                    int width = event.window.data1;
-                    int height = event.window.data2;
-                    display.set_window_size(width, height);
-                    renderer.set_screen_size(width, height, render_scale);
-                    renderer.set_reflection_size(width / 2, height / 2);
-                    renderer.set_refraction_size(width / 2, height / 2);
-                    std::cout << "Window resized to " << width << "x" << height << std::endl;
+                    window_width = event.window.data1;
+                    window_height = event.window.data2;
+                    display.set_window_size(window_width, window_height);
+                    renderer.set_screen_size(window_width, window_height, render_scale);
+                    renderer.set_reflection_size(window_width, window_height);
+                    renderer.set_refraction_size(window_width, window_height);
+                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
                 }
                 break;
                 }
@@ -467,7 +487,6 @@ int main(int argc, char *argv[])
             (keys[SDL_SCANCODE_S] && keys[SDL_SCANCODE_D]) ||
             (keys[SDL_SCANCODE_S] && keys[SDL_SCANCODE_A]))
         {
-            // precomputed 1 / sqrt(2)
             speed *= 0.71f;
         }
         if (keys[SDL_SCANCODE_W])
@@ -487,26 +506,21 @@ int main(int argc, char *argv[])
             main_camera.position += glm::normalize(glm::cross(main_camera_front, main_camera_up)) * speed;
         }
 
-        float angle = current_time * 0.0005f;
-        // float angle_sin = sinf(angle);
-        // float angle_cos = cosf(angle);
-        // red_point_light.position.x = 2 + angle_sin;
-        // red_point_light.position.z = 2 + angle_cos;
-        // yellow_point_light.position.x = -2 + angle_sin;
-        // yellow_point_light.position.z = -2 + angle_cos;
-        // green_point_light.position.x = 2 + angle_sin;
-        // green_point_light.position.z = -2 + angle_cos;
-        // blue_point_light.position.x = -2 + angle_sin;
-        // blue_point_light.position.z = 2 + angle_cos;
+        static float angle = 0.0f;
+        angle += 0.5f * delta_time;
+        if (angle > 2 * (float)M_PI)
+        {
+            angle = 0;
+        }
         float distance = 6.0f;
-        red_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 0));
-        red_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 0));
-        yellow_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 1));
-        yellow_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 1));
-        green_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 2));
-        green_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 2));
-        blue_point_light.position.x = distance * sinf(angle + ((M_PI / 2) * 3));
-        blue_point_light.position.z = distance * cosf(angle + ((M_PI / 2) * 3));
+        red_point_light.position.x = distance * sinf(angle + (((float)M_PI / 2) * 0));
+        red_point_light.position.z = distance * cosf(angle + (((float)M_PI / 2) * 0));
+        yellow_point_light.position.x = distance * sinf(angle + (((float)M_PI / 2) * 1));
+        yellow_point_light.position.z = distance * cosf(angle + (((float)M_PI / 2) * 1));
+        green_point_light.position.x = distance * sinf(angle + (((float)M_PI / 2) * 2));
+        green_point_light.position.z = distance * cosf(angle + (((float)M_PI / 2) * 2));
+        blue_point_light.position.x = distance * sinf(angle + (((float)M_PI / 2) * 3));
+        blue_point_light.position.z = distance * cosf(angle + (((float)M_PI / 2) * 3));
 
         if (torch_follow)
         {
@@ -515,7 +529,8 @@ int main(int argc, char *argv[])
         }
 
         audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
-        camera_source.set_position(main_camera.position);
+        ambient_source.set_position(main_camera.position);
+        shoot_source.set_position(main_camera.position);
 
         shoot_timer += delta_time;
         if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -523,7 +538,7 @@ int main(int argc, char *argv[])
             if (shoot_timer >= 0.25f)
             {
                 shoot_timer = 0.0f;
-                camera_source.play(&shoot_sound);
+                shoot_source.play(&shoot_sound);
             }
         }
 
@@ -533,7 +548,7 @@ int main(int argc, char *argv[])
             if (bounce_timer >= 0.25f)
             {
                 bounce_timer = 0.0f;
-                origin_source.play(&bounce_sound);
+                bounce_source.play(&bounce_sound);
             }
         }
 

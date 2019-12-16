@@ -7,7 +7,7 @@
 
 namespace pk
 {
-texture::texture(const std::string &filename)
+texture::texture(const std::string &filename, bool srgb)
 {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -16,14 +16,30 @@ texture::texture(const std::string &filename)
     {
         std::cout << "Error: Couldn't load image " << filename << std::endl;
     }
+    GLenum internal_format;
+    GLenum format;
+    if (surface->format->BytesPerPixel == 1)
+    {
+        internal_format = format = GL_RED;
+    }
+    else if (surface->format->BytesPerPixel == 3)
+    {
+        internal_format = srgb ? GL_SRGB : GL_RGB;
+        format = GL_RGB;
+    }
+    else if (surface->format->BytesPerPixel == 4)
+    {
+        internal_format = srgb ? GL_SRGB_ALPHA : GL_RGBA;
+        format = GL_RGBA;
+    }
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB,
+        internal_format,
         surface->w,
         surface->h,
         0,
-        surface->format->BytesPerPixel == 4 ? GL_RGBA : surface->format->BytesPerPixel == 1 ? GL_RED : GL_RGB,
+        format,
         GL_UNSIGNED_BYTE,
         surface->pixels);
     SDL_FreeSurface(surface);

@@ -96,7 +96,7 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0)
 
 void main()
 {
-    vec3 albedo = pow(texture(material.albedo_map, vertex.uv).rgb * material.albedo_color, vec3(2.2));
+    vec3 albedo = texture(material.albedo_map, vertex.uv).rgb * material.albedo_color;
     float metallic = texture(material.metallic_map, vertex.uv).r;
     float roughness = texture(material.roughness_map, vertex.uv).r;
     float ao = texture(material.occlusion_map, vertex.uv).r;
@@ -124,8 +124,6 @@ void main()
     kd *= 1.0 - metallic;
     float n_dot_l = max(dot(n, l), 0.0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l;
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
    
     vec4 light_space_position = light.projection * light.view * vec4(vertex.position, 1.0);
     vec3 light_space_proj_coords = (light_space_position.xyz / light_space_position.w) * 0.5 + 0.5;
@@ -143,7 +141,6 @@ void main()
     }
     shadow /= 9.0;
     if (light_space_proj_coords.z > 1.0) shadow = 0.0;
-    
     color = (1.0 - shadow) * color;
 
     frag_color = vec4(color, 1.0);
