@@ -23,9 +23,9 @@ void main()
     color = (mapped_luminance / luminance) * color;
     color = pow(color, vec3(1.0 / gamma));
 
-	// // grayscale
-	// float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-	// vec3 grayscale_color = vec3(average);
+	// grayscale
+	// float average_color = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+	// color = vec3(average_color);
 
     frag_color = vec4(color, 1.0);
 }

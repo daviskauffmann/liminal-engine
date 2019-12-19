@@ -22,6 +22,7 @@ uniform struct Material
     sampler2D metallic_map;
     sampler2D roughness_map;
     sampler2D occlusion_map;
+    sampler2D height_map;
 } material;
 
 uniform struct Light

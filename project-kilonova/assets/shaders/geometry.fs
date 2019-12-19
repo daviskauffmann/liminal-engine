@@ -15,11 +15,13 @@ uniform struct Material
     sampler2D metallic_map;
     sampler2D roughness_map;
     sampler2D occlusion_map;
+    sampler2D height_map;
 } material;
 
 layout (location = 0) out vec3 position_map;
 layout (location = 1) out vec3 normal_map;
-layout (location = 2) out vec4 material_map;
+layout (location = 2) out vec3 albedo_map;
+layout (location = 3) out vec4 material_map;
 
 vec3 calc_normal()
 {
@@ -42,8 +44,9 @@ void main()
 {
     position_map = vertex.position;
     normal_map = calc_normal();
-    material_map.r = texture(material.normal_map, vertex.uv).r;
-    material_map.g = texture(material.metallic_map, vertex.uv).r;
-    material_map.b = texture(material.roughness_map, vertex.uv).r;
-    material_map.a = texture(material.occlusion_map, vertex.uv).r;
+    albedo_map = texture(material.albedo_map, vertex.uv).rgb * material.albedo_color;
+    material_map.r = texture(material.metallic_map, vertex.uv).r;
+    material_map.g = texture(material.roughness_map, vertex.uv).r;
+    material_map.b = texture(material.occlusion_map, vertex.uv).r;
+    material_map.a = texture(material.height_map, vertex.uv).r;
 }

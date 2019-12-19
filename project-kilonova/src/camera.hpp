@@ -22,6 +22,7 @@ struct camera
         float fov);
 
     glm::vec3 calc_front() const;
+    glm::vec3 calc_right() const;
     glm::vec3 calc_up() const;
     glm::mat4 calc_projection(float aspect) const;
     glm::mat4 calc_view() const;

@@ -209,9 +209,10 @@ renderer::renderer(
     forward_ambient_program->set_int("material.metallic_map", 2);
     forward_ambient_program->set_int("material.roughness_map", 3);
     forward_ambient_program->set_int("material.occlusion_map", 4);
-    forward_ambient_program->set_int("irradiance_cubemap", 5);
-    forward_ambient_program->set_int("prefilter_cubemap", 6);
-    forward_ambient_program->set_int("brdf_map", 7);
+    forward_ambient_program->set_int("material.height_map", 5);
+    forward_ambient_program->set_int("irradiance_cubemap", 6);
+    forward_ambient_program->set_int("prefilter_cubemap", 7);
+    forward_ambient_program->set_int("brdf_map", 8);
     forward_ambient_program->unbind();
 
     forward_directional_program->bind();
@@ -220,7 +221,8 @@ renderer::renderer(
     forward_directional_program->set_int("material.metallic_map", 2);
     forward_directional_program->set_int("material.roughness_map", 3);
     forward_directional_program->set_int("material.occlusion_map", 4);
-    forward_directional_program->set_int("light.depth_map", 5);
+    forward_directional_program->set_int("material.height_map", 5);
+    forward_directional_program->set_int("light.depth_map", 6);
     forward_directional_program->unbind();
 
     forward_point_program->bind();
@@ -229,7 +231,8 @@ renderer::renderer(
     forward_point_program->set_int("material.metallic_map", 2);
     forward_point_program->set_int("material.roughness_map", 3);
     forward_point_program->set_int("material.occlusion_map", 4);
-    forward_point_program->set_int("light.depth_cubemap", 5);
+    forward_point_program->set_int("material.height_map", 5);
+    forward_point_program->set_int("light.depth_cubemap", 6);
     forward_point_program->unbind();
 
     forward_spot_program->bind();
@@ -238,14 +241,17 @@ renderer::renderer(
     forward_spot_program->set_int("material.metallic_map", 2);
     forward_spot_program->set_int("material.roughness_map", 3);
     forward_spot_program->set_int("material.occlusion_map", 4);
-    forward_spot_program->set_int("light.depth_map", 5);
+    forward_spot_program->set_int("material.height_map", 5);
+    forward_spot_program->set_int("light.depth_map", 6);
     forward_spot_program->unbind();
 
     geometry_program->bind();
-    geometry_program->set_int("material.diffuse_map", 0);
-    geometry_program->set_int("material.specular_map", 1);
-    geometry_program->set_int("material.normal_map", 2);
-    geometry_program->set_int("material.emission_map", 3);
+    geometry_program->set_int("material.albedo_map", 0);
+    geometry_program->set_int("material.normal_map", 1);
+    geometry_program->set_int("material.metallic_map", 2);
+    geometry_program->set_int("material.roughness_map", 3);
+    geometry_program->set_int("material.occlusion_map", 4);
+    geometry_program->set_int("material.height_map", 5);
     geometry_program->unbind();
 
     background_program->bind();
@@ -645,6 +651,38 @@ void renderer::set_screen_size(int display_width, int display_height, float rend
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glGenTextures(1, &geometry_albedo_texture_id);
+    glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB16F,
+        render_width,
+        render_height,
+        0,
+        GL_RGB,
+        GL_FLOAT,
+        nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenTextures(1, &geometry_material_texture_id);
+    glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA8,
+        render_width,
+        render_height,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glGenRenderbuffers(1, &geometry_rbo_id);
     glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo_id);
     glRenderbufferStorage(
@@ -668,6 +706,18 @@ void renderer::set_screen_size(int display_width, int display_height, float rend
         GL_TEXTURE_2D,
         geometry_normal_texture_id,
         0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT2,
+        GL_TEXTURE_2D,
+        geometry_albedo_texture_id,
+        0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT3,
+        GL_TEXTURE_2D,
+        geometry_material_texture_id,
+        0);
     glFramebufferRenderbuffer(
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
@@ -675,7 +725,9 @@ void renderer::set_screen_size(int display_width, int display_height, float rend
         geometry_rbo_id);
     GLenum geometry_color_attachments[] = {
         GL_COLOR_ATTACHMENT0,
-        GL_COLOR_ATTACHMENT1};
+        GL_COLOR_ATTACHMENT1,
+        GL_COLOR_ATTACHMENT2,
+        GL_COLOR_ATTACHMENT3};
     glDrawBuffers(sizeof(geometry_color_attachments) / sizeof(GLenum), geometry_color_attachments);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -1032,10 +1084,12 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
+            glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
             glActiveTexture(GL_TEXTURE7);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
+            glActiveTexture(GL_TEXTURE8);
             glBindTexture(GL_TEXTURE_2D, brdf_map_id);
             forward_ambient_program->set_vec4("clipping_plane", clipping_plane);
             object->mesh->draw();
@@ -1064,13 +1118,15 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE5);
+                glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
                 for (auto &directional_light : directional_lights)
                 {
                     forward_directional_program->set_vec3("light.direction", directional_light->direction);
                     forward_directional_program->set_vec3("light.color", directional_light->color);
                     forward_directional_program->set_mat4("light.projection", directional_light->projection);
                     forward_directional_program->set_mat4("light.view", directional_light->view);
-                    glActiveTexture(GL_TEXTURE5);
+                    glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
                     object->mesh->draw();
                 }
@@ -1096,11 +1152,13 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE5);
+                glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
                 for (auto &point_light : point_lights)
                 {
                     forward_point_program->set_vec3("light.position", point_light->position);
                     forward_point_program->set_vec3("light.color", point_light->color);
-                    glActiveTexture(GL_TEXTURE5);
+                    glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, point_light->depth_cubemap_texture_id);
                     object->mesh->draw();
                 }
@@ -1125,6 +1183,8 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                 glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
                 glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
+                glActiveTexture(GL_TEXTURE5);
+                glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
                 for (auto &spot_light : spot_lights)
                 {
                     forward_spot_program->set_vec3("light.position", spot_light->position);
@@ -1134,7 +1194,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
                     forward_spot_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
                     forward_spot_program->set_mat4("light.projection", spot_light->projection);
                     forward_spot_program->set_mat4("light.view", spot_light->view);
-                    glActiveTexture(GL_TEXTURE5);
+                    glActiveTexture(GL_TEXTURE6);
                     glBindTexture(GL_TEXTURE_2D, spot_light->depth_map_texture_id);
                     object->mesh->draw();
                 }
@@ -1170,6 +1230,8 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
             object->mesh->draw();
         }
         geometry_program->unbind();

@@ -22,10 +22,19 @@ glm::vec3 camera::calc_front() const
     return glm::normalize(front);
 }
 
+glm::vec3 camera::calc_right() const
+{
+    glm::vec3 front = calc_front();
+    glm::vec3 right = glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f));
+    return glm::normalize(right);
+}
+
 glm::vec3 camera::calc_up() const
 {
-    glm::vec3 up(0.0f, 1.0f, 0.0f);
-    return up;
+    glm::vec3 front = calc_front();
+    glm::vec3 right = glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 up = glm::cross(right, front);
+    return glm::normalize(up);
 }
 
 glm::mat4 camera::calc_projection(float aspect) const
