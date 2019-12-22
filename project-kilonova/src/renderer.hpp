@@ -126,7 +126,7 @@ private:
     GLuint prefilter_cubemap_id;
     GLuint brdf_map_id;
 
-    void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane);
+    void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane = glm::vec4(0.0f));
     void render_waters(GLuint fbo_id, pk::camera *camera, unsigned int elapsed_time);
     void render_sprites(GLuint fbo_id);
     void render_screen(GLuint fbo_id);

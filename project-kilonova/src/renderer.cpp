@@ -5,7 +5,6 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SDL/SDL_image.h>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #define LIGHTING_COLOR 1
@@ -581,7 +580,7 @@ void renderer::set_screen_size(int display_width, int display_height, float rend
         render_height,
         0,
         GL_RGBA,
-        GL_UNSIGNED_BYTE,
+        GL_FLOAT,
         nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -672,12 +671,12 @@ void renderer::set_screen_size(int display_width, int display_height, float rend
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA8,
+        GL_RGBA16F,
         render_width,
         render_height,
         0,
         GL_RGBA,
-        GL_UNSIGNED_BYTE,
+        GL_FLOAT,
         nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -920,7 +919,7 @@ void renderer::flush(pk::camera *camera, unsigned int elapsed_time, float delta_
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    render_scene(screen_fbo_id, render_width, render_height, camera, elapsed_time, glm::vec4(0.0f));
+    render_scene(screen_fbo_id, render_width, render_height, camera, elapsed_time);
     if (waters.size() > 0)
     {
         render_waters(screen_fbo_id, camera, elapsed_time);

@@ -126,6 +126,7 @@
     <ClCompile Include="src\source.cpp" />
     <ClCompile Include="src\spot_light.cpp" />
     <ClCompile Include="src\sprite.cpp" />
+    <ClCompile Include="src\stb_image.c" />
     <ClCompile Include="src\terrain.cpp" />
     <ClCompile Include="src\vertex.cpp" />
     <ClCompile Include="src\water.cpp" />
