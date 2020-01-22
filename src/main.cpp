@@ -323,8 +323,6 @@ int main(int argc, char *argv[])
     float time_scale = 1.0f;
     bool torch = true;
     bool torch_follow = true;
-    float bounce_timer = 0.0f;
-    float shoot_timer = 0.0f;
 
     bool quit = false;
     while (!quit)
@@ -544,7 +542,7 @@ int main(int argc, char *argv[])
 
         if (torch_follow)
         {
-            torch_spot_light.position = main_camera.position - (main_camera_front * 0.5f);
+            torch_spot_light.position = main_camera.position;
             torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 30.0f * delta_time);
         }
 
@@ -552,22 +550,18 @@ int main(int argc, char *argv[])
         ambient_source.set_position(main_camera.position);
         shoot_source.set_position(main_camera.position);
 
-        shoot_timer += delta_time;
         if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
-            if (shoot_timer >= 0.25f)
+            if (!shoot_source.is_playing())
             {
-                shoot_timer = 0.0f;
                 shoot_source.play(&shoot_sound);
             }
         }
 
-        bounce_timer += delta_time;
         if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
         {
-            if (bounce_timer >= 0.25f)
+            if (!bounce_source.is_playing())
             {
-                bounce_timer = 0.0f;
                 bounce_source.play(&bounce_sound);
             }
         }
