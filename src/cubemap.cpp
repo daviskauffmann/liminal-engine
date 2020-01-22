@@ -1,4 +1,4 @@
-#include "cubemap.hh"
+#include "cubemap.hpp"
 
 #include <iostream>
 

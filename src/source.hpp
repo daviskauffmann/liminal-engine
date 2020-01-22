@@ -3,7 +3,7 @@
 
 #include <glm/vec3.hpp>
 
-#include "sound.hh"
+#include "sound.hpp"
 
 namespace pk
 {

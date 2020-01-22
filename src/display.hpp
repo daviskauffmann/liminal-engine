@@ -15,6 +15,7 @@ public:
     void set_window_size(int width, int height);
     void toggle_fullscreen();
 
+    void make_current();
     void swap();
 
 private:

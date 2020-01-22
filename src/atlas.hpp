@@ -5,7 +5,7 @@
 
 #include <glm/vec2.hpp>
 
-#include "texture.hh"
+#include "texture.hpp"
 
 namespace pk
 {

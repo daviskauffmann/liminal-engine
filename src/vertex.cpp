@@ -1,4 +1,4 @@
-#include "vertex.hh"
+#include "vertex.hpp"
 
 namespace pk
 {

@@ -1,4 +1,4 @@
-#include "renderer.hh"
+#include "renderer.hpp"
 
 #include <iostream>
 

@@ -1,4 +1,4 @@
-#include "material.hh"
+#include "material.hpp"
 
 namespace pk
 {

@@ -4,8 +4,8 @@
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>
 
-#include "material.hh"
-#include "mesh.hh"
+#include "material.hpp"
+#include "mesh.hpp"
 
 namespace pk
 {

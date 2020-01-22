@@ -1,4 +1,4 @@
-#include "display.hh"
+#include "display.hpp"
 
 #include <iostream>
 #include <string>
@@ -51,6 +51,11 @@ void display::toggle_fullscreen()
     {
         SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     }
+}
+
+void display::make_current()
+{
+    SDL_GL_MakeCurrent(window, context);
 }
 
 void display::swap()

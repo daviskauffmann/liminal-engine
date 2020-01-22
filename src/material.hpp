@@ -3,7 +3,7 @@
 
 #include <glm/vec3.hpp>
 
-#include "texture.hh"
+#include "texture.hpp"
 
 namespace pk
 {

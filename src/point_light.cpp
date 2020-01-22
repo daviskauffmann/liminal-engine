@@ -1,4 +1,4 @@
-#include "point_light.hh"
+#include "point_light.hpp"
 
 #include <iostream>
 

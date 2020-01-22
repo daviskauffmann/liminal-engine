@@ -1,4 +1,4 @@
-#include "camera.hh"
+#include "camera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
