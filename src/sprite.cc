@@ -1,4 +1,4 @@
-#include "sprite.hpp"
+#include "sprite.hh"
 
 #include <glm/gtc/matrix_transform.hpp>
 

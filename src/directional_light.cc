@@ -1,34 +1,30 @@
-#include "spot_light.hpp"
+#include "directional_light.hh"
 
 #include <iostream>
 
 #include <glm/gtc/matrix_transform.hpp>
 
+constexpr float shadow_map_size = 20.0f;
+
 namespace pk
 {
-spot_light::spot_light(
-    glm::vec3 position,
+directional_light::directional_light(
     glm::vec3 direction,
     glm::vec3 color,
-    float inner_cutoff,
-    float outer_cutoff,
     int depth_map_width, int depth_map_height)
-    : position(position),
-      direction(direction),
-      color(color),
-      inner_cutoff(inner_cutoff),
-      outer_cutoff(outer_cutoff)
+    : direction(direction),
+      color(color)
 {
     set_depth_map_size(depth_map_width, depth_map_height);
 }
 
-spot_light::~spot_light()
+directional_light::~directional_light()
 {
     glDeleteTextures(1, &depth_map_texture_id);
     glDeleteFramebuffers(1, &depth_map_fbo_id);
 }
 
-void spot_light::set_depth_map_size(int depth_map_width, int depth_map_height)
+void directional_light::set_depth_map_size(int depth_map_width, int depth_map_height)
 {
     this->depth_map_width = depth_map_width;
     this->depth_map_height = depth_map_height;
@@ -73,18 +69,18 @@ void spot_light::set_depth_map_size(int depth_map_width, int depth_map_height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-glm::mat4 spot_light::calc_projection() const
+glm::mat4 directional_light::calc_projection() const
 {
-    glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 projection = glm::ortho(-shadow_map_size, shadow_map_size, -shadow_map_size, shadow_map_size, -shadow_map_size, shadow_map_size);
     return projection;
 }
 
-glm::mat4 spot_light::calc_view() const
+glm::mat4 directional_light::calc_view(glm::vec3 center) const
 {
-    glm::vec3 front = glm::normalize(direction);
-    glm::vec3 target = position + front;
-    glm::vec3 up(0.0f, 1.0f, 0.0f);
-    glm::mat4 view = glm::lookAt(position, target, up);
+    glm::mat4 view = glm::lookAt(
+        center - direction,
+        center,
+        glm::vec3(0.0f, 1.0f, 0.0f));
     return view;
 }
 } // namespace pk

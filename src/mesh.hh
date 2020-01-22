@@ -7,7 +7,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "vertex.hpp"
+#include "vertex.hh"
 
 namespace pk
 {

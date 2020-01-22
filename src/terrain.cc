@@ -1,4 +1,4 @@
-#include "terrain.hpp"
+#include "terrain.hh"
 
 #include <glm/gtc/matrix_transform.hpp>
 

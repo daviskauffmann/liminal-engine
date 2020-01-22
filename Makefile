@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits
-CPP := g++
-CPPFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter
+CXX := g++
+CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter
 LDFLAGS :=
 
 SRC	:= src
@@ -11,32 +11,32 @@ BIN	:= bin
 EXE := pk
 
 CSOURCES := $(SRC)/stb_image.c
-CPPSOURCES := \
-	$(SRC)/atlas.cpp \
-	$(SRC)/audio.cpp \
-	$(SRC)/camera.cpp \
-	$(SRC)/cubemap.cpp \
-	$(SRC)/directional_light.cpp \
-	$(SRC)/display.cpp \
-	$(SRC)/main.cpp \
-	$(SRC)/material.cpp \
-	$(SRC)/mesh.cpp \
-	$(SRC)/object.cpp \
-	$(SRC)/point_light.cpp \
-	$(SRC)/program.cpp \
-	$(SRC)/renderer.cpp \
-	$(SRC)/sound.cpp \
-	$(SRC)/source.cpp \
-	$(SRC)/spot_light.cpp \
-	$(SRC)/sprite.cpp \
-	$(SRC)/terrain.cpp \
-	$(SRC)/texture.cpp \
-	$(SRC)/vertex.cpp \
-	$(SRC)/water.cpp
-COBJECTS := $(patsubst $(SRC)/%,$(BUILD)/%,$(CPPSOURCES:.cpp=.oo))
-CPPOBJECTS := $(patsubst $(SRC)/%,$(BUILD)/%,$(CSOURCES:.c=.o))
-CDEPENDENCIES := $(OBJECTS:.o=.d)
-CPPDEPENDENCIES := $(OBJECTS:.oo=.dd)
+CCSOURCES := \
+	$(SRC)/atlas.cc \
+	$(SRC)/audio.cc \
+	$(SRC)/camera.cc \
+	$(SRC)/cubemap.cc \
+	$(SRC)/directional_light.cc \
+	$(SRC)/display.cc \
+	$(SRC)/main.cc \
+	$(SRC)/material.cc \
+	$(SRC)/mesh.cc \
+	$(SRC)/object.cc \
+	$(SRC)/point_light.cc \
+	$(SRC)/program.cc \
+	$(SRC)/renderer.cc \
+	$(SRC)/sound.cc \
+	$(SRC)/source.cc \
+	$(SRC)/spot_light.cc \
+	$(SRC)/sprite.cc \
+	$(SRC)/terrain.cc \
+	$(SRC)/texture.cc \
+	$(SRC)/vertex.cc \
+	$(SRC)/water.cc
+COBJECTS := $(patsubst $(SRC)/%,$(BUILD)/%,$(CSOURCES:.c=.o))
+CCOBJECTS := $(patsubst $(SRC)/%,$(BUILD)/%,$(CCSOURCES:.cc=.oo))
+CDEPENDENCIES := $(COBJECTS:.o=.d)
+CCDEPENDENCIES := $(CCOBJECTS:.oo=.dd)
 INCLUDE :=
 LIB :=
 LIBRARIES := -lglew32 -lglu32 -lmingw32 -lopengl32 -lopenal -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer
@@ -45,19 +45,21 @@ TARGET := $(BIN)/$(EXE)
 .PHONY: all
 all: $(TARGET)
 
-$(TARGET): $(COBJECTS) $(CPPOBJECTS)
+$(TARGET): $(COBJECTS) $(CCOBJECTS)
 	mkdir -p $(@D)
-	$(CPP) $^ -o $@ $(LDFLAGS) $(LIB) $(LIBRARIES)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIB) $(LIBRARIES)
 
 $(BUILD)/%.o: $(SRC)/%.c
 	mkdir -p $(@D)
 	$(CC) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CFLAGS) $(INCLUDE)
 
-$(BUILD)/%.oo: $(SRC)/%.cpp
-	mkdir -p $(@D)
-	$(CPP) -c $< -o $@ -MMD -MF $(@:.oo=.dd) $(CPPFLAGS) $(INCLUDE)
+-include $(CDEPENDENCIES)
 
--include $(DEPENDENCIES)
+$(BUILD)/%.oo: $(SRC)/%.cc
+	mkdir -p $(@D)
+	$(CXX) -c $< -o $@ -MMD -MF $(@:.oo=.dd) $(CXXFLAGS) $(INCLUDE)
+
+-include $(CCDEPENDENCIES)
 
 .PHONY: run
 run: all

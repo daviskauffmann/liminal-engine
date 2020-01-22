@@ -1,4 +1,4 @@
-#include "sound.hpp"
+#include "sound.hh"
 
 #include <iostream>
 

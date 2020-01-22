@@ -3,17 +3,17 @@
 
 #include <GL/glew.h>
 
-#include "camera.hpp"
-#include "cubemap.hpp"
-#include "directional_light.hpp"
-#include "object.hpp"
-#include "point_light.hpp"
-#include "program.hpp"
-#include "spot_light.hpp"
-#include "sprite.hpp"
-#include "terrain.hpp"
-#include "texture.hpp"
-#include "water.hpp"
+#include "camera.hh"
+#include "cubemap.hh"
+#include "directional_light.hh"
+#include "object.hh"
+#include "point_light.hh"
+#include "program.hh"
+#include "spot_light.hh"
+#include "sprite.hh"
+#include "terrain.hh"
+#include "texture.hh"
+#include "water.hh"
 
 namespace pk
 {

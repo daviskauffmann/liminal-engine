@@ -1,4 +1,4 @@
-#include "display.hpp"
+#include "display.hh"
 
 #include <iostream>
 #include <string>

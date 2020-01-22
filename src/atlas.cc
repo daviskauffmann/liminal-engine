@@ -1,4 +1,4 @@
-#include "atlas.hpp"
+#include "atlas.hh"
 
 #include <iostream>
 

@@ -1,4 +1,4 @@
-#include "mesh.hpp"
+#include "mesh.hh"
 
 namespace pk
 {

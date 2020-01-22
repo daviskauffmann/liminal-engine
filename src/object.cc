@@ -1,4 +1,4 @@
-#include "object.hpp"
+#include "object.hh"
 
 #include <glm/gtc/matrix_transform.hpp>
 

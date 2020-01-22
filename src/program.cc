@@ -1,4 +1,4 @@
-#include "program.hpp"
+#include "program.hh"
 
 #include <fstream>
 #include <iostream>
