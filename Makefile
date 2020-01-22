@@ -2,7 +2,7 @@ CC := gcc
 CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wtype-limits
 CPP := g++
 CPPFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter
-LDFLAGS := -lglew32 -lglu32 -lmingw32 -lopengl32 -lopenal -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer
+LDFLAGS :=
 
 SRC	:= src
 DEPS := deps
@@ -37,9 +37,9 @@ COBJECTS := $(patsubst $(SRC)/%,$(BUILD)/%,$(CPPSOURCES:.cpp=.oo))
 CPPOBJECTS := $(patsubst $(SRC)/%,$(BUILD)/%,$(CSOURCES:.c=.o))
 CDEPENDENCIES := $(OBJECTS:.o=.d)
 CPPDEPENDENCIES := $(OBJECTS:.oo=.dd)
-INCLUDE := -Iinclude
+INCLUDE :=
 LIB :=
-LIBRARIES :=
+LIBRARIES := -lglew32 -lglu32 -lmingw32 -lopengl32 -lopenal -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer
 TARGET := $(BIN)/$(EXE)
 
 .PHONY: all
