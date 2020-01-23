@@ -1,31 +1,37 @@
 # Project Kilonova
 
-## Getting started
+## Getting Started
 
-Make sure these are installed.
+### Dependencies
 
-```txt
-SDL2
-SDL2_image
-SDL2_mixer
-glm
-glew
-openal
+- SDL2
+- SDL2_image
+- SDL2_mixer
+- GLM
+- GLEW
+- OpenAL
+
+### Download
+
+```sh
+git clone https://github.com/daviskauffmann/project-kilonova.git
+cd project-kilonova
+git submodule update --init
 ```
 
-Build the project.
+### Build
 
 ```sh
 make
 ```
 
-Build and run.
+### Build & Run
 
 ```sh
 make run
 ```
 
-Cleanup all build files and binaries.
+### Cleanup
 
 ```sh
 make clean

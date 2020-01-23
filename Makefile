@@ -1,6 +1,6 @@
 CXX := g++
-CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits
-LDFLAGS :=
+CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags glew openal sdl2 sdl2_image sdl2_mixer`
+LDFLAGS := `pkg-config --libs glew openal sdl2 sdl2_image sdl2_mixer`
 
 SRC	:= src
 EXTERN := extern
@@ -34,7 +34,7 @@ OBJECTS := $(SOURCES:$(SRC)/%.cpp=$(BUILD)/%.o)
 DEPENDENCIES := $(OBJECTS:%.o=%.d)
 INCLUDE := -I$(EXTERN)/stb
 LIB :=
-LIBRARIES := -lglew32 -lglu32 -lmingw32 -lopengl32 -lopenal -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer
+LIBRARIES := -lopengl32
 TARGET := $(BIN)/pk
 
 .PHONY: all
