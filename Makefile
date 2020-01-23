@@ -1,15 +1,13 @@
-CC := gcc
-CFLAGS := -ggdb -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits
 CXX := g++
-CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter
+CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits
 LDFLAGS :=
 
 SRC	:= src
+EXTERN := extern
 BUILD := build
 BIN	:= bin
 
-CSOURCES := $(SRC)/stb_image.c
-CXXSOURCES := \
+SOURCES := \
 	$(SRC)/atlas.cpp \
 	$(SRC)/audio.cpp \
 	$(SRC)/camera.cpp \
@@ -27,37 +25,30 @@ CXXSOURCES := \
 	$(SRC)/source.cpp \
 	$(SRC)/spot_light.cpp \
 	$(SRC)/sprite.cpp \
+	$(SRC)/stb_image.cpp \
 	$(SRC)/terrain.cpp \
 	$(SRC)/texture.cpp \
 	$(SRC)/vertex.cpp \
 	$(SRC)/water.cpp
-COBJECTS := $(CSOURCES:$(SRC)/%.c=$(BUILD)/%.o)
-CXXOBJECTS := $(CXXSOURCES:$(SRC)/%.cpp=$(BUILD)/%.oo)
-CDEPENDENCIES := $(COBJECTS:%.o=%.d)
-CXXDEPENDENCIES := $(OBJECTS:%.oo=%.dd)
-INCLUDE :=
+OBJECTS := $(SOURCES:$(SRC)/%.cpp=$(BUILD)/%.o)
+DEPENDENCIES := $(OBJECTS:%.o=%.d)
+INCLUDE := -I$(EXTERN)/stb
 LIB :=
 LIBRARIES := -lglew32 -lglu32 -lmingw32 -lopengl32 -lopenal -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer
-TARGET := $(BIN)/pk+
+TARGET := $(BIN)/pk
 
 .PHONY: all
 all: $(TARGET)
 
-$(TARGET): $(COBJECTS) $(CXXOBJECTS)
+$(TARGET): $(OBJECTS)
 	mkdir -p $(@D)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIB) $(LIBRARIES)
 
-$(BUILD)/%.o: $(SRC)/%.c
+$(BUILD)/%.o: $(SRC)/%.cpp
 	mkdir -p $(@D)
-	$(CC) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CFLAGS) $(INCLUDE)
+	$(CXX) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CXXFLAGS) $(INCLUDE)
 
--include $(CDEPENDENCIES)
-
-$(BUILD)/%.oo: $(SRC)/%.cpp
-	mkdir -p $(@D)
-	$(CXX) -c $< -o $@ -MMD -MF $(@:.oo=.dd) $(CXXFLAGS) $(INCLUDE)
-
--include $(CXXDEPENDENCIES)
+-include $(DEPENDENCIES)
 
 .PHONY: run
 run: all
