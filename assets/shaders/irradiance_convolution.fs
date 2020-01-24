@@ -1,5 +1,7 @@
 #version 460 core
 
+#include "glsl/math.glsl"
+
 in struct Vertex
 {
 	vec3 position;
@@ -8,8 +10,6 @@ in struct Vertex
 uniform samplerCube environment_cubemap;
 
 out vec4 frag_color;
-
-const float PI = 3.14159265359;
 
 void main()
 {		

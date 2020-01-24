@@ -122,10 +122,12 @@ void program::set_mat4(const std::string &name, glm::mat4 mat4) const
 GLuint program::create_shader(GLenum type, const std::string &filename) const
 {
     GLuint shader_id = glCreateShader(type);
-    char *inject = 0;
-    const char *path_to_includes = "assets/shaders";
     char error[256];
-    char *source = stb_include_file(const_cast<char *>(filename.c_str()), inject, const_cast<char *>(path_to_includes), error);
+    char *source = stb_include_file(
+        const_cast<char *>(filename.c_str()),
+        NULL,
+        const_cast<char *>("assets/shaders"),
+        error);
     if (!source)
     {
         std::cout << "Error: Shader precompilation failed\n"

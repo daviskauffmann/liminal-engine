@@ -1,5 +1,8 @@
 #version 460 core
 
+#include "glsl/fresnel_schlick.glsl"
+#include "glsl/math.glsl"
+
 in struct Vertex
 {
     vec3 position;
@@ -33,8 +36,6 @@ uniform sampler2D brdf_map;
 
 out vec4 frag_color;
 
-const float PI = 3.14159265359;
-
 vec3 calc_normal()
 {
     vec3 tangent_normal = texture(material.normal_map, vertex.uv).xyz * 2.0 - 1.0;
@@ -50,11 +51,6 @@ vec3 calc_normal()
     mat3 tbn = mat3(t, b, n);
 
     return normalize(tbn * tangent_normal);
-}
-
-vec3 fresnel_schlick_roughness(float cos_theta, vec3 f0, float roughness)
-{
-    return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - cos_theta, 5.0);
 }
 
 void main()

@@ -1,5 +1,10 @@
 #version 460 core
 
+#include "glsl/distribution_ggx.glsl"
+#include "glsl/fresnel_schlick.glsl"
+#include "glsl/geometry_smith.glsl"
+#include "glsl/math.glsl"
+
 in struct Vertex
 {
     vec3 position;
@@ -36,8 +41,6 @@ uniform struct Light
 
 out vec4 frag_color;
 
-const float PI = 3.14159265359;
-
 vec3 calc_normal()
 {
     vec3 tangent_normal = texture(material.normal_map, vertex.uv).xyz * 2.0 - 1.0;
@@ -53,46 +56,6 @@ vec3 calc_normal()
     mat3 tbn = mat3(t, b, n);
 
     return normalize(tbn * tangent_normal);
-}
-
-float distribution_ggx(vec3 n, vec3 h, float roughness)
-{
-    float a = roughness * roughness;
-    float a_sq = a * a;
-    float n_dot_h = max(dot(n, h), 0.0);
-    float n_dot_h_sq = n_dot_h * n_dot_h;
-
-    float numerator = a_sq;
-    float denominator = (n_dot_h_sq * (a_sq - 1.0) + 1.0);
-    denominator = PI * denominator * denominator;
-
-    return numerator / max(denominator, 0.001);
-}
-
-float geometry_schlick_ggx(float n_dot_v, float roughness)
-{
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-
-    float numerator = n_dot_v;
-    float denominator = n_dot_v * (1.0 - k) + k;
-
-    return numerator / denominator;
-}
-
-float geometry_smith(vec3 n, vec3 v, vec3 l, float roughness)
-{
-    float n_dot_v = max(dot(n, v), 0.0);
-    float n_dot_l = max(dot(n, l), 0.0);
-    float ggx1 = geometry_schlick_ggx(n_dot_l, roughness);
-    float ggx2 = geometry_schlick_ggx(n_dot_v, roughness);
-
-    return ggx1 * ggx2;
-}
-
-vec3 fresnel_schlick(float cos_theta, vec3 f0)
-{
-    return f0 + (1.0 - f0) * pow(1.0 - cos_theta, 5.0);
 }
 
 void main()
