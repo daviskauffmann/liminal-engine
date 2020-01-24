@@ -1,12 +1,10 @@
 #include "renderer.hpp"
 
-#include <iostream>
-
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 #include <SDL2/SDL_image.h>
-
-#include "stb_image.h"
+#include <stb_image.h>
 
 #define LIGHTING_COLOR 1
 #define LIGHTING_TEXTURE 2

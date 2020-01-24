@@ -26,6 +26,7 @@ SOURCES := \
 	$(SRC)/spot_light.cpp \
 	$(SRC)/sprite.cpp \
 	$(SRC)/stb_image.cpp \
+	$(SRC)/stb_include.cpp \
 	$(SRC)/terrain.cpp \
 	$(SRC)/texture.cpp \
 	$(SRC)/vertex.cpp \

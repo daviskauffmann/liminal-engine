@@ -1,11 +1,11 @@
 #include "program.hpp"
 
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <sstream>
+#include <stb_include.h>
 #include <vector>
-
-#include <glm/gtc/type_ptr.hpp>
 
 namespace pk
 {
@@ -122,15 +122,18 @@ void program::set_mat4(const std::string &name, glm::mat4 mat4) const
 GLuint program::create_shader(GLenum type, const std::string &filename) const
 {
     GLuint shader_id = glCreateShader(type);
-    std::ifstream file;
-    file.open(filename);
-    std::stringstream stream;
-    stream << file.rdbuf();
-    file.close();
-    std::string source_str = stream.str();
-    const char *source_c_str = source_str.c_str();
-    glShaderSource(shader_id, 1, &source_c_str, nullptr);
+    char *inject = 0;
+    const char *path_to_includes = "assets/shaders";
+    char error[256];
+    char *source = stb_include_file(const_cast<char *>(filename.c_str()), inject, const_cast<char *>(path_to_includes), error);
+    if (!source)
+    {
+        std::cout << "Error: Shader precompilation failed\n"
+                  << error << std::endl;
+    }
+    glShaderSource(shader_id, 1, &source, nullptr);
     glCompileShader(shader_id);
+    free(source);
     GLint success;
     glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
     if (!success)
