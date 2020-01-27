@@ -11,6 +11,7 @@
 - GLM
 - Assimp
 - OpenAL
+- Bullet
 
 ### Download
 

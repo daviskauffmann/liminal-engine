@@ -1,6 +1,6 @@
 CXX := g++
-CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags glew openal sdl2 sdl2_image sdl2_mixer`
-LDFLAGS := `pkg-config --libs glew openal sdl2 sdl2_image sdl2_mixer` -mconsole
+CXXFLAGS := -ggdb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags assimp bullet glew openal sdl2 sdl2_image sdl2_mixer`
+LDFLAGS := `pkg-config --libs assimp bullet glew openal sdl2 sdl2_image sdl2_mixer` -mconsole
 
 SRC	:= src
 EXTERN := extern
