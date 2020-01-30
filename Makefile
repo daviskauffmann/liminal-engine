@@ -28,14 +28,12 @@ SRC := \
 	src/texture.cpp \
 	src/vertex.cpp \
 	src/water.cpp
-OBJ := $(SRC:src/%.cpp=build/%.o)
-DEP := $(OBJ:%.o=%.d)
-TGT := bin/pk
+TARGET := bin/pk
 
 .PHONY: all
-all: $(TGT)
+all: $(TARGET)
 
-$(TGT): $(OBJ)
+$(TARGET): $(SRC:src/%.cpp=build/%.o)
 	mkdir -p $(@D)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
@@ -43,11 +41,11 @@ build/%.o: src/%.cpp
 	mkdir -p $(@D)
 	$(CXX) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CXXFLAGS) $(CPPFLAGS)
 
--include $(DEP)
+-include $(SRC:src/%.cpp=build/%.d)
 
 .PHONY: run
 run: all
-	./$(TGT)
+	./$(TARGET)
 
 .PHONY: clean
 clean:
