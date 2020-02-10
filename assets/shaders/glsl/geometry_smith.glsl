@@ -9,7 +9,7 @@ float geometry_schlick_ggx(float n_dot_v, float roughness)
     float numerator = n_dot_v;
     float denominator = n_dot_v * (1.0 - k) + k;
 
-    return numerator / denominator;
+    return numerator / max(denominator, 0.001);
 }
 
 float geometry_smith(vec3 n, vec3 v, vec3 l, float roughness)

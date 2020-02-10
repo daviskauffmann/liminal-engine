@@ -27,6 +27,14 @@ constexpr int frame_delay = 1000 / fps_cap;
 
 constexpr float pi = 3.14159f;
 
+int window_width = 1280;
+int window_height = 720;
+float render_scale = 1.0f;
+int depth_map_width = 4096;
+int depth_map_height = 4096;
+int depth_cube_width = 512;
+int depth_cube_height = 512;
+
 int main(int argc, char *argv[])
 {
     for (int i = 1; i < argc; i++)
@@ -41,15 +49,15 @@ int main(int argc, char *argv[])
         {
             std::cout << window_title << " " << version << std::endl;
         }
+        // if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--width") == 0)
+        // {
+        //     window_width = atoi(argv[i + 1]);
+        // }
+        // if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--height") == 0)
+        // {
+        //     window_width = atoi(argv[i + 1]);
+        // }
     }
-
-    int window_width = 1280;
-    int window_height = 720;
-    float render_scale = 1.0f;
-    int depth_map_width = 4096;
-    int depth_map_height = 4096;
-    int depth_cube_width = 512;
-    int depth_cube_height = 512;
 
     pk::display display(window_title, window_width, window_height);
     pk::renderer renderer(
@@ -531,14 +539,14 @@ int main(int argc, char *argv[])
             angle = 0;
         }
         float distance = 6.0f;
-        red_point_light.position.x = distance * sinf(angle + ((pi / 2) * 0));
-        red_point_light.position.z = distance * cosf(angle + ((pi / 2) * 0));
-        yellow_point_light.position.x = distance * sinf(angle + ((pi / 2) * 1));
-        yellow_point_light.position.z = distance * cosf(angle + ((pi / 2) * 1));
-        green_point_light.position.x = distance * sinf(angle + ((pi / 2) * 2));
-        green_point_light.position.z = distance * cosf(angle + ((pi / 2) * 2));
-        blue_point_light.position.x = distance * sinf(angle + ((pi / 2) * 3));
-        blue_point_light.position.z = distance * cosf(angle + ((pi / 2) * 3));
+        red_point_light.position.x = distance * sinf(angle);
+        red_point_light.position.z = distance * cosf(angle);
+        yellow_point_light.position.x = distance * sinf(angle + (pi / 2));
+        yellow_point_light.position.z = distance * cosf(angle + (pi / 2));
+        green_point_light.position.x = distance * sinf(angle + pi);
+        green_point_light.position.z = distance * cosf(angle + pi);
+        blue_point_light.position.x = distance * sinf(angle + 3 * pi / 2);
+        blue_point_light.position.z = distance * cosf(angle + 3 * pi / 2);
 
         if (torch_follow)
         {
@@ -583,8 +591,8 @@ int main(int argc, char *argv[])
         {
             renderer.add_spot_light(&torch_spot_light);
         }
-        // renderer.add_water(&test_water);
-        // renderer.add_terrain(&test_terrain);
+        renderer.add_water(&test_water);
+        renderer.add_terrain(&test_terrain);
         // renderer.add_sprite(&grass_sprite);
         renderer.flush(&main_camera, current_time, delta_time);
 

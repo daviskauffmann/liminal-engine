@@ -532,7 +532,6 @@ renderer::~renderer()
     glDeleteTextures(1, &water_reflection_color_texture_id);
     glDeleteFramebuffers(1, &water_reflection_fbo_id);
 
-    glDeleteRenderbuffers(1, &water_refraction_rbo_id);
     glDeleteTextures(1, &water_refraction_depth_texture_id);
     glDeleteTextures(1, &water_refraction_color_texture_id);
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
@@ -795,7 +794,6 @@ void renderer::set_refraction_size(int refraction_width, int refraction_height)
     this->refraction_width = refraction_width;
     this->refraction_height = refraction_height;
 
-    glDeleteRenderbuffers(1, &water_refraction_rbo_id);
     glDeleteTextures(1, &water_refraction_depth_texture_id);
     glDeleteTextures(1, &water_refraction_color_texture_id);
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
@@ -835,15 +833,6 @@ void renderer::set_refraction_size(int refraction_width, int refraction_height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenRenderbuffers(1, &water_refraction_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, water_refraction_rbo_id);
-    glRenderbufferStorage(
-        GL_RENDERBUFFER,
-        GL_DEPTH_COMPONENT,
-        refraction_width,
-        refraction_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
     glGenFramebuffers(1, &water_refraction_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
     glFramebufferTexture2D(
@@ -858,11 +847,6 @@ void renderer::set_refraction_size(int refraction_width, int refraction_height)
         GL_TEXTURE_2D,
         water_refraction_depth_texture_id,
         0);
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_RENDERBUFFER,
-        water_refraction_rbo_id);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -908,16 +892,6 @@ void renderer::add_sprite(pk::sprite *sprite)
 
 void renderer::flush(pk::camera *camera, unsigned int elapsed_time, float delta_time)
 {
-    if (!camera)
-    {
-        std::cout << "Error: Camera cannot be null" << std::endl;
-        return;
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     render_scene(screen_fbo_id, render_width, render_height, camera, elapsed_time);
     if (waters.size() > 0)
     {
@@ -1020,11 +994,12 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
     glm::mat4 camera_view = camera->calc_view();
 
-    glViewport(0, 0, width, height);
     if (objects.size() > 0)
     {
 #if LIGHTING_MODE == LIGHTING_COLOR
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
         for (auto &object : objects)
         {
@@ -1042,6 +1017,8 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_TEXTURE
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
         for (auto &object : objects)
         {
@@ -1061,6 +1038,8 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif LIGHTING_MODE == LIGHTING_FORWARD
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CLIP_DISTANCE0);
         for (auto &object : objects)
         {
@@ -1237,6 +1216,8 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
         for (auto &object : objects)
         {
@@ -1357,9 +1338,6 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int ela
             camera->position.y -= 2 * (camera->position.y - water->position.y);
             camera->pitch = -camera->pitch;
             glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-            glBindFramebuffer(GL_FRAMEBUFFER, water_reflection_fbo_id);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             render_scene(water_reflection_fbo_id, reflection_width, reflection_height, camera, elapsed_time, reflection_clipping_plane);
             camera->position.y = old_camera_y;
             camera->pitch = old_camera_pitch;
@@ -1371,9 +1349,6 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int ela
             refraction_clipping_plane.y = 1.0f;
             refraction_clipping_plane.w = -water->position.y;
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         render_scene(water_refraction_fbo_id, refraction_width, refraction_height, camera, elapsed_time, refraction_clipping_plane);
 
         glViewport(0, 0, render_width, render_height);
@@ -1382,6 +1357,8 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int ela
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         water_program->bind();
         water_program->set_mat4("water.model", water_model);
+        water_program->set_vec3("light.direction", directional_lights[0]->direction);
+        water_program->set_vec3("light.color", directional_lights[0]->color);
         water_program->set_float("near_plane", 0.1f);
         water_program->set_float("far_plane", 1000.0f);
         glActiveTexture(GL_TEXTURE0);
@@ -1429,7 +1406,7 @@ void renderer::render_screen(GLuint fbo_id)
 {
     glViewport(0, 0, display_width, display_height);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     screen_program->bind();
     glActiveTexture(GL_TEXTURE0);
@@ -1439,5 +1416,6 @@ void renderer::render_screen(GLuint fbo_id)
     glBindVertexArray(0);
     screen_program->unbind();
     glEnable(GL_DEPTH_TEST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 } // namespace pk

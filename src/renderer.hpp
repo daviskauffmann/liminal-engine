@@ -69,7 +69,6 @@ private:
     GLuint water_refraction_fbo_id;
     GLuint water_refraction_color_texture_id;
     GLuint water_refraction_depth_texture_id;
-    GLuint water_refraction_rbo_id;
 
     // water mesh
     GLsizei water_vertices_size;

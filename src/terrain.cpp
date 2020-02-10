@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-constexpr float size = 100;
+constexpr float size = 500;
 constexpr int vertex_count = 128;
 
 namespace pk
