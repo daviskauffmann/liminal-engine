@@ -3,7 +3,6 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include <SDL2/SDL_image.h>
 #include <stb_image.h>
 
 #define LIGHTING_COLOR 1
@@ -19,22 +18,6 @@ renderer::renderer(
     int reflection_width, int reflection_height,
     int refraction_width, int refraction_height)
 {
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-    const SDL_version *version = IMG_Linked_Version();
-    std::cout << "SDL_image " << std::to_string(version->major) << "." << std::to_string(version->minor) << "." << std::to_string(version->patch) << std::endl;
-
-    GLenum error = glewInit();
-    if (error != GLEW_OK)
-    {
-        std::cout << "Error: Couldn't initialize GLEW\n"
-                  << glewGetErrorString(error) << std::endl;
-    }
-    std::cout << "GLEW " << glewGetString(GLEW_VERSION) << std::endl;
-    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "Vendor " << glGetString(GL_VENDOR) << std::endl;
-    std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-
     glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
@@ -547,8 +530,6 @@ renderer::~renderer()
 
     glDeleteBuffers(1, &screen_vbo_id);
     glDeleteVertexArrays(1, &screen_vao_id);
-
-    IMG_Quit();
 }
 
 void renderer::set_screen_size(int display_width, int display_height, float render_scale)

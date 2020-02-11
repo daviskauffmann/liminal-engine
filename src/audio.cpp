@@ -1,21 +1,13 @@
 #include "audio.hpp"
 
-#include <iostream>
-#include <string>
-
 #include <AL/al.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <SDL2/SDL_mixer.h>
+#include <iostream>
 
 namespace pk
 {
 audio::audio()
 {
-    Mix_Init(0);
-    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
-    const SDL_version *version = Mix_Linked_Version();
-    std::cout << "SDL_mixer " << std::to_string(version->major) << "." << std::to_string(version->minor) << "." << std::to_string(version->patch) << std::endl;
-
     device = alcOpenDevice(nullptr);
     if (!device)
     {
@@ -37,9 +29,6 @@ audio::~audio()
     alcMakeContextCurrent(nullptr);
     alcDestroyContext(context);
     alcCloseDevice(device);
-
-    Mix_CloseAudio();
-    Mix_Quit();
 }
 
 void audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const
