@@ -180,85 +180,6 @@ renderer::renderer(
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
 
-    texture_program->bind();
-    texture_program->set_int("color_map", 0);
-    texture_program->unbind();
-
-    forward_ambient_program->bind();
-    forward_ambient_program->set_int("material.albedo_map", 0);
-    forward_ambient_program->set_int("material.normal_map", 1);
-    forward_ambient_program->set_int("material.metallic_map", 2);
-    forward_ambient_program->set_int("material.roughness_map", 3);
-    forward_ambient_program->set_int("material.occlusion_map", 4);
-    forward_ambient_program->set_int("material.height_map", 5);
-    forward_ambient_program->set_int("irradiance_cubemap", 6);
-    forward_ambient_program->set_int("prefilter_cubemap", 7);
-    forward_ambient_program->set_int("brdf_map", 8);
-    forward_ambient_program->unbind();
-
-    forward_directional_program->bind();
-    forward_directional_program->set_int("material.albedo_map", 0);
-    forward_directional_program->set_int("material.normal_map", 1);
-    forward_directional_program->set_int("material.metallic_map", 2);
-    forward_directional_program->set_int("material.roughness_map", 3);
-    forward_directional_program->set_int("material.occlusion_map", 4);
-    forward_directional_program->set_int("material.height_map", 5);
-    forward_directional_program->set_int("light.depth_map", 6);
-    forward_directional_program->unbind();
-
-    forward_point_program->bind();
-    forward_point_program->set_int("material.albedo_map", 0);
-    forward_point_program->set_int("material.normal_map", 1);
-    forward_point_program->set_int("material.metallic_map", 2);
-    forward_point_program->set_int("material.roughness_map", 3);
-    forward_point_program->set_int("material.occlusion_map", 4);
-    forward_point_program->set_int("material.height_map", 5);
-    forward_point_program->set_int("light.depth_cubemap", 6);
-    forward_point_program->unbind();
-
-    forward_spot_program->bind();
-    forward_spot_program->set_int("material.albedo_map", 0);
-    forward_spot_program->set_int("material.normal_map", 1);
-    forward_spot_program->set_int("material.metallic_map", 2);
-    forward_spot_program->set_int("material.roughness_map", 3);
-    forward_spot_program->set_int("material.occlusion_map", 4);
-    forward_spot_program->set_int("material.height_map", 5);
-    forward_spot_program->set_int("light.depth_map", 6);
-    forward_spot_program->unbind();
-
-    geometry_program->bind();
-    geometry_program->set_int("material.albedo_map", 0);
-    geometry_program->set_int("material.normal_map", 1);
-    geometry_program->set_int("material.metallic_map", 2);
-    geometry_program->set_int("material.roughness_map", 3);
-    geometry_program->set_int("material.occlusion_map", 4);
-    geometry_program->set_int("material.height_map", 5);
-    geometry_program->unbind();
-
-    background_program->bind();
-    background_program->set_int("environment_cubemap", 0);
-    background_program->unbind();
-
-    water_program->bind();
-    water_program->set_int("water.reflection_map", 0);
-    water_program->set_int("water.refraction_map", 1);
-    water_program->set_int("water.depth_map", 2);
-    water_program->set_int("water.dudv_map", 3);
-    water_program->set_int("water.normal_map", 4);
-    water_program->unbind();
-
-    terrain_program->bind();
-    terrain_program->set_int("material.albedo_map", 0);
-    terrain_program->unbind();
-
-    sprite_program->bind();
-    sprite_program->set_int("sprite.texture", 0);
-    sprite_program->unbind();
-
-    screen_program->bind();
-    screen_program->set_int("screen.texture", 0);
-    screen_program->unbind();
-
     set_screen_size(display_width, display_height, render_scale);
     set_reflection_size(reflection_width, reflection_height);
     set_refraction_size(refraction_width, refraction_height);
@@ -836,6 +757,24 @@ void renderer::set_refraction_size(int refraction_width, int refraction_height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void renderer::reload_programs()
+{
+    depth_program->reload();
+    depth_cube_program->reload();
+    color_program->reload();
+    texture_program->reload();
+    forward_ambient_program->reload();
+    forward_directional_program->reload();
+    forward_point_program->reload();
+    forward_spot_program->reload();
+    geometry_program->reload();
+    background_program->reload();
+    water_program->reload();
+    terrain_program->reload();
+    sprite_program->reload();
+    screen_program->reload();
+}
+
 void renderer::add_object(pk::object *object)
 {
     objects.push_back(object);
@@ -895,6 +834,85 @@ void renderer::flush(pk::camera *camera, unsigned int elapsed_time, float delta_
 
 void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane)
 {
+    texture_program->bind();
+    texture_program->set_int("color_map", 0);
+    texture_program->unbind();
+
+    forward_ambient_program->bind();
+    forward_ambient_program->set_int("material.albedo_map", 0);
+    forward_ambient_program->set_int("material.normal_map", 1);
+    forward_ambient_program->set_int("material.metallic_map", 2);
+    forward_ambient_program->set_int("material.roughness_map", 3);
+    forward_ambient_program->set_int("material.occlusion_map", 4);
+    forward_ambient_program->set_int("material.height_map", 5);
+    forward_ambient_program->set_int("irradiance_cubemap", 6);
+    forward_ambient_program->set_int("prefilter_cubemap", 7);
+    forward_ambient_program->set_int("brdf_map", 8);
+    forward_ambient_program->unbind();
+
+    forward_directional_program->bind();
+    forward_directional_program->set_int("material.albedo_map", 0);
+    forward_directional_program->set_int("material.normal_map", 1);
+    forward_directional_program->set_int("material.metallic_map", 2);
+    forward_directional_program->set_int("material.roughness_map", 3);
+    forward_directional_program->set_int("material.occlusion_map", 4);
+    forward_directional_program->set_int("material.height_map", 5);
+    forward_directional_program->set_int("light.depth_map", 6);
+    forward_directional_program->unbind();
+
+    forward_point_program->bind();
+    forward_point_program->set_int("material.albedo_map", 0);
+    forward_point_program->set_int("material.normal_map", 1);
+    forward_point_program->set_int("material.metallic_map", 2);
+    forward_point_program->set_int("material.roughness_map", 3);
+    forward_point_program->set_int("material.occlusion_map", 4);
+    forward_point_program->set_int("material.height_map", 5);
+    forward_point_program->set_int("light.depth_cubemap", 6);
+    forward_point_program->unbind();
+
+    forward_spot_program->bind();
+    forward_spot_program->set_int("material.albedo_map", 0);
+    forward_spot_program->set_int("material.normal_map", 1);
+    forward_spot_program->set_int("material.metallic_map", 2);
+    forward_spot_program->set_int("material.roughness_map", 3);
+    forward_spot_program->set_int("material.occlusion_map", 4);
+    forward_spot_program->set_int("material.height_map", 5);
+    forward_spot_program->set_int("light.depth_map", 6);
+    forward_spot_program->unbind();
+
+    geometry_program->bind();
+    geometry_program->set_int("material.albedo_map", 0);
+    geometry_program->set_int("material.normal_map", 1);
+    geometry_program->set_int("material.metallic_map", 2);
+    geometry_program->set_int("material.roughness_map", 3);
+    geometry_program->set_int("material.occlusion_map", 4);
+    geometry_program->set_int("material.height_map", 5);
+    geometry_program->unbind();
+
+    background_program->bind();
+    background_program->set_int("environment_cubemap", 0);
+    background_program->unbind();
+
+    water_program->bind();
+    water_program->set_int("water.reflection_map", 0);
+    water_program->set_int("water.refraction_map", 1);
+    water_program->set_int("water.depth_map", 2);
+    water_program->set_int("water.dudv_map", 3);
+    water_program->set_int("water.normal_map", 4);
+    water_program->unbind();
+
+    terrain_program->bind();
+    terrain_program->set_int("material.albedo_map", 0);
+    terrain_program->unbind();
+
+    sprite_program->bind();
+    sprite_program->set_int("sprite.texture", 0);
+    sprite_program->unbind();
+
+    screen_program->bind();
+    screen_program->set_int("screen.texture", 0);
+    screen_program->unbind();
+
 #if LIGHTING_MODE == LIGHTING_FORWARD || LIGHTING_MODE == LIGHTING_DEFERRED
     for (auto &directional_light : directional_lights)
     {
@@ -1334,8 +1352,11 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int ela
 
         glViewport(0, 0, render_width, render_height);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        if (reflect)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
         water_program->bind();
         water_program->set_mat4("water.model", water_model);
         water_program->set_vec3("light.direction", directional_lights[0]->direction);

@@ -73,10 +73,7 @@ void main()
 	normal = normalize(normal);
 	
 	vec3 view_direction = normalize(camera.position - vertex.position);
-	// view_direction.x = abs(view_direction.x);
-	// view_direction.y = abs(view_direction.y);
-	// view_direction.z = abs(view_direction.z);
-	float refractive_factor = dot(view_direction, normal);
+	float refractive_factor = dot(abs(view_direction), normal);
 	refractive_factor = pow(refractive_factor, reflectivity);
 	refractive_factor = clamp(refractive_factor, 0.0, 1.0);
 

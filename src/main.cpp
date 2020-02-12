@@ -383,6 +383,11 @@ int main(int argc, char *argv[])
                     torch_follow = !torch_follow;
                 }
                 break;
+                case SDLK_r:
+                {
+                    renderer.reload_programs();
+                }
+                break;
                 case SDLK_t:
                 {
                     if (time_scale > 0.25f)

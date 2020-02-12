@@ -30,6 +30,8 @@ public:
     void set_reflection_size(int reflection_width, int reflection_height);
     void set_refraction_size(int refraction_width, int refraction_height);
 
+    void reload_programs();
+
     void add_object(pk::object *object);
     void add_directional_light(pk::directional_light *directional_light);
     void add_point_light(pk::point_light *point_light);

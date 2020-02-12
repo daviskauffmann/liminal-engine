@@ -21,6 +21,8 @@ public:
         const std::string &fragment_filename);
     ~program();
 
+    void reload();
+
     void bind() const;
     void unbind(void) const;
 
@@ -32,14 +34,15 @@ public:
     void set_mat4(const std::string &name, glm::mat4 mat4) const;
 
 private:
-    const std::string &vertex_filename;
-    const std::string &geometry_filename;
-    const std::string &fragment_filename;
+    const std::string vertex_filename;
+    const std::string geometry_filename;
+    const std::string fragment_filename;
 
     GLuint program_id;
 
     mutable std::unordered_map<std::string, GLint> uniforms;
 
+    GLuint create_program() const;
     GLuint create_shader(GLenum type, const std::string &filename) const;
 
     GLint get_location(const std::string &name) const;

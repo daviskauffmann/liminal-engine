@@ -17,54 +17,7 @@ program::program(
       geometry_filename(geometry_filename),
       fragment_filename(fragment_filename)
 {
-    program_id = glCreateProgram();
-    GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
-    glAttachShader(program_id, vertex_shader);
-    GLuint geometry_shader = 0;
-    if (!geometry_filename.empty())
-    {
-        geometry_shader = create_shader(GL_GEOMETRY_SHADER, geometry_filename);
-        glAttachShader(program_id, geometry_shader);
-    }
-    GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
-    glAttachShader(program_id, fragment_shader);
-    glLinkProgram(program_id);
-    {
-        GLint success;
-        glGetProgramiv(program_id, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            GLint length;
-            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
-            std::vector<GLchar> info_log(length);
-            glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
-            std::cout << "Error: Program linking failed\n"
-                      << &info_log[0] << std::endl;
-        }
-    }
-    glDetachShader(program_id, vertex_shader);
-    glDeleteShader(vertex_shader);
-    if (geometry_shader)
-    {
-        glDetachShader(program_id, geometry_shader);
-        glDeleteShader(geometry_shader);
-    }
-    glDetachShader(program_id, fragment_shader);
-    glDeleteShader(fragment_shader);
-    glValidateProgram(program_id);
-    {
-        GLint success;
-        glGetProgramiv(program_id, GL_VALIDATE_STATUS, &success);
-        if (!success)
-        {
-            GLint length;
-            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
-            std::vector<GLchar> info_log(length);
-            glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
-            std::cout << "Error: Program validation failed\n"
-                      << &info_log[0] << std::endl;
-        }
-    }
+    program_id = create_program();
 }
 
 program::program(
@@ -77,6 +30,16 @@ program::program(
 program::~program()
 {
     glDeleteProgram(program_id);
+}
+
+void program::reload()
+{
+    GLuint new_program_id = create_program();
+    if (new_program_id)
+    {
+        glDeleteProgram(program_id);
+        program_id = new_program_id;
+    }
 }
 
 void program::bind() const
@@ -119,6 +82,73 @@ void program::set_mat4(const std::string &name, glm::mat4 mat4) const
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
+GLuint program::create_program() const
+{
+    GLuint program_id = glCreateProgram();
+    GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
+    if (!vertex_shader)
+    {
+        return 0;
+    }
+    glAttachShader(program_id, vertex_shader);
+    GLuint geometry_shader = 0;
+    if (!geometry_filename.empty())
+    {
+        geometry_shader = create_shader(GL_GEOMETRY_SHADER, geometry_filename);
+        if (!geometry_shader)
+        {
+            return 0;
+        }
+        glAttachShader(program_id, geometry_shader);
+    }
+    GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
+    if (!fragment_shader)
+    {
+        return 0;
+    }
+    glAttachShader(program_id, fragment_shader);
+    glLinkProgram(program_id);
+    {
+        GLint success;
+        glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            GLint length;
+            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+            std::vector<GLchar> info_log(length);
+            glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
+            std::cout << "Error: Program linking failed\n"
+                      << &info_log[0] << std::endl;
+            return 0;
+        }
+    }
+    glDetachShader(program_id, vertex_shader);
+    glDeleteShader(vertex_shader);
+    if (geometry_shader)
+    {
+        glDetachShader(program_id, geometry_shader);
+        glDeleteShader(geometry_shader);
+    }
+    glDetachShader(program_id, fragment_shader);
+    glDeleteShader(fragment_shader);
+    glValidateProgram(program_id);
+    {
+        GLint success;
+        glGetProgramiv(program_id, GL_VALIDATE_STATUS, &success);
+        if (!success)
+        {
+            GLint length;
+            glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+            std::vector<GLchar> info_log(length);
+            glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
+            std::cout << "Error: Program validation failed\n"
+                      << &info_log[0] << std::endl;
+            return 0;
+        }
+    }
+    return program_id;
+}
+
 GLuint program::create_shader(GLenum type, const std::string &filename) const
 {
     GLuint shader_id = glCreateShader(type);
@@ -132,6 +162,7 @@ GLuint program::create_shader(GLenum type, const std::string &filename) const
     {
         std::cout << "Error: Shader precompilation failed\n"
                   << error << std::endl;
+        return 0;
     }
     glShaderSource(shader_id, 1, &source, nullptr);
     glCompileShader(shader_id);
@@ -146,6 +177,7 @@ GLuint program::create_shader(GLenum type, const std::string &filename) const
         glGetShaderInfoLog(shader_id, length, &length, &info_log[0]);
         std::cout << "Error: Shader compilation failed\n"
                   << &info_log[0] << std::endl;
+        return 0;
     }
     return shader_id;
 }
