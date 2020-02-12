@@ -4,7 +4,7 @@
 
 namespace pk
 {
-atlas::atlas(std::string &filename, GLuint size, GLuint texture_size)
+atlas::atlas(const std::string &filename, GLuint size, GLuint texture_size)
     : texture(filename),
       size(size),
       texture_size(texture_size)

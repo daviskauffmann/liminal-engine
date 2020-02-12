@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "atlas.hpp"
 #include "audio.hpp"
 #include "camera.hpp"
 #include "directional_light.hpp"
@@ -401,6 +402,7 @@ int main(int argc, char *argv[])
                         render_scale -= 0.1f;
                     }
                     renderer.set_screen_size(window_width, window_height, render_scale);
+                    std::cout << "Render scale changed to " << render_scale << std::endl;
                 }
                 break;
                 case SDLK_EQUALS:
@@ -410,6 +412,7 @@ int main(int argc, char *argv[])
                         render_scale += 0.1f;
                     }
                     renderer.set_screen_size(window_width, window_height, render_scale);
+                    std::cout << "Render scale changed to " << render_scale << std::endl;
                 }
                 break;
                 case SDLK_RETURN:

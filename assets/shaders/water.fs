@@ -86,7 +86,7 @@ void main()
 
 	vec4 water_color = mix(reflection_color, refraction_color, refractive_factor);
 	vec4 blue_color = vec4(0.0, 0.3, 0.5, 1.0); // * water_depth;
-	float blue_factor = 0.2;
+	float blue_factor = 0.0;
 	frag_color = mix(water_color, blue_color, blue_factor) + vec4(specular, 1.0);
 	frag_color.a = clamp(water_depth / 5.0, 0.0, 1.0);
 }

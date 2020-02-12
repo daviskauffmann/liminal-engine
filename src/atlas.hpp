@@ -12,7 +12,7 @@ namespace pk
 class atlas : public texture
 {
 public:
-	atlas(std::string &filename, GLuint size, GLuint texture_size);
+	atlas(const std::string &filename, GLuint size, GLuint texture_size);
 
 	std::vector<GLfloat> get_texture_coords(const glm::vec2 &location);
 
