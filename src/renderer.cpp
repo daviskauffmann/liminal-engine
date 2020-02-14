@@ -164,9 +164,9 @@ renderer::renderer(
     geometry_program = new pk::program(
         "assets/shaders/geometry.vs",
         "assets/shaders/geometry.fs");
-    background_program = new pk::program(
-        "assets/shaders/background.vs",
-        "assets/shaders/background.fs");
+    skybox_program = new pk::program(
+        "assets/shaders/skybox.vs",
+        "assets/shaders/skybox.fs");
     water_program = new pk::program(
         "assets/shaders/water.vs",
         "assets/shaders/water.fs");
@@ -185,31 +185,8 @@ renderer::renderer(
     set_refraction_size(refraction_width, refraction_height);
 
     // TODO: move below function so this can be recalculated during runtime
-    pk::program *equirectangular_to_cubemap_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/equirectangular_to_cubemap.fs");
-    pk::program *irradiance_convolution_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/irradiance_convolution.fs");
-    pk::program *prefilter_convolution_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/prefilter_convolution.fs");
-    pk::program *brdf_program = new pk::program(
-        "assets/shaders/brdf.vs",
-        "assets/shaders/brdf.fs");
 
-    equirectangular_to_cubemap_program->bind();
-    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
-    equirectangular_to_cubemap_program->unbind();
-
-    irradiance_convolution_program->bind();
-    irradiance_convolution_program->set_int("environment_cubemap", 0);
-    irradiance_convolution_program->unbind();
-
-    prefilter_convolution_program->bind();
-    prefilter_convolution_program->set_int("environment_cubemap", 0);
-    prefilter_convolution_program->unbind();
-
+    // setup capture fbo
     glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 capture_views[] =
         {glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -219,6 +196,16 @@ renderer::renderer(
          glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
          glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
+    GLuint capture_rbo_id;
+    glGenRenderbuffers(1, &capture_rbo_id);
+
+    GLuint capture_fbo_id;
+    glGenFramebuffers(1, &capture_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, capture_rbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // create environment cubemap from equirectangular texture
     GLuint equirectangular_texture_id;
     glGenTextures(1, &equirectangular_texture_id);
     glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
@@ -255,19 +242,18 @@ renderer::renderer(
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    GLuint capture_rbo_id;
-    glGenRenderbuffers(1, &capture_rbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 4096, 4096);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    GLuint capture_fbo_id;
-    glGenFramebuffers(1, &capture_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, capture_rbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    pk::program *equirectangular_to_cubemap_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/equirectangular_to_cubemap.fs");
+
     equirectangular_to_cubemap_program->bind();
+    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
     equirectangular_to_cubemap_program->set_mat4("capture.projection", capture_projection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
@@ -285,12 +271,15 @@ renderer::renderer(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     equirectangular_to_cubemap_program->unbind();
 
+    delete equirectangular_to_cubemap_program;
+
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     glDeleteTextures(1, &equirectangular_texture_id);
 
+    // create irradiance cubemap from environment cubemap
     glGenTextures(1, &irradiance_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
     for (unsigned int i = 0; i < 6; i++)
@@ -310,7 +299,12 @@ renderer::renderer(
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    pk::program *irradiance_convolution_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/irradiance_convolution.fs");
+
     irradiance_convolution_program->bind();
+    irradiance_convolution_program->set_int("environment_cubemap", 0);
     irradiance_convolution_program->set_mat4("capture.projection", capture_projection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
@@ -328,6 +322,9 @@ renderer::renderer(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     irradiance_convolution_program->unbind();
 
+    delete irradiance_convolution_program;
+
+    // create prefilter cubemap from environment cubemap
     glGenTextures(1, &prefilter_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
     for (unsigned int i = 0; i < 6; i++)
@@ -342,7 +339,12 @@ renderer::renderer(
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
+    pk::program *prefilter_convolution_program = new pk::program(
+        "assets/shaders/cubemap.vs",
+        "assets/shaders/prefilter_convolution.fs");
+
     prefilter_convolution_program->bind();
+    prefilter_convolution_program->set_int("environment_cubemap", 0);
     prefilter_convolution_program->set_mat4("capture.projection", capture_projection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
@@ -371,6 +373,9 @@ renderer::renderer(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     prefilter_convolution_program->unbind();
 
+    delete prefilter_convolution_program;
+
+    // create brdf texture
     glGenTextures(1, &brdf_map_id);
     glBindTexture(GL_TEXTURE_2D, brdf_map_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
@@ -385,6 +390,10 @@ renderer::renderer(
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdf_map_id, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    pk::program *brdf_program = new pk::program(
+        "assets/shaders/brdf.vs",
+        "assets/shaders/brdf.fs");
+
     glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     glViewport(0, 0, 512, 512);
     brdf_program->bind();
@@ -397,9 +406,6 @@ renderer::renderer(
     glDeleteRenderbuffers(1, &capture_rbo_id);
     glDeleteFramebuffers(1, &capture_fbo_id);
 
-    delete equirectangular_to_cubemap_program;
-    delete irradiance_convolution_program;
-    delete prefilter_convolution_program;
     delete brdf_program;
 }
 
@@ -417,7 +423,7 @@ renderer::~renderer()
     delete forward_point_program;
     delete forward_spot_program;
     delete geometry_program;
-    delete background_program;
+    delete skybox_program;
     delete water_program;
     delete terrain_program;
     delete sprite_program;
@@ -768,7 +774,7 @@ void renderer::reload_programs()
     forward_point_program->reload();
     forward_spot_program->reload();
     geometry_program->reload();
-    background_program->reload();
+    skybox_program->reload();
     water_program->reload();
     terrain_program->reload();
     sprite_program->reload();
@@ -889,9 +895,9 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     geometry_program->set_int("material.height_map", 5);
     geometry_program->unbind();
 
-    background_program->bind();
-    background_program->set_int("environment_cubemap", 0);
-    background_program->unbind();
+    skybox_program->bind();
+    skybox_program->set_int("environment_cubemap", 0);
+    skybox_program->unbind();
 
     water_program->bind();
     water_program->set_int("water.reflection_map", 0);
@@ -1275,15 +1281,15 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     camera_view_no_translate[3][0] = 0.0f;
     camera_view_no_translate[3][1] = 0.0f;
     camera_view_no_translate[3][2] = 0.0f;
-    background_program->bind();
-    background_program->set_mat4("camera.projection", camera_projection);
-    background_program->set_mat4("camera.view", camera_view_no_translate);
+    skybox_program->bind();
+    skybox_program->set_mat4("camera.projection", camera_projection);
+    skybox_program->set_mat4("camera.view", camera_view_no_translate);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
     glBindVertexArray(skybox_vao_id);
     glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
     glBindVertexArray(0);
-    background_program->unbind();
+    skybox_program->unbind();
     glDepthFunc(GL_LESS);
 
     if (point_lights.size() > 0)

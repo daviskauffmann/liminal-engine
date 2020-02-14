@@ -106,7 +106,7 @@ private:
     pk::program *forward_point_program;
     pk::program *forward_spot_program;
     pk::program *geometry_program;
-    pk::program *background_program;
+    pk::program *skybox_program;
     pk::program *water_program;
     pk::program *terrain_program;
     pk::program *sprite_program;

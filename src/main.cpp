@@ -455,17 +455,14 @@ int main(int argc, char *argv[])
             break;
             case SDL_MOUSEWHEEL:
             {
-                if (main_camera.fov >= 1.0f && main_camera.fov <= 90.0f)
-                {
-                    main_camera.fov -= event.wheel.y;
-                }
+                main_camera.fov -= event.wheel.y;
                 if (main_camera.fov <= 1.0f)
                 {
                     main_camera.fov = 1.0f;
                 }
-                if (main_camera.fov >= 90.0f)
+                if (main_camera.fov >= 120.0f)
                 {
-                    main_camera.fov = 90.0f;
+                    main_camera.fov = 120.0f;
                 }
             }
             break;
