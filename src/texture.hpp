@@ -1,5 +1,5 @@
 #ifndef TEXTURE_HPP
-#ifndef TEXTURE_HPP
+#define TEXTURE_HPP
 
 #include <string>
 

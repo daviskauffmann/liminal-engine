@@ -1,5 +1,5 @@
 #ifndef SOUND_HPP
-#ifndef SOUND_HPP
+#define SOUND_HPP
 
 #include <string>
 

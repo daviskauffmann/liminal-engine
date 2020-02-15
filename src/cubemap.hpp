@@ -1,5 +1,5 @@
 #ifndef CUBEMAP_HPP
-#ifndef CUBEMAP_HPP
+#define CUBEMAP_HPP
 
 #include <string>
 #include <vector>

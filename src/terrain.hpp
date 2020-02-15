@@ -1,5 +1,5 @@
 #ifndef TERRAIN_HPP
-#ifndef TERRAIN_HPP
+#define TERRAIN_HPP
 
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>

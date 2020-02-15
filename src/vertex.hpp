@@ -1,5 +1,5 @@
-#ifndef PK_VERTEX_HPP
-#define PK_VERTEX_HPP
+#ifndef VERTEX_HPP
+#define VERTEX_HPP
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

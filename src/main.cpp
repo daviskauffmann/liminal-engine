@@ -32,10 +32,6 @@ constexpr float pi = 3.14159f;
 int window_width = 1280;
 int window_height = 720;
 float render_scale = 1.0f;
-int depth_map_width = 4096;
-int depth_map_height = 4096;
-int depth_cube_width = 512;
-int depth_cube_height = 512;
 
 int main(int argc, char *argv[])
 {
@@ -264,25 +260,25 @@ int main(int argc, char *argv[])
     pk::directional_light main_directional_light(
         glm::vec3(0.352286f, -0.547564f, -0.758992f),
         glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
-        depth_map_width, depth_map_height);
+        4096, 4096);
 
     const float point_light_intensity = 10.0f;
     pk::point_light red_point_light(
         glm::vec3(2.0f, 0.0f, 2.0f),
         glm::vec3(1.0f, 0.0f, 0.0f) * point_light_intensity,
-        depth_cube_width, depth_cube_height);
+        512, 512);
     pk::point_light yellow_point_light(
         glm::vec3(-2.0f, 0.0f, -2.0f),
         glm::vec3(1.0f, 1.0f, 0.0f) * point_light_intensity,
-        depth_cube_width, depth_cube_height);
+        512, 512);
     pk::point_light green_point_light(
         glm::vec3(2.0f, 0.0f, -2.0f),
         glm::vec3(0.0f, 1.0f, 0.0f) * point_light_intensity,
-        depth_cube_width, depth_cube_height);
+        512, 512);
     pk::point_light blue_point_light(
         glm::vec3(-2.0f, 0.0f, 2.0f),
         glm::vec3(0.0f, 0.0f, 1.0f) * point_light_intensity,
-        depth_cube_width, depth_cube_height);
+        512, 512);
 
     const float torch_intensity = 20.0f;
     pk::spot_light torch_spot_light(
@@ -291,7 +287,7 @@ int main(int argc, char *argv[])
         glm::vec3(1.0f, 1.0f, 1.0f) * torch_intensity,
         cosf(glm::radians(12.5f)),
         cosf(glm::radians(15.0f)),
-        depth_map_width, depth_map_height);
+        1024, 1024);
 
     pk::water test_water(
         glm::vec3(0.0f, -2.0f, 0.0f),

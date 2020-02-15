@@ -1,5 +1,5 @@
 #ifndef OBJECT_HPP
-#ifndef OBJECT_HPP
+#define OBJECT_HPP
 
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>

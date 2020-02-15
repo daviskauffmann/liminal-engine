@@ -1,5 +1,5 @@
 #ifndef ATLAS_HPP
-#ifndef ATLAS_HPP
+#define ATLAS_HPP
 
 #include <vector>
 

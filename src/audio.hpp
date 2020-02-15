@@ -1,5 +1,5 @@
 #ifndef AUDIO_HPP
-#ifndef AUDIO_HPP
+#define AUDIO_HPP
 
 #include <AL/alc.h>
 #include <glm/vec3.hpp>

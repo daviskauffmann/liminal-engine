@@ -1,5 +1,5 @@
 #ifndef SPOT_LIGHT_HPP
-#ifndef SPOT_LIGHT_HPP
+#define SPOT_LIGHT_HPP
 
 #include <GL/glew.h>
 

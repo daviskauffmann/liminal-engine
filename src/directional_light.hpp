@@ -1,5 +1,5 @@
 #ifndef DIRECTIONAL_LIGHT_HPP
-#ifndef DIRECTIONAL_LIGHT_HPP
+#define DIRECTIONAL_LIGHT_HPP
 
 #include <GL/glew.h>
 

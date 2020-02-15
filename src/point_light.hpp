@@ -1,5 +1,5 @@
 #ifndef POINT_LIGHT_HPP
-#ifndef POINT_LIGHT_HPP
+#define POINT_LIGHT_HPP
 
 #include <GL/glew.h>
 

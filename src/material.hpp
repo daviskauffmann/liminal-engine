@@ -1,5 +1,5 @@
 #ifndef MATERIAL_HPP
-#ifndef MATERIAL_HPP
+#define MATERIAL_HPP
 
 #include <glm/vec3.hpp>
 
