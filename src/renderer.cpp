@@ -179,8 +179,25 @@ renderer::renderer(
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
 
+    this->screen_fbo_id = 0;
+    this->screen_texture_id = 0;
+    this->screen_rbo_id = 0;
+    this->geometry_fbo_id = 0;
+    this->geometry_position_texture_id = 0;
+    this->geometry_normal_texture_id = 0;
+    this->geometry_albedo_texture_id = 0;
+    this->geometry_material_texture_id = 0;
+    this->geometry_rbo_id = 0;
     set_screen_size(display_width, display_height, render_scale);
+
+    this->water_reflection_fbo_id = 0;
+    this->water_reflection_color_texture_id = 0;
+    this->water_reflection_rbo_id = 0;
     set_reflection_size(reflection_width, reflection_height);
+
+    this->water_refraction_fbo_id = 0;
+    this->water_refraction_color_texture_id = 0;
+    this->water_refraction_depth_texture_id = 0;
     set_refraction_size(refraction_width, refraction_height);
 
     // create brdf texture

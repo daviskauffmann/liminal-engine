@@ -15,6 +15,8 @@ directional_light::directional_light(
     : direction(direction),
       color(color)
 {
+    this->depth_map_fbo_id = 0;
+    this->depth_map_texture_id = 0;
     set_depth_map_size(depth_map_size);
 }
 

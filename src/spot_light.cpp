@@ -19,6 +19,8 @@ spot_light::spot_light(
       inner_cutoff(inner_cutoff),
       outer_cutoff(outer_cutoff)
 {
+    this->depth_map_fbo_id = 0;
+    this->depth_map_texture_id = 0;
     set_depth_map_size(depth_map_size);
 }
 

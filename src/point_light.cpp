@@ -11,6 +11,8 @@ point_light::point_light(
     : position(position),
       color(color)
 {
+    this->depth_cubemap_fbo_id = 0;
+    this->depth_cubemap_texture_id = 0;
     set_depth_cube_size(depth_cube_size);
 }
 

@@ -12,6 +12,9 @@ namespace pk
 {
 skybox::skybox(const std::string &filename)
 {
+    this->environment_cubemap_id = 0;
+    this->irradiance_cubemap_id = 0;
+    this->prefilter_cubemap_id = 0;
     set_cubemap(filename);
 }
 
