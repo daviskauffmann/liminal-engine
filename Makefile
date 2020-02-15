@@ -18,6 +18,7 @@ SRC := \
 	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
+	src/skybox.cpp \
 	src/sound.cpp \
 	src/source.cpp \
 	src/spot_light.cpp \

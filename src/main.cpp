@@ -11,6 +11,7 @@
 #include "point_light.hpp"
 #include "program.hpp"
 #include "renderer.hpp"
+#include "skybox.hpp"
 #include "sound.hpp"
 #include "source.hpp"
 #include "spot_light.hpp"
@@ -297,6 +298,8 @@ int main(int argc, char *argv[])
         glm::vec2(100.0f, 100.0f));
 
     pk::terrain test_terrain(0, 0, &grass_material);
+
+    pk::skybox skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
     pk::sprite grass_sprite(
         &grass_texture,
@@ -599,7 +602,7 @@ int main(int argc, char *argv[])
         renderer.add_water(&test_water);
         renderer.add_terrain(&test_terrain);
         // renderer.add_sprite(&grass_sprite);
-        renderer.flush(&main_camera, current_time, delta_time);
+        renderer.flush(&main_camera, &skybox, current_time, delta_time);
 
         display.swap();
 

@@ -3,7 +3,6 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include <stb_image.h>
 
 #define LIGHTING_COLOR 1
 #define LIGHTING_TEXTURE 2
@@ -184,210 +183,30 @@ renderer::renderer(
     set_reflection_size(reflection_width, reflection_height);
     set_refraction_size(refraction_width, refraction_height);
 
-    // TODO: move below function so this can be recalculated during runtime
-
-    // setup capture fbo
-    glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 capture_views[] =
-        {glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
-    GLuint capture_rbo_id;
-    glGenRenderbuffers(1, &capture_rbo_id);
-
-    GLuint capture_fbo_id;
-    glGenFramebuffers(1, &capture_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, capture_rbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // create environment cubemap from equirectangular texture
-    GLuint equirectangular_texture_id;
-    glGenTextures(1, &equirectangular_texture_id);
-    glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
-    stbi_set_flip_vertically_on_load(true);
-    int width, height, num_components;
-    float *image = stbi_loadf("assets/images/GCanyon_C_YumaPoint_8k.jpg", &width, &height, &num_components, 0);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGB16F,
-        width,
-        height,
-        0,
-        GL_RGB,
-        GL_FLOAT,
-        image);
-    stbi_image_free(image);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenTextures(1, &environment_cubemap_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
-    for (unsigned int i = 0; i < 6; i++)
-    {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 4096, 4096, 0, GL_RGB, GL_FLOAT, nullptr);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 4096, 4096);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    pk::program *equirectangular_to_cubemap_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/equirectangular_to_cubemap.fs");
-
-    equirectangular_to_cubemap_program->bind();
-    equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
-    equirectangular_to_cubemap_program->set_mat4("capture.projection", capture_projection);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
-    glViewport(0, 0, 4096, 4096);
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    for (unsigned int i = 0; i < 6; i++)
-    {
-        equirectangular_to_cubemap_program->set_mat4("capture.view", capture_views[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, environment_cubemap_id, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindVertexArray(skybox_vao_id);
-        glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
-        glBindVertexArray(0);
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    equirectangular_to_cubemap_program->unbind();
-
-    delete equirectangular_to_cubemap_program;
-
-    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-    glDeleteTextures(1, &equirectangular_texture_id);
-
-    // create irradiance cubemap from environment cubemap
-    glGenTextures(1, &irradiance_cubemap_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
-    for (unsigned int i = 0; i < 6; i++)
-    {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    pk::program *irradiance_convolution_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/irradiance_convolution.fs");
-
-    irradiance_convolution_program->bind();
-    irradiance_convolution_program->set_int("environment_cubemap", 0);
-    irradiance_convolution_program->set_mat4("capture.projection", capture_projection);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
-    glViewport(0, 0, 32, 32);
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    for (unsigned int i = 0; i < 6; i++)
-    {
-        irradiance_convolution_program->set_mat4("capture.view", capture_views[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradiance_cubemap_id, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindVertexArray(skybox_vao_id);
-        glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
-        glBindVertexArray(0);
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    irradiance_convolution_program->unbind();
-
-    delete irradiance_convolution_program;
-
-    // create prefilter cubemap from environment cubemap
-    glGenTextures(1, &prefilter_cubemap_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
-    for (unsigned int i = 0; i < 6; i++)
-    {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-    pk::program *prefilter_convolution_program = new pk::program(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/prefilter_convolution.fs");
-
-    prefilter_convolution_program->bind();
-    prefilter_convolution_program->set_int("environment_cubemap", 0);
-    prefilter_convolution_program->set_mat4("capture.projection", capture_projection);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-    const unsigned int max_mip_levels = 5;
-    for (unsigned int mip_level = 0; mip_level < max_mip_levels; mip_level++)
-    {
-        unsigned int mip_width = (unsigned int)(128 * std::pow(0.5f, (float)mip_level));
-        unsigned int mip_height = (unsigned int)(128 * std::pow(0.5f, (float)mip_level));
-        glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mip_width, mip_height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        glViewport(0, 0, mip_width, mip_height);
-        float roughness = (float)mip_level / (float)(max_mip_levels - 1);
-        prefilter_convolution_program->set_float("roughness", roughness);
-        for (unsigned int i = 0; i < 6; ++i)
-        {
-            prefilter_convolution_program->set_mat4("capture.view", capture_views[i]);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilter_cubemap_id, mip_level);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glBindVertexArray(skybox_vao_id);
-            glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
-            glBindVertexArray(0);
-        }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    prefilter_convolution_program->unbind();
-
-    delete prefilter_convolution_program;
-
     // create brdf texture
-    glGenTextures(1, &brdf_map_id);
-    glBindTexture(GL_TEXTURE_2D, brdf_map_id);
+    glGenTextures(1, &brdf_texture_id);
+    glBindTexture(GL_TEXTURE_2D, brdf_texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+    GLuint capture_rbo_id;
+    glGenRenderbuffers(1, &capture_rbo_id);
     glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdf_map_id, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    GLuint capture_fbo_id;
+    glGenFramebuffers(1, &capture_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, capture_rbo_id);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdf_texture_id, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "Error: Couldn't complete brdf capture framebuffer" << std::endl;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     pk::program *brdf_program = new pk::program(
@@ -816,12 +635,12 @@ void renderer::add_sprite(pk::sprite *sprite)
     sprites.push_back(sprite);
 }
 
-void renderer::flush(pk::camera *camera, unsigned int elapsed_time, float delta_time)
+void renderer::flush(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, float delta_time)
 {
-    render_scene(screen_fbo_id, render_width, render_height, camera, elapsed_time);
+    render_scene(screen_fbo_id, render_width, render_height, camera, skybox, elapsed_time);
     if (waters.size() > 0)
     {
-        render_waters(screen_fbo_id, camera, elapsed_time);
+        render_waters(screen_fbo_id, camera, skybox, elapsed_time);
     }
     if (sprites.size() > 0)
     {
@@ -838,7 +657,7 @@ void renderer::flush(pk::camera *camera, unsigned int elapsed_time, float delta_
     sprites.clear();
 }
 
-void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane)
+void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane)
 {
     texture_program->bind();
     texture_program->set_int("color_map", 0);
@@ -1068,11 +887,11 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             glActiveTexture(GL_TEXTURE5);
             glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->irradiance_cubemap_id);
             glActiveTexture(GL_TEXTURE7);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->prefilter_cubemap_id);
             glActiveTexture(GL_TEXTURE8);
-            glBindTexture(GL_TEXTURE_2D, brdf_map_id);
+            glBindTexture(GL_TEXTURE_2D, brdf_texture_id);
             forward_ambient_program->set_vec4("clipping_plane", clipping_plane);
             object->mesh->draw();
             forward_ambient_program->unbind();
@@ -1285,7 +1104,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     skybox_program->set_mat4("camera.projection", camera_projection);
     skybox_program->set_mat4("camera.view", camera_view_no_translate);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->environment_cubemap_id);
     glBindVertexArray(skybox_vao_id);
     glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
     glBindVertexArray(0);
@@ -1317,7 +1136,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int elapsed_time)
+void renderer::render_waters(GLuint fbo_id, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time)
 {
     glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
     glm::mat4 camera_view = camera->calc_view();
@@ -1343,7 +1162,7 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int ela
             camera->position.y -= 2 * (camera->position.y - water->position.y);
             camera->pitch = -camera->pitch;
             glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-            render_scene(water_reflection_fbo_id, reflection_width, reflection_height, camera, elapsed_time, reflection_clipping_plane);
+            render_scene(water_reflection_fbo_id, reflection_width, reflection_height, camera, skybox, elapsed_time, reflection_clipping_plane);
             camera->position.y = old_camera_y;
             camera->pitch = old_camera_pitch;
         }
@@ -1354,7 +1173,7 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, unsigned int ela
             refraction_clipping_plane.y = 1.0f;
             refraction_clipping_plane.w = -water->position.y;
         }
-        render_scene(water_refraction_fbo_id, refraction_width, refraction_height, camera, elapsed_time, refraction_clipping_plane);
+        render_scene(water_refraction_fbo_id, refraction_width, refraction_height, camera, skybox, elapsed_time, refraction_clipping_plane);
 
         glViewport(0, 0, render_width, render_height);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);

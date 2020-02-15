@@ -9,6 +9,7 @@
 #include "object.hpp"
 #include "point_light.hpp"
 #include "program.hpp"
+#include "skybox.hpp"
 #include "spot_light.hpp"
 #include "sprite.hpp"
 #include "terrain.hpp"
@@ -39,7 +40,7 @@ public:
     void add_water(pk::water *water);
     void add_terrain(pk::terrain *terrain);
     void add_sprite(pk::sprite *sprite);
-    void flush(pk::camera *camera, unsigned int elapsed_time, float delta_time);
+    void flush(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, float delta_time);
 
 private:
     // settings
@@ -51,26 +52,6 @@ private:
     int reflection_height;
     int refraction_width;
     int refraction_height;
-
-    // framebuffers
-    GLuint screen_fbo_id;
-    GLuint screen_texture_id;
-    GLuint screen_rbo_id;
-
-    GLuint geometry_fbo_id;
-    GLuint geometry_position_texture_id;
-    GLuint geometry_normal_texture_id;
-    GLuint geometry_albedo_texture_id;
-    GLuint geometry_material_texture_id;
-    GLuint geometry_rbo_id;
-
-    GLuint water_reflection_fbo_id;
-    GLuint water_reflection_color_texture_id;
-    GLuint water_reflection_rbo_id;
-
-    GLuint water_refraction_fbo_id;
-    GLuint water_refraction_color_texture_id;
-    GLuint water_refraction_depth_texture_id;
 
     // water mesh
     GLsizei water_vertices_size;
@@ -112,6 +93,29 @@ private:
     pk::program *sprite_program;
     pk::program *screen_program;
 
+    // framebuffers
+    GLuint screen_fbo_id;
+    GLuint screen_texture_id;
+    GLuint screen_rbo_id;
+
+    GLuint geometry_fbo_id;
+    GLuint geometry_position_texture_id;
+    GLuint geometry_normal_texture_id;
+    GLuint geometry_albedo_texture_id;
+    GLuint geometry_material_texture_id;
+    GLuint geometry_rbo_id;
+
+    GLuint water_reflection_fbo_id;
+    GLuint water_reflection_color_texture_id;
+    GLuint water_reflection_rbo_id;
+
+    GLuint water_refraction_fbo_id;
+    GLuint water_refraction_color_texture_id;
+    GLuint water_refraction_depth_texture_id;
+
+    // brdf texture
+    GLuint brdf_texture_id;
+
     // renderables
     std::vector<pk::object *> objects;
     std::vector<pk::directional_light *> directional_lights;
@@ -121,14 +125,8 @@ private:
     std::vector<pk::terrain *> terrains;
     std::vector<pk::sprite *> sprites;
 
-    // TODO: move to class for environment data
-    GLuint environment_cubemap_id;
-    GLuint irradiance_cubemap_id;
-    GLuint prefilter_cubemap_id;
-    GLuint brdf_map_id;
-
-    void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, unsigned int elapsed_time, glm::vec4 clipping_plane = glm::vec4(0.0f));
-    void render_waters(GLuint fbo_id, pk::camera *camera, unsigned int elapsed_time);
+    void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane = glm::vec4(0.0f));
+    void render_waters(GLuint fbo_id, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time);
     void render_sprites(GLuint fbo_id);
     void render_screen(GLuint fbo_id);
 };
