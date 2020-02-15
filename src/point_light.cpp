@@ -7,11 +7,11 @@ namespace pk
 point_light::point_light(
     glm::vec3 position,
     glm::vec3 color,
-    int depth_cube_width, int depth_cube_height)
+    int depth_cube_size)
     : position(position),
       color(color)
 {
-    set_depth_cube_size(depth_cube_width, depth_cube_height);
+    set_depth_cube_size(depth_cube_size);
 }
 
 point_light::~point_light()
@@ -20,10 +20,9 @@ point_light::~point_light()
     glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
 }
 
-void point_light::set_depth_cube_size(int depth_cube_width, int depth_cube_height)
+void point_light::set_depth_cube_size(int depth_cube_size)
 {
-    this->depth_cube_width = depth_cube_width;
-    this->depth_cube_height = depth_cube_height;
+    this->depth_cube_size = depth_cube_size;
 
     glDeleteTextures(1, &depth_cubemap_texture_id);
     glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
@@ -36,8 +35,8 @@ void point_light::set_depth_cube_size(int depth_cube_width, int depth_cube_heigh
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0,
             GL_DEPTH_COMPONENT,
-            depth_cube_width,
-            depth_cube_height,
+            depth_cube_size,
+            depth_cube_size,
             0,
             GL_DEPTH_COMPONENT,
             GL_FLOAT,
@@ -65,5 +64,4 @@ void point_light::set_depth_cube_size(int depth_cube_width, int depth_cube_heigh
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
 } // namespace pk

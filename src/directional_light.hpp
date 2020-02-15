@@ -12,8 +12,7 @@ struct directional_light
 {
     glm::vec3 direction;
     glm::vec3 color;
-    int depth_map_width;
-    int depth_map_height;
+    int depth_map_size;
     glm::mat4 projection;
     glm::mat4 view;
     GLuint depth_map_fbo_id;
@@ -22,10 +21,10 @@ struct directional_light
     directional_light(
         glm::vec3 direction,
         glm::vec3 color,
-        int depth_map_width, int depth_map_height);
+        int depth_map_size);
     ~directional_light();
 
-    void set_depth_map_size(int depth_map_width, int depth_map_height);
+    void set_depth_map_size(int depth_map_size);
 
     glm::mat4 calc_projection() const;
     glm::mat4 calc_view(glm::vec3 center) const;

@@ -6,6 +6,20 @@
 #include <SDL2/SDL_image.h>
 #include <string>
 
+void GLAPIENTRY
+MessageCallback(GLenum source,
+                GLenum type,
+                GLuint id,
+                GLenum severity,
+                GLsizei length,
+                const GLchar *message,
+                const void *userParam)
+{
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+}
+
 namespace pk
 {
 display::display(const char *title, int width, int height)
@@ -44,6 +58,9 @@ display::display(const char *title, int width, int height)
     std::cout << "Vendor " << glGetString(GL_VENDOR) << std::endl;
     std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
 }
 
 display::~display()

@@ -257,28 +257,28 @@ int main(int argc, char *argv[])
         glm::vec3(1.0f, 1.0f, 1.0f));
 
     const float sun_intensity = 10.0f;
-    pk::directional_light main_directional_light(
+    pk::directional_light sun_directional_light(
         glm::vec3(0.352286f, -0.547564f, -0.758992f),
         glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
-        4096, 4096);
+        4096);
 
     const float point_light_intensity = 10.0f;
     pk::point_light red_point_light(
         glm::vec3(2.0f, 0.0f, 2.0f),
         glm::vec3(1.0f, 0.0f, 0.0f) * point_light_intensity,
-        512, 512);
+        512);
     pk::point_light yellow_point_light(
         glm::vec3(-2.0f, 0.0f, -2.0f),
         glm::vec3(1.0f, 1.0f, 0.0f) * point_light_intensity,
-        512, 512);
+        512);
     pk::point_light green_point_light(
         glm::vec3(2.0f, 0.0f, -2.0f),
         glm::vec3(0.0f, 1.0f, 0.0f) * point_light_intensity,
-        512, 512);
+        512);
     pk::point_light blue_point_light(
         glm::vec3(-2.0f, 0.0f, 2.0f),
         glm::vec3(0.0f, 0.0f, 1.0f) * point_light_intensity,
-        512, 512);
+        512);
 
     const float torch_intensity = 20.0f;
     pk::spot_light torch_spot_light(
@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
         glm::vec3(1.0f, 1.0f, 1.0f) * torch_intensity,
         cosf(glm::radians(12.5f)),
         cosf(glm::radians(15.0f)),
-        1024, 1024);
+        1024);
 
     pk::water test_water(
         glm::vec3(0.0f, -2.0f, 0.0f),
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float fps_update_timer = 0.0f;
     float time_scale = 1.0f;
-    bool torch = true;
+    bool torch_on = true;
     bool torch_follow = true;
 
     bool quit = false;
@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
                 break;
                 case SDLK_f:
                 {
-                    torch = !torch;
+                    torch_on = !torch_on;
                 }
                 break;
                 case SDLK_g:
@@ -586,12 +586,12 @@ int main(int argc, char *argv[])
         renderer.add_object(&box_3_object);
         renderer.add_object(&box_4_object);
         renderer.add_object(&box_5_object);
-        renderer.add_directional_light(&main_directional_light);
+        renderer.add_directional_light(&sun_directional_light);
         renderer.add_point_light(&red_point_light);
         renderer.add_point_light(&yellow_point_light);
         renderer.add_point_light(&green_point_light);
         renderer.add_point_light(&blue_point_light);
-        if (torch)
+        if (torch_on)
         {
             renderer.add_spot_light(&torch_spot_light);
         }

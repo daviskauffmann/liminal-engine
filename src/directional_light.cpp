@@ -11,11 +11,11 @@ namespace pk
 directional_light::directional_light(
     glm::vec3 direction,
     glm::vec3 color,
-    int depth_map_width, int depth_map_height)
+    int depth_map_size)
     : direction(direction),
       color(color)
 {
-    set_depth_map_size(depth_map_width, depth_map_height);
+    set_depth_map_size(depth_map_size);
 }
 
 directional_light::~directional_light()
@@ -24,10 +24,9 @@ directional_light::~directional_light()
     glDeleteFramebuffers(1, &depth_map_fbo_id);
 }
 
-void directional_light::set_depth_map_size(int depth_map_width, int depth_map_height)
+void directional_light::set_depth_map_size(int depth_map_size)
 {
-    this->depth_map_width = depth_map_width;
-    this->depth_map_height = depth_map_height;
+    this->depth_map_size = depth_map_size;
 
     glDeleteTextures(1, &depth_map_texture_id);
     glDeleteFramebuffers(1, &depth_map_fbo_id);
@@ -38,8 +37,8 @@ void directional_light::set_depth_map_size(int depth_map_width, int depth_map_he
         GL_TEXTURE_2D,
         0,
         GL_DEPTH_COMPONENT,
-        depth_map_width,
-        depth_map_height,
+        depth_map_size,
+        depth_map_size,
         0,
         GL_DEPTH_COMPONENT,
         GL_FLOAT,

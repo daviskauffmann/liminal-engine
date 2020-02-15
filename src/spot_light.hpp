@@ -15,8 +15,7 @@ struct spot_light
     glm::vec3 color;
     float inner_cutoff;
     float outer_cutoff;
-    int depth_map_width;
-    int depth_map_height;
+    int depth_map_size;
     glm::mat4 projection;
     glm::mat4 view;
     GLuint depth_map_fbo_id;
@@ -28,10 +27,10 @@ struct spot_light
         glm::vec3 color,
         float inner_cutoff,
         float outer_cutoff,
-        int depth_map_width, int depth_map_height);
+        int depth_map_size);
     ~spot_light();
 
-    void set_depth_map_size(int depth_map_width, int depth_map_height);
+    void set_depth_map_size(int depth_map_size);
 
     glm::mat4 calc_projection() const;
     glm::mat4 calc_view() const;

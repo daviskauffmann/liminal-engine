@@ -745,7 +745,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         directional_light->view = directional_light->calc_view(camera->position);
 
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
-        glViewport(0, 0, directional_light->depth_map_width, directional_light->depth_map_height);
+        glViewport(0, 0, directional_light->depth_map_size, directional_light->depth_map_size);
         glClear(GL_DEPTH_BUFFER_BIT);
         depth_program->bind();
         depth_program->set_mat4("projection", directional_light->projection);
@@ -764,7 +764,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     {
         float far_plane = 25.0f;
 
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)point_light->depth_cube_width / (float)point_light->depth_cube_height, 1.0f, far_plane);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, far_plane);
         std::vector<glm::mat4> shadow_matrices;
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -774,7 +774,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
-        glViewport(0, 0, point_light->depth_cube_width, point_light->depth_cube_height);
+        glViewport(0, 0, point_light->depth_cube_size, point_light->depth_cube_size);
         glClear(GL_DEPTH_BUFFER_BIT);
         depth_cube_program->bind();
         for (unsigned int i = 0; i < 6; i++)
@@ -799,7 +799,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
         spot_light->view = spot_light->calc_view();
 
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light->depth_map_fbo_id);
-        glViewport(0, 0, spot_light->depth_map_width, spot_light->depth_map_height);
+        glViewport(0, 0, spot_light->depth_map_size, spot_light->depth_map_size);
         glClear(GL_DEPTH_BUFFER_BIT);
         depth_program->bind();
         depth_program->set_mat4("projection", spot_light->projection);
@@ -887,9 +887,9 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
             glActiveTexture(GL_TEXTURE5);
             glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
             glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->irradiance_cubemap_id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox ? skybox->irradiance_cubemap_id : 0);
             glActiveTexture(GL_TEXTURE7);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->prefilter_cubemap_id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, skybox ? skybox->prefilter_cubemap_id : 0);
             glActiveTexture(GL_TEXTURE8);
             glBindTexture(GL_TEXTURE_2D, brdf_texture_id);
             forward_ambient_program->set_vec4("clipping_plane", clipping_plane);
@@ -1104,7 +1104,7 @@ void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *ca
     skybox_program->set_mat4("camera.projection", camera_projection);
     skybox_program->set_mat4("camera.view", camera_view_no_translate);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->environment_cubemap_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox ? skybox->environment_cubemap_id : 0);
     glBindVertexArray(skybox_vao_id);
     glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
     glBindVertexArray(0);
