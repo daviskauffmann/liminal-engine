@@ -1,5 +1,5 @@
-#ifndef GAME_CUBEMAP_HPP
-#define GAME_CUBEMAP_HPP
+#ifndef CUBEMAP_HPP
+#ifndef CUBEMAP_HPP
 
 #include <string>
 #include <vector>

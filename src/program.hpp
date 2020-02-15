@@ -1,5 +1,5 @@
-#ifndef GAME_PROGRAM_HPP
-#define GAME_PROGRAM_HPP
+#ifndef PROGRAM_HPP
+#ifndef PROGRAM_HPP
 
 #include <string>
 #include <unordered_map>

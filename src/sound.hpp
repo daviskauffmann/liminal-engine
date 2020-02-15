@@ -1,5 +1,5 @@
-#ifndef GAME_SOUND_HPP
-#define GAME_SOUND_HPP
+#ifndef SOUND_HPP
+#ifndef SOUND_HPP
 
 #include <string>
 

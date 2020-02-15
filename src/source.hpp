@@ -1,5 +1,5 @@
-#ifndef GAME_SOURCE_HPP
-#define GAME_SOURCE_HPP
+#ifndef SOURCE_HPP
+#ifndef SOURCE_HPP
 
 #include <glm/vec3.hpp>
 

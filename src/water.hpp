@@ -1,5 +1,5 @@
-#ifndef GAME_WATER_HPP
-#define GAME_WATER_HPP
+#ifndef WATER_HPP
+#ifndef WATER_HPP
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

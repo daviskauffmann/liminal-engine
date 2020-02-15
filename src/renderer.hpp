@@ -1,5 +1,5 @@
-#ifndef GAME_RENDERER_HPP
-#define GAME_RENDERER_HPP
+#ifndef RENDERER_HPP
+#ifndef RENDERER_HPP
 
 #include <GL/glew.h>
 

@@ -1,5 +1,5 @@
-#ifndef GAME_OBJECT_HPP
-#define GAME_OBJECT_HPP
+#ifndef OBJECT_HPP
+#ifndef OBJECT_HPP
 
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>

@@ -1,5 +1,5 @@
-#ifndef GAME_MATERIAL_HPP
-#define GAME_MATERIAL_HPP
+#ifndef MATERIAL_HPP
+#ifndef MATERIAL_HPP
 
 #include <glm/vec3.hpp>
 

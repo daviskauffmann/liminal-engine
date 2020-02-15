@@ -1,5 +1,5 @@
-#ifndef GAME_MESH_HPP
-#define GAME_MESH_HPP
+#ifndef MESH_HPP
+#ifndef MESH_HPP
 
 #include <vector>
 

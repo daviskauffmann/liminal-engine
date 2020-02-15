@@ -1,5 +1,5 @@
-#ifndef GAME_SPRITE_HPP
-#define GAME_SPRITE_HPP
+#ifndef SPRITE_HPP
+#ifndef SPRITE_HPP
 
 #include <glm/matrix.hpp>
 #include <glm/vec2.hpp>
