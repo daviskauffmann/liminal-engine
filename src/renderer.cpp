@@ -10,6 +10,38 @@
 #define LIGHTING_DEFERRED 4
 #define LIGHTING_MODE LIGHTING_FORWARD
 
+// TODO: fix deferred rendering
+// gbuffer:
+// rgb16f - position
+// rgb16f - normal
+// rgb16f - albedo
+// rgba8 - metallic/roughness/occlusion/height
+
+// TODO: face culling
+
+// TODO: transparency
+
+// TODO: instanced rendering
+
+// TODO: fog
+// volumetric fog as well
+
+// TODO: animation
+
+// TODO: underwater effects
+// should probably use a different shader when under a water tile
+// the requirements are totally different and it is hard to write a single water shader that deals with the camera being above *and* below it
+
+// TODO: framebuffer helper class
+// should store info about width/height
+// when binding the framebuffer, automatically set viewport to those values
+// and when unbinding, reset the viewport to some default value (probably the display width/height)
+
+// TODO: custom GUI framework
+
+// TODO: post processing effects
+// bloom, blur, ssao, etc.
+
 namespace pk
 {
 renderer::renderer(

@@ -34,6 +34,7 @@ program::~program()
 
 void program::reload()
 {
+    // TODO: it'd be cool if this just watched the files and automatically reloaded
     GLuint new_program_id = create_program();
     if (new_program_id)
     {

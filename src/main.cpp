@@ -29,6 +29,12 @@ constexpr int frame_delay = 1000 / fps_cap;
 
 constexpr float pi = 3.14159f;
 
+// TODO: assimp
+
+// TODO: physics
+
+// TODO: scene graph
+
 int window_width = 1280;
 int window_height = 720;
 float render_scale = 1.0f;

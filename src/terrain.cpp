@@ -5,6 +5,10 @@
 constexpr float size = 500;
 constexpr int vertex_count = 128;
 
+// TODO: multiple textures w/ blend map
+
+// TODO: erosion simulation?
+
 namespace pk
 {
 terrain::terrain(int grid_x, int grid_z, pk::material *material)

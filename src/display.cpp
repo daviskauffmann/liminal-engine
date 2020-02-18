@@ -34,7 +34,6 @@ display::display(const char *title, int width, int height)
     std::cout << "SDL_image " << std::to_string(img_version->major) << "." << std::to_string(img_version->minor) << "." << std::to_string(img_version->patch) << std::endl;
 
     Mix_Init(0);
-    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
     const SDL_version *mix_version = Mix_Linked_Version();
     std::cout << "SDL_mixer " << std::to_string(mix_version->major) << "." << std::to_string(mix_version->minor) << "." << std::to_string(mix_version->patch) << std::endl;
 
@@ -46,6 +45,8 @@ display::display(const char *title, int width, int height)
         height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     context = SDL_GL_CreateContext(window);
+
+    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
 
     GLenum error = glewInit();
     if (error != GLEW_OK)
@@ -65,14 +66,13 @@ display::display(const char *title, int width, int height)
 
 display::~display()
 {
+    Mix_CloseAudio();
+
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
 
     Mix_Quit();
-    Mix_CloseAudio();
-
     IMG_Quit();
-
     SDL_Quit();
 }
 

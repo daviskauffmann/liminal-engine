@@ -31,6 +31,7 @@ glm::vec3 camera::calc_right() const
 
 glm::vec3 camera::calc_up() const
 {
+    // TODO: use roll
     glm::vec3 front = calc_front();
     glm::vec3 right = glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::vec3 up = glm::cross(right, front);
