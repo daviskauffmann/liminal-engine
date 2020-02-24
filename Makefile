@@ -34,15 +34,16 @@ TARGET := bin/pk
 .PHONY: all
 all: $(TARGET)
 
-$(TARGET): $(SRC:src/%.cpp=build/%.o)
-	mkdir -p $(@D)
+$(TARGET): $(SRC:src/%.cpp=obj/%.o)
+	@mkdir -p $(@D)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
-build/%.o: src/%.cpp
-	mkdir -p $(@D)
-	$(CXX) -c $< -o $@ -MMD -MF $(@:.o=.d) $(CXXFLAGS) $(CPPFLAGS)
+obj/%.o: src/%.cpp
+	@mkdir -p $(@D)
+	@mkdir -p $(@D:obj%=dep%)
+	$(CXX) -c $< -o $@ -MMD -MF $(@:obj/%.o=dep/%.d) $(CXXFLAGS) $(CPPFLAGS)
 
--include $(SRC:src/%.cpp=build/%.d)
+-include $(SRC:src/%.cpp=dep/%.d)
 
 .PHONY: run
 run: all
@@ -50,4 +51,4 @@ run: all
 
 .PHONY: clean
 clean:
-	rm -rf bin build
+	rm -rf bin obj dep
