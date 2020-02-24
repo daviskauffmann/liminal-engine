@@ -1,7 +1,6 @@
 #include "sound.hpp"
 
 #include <iostream>
-
 #include <SDL2/SDL_mixer.h>
 
 namespace pk

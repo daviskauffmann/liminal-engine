@@ -1,11 +1,10 @@
 #ifndef PROGRAM_HPP
 #define PROGRAM_HPP
 
+#include <glm/glm.hpp>
+#include <GL/glew.h>
 #include <string>
 #include <unordered_map>
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
 
 namespace pk
 {

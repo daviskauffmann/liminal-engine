@@ -1,10 +1,9 @@
 #ifndef DIRECTIONAL_LIGHT_HPP
 #define DIRECTIONAL_LIGHT_HPP
 
-#include <GL/glew.h>
-
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
+#include <GL/glew.h>
 
 namespace pk
 {

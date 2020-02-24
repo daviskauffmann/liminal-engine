@@ -1,10 +1,9 @@
 #ifndef SPOT_LIGHT_HPP
 #define SPOT_LIGHT_HPP
 
-#include <GL/glew.h>
-
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
+#include <GL/glew.h>
 
 namespace pk
 {

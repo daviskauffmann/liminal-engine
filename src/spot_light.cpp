@@ -1,8 +1,7 @@
 #include "spot_light.hpp"
 
-#include <iostream>
-
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 namespace pk
 {

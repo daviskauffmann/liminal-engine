@@ -1,8 +1,7 @@
 #include "directional_light.hpp"
 
-#include <iostream>
-
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 constexpr float shadow_map_size = 20.0f;
 

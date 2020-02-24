@@ -1,9 +1,8 @@
 #ifndef ATLAS_HPP
 #define ATLAS_HPP
 
-#include <vector>
-
 #include <glm/vec2.hpp>
+#include <vector>
 
 #include "texture.hpp"
 

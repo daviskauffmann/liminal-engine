@@ -1,9 +1,8 @@
 #ifndef SOUND_HPP
 #define SOUND_HPP
 
-#include <string>
-
 #include <AL/al.h>
+#include <string>
 
 namespace pk
 {

@@ -1,10 +1,9 @@
 #ifndef CUBEMAP_HPP
 #define CUBEMAP_HPP
 
+#include <GL/glew.h>
 #include <string>
 #include <vector>
-
-#include <GL/glew.h>
 
 namespace pk
 {

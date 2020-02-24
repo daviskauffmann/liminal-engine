@@ -1,11 +1,10 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
-#include <vector>
-
-#include <GL/glew.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <GL/glew.h>
+#include <vector>
 
 #include "vertex.hpp"
 
