@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <iostream>
 
 #include "atlas.hpp"
 #include "audio.hpp"
 #include "camera.hpp"
+#include "config.hpp"
 #include "directional_light.hpp"
 #include "display.hpp"
 #include "material.hpp"
@@ -21,12 +23,6 @@
 #include "vertex.hpp"
 #include "water.hpp"
 
-constexpr const char *window_title = "Project Kilonova";
-constexpr const char *version = "0.0.1";
-
-constexpr int fps_cap = 300;
-constexpr int frame_delay = 1000 / fps_cap;
-
 constexpr float pi = 3.14159f;
 
 // TODO: assimp
@@ -35,12 +31,10 @@ constexpr float pi = 3.14159f;
 
 // TODO: scene graph
 
-int window_width = 1280;
-int window_height = 720;
-float render_scale = 1.0f;
-
 int main(int argc, char *argv[])
 {
+    config_load();
+
     for (int i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
@@ -53,14 +47,18 @@ int main(int argc, char *argv[])
         {
             std::cout << window_title << " " << version << std::endl;
         }
-        // if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--width") == 0)
-        // {
-        //     window_width = atoi(argv[i + 1]);
-        // }
-        // if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--height") == 0)
-        // {
-        //     window_width = atoi(argv[i + 1]);
-        // }
+        if (strcmp(argv[i], "--width") == 0)
+        {
+            window_width = atoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--height") == 0)
+        {
+            window_height = atoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--scale") == 0)
+        {
+            render_scale = std::clamp((float)atof(argv[i + 1]), 0.1f, 1.0f);
+        }
     }
 
     pk::display display(window_title, window_width, window_height);
@@ -351,7 +349,7 @@ int main(int argc, char *argv[])
         {
             fps_update_timer = 0.0f;
             char title[256];
-            sprintf(title, "%s %s - FPS: %d", window_title, version, (int)(1 / delta_time));
+            sprintf(title, "%s - FPS: %d", window_title, (int)(1 / delta_time));
             display.set_title(title);
         }
 
@@ -615,6 +613,8 @@ int main(int argc, char *argv[])
             SDL_Delay(frame_delay - frame_time);
         }
     }
+
+    config_save();
 
     return 0;
 }

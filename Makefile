@@ -8,6 +8,7 @@ SRC := \
 	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
+	src/config.cpp \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
 	src/display.cpp \
