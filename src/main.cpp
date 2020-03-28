@@ -443,6 +443,7 @@ int main(int argc, char *argv[])
             {
                 if (SDL_GetRelativeMouseMode())
                 {
+                    // TODO: take into account roll
                     main_camera.pitch -= event.motion.yrel * 0.1f;
                     main_camera.yaw += event.motion.xrel * 0.1f;
                     if (main_camera.pitch > 89.0f)
@@ -493,6 +494,15 @@ int main(int argc, char *argv[])
             }
             break;
             }
+        }
+
+        if (keys[SDL_SCANCODE_Q])
+        {
+            main_camera.roll--;
+        }
+        if (keys[SDL_SCANCODE_E])
+        {
+            main_camera.roll++;
         }
 
         glm::vec3 main_camera_front = main_camera.calc_front();

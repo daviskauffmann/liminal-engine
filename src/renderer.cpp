@@ -1208,12 +1208,15 @@ void renderer::render_waters(GLuint fbo_id, pk::camera *camera, pk::skybox *skyb
             reflect = true;
             float old_camera_y = camera->position.y;
             float old_camera_pitch = camera->pitch;
+            float old_camera_roll = camera->roll;
             camera->position.y -= 2 * (camera->position.y - water->position.y);
             camera->pitch = -camera->pitch;
+            camera->roll = -camera->roll;
             glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
             render_scene(water_reflection_fbo_id, reflection_width, reflection_height, camera, skybox, elapsed_time, reflection_clipping_plane);
             camera->position.y = old_camera_y;
             camera->pitch = old_camera_pitch;
+            camera->roll = old_camera_roll;
         }
 
         glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, water->position.y};
