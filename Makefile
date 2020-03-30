@@ -1,10 +1,12 @@
-CXX := g++
-CXXFLAGS := -ggdb -Iextern/stb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags assimp bullet glew openal sdl2 sdl2_image sdl2_mixer`
-CPPFLAGS :=
-LDFLAGS := `pkg-config --libs assimp bullet glew openal sdl2 sdl2_image sdl2_mixer` -mconsole
-LDLIBS := -lopengl32
+PKGS = assimp bullet glew openal sdl2 sdl2_image sdl2_mixer
 
-SRC := \
+CXX = g++
+CXXFLAGS = -ggdb -Iextern/stb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`
+CPPFLAGS =
+LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
+LDLIBS = -lopengl32
+
+SRC = \
 	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
@@ -30,7 +32,7 @@ SRC := \
 	src/texture.cpp \
 	src/vertex.cpp \
 	src/water.cpp
-TARGET := bin/pk
+TARGET = bin/pk
 
 .PHONY: all
 all: $(TARGET)
