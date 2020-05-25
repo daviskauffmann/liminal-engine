@@ -40,8 +40,11 @@ int main(int argc, char *argv[])
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
         {
             std::cout << "Options:" << std::endl;
-            std::cout << "  -h, --help\tPrint this message" << std::endl;
-            std::cout << "  -v, --version\tPrint version information" << std::endl;
+            std::cout << "  -h, --help       Print this message" << std::endl;
+            std::cout << "  --width <int>    Set window width" << std::endl;
+            std::cout << "  --height <int>   Set window height" << std::endl;
+            std::cout << "  --scale <float>  Set render scale" << std::endl;
+            std::cout << "  -v, --version    Print version information" << std::endl;
         }
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
         {

@@ -89,7 +89,10 @@ private:
     pk::program *geometry_program;
     pk::program *skybox_program;
     pk::program *water_program;
-    pk::program *terrain_program;
+    pk::program *terrain_forward_ambient_program;
+    pk::program *terrain_forward_directional_program;
+    pk::program *terrain_forward_point_program;
+    pk::program *terrain_forward_spot_program;
     pk::program *sprite_program;
     pk::program *screen_program;
 
