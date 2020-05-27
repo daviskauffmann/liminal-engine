@@ -7,8 +7,6 @@
 
 in struct Vertex
 {
-    vec3 position;
-    vec3 normal;
     vec2 uv;
 } vertex;
 
@@ -19,16 +17,13 @@ uniform struct Camera
     vec3 position;
 } camera;
 
-uniform struct Material
+uniform struct Geometry
 {
-    sampler2D albedo_map;
-    vec3 albedo_color;
+    sampler2D position_map;
     sampler2D normal_map;
-    sampler2D metallic_map;
-    sampler2D roughness_map;
-    sampler2D occlusion_map;
-    sampler2D height_map;
-} material;
+    sampler2D albedo_map;
+    sampler2D material_map;
+} geometry;
 
 uniform struct Light
 {
@@ -43,53 +38,24 @@ out vec4 frag_color;
 
 const float height_scale = 1.0;
 
-mat3 calc_tbn()
-{
-    vec3 q1 = dFdx(vertex.position);
-    vec3 q2 = dFdy(vertex.position);
-    vec2 st1 = dFdx(vertex.uv);
-    vec2 st2 = dFdy(vertex.uv);
-    vec3 n = normalize(vertex.normal);
-    vec3 t = normalize(q1 * st2.t - q2 * st1.t);
-    vec3 b = -normalize(cross(n, t));
-    return mat3(t, b, n);
-}
-
-vec2 calc_parallax(mat3 tbn)
-{
-    float height = texture(material.height_map, vertex.uv).r;    
-    vec3 v = normalize((tbn * camera.position) - (tbn * vertex.position));
-    vec2 p = v.xy / v.z * (height * height_scale);
-    return vertex.uv;   
-}
-
-vec3 calc_normal(mat3 tbn)
-{
-    vec3 tangent_normal = texture(material.normal_map, vertex.uv).xyz * 2.0 - 1.0;
-    return normalize(tbn * tangent_normal);
-}
-
 void main()
 {
-    mat3 tbn = calc_tbn();
-    vec2 uv = calc_parallax(tbn);
-    // if(uv.x > 1.0 || uv.y > 1.0 || uv.x < 0.0 || uv.y < 0.0)
-    //     discard;
+    vec3 position = texture(geometry.position_map, vertex.uv).rgb;
+    vec3 normal = texture(geometry.normal_map, vertex.uv).rgb;
+    vec3 albedo = texture(geometry.albedo_map, vertex.uv).rgb;
+    float metallic = texture(geometry.material_map, vertex.uv).r;
+    float roughness = texture(geometry.material_map, vertex.uv).g;
+    float ao = texture(geometry.material_map, vertex.uv).b;
 
-    vec3 albedo = texture(material.albedo_map, uv).rgb * material.albedo_color;
-    float metallic = texture(material.metallic_map, uv).r;
-    float roughness = texture(material.roughness_map, uv).r;
-    float ao = texture(material.occlusion_map, uv).r;
-
-    vec3 n = calc_normal(tbn);
-    vec3 v = normalize(camera.position - vertex.position);
+    vec3 n = normalize(normal);
+    vec3 v = normalize(camera.position - position);
 
     vec3 f0 = vec3(0.04);
     f0 = mix(f0, albedo, metallic);
 
-    vec3 l = normalize(light.position - vertex.position);
+    vec3 l = normalize(light.position - position);
     vec3 h = normalize(v + l);
-    float distance = length(light.position - vertex.position);
+    float distance = length(light.position - position);
     float attenuation = 1.0 / (distance * distance);
     vec3 radiance = light.color * attenuation;
 
@@ -107,12 +73,12 @@ void main()
     float n_dot_l = max(dot(n, l), 0.0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l;
     
-    vec3 frag_to_light = vertex.position - light.position;
+    vec3 frag_to_light = position - light.position;
     float current_depth = length(frag_to_light);
     float shadow = 0.0;
     float bias = 0.15;
     int samples = 20;
-    float view_distance = length(camera.position - vertex.position);
+    float view_distance = length(camera.position - position);
     float disk_radius = (1.0 + (view_distance / far_plane)) / 25.0;
     vec3 grid_sampling_disk[20] = vec3[]
     (
