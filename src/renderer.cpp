@@ -250,6 +250,7 @@ namespace pk
         glBindVertexArray(screen_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
         glBindVertexArray(0);
+        brdf_program->unbind();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glDeleteRenderbuffers(1, &capture_rbo_id);
@@ -767,6 +768,8 @@ namespace pk
             glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
             glViewport(0, 0, directional_light->depth_map_size, directional_light->depth_map_size);
             glClear(GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
             depth_program->bind();
             depth_program->set_mat4("projection", directional_light->projection);
             depth_program->set_mat4("view", directional_light->view);
@@ -774,7 +777,7 @@ namespace pk
             {
                 glm::mat4 object_model = object->calc_model();
                 depth_program->set_mat4("object.model", object_model);
-                object->mesh->draw();
+                object->model->draw();
             }
             for (auto &terrain : terrains)
             {
@@ -783,14 +786,14 @@ namespace pk
                 terrain->mesh->draw();
             }
             depth_program->unbind();
+            glCullFace(GL_BACK);
+            glDisable(GL_CULL_FACE);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
         for (auto &point_light : point_lights)
         {
-            float far_plane = 25.0f;
-
-            glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, far_plane);
+            glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, point_light::far_plane);
             std::vector<glm::mat4> shadow_matrices;
             shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
             shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
@@ -802,26 +805,30 @@ namespace pk
             glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
             glViewport(0, 0, point_light->depth_cube_size, point_light->depth_cube_size);
             glClear(GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
             depth_cube_program->bind();
             for (unsigned int i = 0; i < 6; i++)
             {
                 depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
             }
             depth_cube_program->set_vec3("light.position", point_light->position);
-            depth_cube_program->set_float("far_plane", far_plane);
+            depth_cube_program->set_float("far_plane", point_light::far_plane);
             for (auto &object : objects)
             {
                 glm::mat4 object_model = object->calc_model();
-                depth_cube_program->set_mat4("object.model", object_model);
-                object->mesh->draw();
+                depth_cube_program->set_mat4("model", object_model);
+                object->model->draw();
             }
             for (auto &terrain : terrains)
             {
                 glm::mat4 terrain_model = terrain->calc_model();
-                depth_cube_program->set_mat4("object.model", terrain_model);
+                depth_cube_program->set_mat4("model", terrain_model);
                 terrain->mesh->draw();
             }
             depth_cube_program->unbind();
+            glCullFace(GL_BACK);
+            glDisable(GL_CULL_FACE);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
@@ -833,22 +840,26 @@ namespace pk
             glBindFramebuffer(GL_FRAMEBUFFER, spot_light->depth_map_fbo_id);
             glViewport(0, 0, spot_light->depth_map_size, spot_light->depth_map_size);
             glClear(GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
             depth_program->bind();
             depth_program->set_mat4("projection", spot_light->projection);
             depth_program->set_mat4("view", spot_light->view);
             for (auto &object : objects)
             {
                 glm::mat4 object_model = object->calc_model();
-                depth_program->set_mat4("object.model", object_model);
-                object->mesh->draw();
+                depth_program->set_mat4("model", object_model);
+                object->model->draw();
             }
             for (auto &terrain : terrains)
             {
                 glm::mat4 terrain_model = terrain->calc_model();
-                depth_program->set_mat4("object.model", terrain_model);
+                depth_program->set_mat4("model", terrain_model);
                 terrain->mesh->draw();
             }
             depth_program->unbind();
+            glCullFace(GL_BACK);
+            glDisable(GL_CULL_FACE);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
@@ -860,6 +871,7 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
         glEnable(GL_CLIP_DISTANCE0);
         geometry_program->bind();
         geometry_program->set_mat4("camera.projection", camera_projection);
@@ -870,42 +882,18 @@ namespace pk
         {
             glm::mat4 object_model = object->calc_model();
             geometry_program->set_mat4("object.model", object_model);
-            geometry_program->set_vec3("material.albedo_color", object->material->albedo_color);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, object->material->albedo_map ? object->material->albedo_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, object->material->normal_map ? object->material->normal_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, object->material->metallic_map ? object->material->metallic_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, object->material->roughness_map ? object->material->roughness_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, object->material->occlusion_map ? object->material->occlusion_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_2D, object->material->height_map ? object->material->height_map->texture_id : 0);
-            object->mesh->draw();
+            object->model->draw();
         }
+        // TODO: may need separate shader for terrain
         for (auto &terrain : terrains)
         {
             glm::mat4 terrain_model = terrain->calc_model();
             geometry_program->set_mat4("object.model", terrain_model);
-            geometry_program->set_vec3("material.albedo_color", terrain->material->albedo_color);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, terrain->material->albedo_map ? terrain->material->albedo_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, terrain->material->normal_map ? terrain->material->normal_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, terrain->material->metallic_map ? terrain->material->metallic_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, terrain->material->roughness_map ? terrain->material->roughness_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, terrain->material->occlusion_map ? terrain->material->occlusion_map->texture_id : 0);
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_2D, terrain->material->height_map ? terrain->material->height_map->texture_id : 0);
             terrain->mesh->draw();
         }
         geometry_program->unbind();
         glDisable(GL_CLIP_DISTANCE0);
+        glDisable(GL_CULL_FACE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // deferred lighting
@@ -977,7 +965,7 @@ namespace pk
             deferred_point_program->set_mat4("camera.projection", camera_projection);
             deferred_point_program->set_mat4("camera.view", camera_view);
             deferred_point_program->set_vec3("camera.position", camera->position);
-            deferred_point_program->set_float("far_plane", 25.0f);
+            deferred_point_program->set_float("far_plane", point_light::far_plane);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
             glActiveTexture(GL_TEXTURE1);
@@ -1034,6 +1022,7 @@ namespace pk
         glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
+
         glEnable(GL_DEPTH_TEST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

@@ -5,13 +5,11 @@
 namespace pk
 {
 object::object(
-    pk::mesh *mesh,
-    pk::material *material,
+    pk::model *model,
     glm::vec3 position,
     glm::vec3 rotation,
     glm::vec3 scale)
-    : mesh(mesh),
-      material(material),
+    : model(model),
       position(position),
       rotation(rotation),
       scale(scale)

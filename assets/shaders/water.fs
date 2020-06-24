@@ -38,9 +38,10 @@ uniform float far_plane;
 
 out vec4 frag_color;
 
-const float wave_strength = 0.04;
+const float speed = 0.02;
+const float wave_strength = 0.01;
 const float reflectivity = 0.5;
-const float shine_damper = 20.0;
+const float shine_damper = 100.0;
 
 void main()
 {
@@ -54,7 +55,7 @@ void main()
 	float distance_to_surface = 2.0 * near_plane * far_plane / (far_plane + near_plane - (2.0 * depth_to_surface - 1.0) * (far_plane - near_plane));
 	float water_depth = distance_to_floor - distance_to_surface;
 
-	float move_factor = float(elapsed_time) / 1000 * 0.03;
+	float move_factor = float(elapsed_time) / 1000 * speed;
 	vec2 distorted_uv = texture(water.dudv_map, vec2(vertex.uv.x + move_factor, vertex.uv.y)).rg * 0.1;
 	distorted_uv += vertex.uv + vec2(distorted_uv.x, distorted_uv.y + move_factor);
 	vec2 distortion = (texture(water.dudv_map, distorted_uv).rg * 2.0 - 1.0) * wave_strength * clamp(water_depth / 20.0, 0.0, 1.0);

@@ -33,5 +33,5 @@ void main()
 
     vertex.position = world_position.xyz;
     vertex.normal = mat3(transpose(inverse(object.model))) * normal;
-    vertex.uv = vec2(uv.x, 1 - uv.y);
+    vertex.uv = vec2(uv.x, uv.y);
 }

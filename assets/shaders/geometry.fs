@@ -10,7 +10,6 @@ in struct Vertex
 uniform struct Material
 {
     sampler2D albedo_map;
-    vec3 albedo_color;
     sampler2D normal_map;
     sampler2D metallic_map;
     sampler2D roughness_map;
@@ -43,8 +42,8 @@ vec3 calc_normal()
 void main()
 {
     position_map = vertex.position;
-    normal_map = calc_normal();
-    albedo_map = texture(material.albedo_map, vertex.uv).rgb * material.albedo_color;
+    normal_map = vertex.normal;
+    albedo_map = texture(material.albedo_map, vertex.uv).rgb;
     material_map.r = texture(material.metallic_map, vertex.uv).r;
     material_map.g = texture(material.roughness_map, vertex.uv).r;
     material_map.b = texture(material.occlusion_map, vertex.uv).r;

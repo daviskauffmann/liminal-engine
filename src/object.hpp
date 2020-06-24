@@ -4,22 +4,19 @@
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>
 
-#include "material.hpp"
-#include "mesh.hpp"
+#include "model.hpp"
 
 namespace pk
 {
 struct object
 {
-    pk::mesh *mesh;
-    pk::material *material;
+    pk::model *model;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
 
     object(
-        pk::mesh *mesh,
-        pk::material *material,
+        pk::model *model,
         glm::vec3 position,
         glm::vec3 rotation,
         glm::vec3 scale);

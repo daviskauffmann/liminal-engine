@@ -34,5 +34,5 @@ void main()
 
     vertex.position = world_position.xyz;
     vertex.normal = mat3(transpose(inverse(terrain.model))) * normal;
-    vertex.uv = vec2(uv.x, 1 - uv.y);
+    vertex.uv = vec2(uv.x, uv.y);
 }

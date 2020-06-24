@@ -2,12 +2,9 @@
 
 layout (location = 0) in vec3 position;
 
-uniform struct Object
-{
-    mat4 model;
-} object;
+uniform mat4 model;
 
 void main()
 {
-    gl_Position = object.model * vec4(position, 1.0);
+    gl_Position = model * vec4(position, 1.0);
 }

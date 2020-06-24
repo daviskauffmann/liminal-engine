@@ -1,7 +1,6 @@
 #version 460 core
 
 #include "glsl/fresnel_schlick.glsl"
-#include "glsl/math.glsl"
 
 in struct Vertex
 {

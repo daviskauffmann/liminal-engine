@@ -15,8 +15,8 @@ SRC = \
 	src/directional_light.cpp \
 	src/display.cpp \
 	src/main.cpp \
-	src/material.cpp \
 	src/mesh.cpp \
+	src/model.cpp \
 	src/object.cpp \
 	src/point_light.cpp \
 	src/program.cpp \
