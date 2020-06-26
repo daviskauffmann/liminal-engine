@@ -38,3 +38,8 @@ make run
 ```sh
 make clean
 ```
+
+## Screenshots
+
+![1](screenshots/1.bmp)
+![2](screenshots/2.bmp)
