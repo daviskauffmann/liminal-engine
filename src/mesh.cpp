@@ -44,9 +44,9 @@ namespace pk
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_NORMALS].size() > 0 ? textures[aiTextureType_NORMALS][0]->texture_id : 0 : 0);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_METALNESS].size() > 0 ? textures[aiTextureType_METALNESS][0]->texture_id : 0 : 0);
+        glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_SHININESS].size() > 0 ? textures[aiTextureType_SHININESS][0]->texture_id : 0 : 0);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_DIFFUSE_ROUGHNESS].size() > 0 ? textures[aiTextureType_DIFFUSE_ROUGHNESS][0]->texture_id : 0 : 0);
+        glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_OPACITY].size() > 0 ? textures[aiTextureType_OPACITY][0]->texture_id : 0 : 0);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_AMBIENT_OCCLUSION].size() > 0 ? textures[aiTextureType_AMBIENT_OCCLUSION][0]->texture_id : 0 : 0);
         glActiveTexture(GL_TEXTURE5);
