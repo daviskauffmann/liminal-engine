@@ -188,13 +188,17 @@ namespace pk
         sprite_program = new pk::program(
             "assets/shaders/sprite.vs",
             "assets/shaders/sprite.fs");
+        gaussian_program = new pk::program(
+            "assets/shaders/gaussian.vs",
+            "assets/shaders/gaussian.fs");
         screen_program = new pk::program(
             "assets/shaders/screen.vs",
             "assets/shaders/screen.fs");
 
-        this->screen_fbo_id = 0;
-        this->screen_texture_id = 0;
-        this->screen_rbo_id = 0;
+        this->hdr_fbo_id = 0;
+        this->hdr_texture_ids[0] = 0;
+        this->hdr_texture_ids[1] = 0;
+        this->hdr_rbo_id = 0;
         this->geometry_fbo_id = 0;
         this->geometry_position_texture_id = 0;
         this->geometry_normal_texture_id = 0;
@@ -275,11 +279,12 @@ namespace pk
         delete skybox_program;
         delete water_program;
         delete sprite_program;
+        delete gaussian_program;
         delete screen_program;
 
-        glDeleteRenderbuffers(1, &screen_rbo_id);
-        glDeleteTextures(1, &screen_texture_id);
-        glDeleteFramebuffers(1, &screen_fbo_id);
+        glDeleteRenderbuffers(1, &hdr_rbo_id);
+        glDeleteTextures(2, hdr_texture_ids);
+        glDeleteFramebuffers(1, &hdr_fbo_id);
 
         glDeleteRenderbuffers(1, &geometry_rbo_id);
         glDeleteTextures(1, &geometry_normal_texture_id);
@@ -314,36 +319,42 @@ namespace pk
         this->render_width = (int)(display_width * render_scale);
         this->render_height = (int)(display_height * render_scale);
 
-        glDeleteRenderbuffers(1, &screen_rbo_id);
-        glDeleteTextures(1, &screen_texture_id);
-        glDeleteFramebuffers(1, &screen_fbo_id);
+        glDeleteRenderbuffers(1, &hdr_rbo_id);
+        glDeleteTextures(2, hdr_texture_ids);
+        glDeleteFramebuffers(1, &hdr_fbo_id);
 
         glDeleteRenderbuffers(1, &geometry_rbo_id);
         glDeleteTextures(1, &geometry_normal_texture_id);
         glDeleteTextures(1, &geometry_position_texture_id);
         glDeleteFramebuffers(1, &geometry_fbo_id);
 
-        // setup screen fbo
-        glGenTextures(1, &screen_texture_id);
-        glBindTexture(GL_TEXTURE_2D, screen_texture_id);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            0,
-            GL_RGBA,
-            GL_FLOAT,
-            nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        glDeleteTextures(2, bloom_texture_ids);
+        glDeleteFramebuffers(2, bloom_fbo_ids);
 
-        glGenRenderbuffers(1, &screen_rbo_id);
-        glBindRenderbuffer(GL_RENDERBUFFER, screen_rbo_id);
+        // setup hdr fbo
+        glGenTextures(2, hdr_texture_ids);
+        for (unsigned int i = 0; i < 2; i++)
+        {
+            glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGBA16F,
+                render_width,
+                render_height,
+                0,
+                GL_RGBA,
+                GL_FLOAT,
+                nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        glGenRenderbuffers(1, &hdr_rbo_id);
+        glBindRenderbuffer(GL_RENDERBUFFER, hdr_rbo_id);
         glRenderbufferStorage(
             GL_RENDERBUFFER,
             GL_DEPTH_STENCIL,
@@ -351,24 +362,20 @@ namespace pk
             display_height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-        glGenFramebuffers(1, &screen_fbo_id);
-        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo_id);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            screen_texture_id,
-            0);
+        glGenFramebuffers(1, &hdr_fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture_ids[0], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, hdr_texture_ids[1], 0);
         glFramebufferRenderbuffer(
             GL_FRAMEBUFFER,
             GL_DEPTH_ATTACHMENT,
             GL_RENDERBUFFER,
-            screen_rbo_id);
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            std::cout << "Error: Couldn't complete screen framebuffer" << std::endl;
-        }
+            hdr_rbo_id);
+        GLenum hdr_color_attachments[] = {
+            GL_COLOR_ATTACHMENT0,
+            GL_COLOR_ATTACHMENT1};
+        glDrawBuffers(sizeof(hdr_color_attachments) / sizeof(GLenum), hdr_color_attachments);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // setup geometry fbo
         // gbuffer:
@@ -380,7 +387,6 @@ namespace pk
         //          roughness - g
         //          occlusion - b
         //          height - a
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glGenTextures(1, &geometry_position_texture_id);
         glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
         glTexImage2D(
@@ -496,6 +502,35 @@ namespace pk
             std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // setup gaussian blur fbo
+        glGenFramebuffers(2, bloom_fbo_ids);
+        glGenTextures(2, bloom_texture_ids);
+        for (unsigned int i = 0; i < 2; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[i]);
+            glBindTexture(GL_TEXTURE_2D, bloom_texture_ids[i]);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGBA16F,
+                display_width,
+                display_height,
+                0,
+                GL_RGBA,
+                GL_FLOAT,
+                NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bloom_texture_ids[i], 0);
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                std::cout << "Error: Couldn't complete brdf capture framebuffer" << std::endl;
+            }
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
     }
 
     void renderer::set_reflection_size(int reflection_width, int reflection_height)
@@ -633,6 +668,7 @@ namespace pk
         skybox_program->reload();
         water_program->reload();
         sprite_program->reload();
+        gaussian_program->reload();
         screen_program->reload();
     }
 
@@ -672,28 +708,6 @@ namespace pk
     }
 
     void renderer::flush(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, float delta_time)
-    {
-        render_scene(screen_fbo_id, render_width, render_height, camera, skybox, elapsed_time);
-        if (waters.size() > 0)
-        {
-            render_waters(screen_fbo_id, camera, skybox, elapsed_time);
-        }
-        if (sprites.size() > 0)
-        {
-            render_sprites(screen_fbo_id);
-        }
-        render_screen(0);
-
-        objects.clear();
-        directional_lights.clear();
-        point_lights.clear();
-        spot_lights.clear();
-        waters.clear();
-        terrains.clear();
-        sprites.clear();
-    }
-
-    void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane)
     {
         // setup samplers
         geometry_program->bind();
@@ -755,10 +769,39 @@ namespace pk
         sprite_program->set_int("sprite.texture", 0);
         sprite_program->unbind();
 
+        gaussian_program->bind();
+        gaussian_program->set_int("image", 0);
+        gaussian_program->unbind();
+
         screen_program->bind();
-        screen_program->set_int("screen.texture", 0);
+        screen_program->set_int("hdr_map", 0);
+        screen_program->set_int("bloom_map", 1);
         screen_program->unbind();
 
+        // render everything
+        render_scene(hdr_fbo_id, render_width, render_height, camera, skybox, elapsed_time);
+        if (waters.size() > 0)
+        {
+            render_waters(hdr_fbo_id, camera, skybox, elapsed_time);
+        }
+        if (sprites.size() > 0)
+        {
+            render_sprites(hdr_fbo_id);
+        }
+        render_screen(0);
+
+        // clear renderables
+        objects.clear();
+        directional_lights.clear();
+        point_lights.clear();
+        spot_lights.clear();
+        waters.clear();
+        terrains.clear();
+        sprites.clear();
+    }
+
+    void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane)
+    {
         // update depth maps
         for (auto &directional_light : directional_lights)
         {
@@ -1053,6 +1096,7 @@ namespace pk
         skybox_program->unbind();
         glDepthFunc(GL_LESS);
 
+        // DEBUG: draw point lights as a cube
         if (point_lights.size() > 0)
         {
             glEnable(GL_CLIP_DISTANCE0);
@@ -1176,13 +1220,35 @@ namespace pk
 
     void renderer::render_screen(GLuint fbo_id)
     {
+        // apply gaussian blur to brightness map
+        bool horizontal = true;
+        bool first_iteration = true;
+        gaussian_program->bind();
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[horizontal]);
+            gaussian_program->set_int("horizontal", horizontal);
+            glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids[1] : bloom_texture_ids[!horizontal]);
+            glBindVertexArray(screen_vao_id);
+            glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
+            glBindVertexArray(0);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            horizontal = !horizontal;
+            first_iteration = false;
+        }
+        gaussian_program->unbind();
+
+        // final pass
         glViewport(0, 0, display_width, display_height);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
         screen_program->bind();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, screen_texture_id);
+        glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, bloom_texture_ids[!horizontal]);
         glBindVertexArray(screen_vao_id);
         glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
         glBindVertexArray(0);

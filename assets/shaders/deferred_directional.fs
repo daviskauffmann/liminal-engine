@@ -10,6 +10,9 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+layout (location = 0) out vec4 frag_color;
+layout (location = 1) out vec4 bright_color;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -33,8 +36,6 @@ uniform struct Light
 	mat4 view;
     sampler2D depth_map;
 } light;
-
-out vec4 frag_color;
 
 const float height_scale = 1.0;
 
@@ -90,4 +91,14 @@ void main()
     color = (1.0 - shadow) * color;
 
     frag_color = vec4(color, 1.0);
+
+    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+    {
+        bright_color = vec4(color, 1.0);
+    }
+    else
+    {
+        bright_color = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }

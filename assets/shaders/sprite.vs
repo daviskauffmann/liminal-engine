@@ -3,6 +3,11 @@
 layout (location = 0) in vec2 position;
 layout (location = 1) in vec2 uv;
 
+out struct Vertex
+{
+	vec2 uv;
+} vertex;
+
 uniform struct Camera
 {
 	mat4 projection;
@@ -14,11 +19,6 @@ uniform struct Sprite
 	vec3 color;
 	mat4 model;
 } sprite;
-
-out struct Vertex
-{
-	vec2 uv;
-} vertex;
 
 void main()
 {

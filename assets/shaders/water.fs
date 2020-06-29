@@ -8,6 +8,9 @@ in struct Vertex
 	vec4 clip_space_position;
 } vertex;
 
+layout (location = 0) out vec4 frag_color;
+layout (location = 1) out vec4 bright_color;
+
 uniform unsigned int elapsed_time;
 
 uniform struct Camera
@@ -36,8 +39,6 @@ uniform struct Light
 uniform float near_plane;
 uniform float far_plane;
 
-out vec4 frag_color;
-
 const float speed = 0.02;
 const float wave_strength = 0.01;
 const float reflectivity = 0.5;
@@ -63,11 +64,11 @@ void main()
 	reflection_uv += distortion;
 	reflection_uv.x = clamp(reflection_uv.x, 0.001, 0.999);
 	reflection_uv.y = clamp(reflection_uv.y, -0.999, -0.001);
-	vec4 reflection_color = texture(water.reflection_map, reflection_uv);
+	vec3 reflection_color = texture(water.reflection_map, reflection_uv).rgb;
 
 	refraction_uv += distortion;
 	refraction_uv = clamp(refraction_uv, 0.001, 0.999);
-	vec4 refraction_color = texture(water.refraction_map, refraction_uv);
+	vec3 refraction_color = texture(water.refraction_map, refraction_uv).rgb;
 
 	vec4 normal_color = texture(water.normal_map, distorted_uv);
 	vec3 normal = vec3(normal_color.r * 2.0 - 1.0, normal_color.b * 3.0, normal_color.g * 2.0 - 1.0);
@@ -82,6 +83,18 @@ void main()
 	float specular_factor = pow(max(dot(light_reflection, view_direction), 0.0), shine_damper);
 	vec3 specular = light.color * specular_factor * reflectivity * clamp(water_depth / 5.0, 0.0, 1.0);
 
-	frag_color = mix(reflection_color, refraction_color, refractive_factor) + vec4(specular, 1.0);
+	vec3 color = mix(reflection_color, refraction_color, refractive_factor) + specular;
+
+	frag_color = vec4(color, 1.0);
 	frag_color.a = clamp(water_depth / 5.0, 0.0, 1.0);
+
+    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+    {
+        bright_color = vec4(color, 1.0);
+    }
+    else
+    {
+        bright_color = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }

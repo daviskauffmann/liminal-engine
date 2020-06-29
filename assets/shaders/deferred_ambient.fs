@@ -7,6 +7,9 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+layout (location = 0) out vec4 frag_color;
+layout (location = 1) out vec4 bright_color;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -27,8 +30,6 @@ uniform float far_plane;
 uniform samplerCube irradiance_cubemap;
 uniform samplerCube prefilter_cubemap;
 uniform sampler2D brdf_map;
-
-out vec4 frag_color;
 
 const float height_scale = 1.0;
 
@@ -61,4 +62,14 @@ void main()
     vec3 color = (kd * diffuse + specular) * ao;
 
     frag_color = vec4(color, 1.0);
+
+    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+    {
+        bright_color = vec4(color, 1.0);
+    }
+    else
+    {
+        bright_color = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }

@@ -4,6 +4,13 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 uv;
 
+out struct Vertex
+{
+    vec3 position;
+    vec3 normal;
+    vec2 uv;
+} vertex;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -17,13 +24,6 @@ uniform struct Terrain
 } terrain;
 
 uniform vec4 clipping_plane;
-
-out struct Vertex
-{
-    vec3 position;
-    vec3 normal;
-    vec2 uv;
-} vertex;
 
 void main()
 {

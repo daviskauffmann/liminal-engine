@@ -7,6 +7,11 @@ in struct Vertex
     vec2 uv;
 } vertex;
 
+layout (location = 0) out vec3 position_map;
+layout (location = 1) out vec3 normal_map;
+layout (location = 2) out vec3 albedo_map;
+layout (location = 3) out vec4 material_map;
+
 uniform struct Material
 {
     sampler2D albedo_map;
@@ -16,11 +21,6 @@ uniform struct Material
     sampler2D occlusion_map;
     sampler2D height_map;
 } material;
-
-layout (location = 0) out vec3 position_map;
-layout (location = 1) out vec3 normal_map;
-layout (location = 2) out vec3 albedo_map;
-layout (location = 3) out vec4 material_map;
 
 vec3 calc_normal()
 {

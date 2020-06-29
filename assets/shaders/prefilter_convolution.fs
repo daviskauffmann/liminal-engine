@@ -9,10 +9,10 @@ in struct Vertex
 	vec3 position;
 } vertex;
 
+out vec4 frag_color;
+
 uniform samplerCube environment_cubemap;
 uniform float roughness;
-
-out vec4 frag_color;
 
 float distribution_ggx(vec3 n, vec3 h, float roughness)
 {

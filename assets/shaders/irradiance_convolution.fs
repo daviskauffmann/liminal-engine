@@ -7,9 +7,9 @@ in struct Vertex
 	vec3 position;
 } vertex;
 
-uniform samplerCube environment_cubemap;
-
 out vec4 frag_color;
+
+uniform samplerCube environment_cubemap;
 
 void main()
 {		

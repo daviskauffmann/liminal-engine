@@ -2,6 +2,14 @@
 
 layout (location = 0) in vec2 position;
 
+out struct Vertex
+{
+    vec3 position;
+	vec3 normal;
+	vec2 uv;
+	vec4 clip_space_position;
+} vertex;
+
 uniform struct Camera
 {
     mat4 projection;
@@ -18,14 +26,6 @@ uniform struct Water
 	sampler2D dudv_map;
 	sampler2D normal_map;
 } water;
-
-out struct Vertex
-{
-    vec3 position;
-	vec3 normal;
-	vec2 uv;
-	vec4 clip_space_position;
-} vertex;
 
 const float tiling = 4.0;
 

@@ -89,12 +89,13 @@ namespace pk
         pk::program *skybox_program;
         pk::program *water_program;
         pk::program *sprite_program;
+        pk::program *gaussian_program;
         pk::program *screen_program;
 
         // framebuffers
-        GLuint screen_fbo_id;
-        GLuint screen_texture_id;
-        GLuint screen_rbo_id;
+        GLuint hdr_fbo_id;
+        GLuint hdr_texture_ids[2];
+        GLuint hdr_rbo_id;
 
         GLuint geometry_fbo_id;
         GLuint geometry_position_texture_id;
@@ -111,7 +112,9 @@ namespace pk
         GLuint water_refraction_color_texture_id;
         GLuint water_refraction_depth_texture_id;
 
-        // brdf texture
+        GLuint bloom_fbo_ids[2];
+        GLuint bloom_texture_ids[2];
+
         GLuint brdf_texture_id;
 
         // renderables
@@ -122,8 +125,8 @@ namespace pk
         std::vector<pk::water *> waters;
         std::vector<pk::terrain *> terrains;
         std::vector<pk::sprite *> sprites;
-
         void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane = glm::vec4(0.0f));
+
         void render_waters(GLuint fbo_id, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time);
         void render_sprites(GLuint fbo_id);
         void render_screen(GLuint fbo_id);

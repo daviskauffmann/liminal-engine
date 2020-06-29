@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
         {
             renderer.add_spot_light(&torch_spot_light);
         }
-        renderer.add_water(&test_water);
+        // renderer.add_water(&test_water);
         // renderer.add_terrain(&test_terrain);
         // renderer.add_sprite(&grass_sprite);
         renderer.flush(&main_camera, &skybox, current_time, delta_time);

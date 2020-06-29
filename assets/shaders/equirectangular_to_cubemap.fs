@@ -5,9 +5,9 @@ in struct Vertex
     vec3 position;
 } vertex;
 
-uniform sampler2D equirectangular_map;
-
 out vec4 frag_color;
+
+uniform sampler2D equirectangular_map;
 
 const vec2 inv_atan = vec2(0.1591, 0.3183);
 

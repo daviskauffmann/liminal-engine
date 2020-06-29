@@ -1,11 +1,11 @@
 #version 460 core
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices=18) out;
-
-uniform mat4 shadow_matrices[6];
+layout (triangle_strip, max_vertices = 18) out;
 
 out vec4 frag_position;
+
+uniform mat4 shadow_matrices[6];
 
 void main()
 {

@@ -5,14 +5,14 @@ in struct Vertex
 	vec2 uv;
 } vertex;
 
+out vec4 frag_color;
+
 uniform struct Sprite
 {
 	sampler2D texture;
 	vec3 color;
 	mat4 model;
 } sprite;
-
-out vec4 frag_color;
 
 void main()
 {    
