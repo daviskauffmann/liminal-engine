@@ -503,7 +503,7 @@ namespace pk
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // setup gaussian blur fbo
+        // setup bloom fbo
         glGenFramebuffers(2, bloom_fbo_ids);
         glGenTextures(2, bloom_texture_ids);
         for (unsigned int i = 0; i < 2; i++)
@@ -514,8 +514,8 @@ namespace pk
                 GL_TEXTURE_2D,
                 0,
                 GL_RGBA16F,
-                display_width,
-                display_height,
+                display_width / 8,
+                display_height / 8,
                 0,
                 GL_RGBA,
                 GL_FLOAT,
@@ -1221,6 +1221,7 @@ namespace pk
     void renderer::render_screen(GLuint fbo_id)
     {
         // apply gaussian blur to brightness map
+        glViewport(0, 0, display_width / 8, display_height / 8);
         bool horizontal = true;
         bool first_iteration = true;
         gaussian_program->bind();
