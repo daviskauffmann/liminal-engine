@@ -85,8 +85,7 @@ void main()
 
 	vec3 color = mix(reflection_color, refraction_color, refractive_factor) + specular;
 
-	frag_color = vec4(color, 1.0);
-	frag_color.a = clamp(water_depth / 5.0, 0.0, 1.0);
+	frag_color = vec4(color, clamp(water_depth / 5.0, 0.0, 1.0));
 
     float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
     if (brightness > 1.0)

@@ -93,16 +93,16 @@ namespace pk
         pk::program *screen_program;
 
         // framebuffers
-        GLuint hdr_fbo_id;
-        GLuint hdr_texture_ids[2];
-        GLuint hdr_rbo_id;
-
         GLuint geometry_fbo_id;
         GLuint geometry_position_texture_id;
         GLuint geometry_normal_texture_id;
         GLuint geometry_albedo_texture_id;
         GLuint geometry_material_texture_id;
         GLuint geometry_rbo_id;
+
+        GLuint hdr_fbo_id;
+        GLuint hdr_texture_ids[2];
+        GLuint hdr_rbo_id;
 
         GLuint water_reflection_fbo_id;
         GLuint water_reflection_color_texture_id;
@@ -125,11 +125,11 @@ namespace pk
         std::vector<pk::water *> waters;
         std::vector<pk::terrain *> terrains;
         std::vector<pk::sprite *> sprites;
-        void render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_scene(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
 
-        void render_waters(GLuint fbo_id, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time);
-        void render_sprites(GLuint fbo_id);
-        void render_screen(GLuint fbo_id);
+        void render_waters(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time);
+        void render_sprites();
+        void render_screen();
     };
 } // namespace pk
 

@@ -282,14 +282,14 @@ namespace pk
         delete gaussian_program;
         delete screen_program;
 
-        glDeleteRenderbuffers(1, &hdr_rbo_id);
-        glDeleteTextures(2, hdr_texture_ids);
-        glDeleteFramebuffers(1, &hdr_fbo_id);
-
         glDeleteRenderbuffers(1, &geometry_rbo_id);
         glDeleteTextures(1, &geometry_normal_texture_id);
         glDeleteTextures(1, &geometry_position_texture_id);
         glDeleteFramebuffers(1, &geometry_fbo_id);
+
+        glDeleteRenderbuffers(1, &hdr_rbo_id);
+        glDeleteTextures(2, hdr_texture_ids);
+        glDeleteFramebuffers(1, &hdr_fbo_id);
 
         glDeleteRenderbuffers(1, &water_reflection_rbo_id);
         glDeleteTextures(1, &water_reflection_color_texture_id);
@@ -319,63 +319,17 @@ namespace pk
         this->render_width = (int)(display_width * render_scale);
         this->render_height = (int)(display_height * render_scale);
 
-        glDeleteRenderbuffers(1, &hdr_rbo_id);
-        glDeleteTextures(2, hdr_texture_ids);
-        glDeleteFramebuffers(1, &hdr_fbo_id);
-
         glDeleteRenderbuffers(1, &geometry_rbo_id);
         glDeleteTextures(1, &geometry_normal_texture_id);
         glDeleteTextures(1, &geometry_position_texture_id);
         glDeleteFramebuffers(1, &geometry_fbo_id);
 
+        glDeleteRenderbuffers(1, &hdr_rbo_id);
+        glDeleteTextures(2, hdr_texture_ids);
+        glDeleteFramebuffers(1, &hdr_fbo_id);
+
         glDeleteTextures(2, bloom_texture_ids);
         glDeleteFramebuffers(2, bloom_fbo_ids);
-
-        // setup hdr fbo
-        glGenTextures(2, hdr_texture_ids);
-        for (unsigned int i = 0; i < 2; i++)
-        {
-            glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
-            glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                GL_RGBA16F,
-                render_width,
-                render_height,
-                0,
-                GL_RGBA,
-                GL_FLOAT,
-                nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-
-        glGenRenderbuffers(1, &hdr_rbo_id);
-        glBindRenderbuffer(GL_RENDERBUFFER, hdr_rbo_id);
-        glRenderbufferStorage(
-            GL_RENDERBUFFER,
-            GL_DEPTH_STENCIL,
-            display_width,
-            display_height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        glGenFramebuffers(1, &hdr_fbo_id);
-        glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture_ids[0], 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, hdr_texture_ids[1], 0);
-        glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER,
-            GL_DEPTH_ATTACHMENT,
-            GL_RENDERBUFFER,
-            hdr_rbo_id);
-        GLenum hdr_color_attachments[] = {
-            GL_COLOR_ATTACHMENT0,
-            GL_COLOR_ATTACHMENT1};
-        glDrawBuffers(sizeof(hdr_color_attachments) / sizeof(GLenum), hdr_color_attachments);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // setup geometry fbo
         // gbuffer:
@@ -501,6 +455,52 @@ namespace pk
         {
             std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // setup hdr fbo
+        glGenTextures(2, hdr_texture_ids);
+        for (unsigned int i = 0; i < 2; i++)
+        {
+            glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGBA16F,
+                render_width,
+                render_height,
+                0,
+                GL_RGBA,
+                GL_FLOAT,
+                nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        glGenRenderbuffers(1, &hdr_rbo_id);
+        glBindRenderbuffer(GL_RENDERBUFFER, hdr_rbo_id);
+        glRenderbufferStorage(
+            GL_RENDERBUFFER,
+            GL_DEPTH_STENCIL,
+            display_width,
+            display_height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        glGenFramebuffers(1, &hdr_fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture_ids[0], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, hdr_texture_ids[1], 0);
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_RENDERBUFFER,
+            hdr_rbo_id);
+        GLenum hdr_color_attachments[] = {
+            GL_COLOR_ATTACHMENT0,
+            GL_COLOR_ATTACHMENT1};
+        glDrawBuffers(sizeof(hdr_color_attachments) / sizeof(GLenum), hdr_color_attachments);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // setup bloom fbo
@@ -779,16 +779,16 @@ namespace pk
         screen_program->unbind();
 
         // render everything
-        render_scene(hdr_fbo_id, render_width, render_height, camera, skybox, elapsed_time);
+        render_scene(camera, skybox, elapsed_time, hdr_fbo_id, render_width, render_height);
         if (waters.size() > 0)
         {
-            render_waters(hdr_fbo_id, camera, skybox, elapsed_time);
+            render_waters(camera, skybox, elapsed_time);
         }
         if (sprites.size() > 0)
         {
-            render_sprites(hdr_fbo_id);
+            render_sprites();
         }
-        render_screen(0);
+        render_screen();
 
         // clear renderables
         objects.clear();
@@ -800,7 +800,7 @@ namespace pk
         sprites.clear();
     }
 
-    void renderer::render_scene(GLuint fbo_id, int width, int height, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, glm::vec4 clipping_plane)
+    void renderer::render_scene(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
     {
         // update depth maps
         for (auto &directional_light : directional_lights)
@@ -1122,7 +1122,7 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void renderer::render_waters(GLuint fbo_id, pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time)
+    void renderer::render_waters(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time)
     {
         glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
         glm::mat4 camera_view = camera->calc_view();
@@ -1150,7 +1150,7 @@ namespace pk
                 camera->pitch = -camera->pitch;
                 camera->roll = -camera->roll;
                 glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-                render_scene(water_reflection_fbo_id, reflection_width, reflection_height, camera, skybox, elapsed_time, reflection_clipping_plane);
+                render_scene(camera, skybox, elapsed_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
                 camera->position.y = old_camera_y;
                 camera->pitch = old_camera_pitch;
                 camera->roll = old_camera_roll;
@@ -1162,10 +1162,10 @@ namespace pk
                 refraction_clipping_plane.y = 1.0f;
                 refraction_clipping_plane.w = -water->position.y;
             }
-            render_scene(water_refraction_fbo_id, refraction_width, refraction_height, camera, skybox, elapsed_time, refraction_clipping_plane);
+            render_scene(camera, skybox, elapsed_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
 
             glViewport(0, 0, render_width, render_height);
-            glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+            glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
             if (reflect)
             {
                 glEnable(GL_BLEND);
@@ -1196,10 +1196,10 @@ namespace pk
         }
     }
 
-    void renderer::render_sprites(GLuint fbo_id)
+    void renderer::render_sprites()
     {
         glViewport(0, 0, display_width, display_height);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+        glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
         sprite_program->bind();
         glm::mat4 camera_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
         sprite_program->set_mat4("camera.projection", camera_projection);
@@ -1218,7 +1218,7 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void renderer::render_screen(GLuint fbo_id)
+    void renderer::render_screen()
     {
         // apply gaussian blur to brightness map
         glViewport(0, 0, display_width / 8, display_height / 8);
@@ -1229,6 +1229,7 @@ namespace pk
         {
             glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[horizontal]);
             gaussian_program->set_int("horizontal", horizontal);
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids[1] : bloom_texture_ids[!horizontal]);
             glBindVertexArray(screen_vao_id);
             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -1242,7 +1243,6 @@ namespace pk
 
         // final pass
         glViewport(0, 0, display_width, display_height);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
         screen_program->bind();
@@ -1255,6 +1255,5 @@ namespace pk
         glBindVertexArray(0);
         screen_program->unbind();
         glEnable(GL_DEPTH_TEST);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 } // namespace pk
