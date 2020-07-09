@@ -412,20 +412,22 @@ int main(int argc, char *argv[])
 
         display.make_current();
 
-        renderer.add_object(&test_object);
-        renderer.add_directional_light(&sun_directional_light);
-        renderer.add_point_light(&red_point_light);
-        renderer.add_point_light(&yellow_point_light);
-        renderer.add_point_light(&green_point_light);
-        renderer.add_point_light(&blue_point_light);
+        renderer.camera = &main_camera;
+        renderer.skybox = &skybox;
+        renderer.objects.push_back(&test_object);
+        renderer.directional_lights.push_back(&sun_directional_light);
+        renderer.point_lights.push_back(&red_point_light);
+        renderer.point_lights.push_back(&yellow_point_light);
+        renderer.point_lights.push_back(&green_point_light);
+        renderer.point_lights.push_back(&blue_point_light);
         if (torch_on)
         {
-            renderer.add_spot_light(&torch_spot_light);
+            renderer.spot_lights.push_back(&torch_spot_light);
         }
-        // renderer.add_water(&test_water);
-        // renderer.add_terrain(&test_terrain);
-        // renderer.add_sprite(&grass_sprite);
-        renderer.flush(&main_camera, &skybox, current_time, delta_time);
+        renderer.waters.push_back(&test_water);
+        // renderer.terrains.push_back(&test_terrain);
+        // renderer.sprites.push_back(&grass_sprite);
+        renderer.flush(current_time, delta_time);
 
         display.swap();
 

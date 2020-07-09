@@ -40,6 +40,7 @@ namespace pk
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_STENCIL_TEST);
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+        // glEnable(GL_MULTISAMPLE);
         // glEnable(GL_FRAMEBUFFER_SRGB);
 
         std::vector<float> water_vertices =
@@ -672,43 +673,13 @@ namespace pk
         screen_program->reload();
     }
 
-    void renderer::add_object(pk::object *object)
+    void renderer::flush(unsigned int elapsed_time, float delta_time)
     {
-        objects.push_back(object);
-    }
+        if (!camera)
+        {
+            std::cout << "Error: Camera must be set" << std::endl;
+        }
 
-    void renderer::add_directional_light(pk::directional_light *directional_light)
-    {
-        directional_lights.push_back(directional_light);
-    }
-
-    void renderer::add_point_light(pk::point_light *point_light)
-    {
-        point_lights.push_back(point_light);
-    }
-
-    void renderer::add_spot_light(pk::spot_light *spot_light)
-    {
-        spot_lights.push_back(spot_light);
-    }
-
-    void renderer::add_water(pk::water *water)
-    {
-        waters.push_back(water);
-    }
-
-    void renderer::add_terrain(pk::terrain *terrain)
-    {
-        terrains.push_back(terrain);
-    }
-
-    void renderer::add_sprite(pk::sprite *sprite)
-    {
-        sprites.push_back(sprite);
-    }
-
-    void renderer::flush(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, float delta_time)
-    {
         // setup samplers
         geometry_program->bind();
         geometry_program->set_int("material.albedo_map", 0);
@@ -779,10 +750,10 @@ namespace pk
         screen_program->unbind();
 
         // render everything
-        render_scene(camera, skybox, elapsed_time, hdr_fbo_id, render_width, render_height);
+        render_scene(elapsed_time, hdr_fbo_id, render_width, render_height);
         if (waters.size() > 0)
         {
-            render_waters(camera, skybox, elapsed_time);
+            render_waters(elapsed_time);
         }
         if (sprites.size() > 0)
         {
@@ -800,7 +771,7 @@ namespace pk
         sprites.clear();
     }
 
-    void renderer::render_scene(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
+    void renderer::render_scene(unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
     {
         // update depth maps
         for (auto &directional_light : directional_lights)
@@ -1122,7 +1093,7 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void renderer::render_waters(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time)
+    void renderer::render_waters(unsigned int elapsed_time)
     {
         glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
         glm::mat4 camera_view = camera->calc_view();
@@ -1150,7 +1121,7 @@ namespace pk
                 camera->pitch = -camera->pitch;
                 camera->roll = -camera->roll;
                 glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-                render_scene(camera, skybox, elapsed_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
+                render_scene(elapsed_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
                 camera->position.y = old_camera_y;
                 camera->pitch = old_camera_pitch;
                 camera->roll = old_camera_roll;
@@ -1162,7 +1133,7 @@ namespace pk
                 refraction_clipping_plane.y = 1.0f;
                 refraction_clipping_plane.w = -water->position.y;
             }
-            render_scene(camera, skybox, elapsed_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
+            render_scene(elapsed_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
 
             glViewport(0, 0, render_width, render_height);
             glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);

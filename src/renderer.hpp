@@ -21,6 +21,16 @@ namespace pk
     class renderer
     {
     public:
+        pk::camera *camera;
+        pk::skybox *skybox;
+        std::vector<pk::object *> objects;
+        std::vector<pk::directional_light *> directional_lights;
+        std::vector<pk::point_light *> point_lights;
+        std::vector<pk::spot_light *> spot_lights;
+        std::vector<pk::water *> waters;
+        std::vector<pk::terrain *> terrains;
+        std::vector<pk::sprite *> sprites;
+
         renderer(
             int display_width, int display_height, float render_scale,
             int reflection_width, int reflection_height,
@@ -33,14 +43,7 @@ namespace pk
 
         void reload_programs();
 
-        void add_object(pk::object *object);
-        void add_directional_light(pk::directional_light *directional_light);
-        void add_point_light(pk::point_light *point_light);
-        void add_spot_light(pk::spot_light *spot_light);
-        void add_water(pk::water *water);
-        void add_terrain(pk::terrain *terrain);
-        void add_sprite(pk::sprite *sprite);
-        void flush(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, float delta_time);
+        void flush(unsigned int elapsed_time, float delta_time);
 
     private:
         // settings
@@ -117,17 +120,8 @@ namespace pk
 
         GLuint brdf_texture_id;
 
-        // renderables
-        std::vector<pk::object *> objects;
-        std::vector<pk::directional_light *> directional_lights;
-        std::vector<pk::point_light *> point_lights;
-        std::vector<pk::spot_light *> spot_lights;
-        std::vector<pk::water *> waters;
-        std::vector<pk::terrain *> terrains;
-        std::vector<pk::sprite *> sprites;
-        void render_scene(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
-
-        void render_waters(pk::camera *camera, pk::skybox *skybox, unsigned int elapsed_time);
+        void render_scene(unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_waters(unsigned int elapsed_time);
         void render_sprites();
         void render_screen();
     };
