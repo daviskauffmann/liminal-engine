@@ -25,8 +25,6 @@
 
 constexpr float pi = 3.14159f;
 
-// TODO: assimp
-
 // TODO: physics
 
 // TODO: scene graph
@@ -108,9 +106,9 @@ int main(int argc, char *argv[])
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec2(100.0f, 100.0f));
 
-    pk::model test_model("assets/models/backpack/backpack.obj");
-    pk::object test_object(
-        &test_model,
+    pk::model backpack_model("assets/models/backpack/backpack.obj");
+    pk::object backpack_object(
+        &backpack_model,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f));
@@ -414,7 +412,7 @@ int main(int argc, char *argv[])
 
         renderer.camera = &main_camera;
         renderer.skybox = &skybox;
-        renderer.objects.push_back(&test_object);
+        renderer.objects.push_back(&backpack_object);
         renderer.directional_lights.push_back(&sun_directional_light);
         renderer.point_lights.push_back(&red_point_light);
         renderer.point_lights.push_back(&yellow_point_light);
@@ -430,13 +428,6 @@ int main(int argc, char *argv[])
         renderer.flush(current_time, delta_time);
 
         display.swap();
-
-        unsigned int frame_end = SDL_GetTicks();
-        unsigned int frame_time = frame_end - frame_start;
-        if (frame_delay > frame_time)
-        {
-            SDL_Delay(frame_delay - frame_time);
-        }
     }
 
     config_save();
