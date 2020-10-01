@@ -1,7 +1,7 @@
 PKGS = assimp bullet glew openal sdl2 sdl2_image sdl2_mixer
 
 CXX = g++
-CXXFLAGS = -ggdb -Iextern/stb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`
+CXXFLAGS = -ggdb -Iextern/imgui -Iextern/imgui/examples -Iextern/stb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`
 CPPFLAGS =
 LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
 LDLIBS = -lopengl32
@@ -14,6 +14,7 @@ SRC = \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
 	src/display.cpp \
+	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
 	src/model.cpp \

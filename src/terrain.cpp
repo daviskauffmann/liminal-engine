@@ -7,9 +7,12 @@
 constexpr float size = 500;
 constexpr int vertex_count = 128;
 
+// TODO: read from heightmap image file
+
 // TODO: multiple textures w/ blend map
 
-// TODO: erosion simulation?
+// TODO: 3d terrain (caves and whatnot)
+// this will probably be a different class
 
 namespace pk
 {

@@ -6,17 +6,17 @@
 
 namespace pk
 {
-struct skybox
-{
-    GLuint environment_cubemap_id;
-    GLuint irradiance_cubemap_id;
-    GLuint prefilter_cubemap_id;
+    struct skybox
+    {
+        GLuint environment_cubemap_id;
+        GLuint irradiance_cubemap_id;
+        GLuint prefilter_cubemap_id;
 
-    skybox(const std::string &filename);
-    ~skybox();
+        skybox(const std::string &filename);
+        ~skybox();
 
-    void set_cubemap(const std::string &filename);
-};
+        void set_cubemap(const std::string &filename);
+    };
 } // namespace pk
 
 #endif

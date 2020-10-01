@@ -8,21 +8,21 @@
 
 namespace pk
 {
-struct object
-{
-    pk::model *model;
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
+    struct object
+    {
+        pk::model *model;
+        glm::vec3 position;
+        glm::vec3 rotation;
+        glm::vec3 scale;
 
-    object(
-        pk::model *model,
-        glm::vec3 position,
-        glm::vec3 rotation,
-        glm::vec3 scale);
+        object(
+            pk::model *model,
+            glm::vec3 position,
+            glm::vec3 rotation,
+            glm::vec3 scale);
 
-    glm::mat4 calc_model() const;
-};
+        glm::mat4 calc_model() const;
+    };
 } // namespace pk
 
 #endif

@@ -8,16 +8,16 @@
 
 namespace pk
 {
-struct terrain
-{
-    glm::vec3 position;
-    pk::mesh *mesh;
+    struct terrain
+    {
+        glm::vec3 position;
+        pk::mesh *mesh;
 
-    terrain(int grid_x, int grid_z);
-    ~terrain();
+        terrain(int grid_x, int grid_z);
+        ~terrain();
 
-    glm::mat4 calc_model() const;
-};
+        glm::mat4 calc_model() const;
+    };
 } // namespace pk
 
 #endif

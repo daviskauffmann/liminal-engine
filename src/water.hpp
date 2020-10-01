@@ -6,13 +6,13 @@
 
 namespace pk
 {
-struct water
-{
-    glm::vec3 position;
-    glm::vec2 scale;
+    struct water
+    {
+        glm::vec3 position;
+        glm::vec2 scale;
 
-    water(glm::vec3 position, glm::vec2 scale);
-};
+        water(glm::vec3 position, glm::vec2 scale);
+    };
 } // namespace pk
 
 #endif

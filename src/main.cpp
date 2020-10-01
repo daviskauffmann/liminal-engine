@@ -1,5 +1,8 @@
 #include <algorithm>
 #include <iostream>
+#include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
 
 #include "atlas.hpp"
 #include "audio.hpp"
@@ -23,11 +26,7 @@
 #include "vertex.hpp"
 #include "water.hpp"
 
-constexpr float pi = 3.14159f;
-
 // TODO: physics
-
-// TODO: scene graph
 
 int main(int argc, char *argv[])
 {
@@ -143,14 +142,21 @@ int main(int argc, char *argv[])
     SDL_GL_SetSwapInterval(0);
 
     ambient_source.set_loop(true);
-    ambient_source.set_gain(0.5f);
+    ambient_source.set_gain(0.25f);
     ambient_source.play(&ambient_sound);
 
     unsigned int current_time = 0;
     float fps_update_timer = 0.0f;
     float time_scale = 1.0f;
+    bool edit_mode = false;
     bool torch_on = true;
     bool torch_follow = true;
+
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    io.IniFilename = "assets/imgui.ini";
+    ImGui_ImplSDL2_InitForOpenGL(display.window, display.context);
+    ImGui_ImplOpenGL3_Init("#version 460");
 
     bool quit = false;
     while (!quit)
@@ -190,6 +196,11 @@ int main(int argc, char *argv[])
                     {
                         quit = true;
                     }
+                }
+                break;
+                case SDLK_e:
+                {
+                    edit_mode = !edit_mode;
                 }
                 break;
                 case SDLK_f:
@@ -259,7 +270,6 @@ int main(int argc, char *argv[])
             {
                 if (SDL_GetRelativeMouseMode())
                 {
-                    // TODO: take into account roll
                     main_camera.pitch -= event.motion.yrel * 0.1f;
                     main_camera.yaw += event.motion.xrel * 0.1f;
                     if (main_camera.pitch > 89.0f)
@@ -312,18 +322,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (keys[SDL_SCANCODE_Q])
-        {
-            main_camera.roll--;
-        }
-        if (keys[SDL_SCANCODE_E])
-        {
-            main_camera.roll++;
-        }
-
         glm::vec3 main_camera_front = main_camera.calc_front();
         glm::vec3 main_camera_right = main_camera.calc_right();
-        glm::vec3 main_camera_up = main_camera.calc_up();
 
         static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
         glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
@@ -345,11 +345,11 @@ int main(int argc, char *argv[])
         }
         if (keys[SDL_SCANCODE_SPACE])
         {
-            acceleration += main_camera_up;
+            acceleration += glm::vec3(0.0f, 1.0f, 0.0f);
         }
         if (keys[SDL_SCANCODE_LCTRL])
         {
-            acceleration -= main_camera_up;
+            acceleration -= glm::vec3(0.0f, 1.0f, 0.0f);
         }
         float acceleration_length = glm::length(acceleration);
         if (acceleration_length > 1.0f)
@@ -365,14 +365,24 @@ int main(int argc, char *argv[])
         acceleration -= velocity * 10.0f;
         main_camera.position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + main_camera.position;
         velocity = acceleration * delta_time + velocity;
+        float velocity_length = glm::length(velocity);
+        if (velocity_length > 0.1f)
+        {
+            main_camera.roll = 10.0f * glm::dot(main_camera_right, velocity) / velocity_length;
+        }
+        else
+        {
+            main_camera.roll = 0.0f;
+        }
 
         static float angle = 0.0f;
+        constexpr float pi = 3.14159f;
+        float distance = 6.0f;
         angle += 0.5f * delta_time;
         if (angle > 2 * pi)
         {
             angle = 0;
         }
-        float distance = 6.0f;
         red_point_light.position.x = distance * sinf(angle);
         red_point_light.position.z = distance * cosf(angle);
         yellow_point_light.position.x = distance * sinf(angle + (pi / 2));
@@ -388,7 +398,7 @@ int main(int argc, char *argv[])
             torch_spot_light.direction = glm::mix(torch_spot_light.direction, main_camera_front, 30.0f * delta_time);
         }
 
-        audio.set_listener(main_camera.position, main_camera_front, main_camera_up);
+        audio.set_listener(main_camera.position, main_camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
         ambient_source.set_position(main_camera.position);
         shoot_source.set_position(main_camera.position);
 
@@ -427,8 +437,52 @@ int main(int argc, char *argv[])
         // renderer.sprites.push_back(&grass_sprite);
         renderer.flush(current_time, delta_time);
 
+        // start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(display.window);
+        ImGui::NewFrame();
+
+        {
+            static int counter = 0;
+            int controls_width = window_width;
+            int controls_height = window_height - 20;
+            if ((controls_width /= 3) < 300)
+            {
+                controls_width = 300;
+            }
+
+            ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(
+                ImVec2(static_cast<float>(controls_width), static_cast<float>(controls_height)),
+                ImGuiCond_Always);
+            ImGui::Begin("Controls", NULL, ImGuiWindowFlags_NoResize);
+
+            ImGui::Dummy(ImVec2(0.0f, 1.0f));
+            ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "Platform");
+            ImGui::Text("%s", SDL_GetPlatform());
+            ImGui::Text("CPU cores: %d", SDL_GetCPUCount());
+            ImGui::Text("RAM: %.2f GB", SDL_GetSystemRAM() / 1024.0f);
+
+            if (ImGui::Button("Counter button"))
+            {
+                std::cout << "counter button clicked\n";
+                counter++;
+            }
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::End();
+        }
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         display.swap();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     config_save();
 

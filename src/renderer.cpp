@@ -10,6 +10,8 @@
 
 // TODO: instanced rendering
 
+// TODO: particles
+
 // TODO: fog
 // volumetric fog as well
 

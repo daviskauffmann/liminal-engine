@@ -8,17 +8,17 @@
 
 namespace pk
 {
-class atlas : public texture
-{
-public:
-	atlas(const std::string &filename, GLuint size, GLuint texture_size);
+	class atlas : public texture
+	{
+	public:
+		atlas(const std::string &filename, GLuint size, GLuint texture_size);
 
-	std::vector<GLfloat> get_texture_coords(const glm::vec2 &location);
+		std::vector<GLfloat> get_texture_coords(const glm::vec2 &location);
 
-private:
-	GLuint size;
-	GLuint texture_size;
-};
+	private:
+		GLuint size;
+		GLuint texture_size;
+	};
 } // namespace pk
 
 #endif

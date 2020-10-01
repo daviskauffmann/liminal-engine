@@ -5,23 +5,22 @@
 
 namespace pk
 {
-class display
-{
-public:
-    display(const char *title, int width, int height);
-    ~display();
+    class display
+    {
+    public:
+        SDL_Window *window;
+        SDL_GLContext context;
 
-    void set_title(const char *title);
-    void set_window_size(int width, int height);
-    void toggle_fullscreen();
+        display(const char *title, int width, int height);
+        ~display();
 
-    void make_current();
-    void swap();
+        void set_title(const char *title);
+        void set_window_size(int width, int height);
+        void toggle_fullscreen();
 
-private:
-    SDL_Window *window;
-    SDL_GLContext context;
-};
+        void make_current();
+        void swap();
+    };
 } // namespace pk
 
 #endif
