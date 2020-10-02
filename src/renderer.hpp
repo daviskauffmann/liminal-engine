@@ -6,6 +6,7 @@
 #include "camera.hpp"
 #include "cubemap.hpp"
 #include "directional_light.hpp"
+#include "mesh.hpp"
 #include "object.hpp"
 #include "point_light.hpp"
 #include "program.hpp"
@@ -75,6 +76,9 @@ namespace pk
         GLsizei screen_vertices_size;
         GLuint screen_vao_id;
         GLuint screen_vbo_id;
+
+        // sphere mesh
+        pk::mesh *sphere_mesh;
 
         // textures
         pk::texture *water_dudv_texture;

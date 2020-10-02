@@ -186,113 +186,127 @@ int main(int argc, char *argv[])
         {
             switch (event.type)
             {
+            case SDL_TEXTINPUT:
+            {
+                io.AddInputCharacter(event.text.text[0]);
+            }
+            break;
             case SDL_KEYDOWN:
             {
-                switch (event.key.keysym.sym)
+                if (!io.WantCaptureKeyboard)
                 {
-                case SDLK_F4:
-                {
-                    if (keys[SDL_SCANCODE_LALT])
+                    switch (event.key.keysym.sym)
                     {
-                        quit = true;
-                    }
-                }
-                break;
-                case SDLK_e:
-                {
-                    edit_mode = !edit_mode;
-                }
-                break;
-                case SDLK_f:
-                {
-                    torch_on = !torch_on;
-                }
-                break;
-                case SDLK_g:
-                {
-                    torch_follow = !torch_follow;
-                }
-                break;
-                case SDLK_r:
-                {
-                    renderer.reload_programs();
-                }
-                break;
-                case SDLK_t:
-                {
-                    if (time_scale > 0.25f)
+                    case SDLK_F4:
                     {
-                        time_scale = 0.25f;
+                        if (keys[SDL_SCANCODE_LALT])
+                        {
+                            quit = true;
+                        }
                     }
-                    else
+                    break;
+                    case SDLK_e:
                     {
-                        time_scale = 1.0f;
+                        edit_mode = !edit_mode;
                     }
-                }
-                break;
-                case SDLK_MINUS:
-                {
-                    if (render_scale > 0.2f)
+                    break;
+                    case SDLK_f:
                     {
-                        render_scale -= 0.1f;
+                        torch_on = !torch_on;
                     }
-                    renderer.set_screen_size(window_width, window_height, render_scale);
-                    std::cout << "Render scale changed to " << render_scale << std::endl;
-                }
-                break;
-                case SDLK_EQUALS:
-                {
-                    if (render_scale < 1.0f)
+                    break;
+                    case SDLK_g:
                     {
-                        render_scale += 0.1f;
+                        torch_follow = !torch_follow;
                     }
-                    renderer.set_screen_size(window_width, window_height, render_scale);
-                    std::cout << "Render scale changed to " << render_scale << std::endl;
-                }
-                break;
-                case SDLK_RETURN:
-                {
-                    if (keys[SDL_SCANCODE_LALT])
+                    break;
+                    case SDLK_r:
                     {
-                        display.toggle_fullscreen();
+                        renderer.reload_programs();
                     }
-                }
-                break;
-                case SDLK_TAB:
-                {
-                    SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
-                }
-                break;
+                    break;
+                    case SDLK_t:
+                    {
+                        if (time_scale > 0.25f)
+                        {
+                            time_scale = 0.25f;
+                        }
+                        else
+                        {
+                            time_scale = 1.0f;
+                        }
+                    }
+                    break;
+                    case SDLK_MINUS:
+                    {
+                        if (render_scale > 0.2f)
+                        {
+                            render_scale -= 0.1f;
+                        }
+                        renderer.set_screen_size(window_width, window_height, render_scale);
+                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                    }
+                    break;
+                    case SDLK_EQUALS:
+                    {
+                        if (render_scale < 1.0f)
+                        {
+                            render_scale += 0.1f;
+                        }
+                        renderer.set_screen_size(window_width, window_height, render_scale);
+                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                    }
+                    break;
+                    case SDLK_RETURN:
+                    {
+                        if (keys[SDL_SCANCODE_LALT])
+                        {
+                            display.toggle_fullscreen();
+                        }
+                    }
+                    break;
+                    case SDLK_TAB:
+                    {
+                        SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+                    }
+                    break;
+                    }
                 }
             }
             break;
             case SDL_MOUSEMOTION:
             {
-                if (SDL_GetRelativeMouseMode())
+                if (!io.WantCaptureMouse)
                 {
-                    main_camera.pitch -= event.motion.yrel * 0.1f;
-                    main_camera.yaw += event.motion.xrel * 0.1f;
-                    if (main_camera.pitch > 89.0f)
+                    if (SDL_GetRelativeMouseMode())
                     {
-                        main_camera.pitch = 89.0f;
-                    }
-                    if (main_camera.pitch < -89.0f)
-                    {
-                        main_camera.pitch = -89.0f;
+                        main_camera.pitch -= event.motion.yrel * 0.1f;
+                        main_camera.yaw += event.motion.xrel * 0.1f;
+                        if (main_camera.pitch > 89.0f)
+                        {
+                            main_camera.pitch = 89.0f;
+                        }
+                        if (main_camera.pitch < -89.0f)
+                        {
+                            main_camera.pitch = -89.0f;
+                        }
                     }
                 }
             }
             break;
             case SDL_MOUSEWHEEL:
             {
-                main_camera.fov -= event.wheel.y;
-                if (main_camera.fov <= 1.0f)
+                if (!io.WantCaptureMouse)
                 {
-                    main_camera.fov = 1.0f;
-                }
-                if (main_camera.fov >= 120.0f)
-                {
-                    main_camera.fov = 120.0f;
+                    main_camera.fov -= event.wheel.y;
+                    if (main_camera.fov <= 1.0f)
+                    {
+                        main_camera.fov = 1.0f;
+                    }
+                    if (main_camera.fov >= 120.0f)
+                    {
+                        main_camera.fov = 120.0f;
+                    }
                 }
             }
             break;
@@ -327,39 +341,42 @@ int main(int argc, char *argv[])
 
         static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
         glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
-        if (keys[SDL_SCANCODE_W])
+        float speed = 50.0f;
+        if (!io.WantCaptureKeyboard)
         {
-            acceleration += main_camera_front;
-        }
-        if (keys[SDL_SCANCODE_A])
-        {
-            acceleration -= main_camera_right;
-        }
-        if (keys[SDL_SCANCODE_S])
-        {
-            acceleration -= main_camera_front;
-        }
-        if (keys[SDL_SCANCODE_D])
-        {
-            acceleration += main_camera_right;
-        }
-        if (keys[SDL_SCANCODE_SPACE])
-        {
-            acceleration += glm::vec3(0.0f, 1.0f, 0.0f);
-        }
-        if (keys[SDL_SCANCODE_LCTRL])
-        {
-            acceleration -= glm::vec3(0.0f, 1.0f, 0.0f);
+            if (keys[SDL_SCANCODE_W])
+            {
+                acceleration += main_camera_front;
+            }
+            if (keys[SDL_SCANCODE_A])
+            {
+                acceleration -= main_camera_right;
+            }
+            if (keys[SDL_SCANCODE_S])
+            {
+                acceleration -= main_camera_front;
+            }
+            if (keys[SDL_SCANCODE_D])
+            {
+                acceleration += main_camera_right;
+            }
+            if (keys[SDL_SCANCODE_SPACE])
+            {
+                acceleration += glm::vec3(0.0f, 1.0f, 0.0f);
+            }
+            if (keys[SDL_SCANCODE_LCTRL])
+            {
+                acceleration -= glm::vec3(0.0f, 1.0f, 0.0f);
+            }
+            if (keys[SDL_SCANCODE_LSHIFT])
+            {
+                speed *= 2.0f;
+            }
         }
         float acceleration_length = glm::length(acceleration);
         if (acceleration_length > 1.0f)
         {
             acceleration /= acceleration_length;
-        }
-        float speed = 50.0f;
-        if (keys[SDL_SCANCODE_LSHIFT])
-        {
-            speed *= 2.0f;
         }
         acceleration *= speed;
         acceleration -= velocity * 10.0f;
@@ -402,19 +419,22 @@ int main(int argc, char *argv[])
         ambient_source.set_position(main_camera.position);
         shoot_source.set_position(main_camera.position);
 
-        if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+        if (!io.WantCaptureMouse)
         {
-            if (!shoot_source.is_playing())
+            if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
-                shoot_source.play(&shoot_sound);
+                if (!shoot_source.is_playing())
+                {
+                    shoot_source.play(&shoot_sound);
+                }
             }
-        }
 
-        if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
-        {
-            if (!bounce_source.is_playing())
+            if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
             {
-                bounce_source.play(&bounce_sound);
+                if (!bounce_source.is_playing())
+                {
+                    bounce_source.play(&bounce_sound);
+                }
             }
         }
 
@@ -437,42 +457,11 @@ int main(int argc, char *argv[])
         // renderer.sprites.push_back(&grass_sprite);
         renderer.flush(current_time, delta_time);
 
-        // start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame(display.window);
         ImGui::NewFrame();
 
-        {
-            static int counter = 0;
-            int controls_width = window_width;
-            int controls_height = window_height - 20;
-            if ((controls_width /= 3) < 300)
-            {
-                controls_width = 300;
-            }
-
-            ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-            ImGui::SetNextWindowSize(
-                ImVec2(static_cast<float>(controls_width), static_cast<float>(controls_height)),
-                ImGuiCond_Always);
-            ImGui::Begin("Controls", NULL, ImGuiWindowFlags_NoResize);
-
-            ImGui::Dummy(ImVec2(0.0f, 1.0f));
-            ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "Platform");
-            ImGui::Text("%s", SDL_GetPlatform());
-            ImGui::Text("CPU cores: %d", SDL_GetCPUCount());
-            ImGui::Text("RAM: %.2f GB", SDL_GetSystemRAM() / 1024.0f);
-
-            if (ImGui::Button("Counter button"))
-            {
-                std::cout << "counter button clicked\n";
-                counter++;
-            }
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::End();
-        }
+        ImGui::ShowDemoWindow();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

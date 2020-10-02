@@ -4,6 +4,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+// TODO: reloading shaders when a spot light is not active causes directional light shadow to stop working
+// shadows come back after turning on the spot light
+// maybe because both light types use the same depthmap shader?
+
 // TODO: face culling
 
 // TODO: transparency
@@ -154,6 +158,58 @@ namespace pk
         glEnableVertexAttribArray(1);
         glBindVertexArray(0);
 
+        // http://www.songho.ca/opengl/gl_sphere.html
+        std::vector<pk::vertex> vertices;
+        int radius = 1;
+        int stack_count = 36;
+        int sector_count = 18;
+        float length_inv = 1.0f / radius;
+        float sector_step = 2 * 3.14f / sector_count;
+        float stack_step = 3.14f / stack_count;
+        for (int i = 0; i <= stack_count; i++)
+        {
+            float stack_angle = 3.14f / 2 - i * stack_step;
+            float xy = radius * cosf(stack_angle);
+            float z = radius * sinf(stack_angle);
+            for (int j = 0; j <= sector_count; j++)
+            {
+                float sector_angle = j * sector_step;
+                pk::vertex vertex;
+                vertex.position.x = xy * cosf(sector_angle);
+                vertex.position.y = xy * sinf(sector_angle);
+                vertex.position.z = z;
+                vertex.normal.x = vertex.position.x * length_inv;
+                vertex.normal.y = vertex.position.y * length_inv;
+                vertex.normal.z = vertex.position.z * length_inv;
+                vertex.uv.s = (float)j / sector_count;
+                vertex.uv.t = (float)i / stack_count;
+                vertices.push_back(vertex);
+            }
+        }
+        std::vector<unsigned int> indices;
+        for (int i = 0; i < stack_count; i++)
+        {
+            int k1 = i * (sector_count + 1);
+            int k2 = k1 + sector_count + 1;
+            for (int j = 0; j < sector_count; j++, k1++, k2++)
+            {
+                if (i != 0)
+                {
+                    indices.push_back(k1);
+                    indices.push_back(k2);
+                    indices.push_back(k1 + 1);
+                }
+                if (i != stack_count - 1)
+                {
+                    indices.push_back(k1 + 1);
+                    indices.push_back(k2);
+                    indices.push_back(k2 + 1);
+                }
+            }
+        }
+        std::vector<std::vector<pk::texture *>> textures;
+        sphere_mesh = new pk::mesh(vertices, indices, textures);
+
         water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
         water_normal_texture = new pk::texture("assets/images/water_normal.png");
 
@@ -301,6 +357,8 @@ namespace pk
         glDeleteTextures(1, &water_refraction_depth_texture_id);
         glDeleteTextures(1, &water_refraction_color_texture_id);
         glDeleteFramebuffers(1, &water_refraction_fbo_id);
+
+        delete sphere_mesh;
 
         glDeleteBuffers(1, &water_vbo_id);
         glDeleteVertexArrays(1, &water_vao_id);
@@ -551,7 +609,7 @@ namespace pk
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
-            GL_RGBA,
+            GL_RGBA16F,
             reflection_width,
             reflection_height,
             0,
@@ -607,7 +665,7 @@ namespace pk
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
-            GL_RGBA,
+            GL_RGBA16F,
             refraction_width,
             refraction_height,
             0,
@@ -1069,7 +1127,7 @@ namespace pk
         skybox_program->unbind();
         glDepthFunc(GL_LESS);
 
-        // DEBUG: draw point lights as a cube
+        // DEBUG: draw point lights as a sphere
         if (point_lights.size() > 0)
         {
             glEnable(GL_CLIP_DISTANCE0);
@@ -1084,9 +1142,7 @@ namespace pk
                 color_program->set_mat4("object.model", model);
                 color_program->set_vec3("color", point_light->color);
                 color_program->set_vec4("clipping_plane", clipping_plane);
-                glBindVertexArray(skybox_vao_id);
-                glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
-                glBindVertexArray(0);
+                sphere_mesh->draw();
                 color_program->unbind();
             }
             glDisable(GL_CLIP_DISTANCE0);
