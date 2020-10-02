@@ -48,6 +48,10 @@ make clean
 
 ## Features
 
+- Deferred shading
+- PBR w/ metallic workflow
+- HDR
+- Bloom
 - Light sources and shadow mapping
   - Directional
   - Point
@@ -56,10 +60,6 @@ make clean
   - Planar reflections
   - Refraction
 - Model loading (WIP)
-- HDR
-- Bloom
-- Deferred shading
-- PBR w/ metallic workflow
 - 3D sound
 - Runtime shader reloading
 - Terrain (WIP)
@@ -80,8 +80,8 @@ make clean
 
 ## Screenshots
 
-![1](screenshots/1.bmp)
-![2](screenshots/2.bmp)
+![1](screenshots/1.png)
+![2](screenshots/2.png)
 
 ## Resources Used
 
