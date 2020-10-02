@@ -26,8 +26,6 @@
 #include "vertex.hpp"
 #include "water.hpp"
 
-// TODO: physics
-
 int main(int argc, char *argv[])
 {
     config_load();

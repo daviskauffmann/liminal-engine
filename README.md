@@ -67,10 +67,14 @@ make clean
 
 ### Upcoming
 
+- Physics
 - Transparency
 - Ambient occlusion
 - Particles
+- Fog and other atmospheric effects
+- Underwater effects
 - Anti-aliasing
+- Animation
 - Real-time level editing
 - LUA scripting
 
