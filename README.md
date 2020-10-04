@@ -89,10 +89,10 @@ make clean
 
 [opengl-tutorial.org](http://www.opengl-tutorial.org)
 
-[thebennybox - 3D Game Engine Tutorial](https://www.youtube.com/playlist?list=PLEETnX-uPtBXP_B2yupUKlflXBznWIlL5)
+[thebennybox](https://www.youtube.com/user/thebennybox)
 
-[ThinMatrix - OpenGL 3D Game Tutorials](https://www.youtube.com/playlist?list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP)
+[ThinMatrix](https://www.youtube.com/user/ThinMatrix)
 
-[ThinMatrix - OpenGL Water Tutorials](https://www.youtube.com/playlist?list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh)
+[The Cherno](https://www.youtube.com/user/TheChernoProject)
 
-[The Cherno - Game Engine](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT)
+[Hopson](https://www.youtube.com/channel/UCeQhZOvNKSBRU0Mdg7V44wA)
