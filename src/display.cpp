@@ -1,6 +1,9 @@
 #include "display.hpp"
 
 #include <GL/glew.h>
+#include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
 #include <iostream>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
@@ -83,17 +86,26 @@ namespace pk
 
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(MessageCallback, 0);
+
+        ImGui::CreateContext();
+        ImGui_ImplSDL2_InitForOpenGL(window, context);
+        ImGui_ImplOpenGL3_Init("#version 460");
     }
 
     display::~display()
     {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
+
         Mix_CloseAudio();
 
-        SDL_GL_DeleteContext(context);
         SDL_DestroyWindow(window);
+        SDL_GL_DeleteContext(context);
 
-        Mix_Quit();
         IMG_Quit();
+        Mix_Quit();
+
         SDL_Quit();
     }
 
@@ -123,6 +135,19 @@ namespace pk
     void display::make_current()
     {
         SDL_GL_MakeCurrent(window, context);
+    }
+
+    void display::start_gui()
+    {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
+        ImGui::NewFrame();
+    }
+
+    void display::end_gui()
+    {
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
     void display::swap()

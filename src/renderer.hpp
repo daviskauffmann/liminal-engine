@@ -7,10 +7,13 @@
 #include "cubemap.hpp"
 #include "directional_light.hpp"
 #include "mesh.hpp"
+#include "model.hpp"
 #include "object.hpp"
 #include "point_light.hpp"
 #include "program.hpp"
 #include "skybox.hpp"
+#include "sound.hpp"
+#include "source.hpp"
 #include "spot_light.hpp"
 #include "sprite.hpp"
 #include "terrain.hpp"
@@ -44,7 +47,7 @@ namespace pk
 
         void reload_programs();
 
-        void flush(unsigned int elapsed_time, float delta_time);
+        void flush(unsigned int current_time, float delta_time);
 
     private:
         // settings
@@ -124,8 +127,8 @@ namespace pk
 
         GLuint brdf_texture_id;
 
-        void render_scene(unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
-        void render_waters(unsigned int elapsed_time);
+        void render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_waters(unsigned int current_time);
         void render_sprites();
         void render_screen();
     };

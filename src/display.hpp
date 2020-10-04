@@ -8,9 +8,6 @@ namespace pk
     class display
     {
     public:
-        SDL_Window *window;
-        SDL_GLContext context;
-
         display(const char *title, int width, int height);
         ~display();
 
@@ -19,7 +16,13 @@ namespace pk
         void toggle_fullscreen();
 
         void make_current();
+        void start_gui();
+        void end_gui();
         void swap();
+
+    private:
+        SDL_Window *window;
+        SDL_GLContext context;
     };
 } // namespace pk
 

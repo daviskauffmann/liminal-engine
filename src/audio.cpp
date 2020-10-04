@@ -13,11 +13,13 @@ namespace pk
         {
             std::cout << "Error: Couldn't open device" << std::endl;
         }
+
         context = alcCreateContext(device, nullptr);
         if (!context)
         {
             std::cout << "Error: Couldn't create context" << std::endl;
         }
+
         if (!alcMakeContextCurrent(context))
         {
             std::cout << "Error: Couldn't make context current" << std::endl;
@@ -27,7 +29,9 @@ namespace pk
     audio::~audio()
     {
         alcMakeContextCurrent(nullptr);
+
         alcDestroyContext(context);
+
         alcCloseDevice(device);
     }
 

@@ -21,16 +21,16 @@ namespace pk
 
     directional_light::~directional_light()
     {
-        glDeleteTextures(1, &depth_map_texture_id);
         glDeleteFramebuffers(1, &depth_map_fbo_id);
+        glDeleteTextures(1, &depth_map_texture_id);
     }
 
     void directional_light::set_depth_map_size(int depth_map_size)
     {
         this->depth_map_size = depth_map_size;
 
-        glDeleteTextures(1, &depth_map_texture_id);
         glDeleteFramebuffers(1, &depth_map_fbo_id);
+        glDeleteTextures(1, &depth_map_texture_id);
 
         glGenTextures(1, &depth_map_texture_id);
         glBindTexture(GL_TEXTURE_2D, depth_map_texture_id);

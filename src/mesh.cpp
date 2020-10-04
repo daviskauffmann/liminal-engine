@@ -32,9 +32,9 @@ namespace pk
 
     mesh::~mesh()
     {
-        glDeleteBuffers(1, &ebo_id);
-        glDeleteBuffers(1, &vbo_id);
         glDeleteVertexArrays(1, &vao_id);
+        glDeleteBuffers(1, &vbo_id);
+        glDeleteBuffers(1, &ebo_id);
     }
 
     void mesh::draw() const

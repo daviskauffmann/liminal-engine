@@ -8,12 +8,13 @@
 // shadows come back after turning on the spot light
 // maybe because both light types use the same depthmap shader?
 
-// TODO: face culling
-
 // TODO: framebuffer helper class
 // should store info about width/height
 // when binding the framebuffer, automatically set viewport to those values
 // and when unbinding, reset the viewport to some default value (probably the display width/height)
+
+// TODO: control shadowmap resolutions from a centralized location
+// currently they are stored on each instance of a light
 
 namespace pk
 {
@@ -26,6 +27,7 @@ namespace pk
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_STENCIL_TEST);
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+        glCullFace(GL_BACK);
         // glEnable(GL_MULTISAMPLE);
         // glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -304,6 +306,20 @@ namespace pk
 
     renderer::~renderer()
     {
+        glDeleteVertexArrays(1, &water_vao_id);
+        glDeleteBuffers(1, &water_vbo_id);
+
+        glDeleteVertexArrays(1, &skybox_vao_id);
+        glDeleteBuffers(1, &skybox_vbo_id);
+
+        glDeleteVertexArrays(1, &sprite_vao_id);
+        glDeleteBuffers(1, &sprite_vbo_id);
+
+        glDeleteVertexArrays(1, &screen_vao_id);
+        glDeleteBuffers(1, &screen_vbo_id);
+
+        delete sphere_mesh;
+
         delete water_dudv_texture;
         delete water_normal_texture;
 
@@ -321,36 +337,29 @@ namespace pk
         delete gaussian_program;
         delete screen_program;
 
-        glDeleteRenderbuffers(1, &geometry_rbo_id);
-        glDeleteTextures(1, &geometry_normal_texture_id);
-        glDeleteTextures(1, &geometry_position_texture_id);
         glDeleteFramebuffers(1, &geometry_fbo_id);
+        glDeleteTextures(1, &geometry_position_texture_id);
+        glDeleteTextures(1, &geometry_normal_texture_id);
+        glDeleteTextures(1, &geometry_albedo_texture_id);
+        glDeleteTextures(1, &geometry_material_texture_id);
+        glDeleteRenderbuffers(1, &geometry_rbo_id);
 
-        glDeleteRenderbuffers(1, &hdr_rbo_id);
-        glDeleteTextures(2, hdr_texture_ids);
         glDeleteFramebuffers(1, &hdr_fbo_id);
+        glDeleteTextures(2, hdr_texture_ids);
+        glDeleteRenderbuffers(1, &hdr_rbo_id);
 
+        glDeleteFramebuffers(1, &water_reflection_fbo_id);
         glDeleteRenderbuffers(1, &water_reflection_rbo_id);
         glDeleteTextures(1, &water_reflection_color_texture_id);
-        glDeleteFramebuffers(1, &water_reflection_fbo_id);
 
-        glDeleteTextures(1, &water_refraction_depth_texture_id);
-        glDeleteTextures(1, &water_refraction_color_texture_id);
         glDeleteFramebuffers(1, &water_refraction_fbo_id);
+        glDeleteTextures(1, &water_refraction_color_texture_id);
+        glDeleteTextures(1, &water_refraction_depth_texture_id);
 
-        delete sphere_mesh;
+        glDeleteFramebuffers(2, bloom_fbo_ids);
+        glDeleteTextures(2, bloom_texture_ids);
 
-        glDeleteBuffers(1, &water_vbo_id);
-        glDeleteVertexArrays(1, &water_vao_id);
-
-        glDeleteBuffers(1, &skybox_vbo_id);
-        glDeleteVertexArrays(1, &skybox_vao_id);
-
-        glDeleteBuffers(1, &sprite_vbo_id);
-        glDeleteVertexArrays(1, &sprite_vao_id);
-
-        glDeleteBuffers(1, &screen_vbo_id);
-        glDeleteVertexArrays(1, &screen_vao_id);
+        glDeleteTextures(1, &brdf_texture_id);
     }
 
     void renderer::set_screen_size(int display_width, int display_height, float render_scale)
@@ -360,17 +369,19 @@ namespace pk
         this->render_width = (int)(display_width * render_scale);
         this->render_height = (int)(display_height * render_scale);
 
-        glDeleteRenderbuffers(1, &geometry_rbo_id);
-        glDeleteTextures(1, &geometry_normal_texture_id);
-        glDeleteTextures(1, &geometry_position_texture_id);
         glDeleteFramebuffers(1, &geometry_fbo_id);
+        glDeleteTextures(1, &geometry_position_texture_id);
+        glDeleteTextures(1, &geometry_normal_texture_id);
+        glDeleteTextures(1, &geometry_albedo_texture_id);
+        glDeleteTextures(1, &geometry_material_texture_id);
+        glDeleteRenderbuffers(1, &geometry_rbo_id);
 
-        glDeleteRenderbuffers(1, &hdr_rbo_id);
-        glDeleteTextures(2, hdr_texture_ids);
         glDeleteFramebuffers(1, &hdr_fbo_id);
+        glDeleteTextures(2, hdr_texture_ids);
+        glDeleteRenderbuffers(1, &hdr_rbo_id);
 
-        glDeleteTextures(2, bloom_texture_ids);
         glDeleteFramebuffers(2, bloom_fbo_ids);
+        glDeleteTextures(2, bloom_texture_ids);
 
         // setup geometry fbo
         // gbuffer:
@@ -579,9 +590,9 @@ namespace pk
         this->reflection_width = reflection_width;
         this->reflection_height = reflection_height;
 
-        glDeleteRenderbuffers(1, &water_reflection_rbo_id);
-        glDeleteTextures(1, &water_reflection_color_texture_id);
         glDeleteFramebuffers(1, &water_reflection_fbo_id);
+        glDeleteTextures(1, &water_reflection_color_texture_id);
+        glDeleteRenderbuffers(1, &water_reflection_rbo_id);
 
         // setup water reflection fbo
         glGenTextures(1, &water_reflection_color_texture_id);
@@ -635,9 +646,9 @@ namespace pk
         this->refraction_width = refraction_width;
         this->refraction_height = refraction_height;
 
-        glDeleteTextures(1, &water_refraction_depth_texture_id);
-        glDeleteTextures(1, &water_refraction_color_texture_id);
         glDeleteFramebuffers(1, &water_refraction_fbo_id);
+        glDeleteTextures(1, &water_refraction_color_texture_id);
+        glDeleteTextures(1, &water_refraction_depth_texture_id);
 
         // setup water refraction fbo
         glGenTextures(1, &water_refraction_color_texture_id);
@@ -713,7 +724,7 @@ namespace pk
         screen_program->reload();
     }
 
-    void renderer::flush(unsigned int elapsed_time, float delta_time)
+    void renderer::flush(unsigned int current_time, float delta_time)
     {
         if (!camera)
         {
@@ -790,10 +801,10 @@ namespace pk
         screen_program->unbind();
 
         // render everything
-        render_scene(elapsed_time, hdr_fbo_id, render_width, render_height);
+        render_objects(current_time, hdr_fbo_id, render_width, render_height);
         if (waters.size() > 0)
         {
-            render_waters(elapsed_time);
+            render_waters(current_time);
         }
         if (sprites.size() > 0)
         {
@@ -811,7 +822,7 @@ namespace pk
         sprites.clear();
     }
 
-    void renderer::render_scene(unsigned int elapsed_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
+    void renderer::render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
     {
         // update depth maps
         for (auto &directional_light : directional_lights)
@@ -823,7 +834,6 @@ namespace pk
             glViewport(0, 0, directional_light->depth_map_size, directional_light->depth_map_size);
             glClear(GL_DEPTH_BUFFER_BIT);
             glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
             depth_program->bind();
             depth_program->set_mat4("projection", directional_light->projection);
             depth_program->set_mat4("view", directional_light->view);
@@ -840,7 +850,6 @@ namespace pk
                 terrain->mesh->draw();
             }
             depth_program->unbind();
-            glCullFace(GL_BACK);
             glDisable(GL_CULL_FACE);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -860,7 +869,6 @@ namespace pk
             glViewport(0, 0, point_light->depth_cube_size, point_light->depth_cube_size);
             glClear(GL_DEPTH_BUFFER_BIT);
             glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
             depth_cube_program->bind();
             for (unsigned int i = 0; i < 6; i++)
             {
@@ -881,7 +889,6 @@ namespace pk
                 terrain->mesh->draw();
             }
             depth_cube_program->unbind();
-            glCullFace(GL_BACK);
             glDisable(GL_CULL_FACE);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -895,7 +902,6 @@ namespace pk
             glViewport(0, 0, spot_light->depth_map_size, spot_light->depth_map_size);
             glClear(GL_DEPTH_BUFFER_BIT);
             glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
             depth_program->bind();
             depth_program->set_mat4("projection", spot_light->projection);
             depth_program->set_mat4("view", spot_light->view);
@@ -912,7 +918,6 @@ namespace pk
                 terrain->mesh->draw();
             }
             depth_program->unbind();
-            glCullFace(GL_BACK);
             glDisable(GL_CULL_FACE);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -1075,6 +1080,7 @@ namespace pk
 
         glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
+        glBlendFunc(GL_ONE, GL_ZERO);
         glDisable(GL_BLEND);
 
         glEnable(GL_DEPTH_TEST);
@@ -1092,7 +1098,7 @@ namespace pk
 
         glDepthFunc(GL_LEQUAL);
         glm::mat4 camera_view_no_translate = camera_view;
-        // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)elapsed_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
+        // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)current_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
         camera_view_no_translate[3][0] = 0.0f;
         camera_view_no_translate[3][1] = 0.0f;
         camera_view_no_translate[3][2] = 0.0f;
@@ -1131,7 +1137,7 @@ namespace pk
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void renderer::render_waters(unsigned int elapsed_time)
+    void renderer::render_waters(unsigned int current_time)
     {
         glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
         glm::mat4 camera_view = camera->calc_view();
@@ -1140,7 +1146,7 @@ namespace pk
         water_program->set_mat4("camera.projection", camera_projection);
         water_program->set_mat4("camera.view", camera_view);
         water_program->set_vec3("camera.position", camera->position);
-        water_program->set_unsigned_int("elapsed_time", elapsed_time);
+        water_program->set_unsigned_int("current_time", current_time);
         water_program->unbind();
         for (auto &water : waters)
         {
@@ -1159,7 +1165,7 @@ namespace pk
                 camera->pitch = -camera->pitch;
                 camera->roll = -camera->roll;
                 glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-                render_scene(elapsed_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
+                render_objects(current_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
                 camera->position.y = old_camera_y;
                 camera->pitch = old_camera_pitch;
                 camera->roll = old_camera_roll;
@@ -1171,7 +1177,7 @@ namespace pk
                 refraction_clipping_plane.y = 1.0f;
                 refraction_clipping_plane.w = -water->position.y;
             }
-            render_scene(elapsed_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
+            render_objects(current_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
 
             glViewport(0, 0, render_width, render_height);
             glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
@@ -1182,7 +1188,7 @@ namespace pk
             }
             water_program->bind();
             water_program->set_mat4("water.model", water_model);
-            water_program->set_vec3("light.direction", directional_lights[0]->direction);
+            water_program->set_vec3("light.direction", directional_lights[0]->direction); // TODO: specular reflections for all lights
             water_program->set_vec3("light.color", directional_lights[0]->color);
             water_program->set_float("near_plane", 0.1f);
             water_program->set_float("far_plane", 1000.0f);
@@ -1200,7 +1206,11 @@ namespace pk
             glDrawArrays(GL_TRIANGLES, 0, water_vertices_size);
             glBindVertexArray(0);
             water_program->unbind();
-            glDisable(GL_BLEND);
+            if (reflect)
+            {
+                glBlendFunc(GL_ONE, GL_ZERO);
+                glDisable(GL_BLEND);
+            }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     }

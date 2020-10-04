@@ -20,16 +20,16 @@ namespace pk
 
     point_light::~point_light()
     {
-        glDeleteTextures(1, &depth_cubemap_texture_id);
         glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
+        glDeleteTextures(1, &depth_cubemap_texture_id);
     }
 
     void point_light::set_depth_cube_size(int depth_cube_size)
     {
         this->depth_cube_size = depth_cube_size;
 
-        glDeleteTextures(1, &depth_cubemap_texture_id);
         glDeleteFramebuffers(1, &depth_cubemap_fbo_id);
+        glDeleteTextures(1, &depth_cubemap_texture_id);
 
         glGenTextures(1, &depth_cubemap_texture_id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap_texture_id);
