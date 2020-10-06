@@ -25,6 +25,7 @@ namespace pk
     class renderer
     {
     public:
+        bool greyscale;
         pk::camera *camera;
         pk::skybox *skybox;
         std::vector<pk::object *> objects;
@@ -50,7 +51,6 @@ namespace pk
         void flush(unsigned int current_time, float delta_time);
 
     private:
-        // settings
         int display_width;
         int display_height;
         int render_width;
@@ -60,34 +60,27 @@ namespace pk
         int refraction_width;
         int refraction_height;
 
-        // water mesh
         GLsizei water_vertices_size;
         GLuint water_vao_id;
         GLuint water_vbo_id;
 
-        // skybox mesh
         GLsizei skybox_vertices_size;
         GLuint skybox_vao_id;
         GLuint skybox_vbo_id;
 
-        // sprite mesh
         GLsizei sprite_vertices_size;
         GLuint sprite_vao_id;
         GLuint sprite_vbo_id;
 
-        // screen mesh
         GLsizei screen_vertices_size;
         GLuint screen_vao_id;
         GLuint screen_vbo_id;
 
-        // sphere mesh
         pk::mesh *sphere_mesh;
 
-        // textures
         pk::texture *water_dudv_texture;
         pk::texture *water_normal_texture;
 
-        // shader programs
         pk::program *depth_program;
         pk::program *depth_cube_program;
         pk::program *color_program;
@@ -102,7 +95,6 @@ namespace pk
         pk::program *gaussian_program;
         pk::program *screen_program;
 
-        // framebuffers
         GLuint geometry_fbo_id;
         GLuint geometry_position_texture_id;
         GLuint geometry_normal_texture_id;

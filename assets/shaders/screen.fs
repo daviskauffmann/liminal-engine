@@ -10,6 +10,8 @@ out vec4 frag_color;
 uniform sampler2D hdr_map;
 uniform sampler2D bloom_map;
 
+uniform uint greyscale;
+
 const float gamma = 2.2;
 const float exposure = 1.0;
 const float white = 1.0;
@@ -25,13 +27,11 @@ void main()
     color = (mapped_luminance / luminance) * color;
     color = pow(color, vec3(1.0 / gamma));
 
-	// grayscale
-	// float average_color = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-	// color = vec3(average_color);
-
-	// red/green colorblindness
-	// float average_color = 0.2126 * color.r + 0.7152 * color.g;
-	// color = vec3(average_color, average_color, color.b);
+	if (greyscale == 1)
+	{
+		float average_color = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+		color = vec3(average_color);
+	}
 
     frag_color = vec4(color, 1.0);
 }

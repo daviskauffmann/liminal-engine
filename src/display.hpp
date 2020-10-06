@@ -11,6 +11,8 @@ namespace pk
         display(const char *title, int width, int height);
         ~display();
 
+        bool poll_event(SDL_Event *event);
+
         void set_title(const char *title);
         void set_window_size(int width, int height);
         void toggle_fullscreen();

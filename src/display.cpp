@@ -109,6 +109,18 @@ namespace pk
         SDL_Quit();
     }
 
+    bool display::poll_event(SDL_Event *event)
+    {
+        bool result = SDL_PollEvent(event);
+
+        if (result)
+        {
+            ImGui_ImplSDL2_ProcessEvent(event);
+        }
+
+        return result;
+    }
+
     void display::set_title(const char *title)
     {
         SDL_SetWindowTitle(window, title);

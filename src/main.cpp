@@ -1,29 +1,15 @@
-#include <algorithm>
 #include <iostream>
 #include <imgui.h>
+#include <SDL2/SDL.h>
 
-#include "atlas.hpp"
 #include "audio.hpp"
-#include "camera.hpp"
 #include "config.hpp"
-#include "directional_light.hpp"
 #include "display.hpp"
-#include "mesh.hpp"
-#include "model.hpp"
-#include "object.hpp"
-#include "point_light.hpp"
-#include "program.hpp"
+#include "empty_scene.hpp"
+#include "game_scene.hpp"
+#include "pause_scene.hpp"
 #include "renderer.hpp"
 #include "scene.hpp"
-#include "skybox.hpp"
-#include "sound.hpp"
-#include "source.hpp"
-#include "spot_light.hpp"
-#include "sprite.hpp"
-#include "terrain.hpp"
-#include "texture.hpp"
-#include "vertex.hpp"
-#include "water.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -74,6 +60,7 @@ int main(int argc, char *argv[])
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;
+    bool console_open = false;
 
     bool quit = false;
     while (!quit)
@@ -85,47 +72,42 @@ int main(int argc, char *argv[])
         int num_keys;
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (display.poll_event(&event))
         {
             switch (event.type)
             {
-            case SDL_TEXTINPUT:
+            case SDL_QUIT:
             {
-                io.AddInputCharacter(event.text.text[0]);
+                quit = true;
+            }
+            break;
+            case SDL_WINDOWEVENT:
+            {
+                switch (event.window.event)
+                {
+                case SDL_WINDOWEVENT_RESIZED:
+                {
+                    window_width = event.window.data1;
+                    window_height = event.window.data2;
+                    display.set_window_size(window_width, window_height);
+                    renderer.set_screen_size(window_width, window_height, render_scale);
+                    renderer.set_reflection_size(window_width, window_height);
+                    renderer.set_refraction_size(window_width, window_height);
+                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
+                }
+                break;
+                }
             }
             break;
             case SDL_KEYDOWN:
             {
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_F4:
+                case SDLK_RETURN:
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        quit = true;
-                    }
-                }
-                break;
-                case SDLK_r:
-                {
-                    if (!io.WantCaptureKeyboard)
-                    {
-                        renderer.reload_programs();
-                    }
-                }
-                break;
-                case SDLK_t:
-                {
-                    if (!io.WantCaptureKeyboard)
-                    {
-                        if (time_scale > 0.25f)
-                        {
-                            time_scale = 0.25f;
-                        }
-                        else
-                        {
-                            time_scale = 1.0f;
-                        }
+                        display.toggle_fullscreen();
                     }
                 }
                 break;
@@ -155,11 +137,42 @@ int main(int argc, char *argv[])
                     }
                 }
                 break;
-                case SDLK_RETURN:
+                case SDLK_BACKQUOTE:
+                {
+                    if (!io.WantCaptureKeyboard)
+                    {
+                        console_open = !console_open;
+                    }
+                }
+                break;
+                case SDLK_r:
+                {
+                    if (!io.WantCaptureKeyboard)
+                    {
+                        renderer.reload_programs();
+                    }
+                }
+                break;
+                case SDLK_t:
+                {
+                    if (!io.WantCaptureKeyboard)
+                    {
+                        if (time_scale > 0.25f)
+                        {
+                            time_scale = 0.25f;
+                        }
+                        else
+                        {
+                            time_scale = 1.0f;
+                        }
+                    }
+                }
+                break;
+                case SDLK_F4:
                 {
                     if (keys[SDL_SCANCODE_LALT])
                     {
-                        display.toggle_fullscreen();
+                        quit = true;
                     }
                 }
                 break;
@@ -174,39 +187,16 @@ int main(int argc, char *argv[])
                 }
             }
             break;
-            case SDL_QUIT:
-            {
-                quit = true;
-            }
-            break;
-            case SDL_WINDOWEVENT:
-            {
-                switch (event.window.event)
-                {
-                case SDL_WINDOWEVENT_RESIZED:
-                {
-                    window_width = event.window.data1;
-                    window_height = event.window.data2;
-                    display.set_window_size(window_width, window_height);
-                    renderer.set_screen_size(window_width, window_height, render_scale);
-                    renderer.set_reflection_size(window_width, window_height);
-                    renderer.set_refraction_size(window_width, window_height);
-                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
-                }
-                break;
-                }
-            }
-            break;
             }
 
-            scene->handle_event(event);
+            scene = scene->handle_event(event);
             if (!scene)
             {
                 quit = true;
             }
         }
 
-        scene->update(&audio, delta_time);
+        scene = scene->update(&audio, delta_time);
         if (!scene)
         {
             quit = true;
@@ -221,12 +211,39 @@ int main(int argc, char *argv[])
 
         renderer.flush(current_time, delta_time);
 
+        display.start_gui();
+
         if (scene)
         {
-            display.start_gui();
             scene->gui();
-            display.end_gui();
         }
+
+        if (console_open)
+        {
+            ImGui::Begin("Console", &console_open, ImGuiWindowFlags_None);
+
+            char command[256];
+            if (ImGui::InputText("Input", command, sizeof(command), ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                if (strcmp(command, "help") == 0)
+                {
+                    // TODO: print options
+
+                    if (scene)
+                    {
+                        scene->print_commands();
+                    }
+                }
+
+                if (scene)
+                {
+                    scene->handle_command(command);
+                }
+            }
+            ImGui::End();
+        }
+
+        display.end_gui();
 
         display.swap();
     }

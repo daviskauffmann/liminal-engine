@@ -14,15 +14,17 @@ SRC = \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
 	src/display.cpp \
+	src/empty_scene.cpp \
+	src/game_scene.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
 	src/model.cpp \
 	src/object.cpp \
+	src/pause_scene.cpp \
 	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
-	src/scene.cpp \
 	src/skybox.cpp \
 	src/sound.cpp \
 	src/source.cpp \
@@ -32,7 +34,6 @@ SRC = \
 	src/stb_include.cpp \
 	src/terrain.cpp \
 	src/texture.cpp \
-	src/vertex.cpp \
 	src/water.cpp
 TARGET = bin/pk
 

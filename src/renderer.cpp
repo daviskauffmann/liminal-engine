@@ -812,7 +812,8 @@ namespace pk
         }
         render_screen();
 
-        // clear renderables
+        // reset render state
+        greyscale = false;
         objects.clear();
         directional_lights.clear();
         point_lights.clear();
@@ -1265,6 +1266,7 @@ namespace pk
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
         screen_program->bind();
+        screen_program->set_unsigned_int("greyscale", greyscale);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[0]);
         glActiveTexture(GL_TEXTURE1);

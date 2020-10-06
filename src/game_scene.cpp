@@ -1,18 +1,12 @@
-#include "scene.hpp"
+#include "game_scene.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 
+#include "pause_scene.hpp"
+
 namespace pk
 {
-    scene::scene()
-    {
-    }
-
-    scene::~scene()
-    {
-    }
-
     // TODO: read from file
     game_scene::game_scene()
     {
@@ -79,11 +73,10 @@ namespace pk
         bounce_sound = new pk::sound("assets/audio/bounce.wav");
         shoot_sound = new pk::sound("assets/audio/shoot.wav");
 
+        edit_mode = false;
+        lock_cursor = true;
         torch_on = true;
         torch_follow = true;
-        edit_mode = false;
-
-        SDL_SetRelativeMouseMode(SDL_TRUE);
 
         ambient_source->set_loop(true);
         ambient_source->set_gain(0.25f);
@@ -92,7 +85,25 @@ namespace pk
 
     game_scene::~game_scene()
     {
+        delete camera;
+
+        delete skybox;
+
         delete backpack_model;
+        delete backpack;
+
+        delete sun;
+
+        delete red_light;
+        delete yellow_light;
+        delete green_light;
+        delete blue_light;
+
+        delete torch;
+
+        delete water;
+
+        delete terrain;
 
         delete ambient_source;
         delete bounce_source;
@@ -113,6 +124,24 @@ namespace pk
         {
             switch (event.key.keysym.sym)
             {
+            case SDLK_TAB:
+            {
+                if (!io.WantCaptureKeyboard)
+                {
+                    lock_cursor = !lock_cursor;
+                }
+            }
+            break;
+            case SDLK_ESCAPE:
+            {
+                if (!io.WantCaptureKeyboard)
+                {
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+
+                    return new pk::pause_scene(this);
+                }
+            }
+            break;
             case SDLK_e:
             {
                 if (!io.WantCaptureKeyboard)
@@ -134,14 +163,6 @@ namespace pk
                 if (!io.WantCaptureKeyboard)
                 {
                     torch_follow = !torch_follow;
-                }
-            }
-            break;
-            case SDLK_TAB:
-            {
-                if (!io.WantCaptureKeyboard)
-                {
-                    SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
                 }
             }
             break;
@@ -190,6 +211,8 @@ namespace pk
     {
         ImGuiIO &io = ImGui::GetIO();
 
+        SDL_SetRelativeMouseMode((SDL_bool)lock_cursor);
+
         int num_keys;
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
         int mouse_x, mouse_y;
@@ -221,11 +244,11 @@ namespace pk
             }
             if (keys[SDL_SCANCODE_SPACE])
             {
-                acceleration += glm::vec3(0.0f, 1.0f, 0.0f);
+                acceleration.y = 1.0f;
             }
             if (keys[SDL_SCANCODE_LCTRL])
             {
-                acceleration -= glm::vec3(0.0f, 1.0f, 0.0f);
+                acceleration.y = -1.0f;
             }
             if (keys[SDL_SCANCODE_LSHIFT])
             {
@@ -254,8 +277,8 @@ namespace pk
         }
         red_light->position.x = distance * sinf(angle);
         red_light->position.z = distance * cosf(angle);
-        yellow_light->position.x = distance * sinf(angle + (pi / 2));
-        yellow_light->position.z = distance * cosf(angle + (pi / 2));
+        yellow_light->position.x = distance * sinf(angle + pi / 2);
+        yellow_light->position.z = distance * cosf(angle + pi / 2);
         green_light->position.x = distance * sinf(angle + pi);
         green_light->position.z = distance * cosf(angle + pi);
         blue_light->position.x = distance * sinf(angle + 3 * pi / 2);
@@ -314,7 +337,15 @@ namespace pk
     {
         if (edit_mode)
         {
-            ImGui::ShowDemoWindow();
+            // TODO: edit mode UI
         }
+    }
+
+    void game_scene::print_commands()
+    {
+    }
+
+    void game_scene::handle_command(const char *command)
+    {
     }
 } // namespace pk
