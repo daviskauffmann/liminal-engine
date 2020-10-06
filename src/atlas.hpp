@@ -8,7 +8,7 @@
 
 namespace pk
 {
-	class atlas : public texture
+	class atlas : public pk::texture
 	{
 	public:
 		atlas(const std::string &filename, GLuint size, GLuint texture_size);

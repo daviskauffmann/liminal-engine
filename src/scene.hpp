@@ -13,8 +13,8 @@ namespace pk
     public:
         virtual ~scene(){};
 
-        virtual scene *handle_event(SDL_Event event) = 0;
-        virtual scene *update(pk::audio *audio, float delta_time) = 0;
+        virtual pk::scene *handle_event(SDL_Event event) = 0;
+        virtual pk::scene *update(pk::audio *audio, float delta_time) = 0;
         virtual void render(pk::renderer *renderer) const = 0;
         virtual void gui() const = 0;
         virtual void print_commands() = 0;

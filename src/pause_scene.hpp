@@ -5,7 +5,7 @@
 
 namespace pk
 {
-    class pause_scene : public scene
+    class pause_scene : public pk::scene
     {
     public:
         pause_scene(pk::scene *paused_scene);

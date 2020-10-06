@@ -3,7 +3,6 @@
 #include <SDL2/SDL.h>
 
 #include "audio.hpp"
-#include "config.hpp"
 #include "display.hpp"
 #include "empty_scene.hpp"
 #include "game_scene.hpp"
@@ -11,10 +10,15 @@
 #include "renderer.hpp"
 #include "scene.hpp"
 
+constexpr const char *window_title = "Project Kilonova";
+constexpr const char *version = "0.0.1";
+
+int window_width = 1280;
+int window_height = 720;
+float render_scale = 1.0f;
+
 int main(int argc, char *argv[])
 {
-    config_load();
-
     for (int i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
@@ -252,8 +256,6 @@ int main(int argc, char *argv[])
     {
         delete scene;
     }
-
-    config_save();
 
     return 0;
 }

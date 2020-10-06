@@ -2,65 +2,62 @@
 
 #include <imgui.h>
 
-namespace pk
+pk::pause_scene::pause_scene(pk::scene *paused_scene)
+    : paused_scene(paused_scene)
 {
-    pause_scene::pause_scene(pk::scene *paused_scene)
-        : paused_scene(paused_scene)
-    {
-    }
+}
 
-    pause_scene::~pause_scene()
-    {
-    }
+pk::pause_scene::~pause_scene()
+{
+}
 
-    scene *pause_scene::handle_event(SDL_Event event)
-    {
-        ImGuiIO &io = ImGui::GetIO();
+pk::scene *pk::pause_scene::handle_event(SDL_Event event)
+{
+    ImGuiIO &io = ImGui::GetIO();
 
-        switch (event.type)
+    switch (event.type)
+    {
+    case SDL_KEYDOWN:
+    {
+        switch (event.key.keysym.sym)
         {
-        case SDL_KEYDOWN:
+        case SDLK_ESCAPE:
         {
-            switch (event.key.keysym.sym)
+            if (!io.WantCaptureKeyboard)
             {
-            case SDLK_ESCAPE:
-            {
-                if (!io.WantCaptureKeyboard)
-                {
-                    pk::scene *return_scene = paused_scene;
-                    delete this;
-                    return return_scene;
-                }
-            }
-            break;
+                pk::scene *return_scene = paused_scene;
+                delete this;
+                return return_scene;
             }
         }
+        break;
         }
-
-        return this;
+    }
     }
 
-    scene *pause_scene::update(pk::audio *audio, float delta_time)
-    {
-        return this;
-    }
+    return this;
+}
 
-    void pause_scene::render(pk::renderer *renderer) const
-    {
-        renderer->greyscale = true;
+pk::scene *pk::pause_scene::update(pk::audio *audio, float delta_time)
+{
+    return this;
+}
 
-        paused_scene->render(renderer);
-    }
+void pk::pause_scene::render(pk::renderer *renderer) const
+{
+    renderer->greyscale = true;
 
-    void pause_scene::gui() const
-    {
-    }
+    paused_scene->render(renderer);
+}
 
-    void pause_scene::print_commands()
-    {
-    }
+void pk::pause_scene::gui() const
+{
+}
 
-    void pause_scene::handle_command(const char *command)
-    {
-    }
-} // namespace pk
+void pk::pause_scene::print_commands()
+{
+}
+
+void pk::pause_scene::handle_command(const char *command)
+{
+}
