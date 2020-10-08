@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         }
         if (strcmp(argv[i], "--scale") == 0)
         {
-            render_scale = std::clamp((float)atof(argv[i + 1]), 0.1f, 1.0f);
+            render_scale = glm::clamp((float)atof(argv[i + 1]), 0.1f, 1.0f);
         }
     }
 
@@ -59,8 +59,6 @@ int main(int argc, char *argv[])
 
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = "assets/imgui.ini";
-
-    SDL_GL_SetSwapInterval(0);
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;
@@ -105,19 +103,19 @@ int main(int argc, char *argv[])
             break;
             case SDL_KEYDOWN:
             {
-                switch (event.key.keysym.sym)
+                if (!io.WantCaptureKeyboard)
                 {
-                case SDLK_RETURN:
-                {
-                    if (keys[SDL_SCANCODE_LALT])
+                    switch (event.key.keysym.sym)
                     {
-                        display.toggle_fullscreen();
+                    case SDLK_RETURN:
+                    {
+                        if (keys[SDL_SCANCODE_LALT])
+                        {
+                            display.toggle_fullscreen();
+                        }
                     }
-                }
-                break;
-                case SDLK_MINUS:
-                {
-                    if (!io.WantCaptureKeyboard)
+                    break;
+                    case SDLK_MINUS:
                     {
                         if (render_scale > 0.2f)
                         {
@@ -126,11 +124,8 @@ int main(int argc, char *argv[])
                         renderer.set_screen_size(window_width, window_height, render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
-                }
-                break;
-                case SDLK_EQUALS:
-                {
-                    if (!io.WantCaptureKeyboard)
+                    break;
+                    case SDLK_EQUALS:
                     {
                         if (render_scale < 1.0f)
                         {
@@ -139,27 +134,18 @@ int main(int argc, char *argv[])
                         renderer.set_screen_size(window_width, window_height, render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
-                }
-                break;
-                case SDLK_BACKQUOTE:
-                {
-                    if (!io.WantCaptureKeyboard)
+                    break;
+                    case SDLK_BACKQUOTE:
                     {
                         console_open = !console_open;
                     }
-                }
-                break;
-                case SDLK_r:
-                {
-                    if (!io.WantCaptureKeyboard)
+                    break;
+                    case SDLK_r:
                     {
                         renderer.reload_programs();
                     }
-                }
-                break;
-                case SDLK_t:
-                {
-                    if (!io.WantCaptureKeyboard)
+                    break;
+                    case SDLK_t:
                     {
                         if (time_scale > 0.25f)
                         {
@@ -170,24 +156,16 @@ int main(int argc, char *argv[])
                             time_scale = 1.0f;
                         }
                     }
-                }
-                break;
-                case SDLK_F4:
-                {
-                    if (keys[SDL_SCANCODE_LALT])
+                    break;
+                    case SDLK_F4:
                     {
-                        quit = true;
+                        if (keys[SDL_SCANCODE_LALT])
+                        {
+                            quit = true;
+                        }
                     }
-                }
-                break;
-                }
-            }
-            break;
-            case SDL_MOUSEWHEEL:
-            {
-                if (io.WantCaptureMouse)
-                {
-                    io.MouseWheel = event.wheel.y;
+                    break;
+                    }
                 }
             }
             break;
@@ -224,7 +202,7 @@ int main(int argc, char *argv[])
 
         if (console_open)
         {
-            ImGui::Begin("Console", &console_open, ImGuiWindowFlags_None);
+            ImGui::Begin("Console", &console_open);
 
             char command[256];
             if (ImGui::InputText("Input", command, sizeof(command), ImGuiInputTextFlags_EnterReturnsTrue))
@@ -232,18 +210,9 @@ int main(int argc, char *argv[])
                 if (strcmp(command, "help") == 0)
                 {
                     // TODO: print options
-
-                    if (scene)
-                    {
-                        scene->print_commands();
-                    }
-                }
-
-                if (scene)
-                {
-                    scene->handle_command(command);
                 }
             }
+
             ImGui::End();
         }
 

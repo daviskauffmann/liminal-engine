@@ -5,10 +5,15 @@
 pk::pause_scene::pause_scene(pk::scene *paused_scene)
     : paused_scene(paused_scene)
 {
+    delete_paused_scene = true;
 }
 
 pk::pause_scene::~pause_scene()
 {
+    if (delete_paused_scene)
+    {
+        delete paused_scene;
+    }
 }
 
 pk::scene *pk::pause_scene::handle_event(SDL_Event event)
@@ -26,7 +31,10 @@ pk::scene *pk::pause_scene::handle_event(SDL_Event event)
             if (!io.WantCaptureKeyboard)
             {
                 pk::scene *return_scene = paused_scene;
+
+                delete_paused_scene = false;
                 delete this;
+
                 return return_scene;
             }
         }
@@ -51,13 +59,5 @@ void pk::pause_scene::render(pk::renderer *renderer) const
 }
 
 void pk::pause_scene::gui() const
-{
-}
-
-void pk::pause_scene::print_commands()
-{
-}
-
-void pk::pause_scene::handle_command(const char *command)
 {
 }

@@ -160,6 +160,7 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
     if (!source)
     {
         std::cout << "Error: Shader preprocessing failed\n"
+                  << "File: " << filename << "\n"
                   << error << std::endl;
         return 0;
     }
@@ -175,6 +176,7 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
         std::vector<GLchar> info_log(length);
         glGetShaderInfoLog(shader_id, length, &length, &info_log[0]);
         std::cout << "Error: Shader compilation failed\n"
+                  << "File: " << filename << "\n"
                   << &info_log[0] << std::endl;
         return 0;
     }

@@ -15,6 +15,8 @@ pk::game_scene::game_scene()
         0.0f,
         45.0f);
 
+    // skybox = nullptr;
+    // skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
     skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
     backpack_model = new pk::model("assets/models/backpack/backpack.obj");
@@ -120,66 +122,57 @@ pk::scene *pk::game_scene::handle_event(SDL_Event event)
     {
     case SDL_KEYDOWN:
     {
-        switch (event.key.keysym.sym)
+        if (!io.WantCaptureKeyboard)
         {
-        case SDLK_TAB:
-        {
-            if (!io.WantCaptureKeyboard)
+            switch (event.key.keysym.sym)
+            {
+            case SDLK_TAB:
             {
                 lock_cursor = !lock_cursor;
             }
-        }
-        break;
-        case SDLK_ESCAPE:
-        {
-            if (!io.WantCaptureKeyboard)
+            break;
+            case SDLK_ESCAPE:
             {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
 
                 return new pk::pause_scene(this);
             }
-        }
-        break;
-        case SDLK_e:
-        {
-            if (!io.WantCaptureKeyboard)
+            break;
+            case SDLK_e:
             {
                 edit_mode = !edit_mode;
             }
-        }
-        break;
-        case SDLK_f:
-        {
-            if (!io.WantCaptureKeyboard)
+            break;
+            case SDLK_f:
             {
                 torch_on = !torch_on;
             }
-        }
-        break;
-        case SDLK_g:
-        {
-            if (!io.WantCaptureKeyboard)
+            break;
+            case SDLK_g:
             {
                 torch_follow = !torch_follow;
             }
-        }
-        break;
+            break;
+            }
         }
     }
     break;
     case SDL_MOUSEMOTION:
     {
-        if (SDL_GetRelativeMouseMode() && !io.WantCaptureMouse)
+        if (!io.WantCaptureMouse)
         {
-            camera->pitch -= event.motion.yrel * 0.1f;
-            camera->yaw += event.motion.xrel * 0.1f;
-            if (camera->pitch > 89.0f)
+            if (SDL_GetRelativeMouseMode())
             {
-                camera->pitch = 89.0f;
-            }
-            if (camera->pitch < -89.0f)
-            {
-                camera->pitch = -89.0f;
+                camera->pitch -= event.motion.yrel * 0.1f;
+                camera->yaw += event.motion.xrel * 0.1f;
+                if (camera->pitch > 89.0f)
+                {
+                    camera->pitch = 89.0f;
+                }
+                if (camera->pitch < -89.0f)
+                {
+                    camera->pitch = -89.0f;
+                }
             }
         }
     }
@@ -188,14 +181,17 @@ pk::scene *pk::game_scene::handle_event(SDL_Event event)
     {
         if (!io.WantCaptureMouse)
         {
-            camera->fov -= event.wheel.y;
-            if (camera->fov <= 1.0f)
+            if (SDL_GetRelativeMouseMode())
             {
-                camera->fov = 1.0f;
-            }
-            if (camera->fov >= 120.0f)
-            {
-                camera->fov = 120.0f;
+                camera->fov -= event.wheel.y;
+                if (camera->fov <= 1.0f)
+                {
+                    camera->fov = 1.0f;
+                }
+                if (camera->fov >= 120.0f)
+                {
+                    camera->fov = 120.0f;
+                }
             }
         }
     }
@@ -221,7 +217,8 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
 
     static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
     glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
-    float speed = 50.0f;
+    const float speed = 50.0f;
+    bool sprint = false;
     if (!io.WantCaptureKeyboard)
     {
         if (keys[SDL_SCANCODE_W])
@@ -250,7 +247,7 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
         }
         if (keys[SDL_SCANCODE_LSHIFT])
         {
-            speed *= 2.0f;
+            sprint = true;
         }
     }
     float acceleration_length = glm::length(acceleration);
@@ -258,7 +255,7 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
     {
         acceleration /= acceleration_length;
     }
-    acceleration *= speed;
+    acceleration *= speed * (sprint ? 2.0f : 1.0f);
     acceleration -= velocity * 10.0f;
     camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
     velocity = acceleration * delta_time + velocity;
@@ -266,8 +263,8 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
     // camera->roll = 10.0f * glm::dot(main_camera_right, velocity) / velocity_length;
 
     static float angle = 0.0f;
-    constexpr float pi = 3.14159f;
-    float distance = 6.0f;
+    const float pi = 3.14159f;
+    const float distance = 6.0f;
     angle += 0.5f * delta_time;
     if (angle > 2 * pi)
     {
@@ -335,14 +332,6 @@ void pk::game_scene::gui() const
 {
     if (edit_mode)
     {
-        // TODO: edit mode UI
+        ImGui::ShowDemoWindow();
     }
-}
-
-void pk::game_scene::print_commands()
-{
-}
-
-void pk::game_scene::handle_command(const char *command)
-{
 }

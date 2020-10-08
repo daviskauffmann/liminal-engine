@@ -25,11 +25,3 @@ void pk::empty_scene::render(pk::renderer *renderer) const
 void pk::empty_scene::gui() const
 {
 }
-
-void pk::empty_scene::print_commands()
-{
-}
-
-void pk::empty_scene::handle_command(const char *command)
-{
-}

@@ -15,11 +15,10 @@ namespace pk
         scene *update(pk::audio *audio, float delta_time) override;
         void render(pk::renderer *renderer) const override;
         void gui() const override;
-        void print_commands() override;
-        void handle_command(const char *command) override;
 
     private:
         pk::scene *paused_scene;
+        bool delete_paused_scene;
     };
 } // namespace pk
 

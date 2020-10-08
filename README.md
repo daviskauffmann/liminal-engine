@@ -87,6 +87,8 @@ make clean
 
 [Learn OpenGL](https://learnopengl.com)
 
+[Lazy Foo' Productions](https://lazyfoo.net)
+
 [opengl-tutorial.org](http://www.opengl-tutorial.org)
 
 [thebennybox](https://www.youtube.com/user/thebennybox)

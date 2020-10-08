@@ -814,6 +814,8 @@ void pk::renderer::flush(unsigned int current_time, float delta_time)
 
     // reset render state
     greyscale = false;
+    camera = nullptr;
+    skybox = nullptr;
     objects.clear();
     directional_lights.clear();
     point_lights.clear();
@@ -944,7 +946,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         geometry_program->set_mat4("object.model", object_model);
         object->model->draw();
     }
-    // TODO: may need separate shader for terrain
     for (auto &terrain : terrains)
     {
         glm::mat4 terrain_model = terrain->calc_model();
@@ -1097,6 +1098,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
     glViewport(0, 0, width, height);
 
+    // draw skybox
     glDepthFunc(GL_LEQUAL);
     glm::mat4 camera_view_no_translate = camera_view;
     // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)current_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));

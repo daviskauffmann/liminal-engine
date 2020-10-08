@@ -29,8 +29,7 @@ void main()
 
 	if (greyscale == 1)
 	{
-		float average_color = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-		color = vec3(average_color);
+		color = vec3((color.r + color.g + color.b) / 3);
 	}
 
     frag_color = vec4(color, 1.0);
