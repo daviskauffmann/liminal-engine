@@ -30,19 +30,19 @@ int main(int argc, char *argv[])
             std::cout << "  --scale <float>  Set render scale" << std::endl;
             std::cout << "  -v, --version    Print version information" << std::endl;
         }
-        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
+        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
         {
             std::cout << window_title << " " << version << std::endl;
         }
-        if (strcmp(argv[i], "--width") == 0)
+        else if (strcmp(argv[i], "--width") == 0)
         {
             window_width = atoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--height") == 0)
+        else if (strcmp(argv[i], "--height") == 0)
         {
             window_height = atoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--scale") == 0)
+        else if (strcmp(argv[i], "--scale") == 0)
         {
             render_scale = glm::clamp((float)atof(argv[i + 1]), 0.1f, 1.0f);
         }
@@ -204,14 +204,40 @@ int main(int argc, char *argv[])
         {
             ImGui::Begin("Console", &console_open);
 
+            static std::vector<std::string> messages;
+
+            // TODO: command arguments
             char command[256];
             if (ImGui::InputText("Input", command, sizeof(command), ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 if (strcmp(command, "help") == 0)
                 {
-                    // TODO: print options
+                    messages.push_back("TODO: help");
+                }
+                else if (strcmp(command, "quit") == 0)
+                {
+                    quit = true;
+                }
+                else if (strcmp(command, "map") == 0)
+                {
+                    if (scene)
+                    {
+                        delete scene;
+                    }
+                    scene = new pk::game_scene();
+                }
+                else
+                {
+                    messages.push_back("Unknown command");
                 }
             }
+
+            ImGui::BeginChild("");
+            for (auto &message : messages)
+            {
+                ImGui::Text(message.c_str());
+            }
+            ImGui::EndChild();
 
             ImGui::End();
         }

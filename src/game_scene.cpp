@@ -80,7 +80,7 @@ pk::game_scene::game_scene()
 
     ambient_source->set_loop(true);
     ambient_source->set_gain(0.25f);
-    ambient_source->play(ambient_sound);
+    // ambient_source->play(ambient_sound);
 }
 
 pk::game_scene::~game_scene()
@@ -259,8 +259,7 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
     acceleration -= velocity * 10.0f;
     camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
     velocity = acceleration * delta_time + velocity;
-    // float velocity_length = glm::length(velocity);
-    // camera->roll = 10.0f * glm::dot(main_camera_right, velocity) / velocity_length;
+    camera->roll = 2.0f * glm::dot(camera_right, velocity);
 
     static float angle = 0.0f;
     const float pi = 3.14159f;

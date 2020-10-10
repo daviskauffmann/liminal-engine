@@ -302,6 +302,9 @@ pk::renderer::renderer(
     glDeleteFramebuffers(1, &capture_fbo_id);
 
     delete brdf_program;
+
+    camera = nullptr;
+    skybox = nullptr;
 }
 
 pk::renderer::~renderer()
@@ -728,7 +731,8 @@ void pk::renderer::flush(unsigned int current_time, float delta_time)
 {
     if (!camera)
     {
-        std::cout << "Error: Camera must be set" << std::endl;
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        return;
     }
 
     // setup samplers
