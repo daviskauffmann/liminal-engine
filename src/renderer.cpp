@@ -1161,46 +1161,44 @@ void pk::renderer::render_waters(unsigned int current_time)
         water_model = glm::translate(water_model, water->position);
         water_model = glm::scale(water_model, {water->scale.x, 1.0f, water->scale.y});
 
-        bool reflect = false;
-        if (camera->position.y > water->position.y) // don't draw reflections if under the water
+        glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
+        if (camera->position.y < water->position.y) // flip reflection clipping plane if under the water
         {
-            reflect = true;
-            float old_camera_y = camera->position.y;
-            float old_camera_pitch = camera->pitch;
-            float old_camera_roll = camera->roll;
-            camera->position.y -= 2 * (camera->position.y - water->position.y);
-            camera->pitch = -camera->pitch;
-            camera->roll = -camera->roll;
-            glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-            render_objects(current_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
-            camera->position.y = old_camera_y;
-            camera->pitch = old_camera_pitch;
-            camera->roll = old_camera_roll;
+            reflection_clipping_plane *= -1;
         }
+        float old_camera_y = camera->position.y;
+        float old_camera_pitch = camera->pitch;
+        float old_camera_roll = camera->roll;
+        camera->position.y -= 2 * (camera->position.y - water->position.y);
+        camera->pitch = -camera->pitch;
+        camera->roll = -camera->roll;
+        render_objects(current_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
+        camera->position.y = old_camera_y;
+        camera->pitch = old_camera_pitch;
+        camera->roll = old_camera_roll;
 
         glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, water->position.y};
         if (camera->position.y < water->position.y) // flip refraction clipping plane if under the water
         {
-            refraction_clipping_plane.y = 1.0f;
-            refraction_clipping_plane.w = -water->position.y;
+            refraction_clipping_plane *= -1;
         }
         render_objects(current_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
 
         glViewport(0, 0, render_width, render_height);
         glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
-        if (reflect)
-        {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         water_program->bind();
         water_program->set_mat4("water.model", water_model);
-        water_program->set_vec3("light.direction", directional_lights[0]->direction); // TODO: specular reflections for all lights
-        water_program->set_vec3("light.color", directional_lights[0]->color);
+        if (directional_lights.size() > 0)
+        {
+            water_program->set_vec3("light.direction", directional_lights[0]->direction); // TODO: specular reflections for all lights
+            water_program->set_vec3("light.color", directional_lights[0]->color);
+        }
         water_program->set_float("near_plane", 0.1f);
         water_program->set_float("far_plane", 1000.0f);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, reflect ? water_reflection_color_texture_id : 0);
+        glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
         glActiveTexture(GL_TEXTURE2);
@@ -1213,11 +1211,8 @@ void pk::renderer::render_waters(unsigned int current_time)
         glDrawArrays(GL_TRIANGLES, 0, water_vertices_size);
         glBindVertexArray(0);
         water_program->unbind();
-        if (reflect)
-        {
-            glBlendFunc(GL_ONE, GL_ZERO);
-            glDisable(GL_BLEND);
-        }
+        glBlendFunc(GL_ONE, GL_ZERO);
+        glDisable(GL_BLEND);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
