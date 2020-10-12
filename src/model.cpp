@@ -19,6 +19,7 @@ pk::model::model(const std::string &filename, bool flip_uvs)
     }
     directory = filename.substr(0, filename.find_last_of('/'));
     process_node(scene->mRootNode, scene);
+    std::cout << "Loaded: " << filename << std::endl;
 }
 
 pk::model::~model()

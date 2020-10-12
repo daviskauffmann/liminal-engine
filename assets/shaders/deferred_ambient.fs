@@ -41,6 +41,7 @@ void main()
     float metallic = texture(geometry.material_map, vertex.uv).r;
     float roughness = texture(geometry.material_map, vertex.uv).g;
     float ao = texture(geometry.material_map, vertex.uv).b;
+    float height = texture(geometry.material_map, vertex.uv).a;
 
     vec3 n = normalize(normal);
     vec3 v = normalize(camera.position - position);

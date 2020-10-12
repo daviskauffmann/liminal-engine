@@ -46,7 +46,7 @@ void pk::mesh::draw() const
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_OPACITY].size() > 0 ? textures[aiTextureType_OPACITY][0]->texture_id : 0 : 0);
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_AMBIENT_OCCLUSION].size() > 0 ? textures[aiTextureType_AMBIENT_OCCLUSION][0]->texture_id : 0 : 0);
+    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_AMBIENT].size() > 0 ? textures[aiTextureType_AMBIENT][0]->texture_id : 0 : 0);
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_HEIGHT].size() > 0 ? textures[aiTextureType_HEIGHT][0]->texture_id : 0 : 0);
 

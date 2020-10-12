@@ -118,6 +118,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
     stbi_set_flip_vertically_on_load(true);
     int width, height, num_components;
     float *image = stbi_loadf(filename.c_str(), &width, &height, &num_components, 0);
+    std::cout << "Loaded: " << filename << std::endl;
     glTexImage2D(
         GL_TEXTURE_2D,
         0,

@@ -42,7 +42,7 @@ vec3 calc_normal()
 void main()
 {
     position_map = vertex.position;
-    normal_map = vertex.normal;
+    normal_map = calc_normal();
     albedo_map = texture(material.albedo_map, vertex.uv).rgb;
     material_map.r = texture(material.metallic_map, vertex.uv).r;
     material_map.g = texture(material.roughness_map, vertex.uv).r;

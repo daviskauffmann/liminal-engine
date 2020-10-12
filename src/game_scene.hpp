@@ -1,6 +1,8 @@
 #ifndef GAME_SCENE_HPP
 #define GAME_SCENE_HPP
 
+#include <bullet/btBulletDynamicsCommon.h>
+
 #include "audio.hpp"
 #include "camera.hpp"
 #include "directional_light.hpp"
@@ -35,6 +37,9 @@ namespace pk
 
         pk::skybox *skybox;
 
+        pk::model *cube_model;
+        pk::object *cube;
+
         pk::model *backpack_model;
         pk::object *backpack;
 
@@ -58,6 +63,12 @@ namespace pk
         pk::sound *ambient_sound;
         pk::sound *bounce_sound;
         pk::sound *shoot_sound;
+
+        btDefaultCollisionConfiguration *collision_configuration;
+        btCollisionDispatcher *dispatcher;
+        btBroadphaseInterface *overlapping_pair_cache;
+        btSequentialImpulseConstraintSolver *solver;
+        btDiscreteDynamicsWorld *world;
 
         bool edit_mode;
         bool lock_cursor;

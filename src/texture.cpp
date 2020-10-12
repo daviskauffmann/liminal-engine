@@ -11,8 +11,9 @@ pk::texture::texture(const std::string &filename, bool srgb)
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
     {
-        std::cout << "Error: Couldn't load image " << filename << std::endl;
+        std::cout << "Error: " << IMG_GetError() << std::endl;
     }
+    std::cout << "Loaded: " << filename << std::endl;
     GLenum internal_format;
     GLenum format;
     if (surface->format->BytesPerPixel == 1)

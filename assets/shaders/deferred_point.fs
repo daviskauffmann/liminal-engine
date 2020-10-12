@@ -47,6 +47,7 @@ void main()
     float metallic = texture(geometry.material_map, vertex.uv).r;
     float roughness = texture(geometry.material_map, vertex.uv).g;
     float ao = texture(geometry.material_map, vertex.uv).b;
+    float height = texture(geometry.material_map, vertex.uv).a;
 
     vec3 n = normalize(normal);
     vec3 v = normalize(camera.position - position);
@@ -72,7 +73,7 @@ void main()
     vec3 kd = vec3(1.0) - ks;
     kd *= 1.0 - metallic;
     float n_dot_l = max(dot(n, l), 0.0);
-    vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l;
+    vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
     
     vec3 frag_to_light = position - light.position;
     float current_depth = length(frag_to_light);

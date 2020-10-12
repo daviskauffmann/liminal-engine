@@ -24,7 +24,16 @@ pk::game_scene::game_scene()
         backpack_model,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f));
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        0.0f);
+
+    cube_model = new pk::model("assets/models/cube/cube.obj");
+    cube = new pk::object(
+        cube_model,
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        0.0f);
 
     const float sun_intensity = 10.0f;
     sun = new pk::directional_light(
@@ -73,6 +82,12 @@ pk::game_scene::game_scene()
     bounce_sound = new pk::sound("assets/audio/bounce.wav");
     shoot_sound = new pk::sound("assets/audio/shoot.wav");
 
+    collision_configuration = new btDefaultCollisionConfiguration();
+    dispatcher = new btCollisionDispatcher(collision_configuration);
+    overlapping_pair_cache = new btDbvtBroadphase();
+    solver = new btSequentialImpulseConstraintSolver();
+    world = new btDiscreteDynamicsWorld(dispatcher, overlapping_pair_cache, solver, collision_configuration);
+
     edit_mode = false;
     lock_cursor = true;
     torch_on = true;
@@ -81,6 +96,10 @@ pk::game_scene::game_scene()
     ambient_source->set_loop(true);
     ambient_source->set_gain(0.25f);
     // ambient_source->play(ambient_sound);
+
+    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
+    world->addRigidBody(backpack->rigidbody);
+    world->addRigidBody(cube->rigidbody);
 }
 
 pk::game_scene::~game_scene()
@@ -91,6 +110,9 @@ pk::game_scene::~game_scene()
 
     delete backpack_model;
     delete backpack;
+
+    delete cube_model;
+    delete cube;
 
     delete sun;
 
@@ -112,6 +134,12 @@ pk::game_scene::~game_scene()
     delete ambient_sound;
     delete bounce_sound;
     delete shoot_sound;
+
+    delete world;
+    delete solver;
+    delete overlapping_pair_cache;
+    delete dispatcher;
+    delete collision_configuration;
 }
 
 pk::scene *pk::game_scene::handle_event(SDL_Event event)
@@ -259,7 +287,7 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
     acceleration -= velocity * 10.0f;
     camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
     velocity = acceleration * delta_time + velocity;
-    camera->roll = 2.0f * glm::dot(camera_right, velocity);
+    camera->roll = glm::dot(camera_right, velocity);
 
     static float angle = 0.0f;
     const float pi = 3.14159f;
@@ -307,6 +335,8 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
         }
     }
 
+    world->stepSimulation(delta_time);
+
     return this;
 }
 
@@ -315,6 +345,7 @@ void pk::game_scene::render(pk::renderer *renderer) const
     renderer->camera = camera;
     renderer->skybox = skybox;
     renderer->objects.push_back(backpack);
+    // renderer->objects.push_back(cube);
     renderer->directional_lights.push_back(sun);
     renderer->point_lights.push_back(red_light);
     renderer->point_lights.push_back(yellow_light);

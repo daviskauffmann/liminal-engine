@@ -9,8 +9,9 @@ pk::sound::sound(const std::string &filename)
     Mix_Chunk *chunk = Mix_LoadWAV(filename.c_str());
     if (!chunk)
     {
-        std::cout << "Error: Couldn't load chunk" << std::endl;
+        std::cout << "Error: " << Mix_GetError() << std::endl;
     }
+    std::cout << "Loaded: " << filename << std::endl;
     alBufferData(
         buffer_id,
         AL_FORMAT_MONO16,

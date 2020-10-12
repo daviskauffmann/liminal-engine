@@ -13,8 +13,9 @@ pk::cubemap::cubemap(std::vector<std::string> filenames)
         SDL_Surface *surface = IMG_Load(filenames[i].c_str());
         if (!surface)
         {
-            std::cout << "Error: Couldn't load image " << filenames[i] << std::endl;
+            std::cout << "Error: " << IMG_GetError() << std::endl;
         }
+        std::cout << "Loaded: " << filenames[i] << std::endl;
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0,
