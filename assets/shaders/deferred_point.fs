@@ -30,12 +30,11 @@ uniform struct Geometry
 
 uniform struct Light
 {
+    float far_plane;
     vec3 position;
     vec3 color;
     samplerCube depth_cubemap;
 } light;
-
-uniform float far_plane;
 
 const float height_scale = 1.0;
 
@@ -81,7 +80,7 @@ void main()
     float bias = 0.15;
     int samples = 20;
     float view_distance = length(camera.position - position);
-    float disk_radius = (1.0 + (view_distance / far_plane)) / 25.0;
+    float disk_radius = (1.0 + (view_distance / light.far_plane)) / 25.0;
     vec3 grid_sampling_disk[20] = vec3[]
     (
         vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
@@ -93,7 +92,7 @@ void main()
     for (int i = 0; i < samples; i++)
     {
         float closest_depth = texture(light.depth_cubemap, frag_to_light + grid_sampling_disk[i] * disk_radius).r;
-        closest_depth *= far_plane;
+        closest_depth *= light.far_plane;
         if (current_depth - bias > closest_depth)
         {
             shadow += 1.0;

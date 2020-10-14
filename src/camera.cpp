@@ -2,6 +2,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+float pk::camera::near_plane = 0.1f;
+float pk::camera::far_plane = 1000.0f;
+
 pk::camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float fov)
     : position(position),
       pitch(pitch),
@@ -29,7 +32,7 @@ glm::vec3 pk::camera::calc_right() const
 
 glm::mat4 pk::camera::calc_projection(float aspect) const
 {
-    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, 0.1f, 1000.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, near_plane, far_plane);
     return projection;
 }
 

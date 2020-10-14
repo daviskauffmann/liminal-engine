@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
+    bool wireframe = false;
 
     bool quit = false;
     while (!quit)
@@ -191,6 +192,7 @@ int main(int argc, char *argv[])
             scene->render(&renderer);
         }
 
+        renderer.wireframe = wireframe;
         renderer.flush(current_time, delta_time);
 
         display.start_gui();
@@ -225,6 +227,10 @@ int main(int argc, char *argv[])
                         delete scene;
                     }
                     scene = new pk::game_scene();
+                }
+                else if (strcmp(command, "twf") == 0)
+                {
+                    wireframe = !wireframe;
                 }
                 else
                 {

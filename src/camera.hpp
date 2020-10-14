@@ -8,6 +8,9 @@ namespace pk
 {
     struct camera
     {
+        static float near_plane;
+        static float far_plane;
+
         glm::vec3 position;
         float pitch;
         float yaw;

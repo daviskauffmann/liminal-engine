@@ -33,6 +33,12 @@ namespace pk
         void gui() const override;
 
     private:
+        btDefaultCollisionConfiguration *collision_configuration;
+        btCollisionDispatcher *dispatcher;
+        btBroadphaseInterface *overlapping_pair_cache;
+        btSequentialImpulseConstraintSolver *solver;
+        btDiscreteDynamicsWorld *world;
+
         pk::camera *camera;
 
         pk::skybox *skybox;
@@ -63,12 +69,6 @@ namespace pk
         pk::sound *ambient_sound;
         pk::sound *bounce_sound;
         pk::sound *shoot_sound;
-
-        btDefaultCollisionConfiguration *collision_configuration;
-        btCollisionDispatcher *dispatcher;
-        btBroadphaseInterface *overlapping_pair_cache;
-        btSequentialImpulseConstraintSolver *solver;
-        btDiscreteDynamicsWorld *world;
 
         bool edit_mode;
         bool lock_cursor;

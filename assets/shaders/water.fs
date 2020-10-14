@@ -11,10 +11,10 @@ in struct Vertex
 layout (location = 0) out vec4 frag_color;
 layout (location = 1) out vec4 bright_color;
 
-uniform unsigned int current_time;
-
 uniform struct Camera
 {
+    float near_plane;
+    float far_plane;
     mat4 projection;
     mat4 view;
     vec3 position;
@@ -36,8 +36,7 @@ uniform struct Light
     vec3 color;
 } light;
 
-uniform float near_plane;
-uniform float far_plane;
+uniform uint current_time;
 
 const float speed = 0.02;
 const float wave_strength = 0.01;
@@ -51,9 +50,9 @@ void main()
 	vec2 refraction_uv = vec2(clip_space_proj_coords.x, clip_space_proj_coords.y);
 
 	float depth_to_floor = texture(water.depth_map, refraction_uv).r;
-	float distance_to_floor = 2.0 * near_plane * far_plane / (far_plane + near_plane - (2.0 * depth_to_floor - 1.0) * (far_plane - near_plane));
+	float distance_to_floor = 2.0 * camera.near_plane * camera.far_plane / (camera.far_plane + camera.near_plane - (2.0 * depth_to_floor - 1.0) * (camera.far_plane - camera.near_plane));
 	float depth_to_surface = gl_FragCoord.z;
-	float distance_to_surface = 2.0 * near_plane * far_plane / (far_plane + near_plane - (2.0 * depth_to_surface - 1.0) * (far_plane - near_plane));
+	float distance_to_surface = 2.0 * camera.near_plane * camera.far_plane / (camera.far_plane + camera.near_plane - (2.0 * depth_to_surface - 1.0) * (camera.far_plane - camera.near_plane));
 	float water_depth = distance_to_floor - distance_to_surface;
 
 	float move_factor = float(current_time) / 1000 * speed;

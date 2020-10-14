@@ -25,6 +25,7 @@ namespace pk
     class renderer
     {
     public:
+        bool wireframe;
         bool greyscale;
         pk::camera *camera;
         pk::skybox *skybox;

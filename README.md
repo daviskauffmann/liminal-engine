@@ -64,10 +64,10 @@ make clean
 - Runtime shader reloading
 - Terrain (WIP)
 - 2D sprites (WIP)
+- Physics (WIP)
 
 ### Upcoming
 
-- Physics
 - Transparency
 - Ambient occlusion
 - Particles
@@ -80,16 +80,17 @@ make clean
 
 ## Screenshots
 
-![1](screenshots/1.png)
-![2](screenshots/2.png)
+![Backpack](screenshots/backpack.png)
 
 ## Resources Used
 
 [Learn OpenGL](https://learnopengl.com)
 
-[Lazy Foo' Productions](https://lazyfoo.net)
-
 [opengl-tutorial.org](http://www.opengl-tutorial.org)
+
+[ogldev](http://ogldev.atspace.co.uk)
+
+[Lazy Foo' Productions](https://lazyfoo.net)
 
 [thebennybox](https://www.youtube.com/user/thebennybox)
 
@@ -98,3 +99,5 @@ make clean
 [The Cherno](https://www.youtube.com/user/TheChernoProject)
 
 [Hopson](https://www.youtube.com/channel/UCeQhZOvNKSBRU0Mdg7V44wA)
+
+[Byungil Jeong - CS594 - Project 2](https://www.evl.uic.edu/bijeong/cs594/proj2)

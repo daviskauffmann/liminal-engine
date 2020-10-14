@@ -8,6 +8,13 @@
 // TODO: read from file
 pk::game_scene::game_scene()
 {
+    collision_configuration = new btDefaultCollisionConfiguration();
+    dispatcher = new btCollisionDispatcher(collision_configuration);
+    overlapping_pair_cache = new btDbvtBroadphase();
+    solver = new btSequentialImpulseConstraintSolver();
+    world = new btDiscreteDynamicsWorld(dispatcher, overlapping_pair_cache, solver, collision_configuration);
+    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
+
     camera = new pk::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
@@ -26,6 +33,7 @@ pk::game_scene::game_scene()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         0.0f);
+    world->addRigidBody(backpack->rigidbody);
 
     cube_model = new pk::model("assets/models/cube/cube.obj");
     cube = new pk::object(
@@ -34,6 +42,7 @@ pk::game_scene::game_scene()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         0.0f);
+    world->addRigidBody(cube->rigidbody);
 
     const float sun_intensity = 10.0f;
     sun = new pk::directional_light(
@@ -75,6 +84,9 @@ pk::game_scene::game_scene()
     terrain = new pk::terrain(0, 0);
 
     ambient_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    ambient_source->set_loop(true);
+    ambient_source->set_gain(0.25f);
+    // ambient_source->play(ambient_sound);
     bounce_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
     shoot_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -82,28 +94,20 @@ pk::game_scene::game_scene()
     bounce_sound = new pk::sound("assets/audio/bounce.wav");
     shoot_sound = new pk::sound("assets/audio/shoot.wav");
 
-    collision_configuration = new btDefaultCollisionConfiguration();
-    dispatcher = new btCollisionDispatcher(collision_configuration);
-    overlapping_pair_cache = new btDbvtBroadphase();
-    solver = new btSequentialImpulseConstraintSolver();
-    world = new btDiscreteDynamicsWorld(dispatcher, overlapping_pair_cache, solver, collision_configuration);
-
     edit_mode = false;
     lock_cursor = true;
     torch_on = true;
     torch_follow = true;
-
-    ambient_source->set_loop(true);
-    ambient_source->set_gain(0.25f);
-    // ambient_source->play(ambient_sound);
-
-    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
-    world->addRigidBody(backpack->rigidbody);
-    world->addRigidBody(cube->rigidbody);
 }
 
 pk::game_scene::~game_scene()
 {
+    delete world;
+    delete solver;
+    delete overlapping_pair_cache;
+    delete dispatcher;
+    delete collision_configuration;
+
     delete camera;
 
     delete skybox;
@@ -134,12 +138,6 @@ pk::game_scene::~game_scene()
     delete ambient_sound;
     delete bounce_sound;
     delete shoot_sound;
-
-    delete world;
-    delete solver;
-    delete overlapping_pair_cache;
-    delete dispatcher;
-    delete collision_configuration;
 }
 
 pk::scene *pk::game_scene::handle_event(SDL_Event event)
@@ -287,6 +285,7 @@ pk::scene *pk::game_scene::update(pk::audio *audio, float delta_time)
     acceleration -= velocity * 10.0f;
     camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
     velocity = acceleration * delta_time + velocity;
+    // camera->pitch = -glm::dot(camera_front, velocity);
     camera->roll = glm::dot(camera_right, velocity);
 
     static float angle = 0.0f;
@@ -347,10 +346,10 @@ void pk::game_scene::render(pk::renderer *renderer) const
     renderer->objects.push_back(backpack);
     // renderer->objects.push_back(cube);
     renderer->directional_lights.push_back(sun);
-    renderer->point_lights.push_back(red_light);
-    renderer->point_lights.push_back(yellow_light);
-    renderer->point_lights.push_back(green_light);
-    renderer->point_lights.push_back(blue_light);
+    // renderer->point_lights.push_back(red_light);
+    // renderer->point_lights.push_back(yellow_light);
+    // renderer->point_lights.push_back(green_light);
+    // renderer->point_lights.push_back(blue_light);
     if (torch_on)
     {
         renderer->spot_lights.push_back(torch);

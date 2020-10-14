@@ -34,39 +34,47 @@ void pk::spot_light::set_depth_map_size(int depth_map_size)
     glDeleteFramebuffers(1, &depth_map_fbo_id);
     glDeleteTextures(1, &depth_map_texture_id);
 
-    glGenTextures(1, &depth_map_texture_id);
-    glBindTexture(GL_TEXTURE_2D, depth_map_texture_id);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_DEPTH_COMPONENT,
-        depth_map_size,
-        depth_map_size,
-        0,
-        GL_DEPTH_COMPONENT,
-        GL_FLOAT,
-        nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    GLfloat border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     glGenFramebuffers(1, &depth_map_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo_id);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_TEXTURE_2D,
-        depth_map_texture_id,
-        0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "Error: Couldn't complete depth map framebuffer" << std::endl;
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+
+        {
+            glGenTextures(1, &depth_map_texture_id);
+            glBindTexture(GL_TEXTURE_2D, depth_map_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_DEPTH_COMPONENT,
+                    depth_map_size,
+                    depth_map_size,
+                    0,
+                    GL_DEPTH_COMPONENT,
+                    GL_FLOAT,
+                    nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+                GLfloat border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+                glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_TEXTURE_2D,
+                depth_map_texture_id,
+                0);
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cout << "Error: Couldn't complete depth map framebuffer" << std::endl;
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

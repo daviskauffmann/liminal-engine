@@ -6,8 +6,6 @@
 
 pk::texture::texture(const std::string &filename, bool srgb)
 {
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
     {
@@ -30,24 +28,30 @@ pk::texture::texture(const std::string &filename, bool srgb)
         internal_format = srgb ? GL_SRGB_ALPHA : GL_RGBA;
         format = GL_RGBA;
     }
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        internal_format,
-        surface->w,
-        surface->h,
-        0,
-        format,
-        GL_UNSIGNED_BYTE,
-        surface->pixels);
-    SDL_FreeSurface(surface);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.4f);
+
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    {
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            internal_format,
+            surface->w,
+            surface->h,
+            0,
+            format,
+            GL_UNSIGNED_BYTE,
+            surface->pixels);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.4f);
+    }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    SDL_FreeSurface(surface);
 }
 
 pk::texture::~texture()
