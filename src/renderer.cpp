@@ -230,9 +230,12 @@ pk::renderer::renderer(
     color_program = new pk::program(
         "assets/shaders/color.vs",
         "assets/shaders/color.fs");
-    geometry_program = new pk::program(
+    geometry_object_program = new pk::program(
         "assets/shaders/geometry.vs",
-        "assets/shaders/geometry.fs");
+        "assets/shaders/geometry_object.fs");
+    geometry_terrain_program = new pk::program(
+        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry_terrain.fs");
     deferred_ambient_program = new pk::program(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_ambient.fs");
@@ -402,7 +405,8 @@ pk::renderer::~renderer()
     delete depth_program;
     delete depth_cube_program;
     delete color_program;
-    delete geometry_program;
+    delete geometry_object_program;
+    delete geometry_terrain_program;
     delete deferred_ambient_program;
     delete deferred_directional_program;
     delete deferred_point_program;
@@ -816,7 +820,8 @@ void pk::renderer::reload_programs()
     depth_program->reload();
     depth_cube_program->reload();
     color_program->reload();
-    geometry_program->reload();
+    geometry_object_program->reload();
+    geometry_terrain_program->reload();
     deferred_ambient_program->reload();
     deferred_directional_program->reload();
     deferred_point_program->reload();
@@ -1015,38 +1020,47 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        geometry_program->bind();
+        geometry_object_program->bind();
         {
-            geometry_program->set_mat4("camera.projection", camera_projection);
-            geometry_program->set_mat4("camera.view", camera_view);
-            geometry_program->set_vec3("camera.position", camera->position);
-            geometry_program->set_vec4("clipping_plane", clipping_plane);
-            geometry_program->set_int("material.albedo_map", 0);
-            geometry_program->set_int("material.normal_map", 1);
-            geometry_program->set_int("material.metallic_map", 2);
-            geometry_program->set_int("material.roughness_map", 3);
-            geometry_program->set_int("material.occlusion_map", 4);
-            geometry_program->set_int("material.height_map", 5);
+            geometry_object_program->set_mat4("camera.projection", camera_projection);
+            geometry_object_program->set_mat4("camera.view", camera_view);
+            geometry_object_program->set_vec3("camera.position", camera->position);
+            geometry_object_program->set_vec4("clipping_plane", clipping_plane);
+            geometry_object_program->set_int("material.albedo_map", 0);
+            geometry_object_program->set_int("material.normal_map", 1);
+            geometry_object_program->set_int("material.metallic_map", 2);
+            geometry_object_program->set_int("material.roughness_map", 3);
+            geometry_object_program->set_int("material.occlusion_map", 4);
+            geometry_object_program->set_int("material.height_map", 5);
 
             for (auto &object : objects)
             {
                 glm::mat4 object_model = object->calc_model();
 
-                geometry_program->set_mat4("object.model", object_model);
+                geometry_object_program->set_mat4("object.model", object_model);
 
                 object->model->draw();
             }
+        }
+        geometry_object_program->unbind();
+
+        geometry_terrain_program->bind();
+        {
+            geometry_terrain_program->set_mat4("camera.projection", camera_projection);
+            geometry_terrain_program->set_mat4("camera.view", camera_view);
+            geometry_terrain_program->set_vec3("camera.position", camera->position);
+            geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
 
             for (auto &terrain : terrains)
             {
                 glm::mat4 terrain_model = terrain->calc_model();
 
-                geometry_program->set_mat4("object.model", terrain_model);
+                geometry_terrain_program->set_mat4("object.model", terrain_model);
 
                 terrain->mesh->draw();
             }
         }
-        geometry_program->unbind();
+        geometry_terrain_program->unbind();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDisable(GL_CULL_FACE);

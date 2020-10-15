@@ -13,7 +13,7 @@ namespace pk
         glm::vec3 position;
         pk::mesh *mesh;
 
-        terrain(int grid_x, int grid_z);
+        terrain(const std::string &filename, int grid_x, int grid_z);
         ~terrain();
 
         glm::mat4 calc_model() const;

@@ -85,7 +85,8 @@ namespace pk
         pk::program *depth_program;
         pk::program *depth_cube_program;
         pk::program *color_program;
-        pk::program *geometry_program;
+        pk::program *geometry_object_program;
+        pk::program *geometry_terrain_program;
         pk::program *deferred_ambient_program;
         pk::program *deferred_directional_program;
         pk::program *deferred_point_program;

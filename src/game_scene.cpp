@@ -81,7 +81,7 @@ pk::game_scene::game_scene()
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec2(100.0f, 100.0f));
 
-    terrain = new pk::terrain(0, 0);
+    terrain = new pk::terrain("assets/images/heightmap.png", 0, 0);
 
     ambient_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
     ambient_source->set_loop(true);
@@ -346,14 +346,15 @@ void pk::game_scene::render(pk::renderer *renderer) const
     renderer->objects.push_back(backpack);
     // renderer->objects.push_back(cube);
     renderer->directional_lights.push_back(sun);
-    // renderer->point_lights.push_back(red_light);
-    // renderer->point_lights.push_back(yellow_light);
-    // renderer->point_lights.push_back(green_light);
-    // renderer->point_lights.push_back(blue_light);
+    renderer->point_lights.push_back(red_light);
+    renderer->point_lights.push_back(yellow_light);
+    renderer->point_lights.push_back(green_light);
+    renderer->point_lights.push_back(blue_light);
     if (torch_on)
     {
         renderer->spot_lights.push_back(torch);
     }
+    renderer->terrains.push_back(terrain);
     renderer->waters.push_back(water);
 }
 
