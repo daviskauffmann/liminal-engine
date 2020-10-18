@@ -42,6 +42,7 @@ pk::mesh::~mesh()
 
 void pk::mesh::draw() const
 {
+    // TODO: support multiple textures per type in the shader?
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_DIFFUSE].size() > 0 ? textures[aiTextureType_DIFFUSE][0]->texture_id : 0 : 0);
     glActiveTexture(GL_TEXTURE1);

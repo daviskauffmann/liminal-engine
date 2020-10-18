@@ -25,13 +25,13 @@ uniform struct Geometry
     sampler2D material_map;
 } geometry;
 
-uniform float far_plane;
+uniform struct Skybox
+{
+    samplerCube irradiance_cubemap;
+    samplerCube prefilter_cubemap;
+} skybox;
 
-uniform samplerCube irradiance_cubemap;
-uniform samplerCube prefilter_cubemap;
 uniform sampler2D brdf_map;
-
-const float height_scale = 1.0;
 
 void main()
 {
@@ -54,10 +54,10 @@ void main()
     vec3 ks = f;
     vec3 kd = 1.0 - ks;
     kd *= 1.0 - metallic;
-    vec3 irradiance = texture(irradiance_cubemap, n).rgb;
+    vec3 irradiance = texture(skybox.irradiance_cubemap, n).rgb;
     vec3 diffuse = irradiance * albedo;
     const float MAX_REFLECTION_LOD = 4.0;
-    vec3 prefilter = textureLod(prefilter_cubemap, r,  roughness * MAX_REFLECTION_LOD).rgb;    
+    vec3 prefilter = textureLod(skybox.prefilter_cubemap, r,  roughness * MAX_REFLECTION_LOD).rgb;    
     vec2 brdf  = texture(brdf_map, vec2(max(dot(n, v), 0.0), roughness)).rg;
     vec3 specular = prefilter * (f * brdf.x + brdf.y);
     vec3 color = (kd * diffuse + specular) * ao;

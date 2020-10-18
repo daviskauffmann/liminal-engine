@@ -115,7 +115,7 @@ pk::mesh *pk::model::process_mesh(aiMesh *mesh, const aiScene *scene) const
     }
 
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-    for (aiTextureType type = aiTextureType_NONE; type < aiTextureType_UNKNOWN + 1; type = (aiTextureType)(type + 1))
+    for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
     {
         textures.push_back(load_material_textures(material, type));
     }

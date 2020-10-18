@@ -15,8 +15,6 @@ layout (location = 1) out vec4 bright_color;
 
 uniform struct Camera
 {
-    mat4 projection;
-    mat4 view;
     vec3 position;
 } camera;
 
@@ -32,12 +30,9 @@ uniform struct Light
 {
     vec3 direction;
     vec3 color;
-	mat4 projection;
-	mat4 view;
+    mat4 view_projection_matrix;
     sampler2D depth_map;
 } light;
-
-const float height_scale = 1.0;
 
 void main()
 {
@@ -73,10 +68,10 @@ void main()
     float n_dot_l = max(dot(n, l), 0.0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
    
-    vec4 light_space_position = light.projection * light.view * vec4(position, 1.0);
+    vec4 light_space_position = light.view_projection_matrix * vec4(position, 1.0);
     vec3 light_space_proj_coords = (light_space_position.xyz / light_space_position.w) * 0.5 + 0.5;
     float current_depth = light_space_proj_coords.z;
-    float bias = max(0.05 * (1.0 - dot(n, l)), 0.005) * 0.1;
+    float bias = max(0.05 * (1.0 - dot(n, l)), 0.005);
     float shadow = 0.0;
     vec2 texel_size = 1.0 / textureSize(light.depth_map, 0);
     for (int x = -1; x <= 1; x++)

@@ -9,6 +9,10 @@ namespace pk
 {
     struct directional_light
     {
+        static float shadow_map_size;
+        static float near_plane;
+        static float far_plane;
+
         glm::vec3 direction;
         glm::vec3 color;
         int depth_map_size;

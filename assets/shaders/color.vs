@@ -2,23 +2,13 @@
 
 layout (location = 0) in vec3 position;
 
-uniform struct Camera
-{
-    mat4 projection;
-    mat4 view;
-} camera;
+uniform mat4 mvp;
 
-uniform struct Object
-{
-    mat4 model;
-} object;
-
+uniform mat4 model;
 uniform vec4 clipping_plane;
 
 void main()
 {
-	vec4 world_position = object.model * vec4(position, 1.0);
-
-	gl_ClipDistance[0] = dot(world_position, clipping_plane);
-    gl_Position = camera.projection * camera.view * world_position;
+    gl_Position = mvp * vec4(position, 1.0);
+	gl_ClipDistance[0] = dot(model * vec4(position, 1.0), clipping_plane);
 }

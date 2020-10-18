@@ -9,6 +9,9 @@ namespace pk
 {
     struct spot_light
     {
+        static float near_plane;
+        static float far_plane;
+
         glm::vec3 position;
         glm::vec3 direction;
         glm::vec3 color;

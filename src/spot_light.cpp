@@ -3,6 +3,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+float pk::spot_light::near_plane = 0.1f;
+float pk::spot_light::far_plane = 10.0f;
+
 pk::spot_light::spot_light(
     glm::vec3 position,
     glm::vec3 direction,
@@ -81,7 +84,7 @@ void pk::spot_light::set_depth_map_size(int depth_map_size)
 
 glm::mat4 pk::spot_light::calc_projection() const
 {
-    glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane);
     return projection;
 }
 

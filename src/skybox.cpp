@@ -95,13 +95,13 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
     // setup capture matrices
     glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 capture_views[] =
-        {glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+    glm::mat4 capture_mvps[] =
+        {capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
     // setup capture fbo
     GLuint capture_fbo_id;
@@ -200,7 +200,6 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
         equirectangular_to_cubemap_program->bind();
         {
-            equirectangular_to_cubemap_program->set_mat4("capture.projection", capture_projection);
             equirectangular_to_cubemap_program->set_int("equirectangular_map", 0);
 
             glActiveTexture(GL_TEXTURE0);
@@ -217,7 +216,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                equirectangular_to_cubemap_program->set_mat4("capture.view", capture_views[i]);
+                equirectangular_to_cubemap_program->set_mat4("mvp", capture_mvps[i]);
 
                 glBindVertexArray(capture_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, capture_vertices_size);
@@ -288,7 +287,6 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
         irradiance_convolution_program->bind();
         {
-            irradiance_convolution_program->set_mat4("capture.projection", capture_projection);
             irradiance_convolution_program->set_int("environment_cubemap", 0);
 
             glActiveTexture(GL_TEXTURE0);
@@ -305,7 +303,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                irradiance_convolution_program->set_mat4("capture.view", capture_views[i]);
+                irradiance_convolution_program->set_mat4("mvp", capture_mvps[i]);
 
                 glBindVertexArray(capture_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, capture_vertices_size);
@@ -391,7 +389,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    prefilter_convolution_program->set_mat4("capture.view", capture_views[i]);
+                    prefilter_convolution_program->set_mat4("mvp", capture_mvps[i]);
 
                     glBindVertexArray(capture_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, capture_vertices_size);

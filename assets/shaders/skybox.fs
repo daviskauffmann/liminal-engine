@@ -8,11 +8,14 @@ in struct Vertex
 layout (location = 0) out vec4 frag_color;
 layout (location = 1) out vec4 bright_color;
 
-uniform samplerCube environment_cubemap;
+uniform struct Skybox
+{
+    samplerCube environment_cubemap;
+} skybox;
 
 void main()
 {    
-    vec3 color = texture(environment_cubemap, vertex.position).rgb;
+    vec3 color = texture(skybox.environment_cubemap, vertex.position).rgb;
 
 	frag_color = vec4(color, 1.0);
 

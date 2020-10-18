@@ -15,8 +15,6 @@ layout (location = 1) out vec4 bright_color;
 
 uniform struct Camera
 {
-    mat4 projection;
-    mat4 view;
     vec3 position;
 } camera;
 
@@ -36,7 +34,14 @@ uniform struct Light
     samplerCube depth_cubemap;
 } light;
 
-const float height_scale = 1.0;
+const vec3 grid_sampling_disk[20] = vec3[]
+(
+    vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+    vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+    vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+    vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+    vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
 
 void main()
 {
@@ -81,14 +86,6 @@ void main()
     int samples = 20;
     float view_distance = length(camera.position - position);
     float disk_radius = (1.0 + (view_distance / light.far_plane)) / 25.0;
-    vec3 grid_sampling_disk[20] = vec3[]
-    (
-        vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
-        vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
-        vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
-        vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
-        vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
-    );
     for (int i = 0; i < samples; i++)
     {
         float closest_depth = texture(light.depth_cubemap, frag_to_light + grid_sampling_disk[i] * disk_radius).r;

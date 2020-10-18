@@ -3,6 +3,7 @@
 
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>
+#include <SDL2/SDL.h>
 
 #include "mesh.hpp"
 
@@ -10,13 +11,19 @@ namespace pk
 {
     struct terrain
     {
+        static float size;
+        static float height_scale;
+
         glm::vec3 position;
         pk::mesh *mesh;
 
-        terrain(const std::string &filename, int grid_x, int grid_z);
+        terrain(glm::vec3 position, const std::string &heightmap_filename);
         ~terrain();
 
         glm::mat4 calc_model() const;
+
+    private:
+        float get_height(SDL_Surface *surface, int x, int z) const;
     };
 } // namespace pk
 

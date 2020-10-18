@@ -15,14 +15,11 @@ uniform struct Camera
 {
     float near_plane;
     float far_plane;
-    mat4 projection;
-    mat4 view;
     vec3 position;
 } camera;
 
 uniform struct Water
 {
-	mat4 model;
 	sampler2D reflection_map;
 	sampler2D refraction_map;
 	sampler2D depth_map;

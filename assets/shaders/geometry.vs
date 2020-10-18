@@ -11,27 +11,21 @@ out struct Vertex
     vec2 uv;
 } vertex;
 
-uniform struct Camera
-{
-    mat4 projection;
-    mat4 view;
-} camera;
+uniform mat4 mvp;
 
-uniform struct Object
-{
-    mat4 model;
-} object;
-
+uniform mat4 model;
 uniform vec4 clipping_plane;
+
+uniform float tiling;
 
 void main()
 {
-	vec4 world_position = object.model * vec4(position, 1.0);
+    vec4 world_position = model * vec4(position, 1.0);
 
+    gl_Position = mvp * vec4(position, 1.0);
 	gl_ClipDistance[0] = dot(world_position, clipping_plane);
-    gl_Position = camera.projection * camera.view * world_position;
 
     vertex.position = world_position.xyz;
-    vertex.normal = mat3(transpose(inverse(object.model))) * normal;
-    vertex.uv = vec2(uv.x, uv.y);
+    vertex.normal = mat3(transpose(inverse(model))) * normal;
+    vertex.uv = vec2(uv.x, uv.y) * tiling;
 }

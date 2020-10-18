@@ -884,14 +884,11 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
             depth_program->bind();
             {
-                depth_program->set_mat4("projection", directional_light->projection);
-                depth_program->set_mat4("view", directional_light->view);
-
                 for (auto &object : objects)
                 {
                     glm::mat4 object_model = object->calc_model();
 
-                    depth_program->set_mat4("object.model", object_model);
+                    depth_program->set_mat4("mvp", directional_light->projection * directional_light->view * object_model);
 
                     object->model->draw();
                 }
@@ -900,7 +897,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_program->set_mat4("object.model", terrain_model);
+                    depth_program->set_mat4("mvp", directional_light->projection * directional_light->view * terrain_model);
 
                     terrain->mesh->draw();
                 }
@@ -923,17 +920,11 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
             depth_cube_program->bind();
             {
-                glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, point_light::far_plane);
-                std::vector<glm::mat4> shadow_matrices;
-                shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-                shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-                shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-                shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-                shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-                shadow_matrices.push_back(projection * glm::lookAt(point_light->position, point_light->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+                std::vector<glm::mat4> mvps = point_light->calc_mvps();
+
                 for (unsigned int i = 0; i < 6; i++)
                 {
-                    depth_cube_program->set_mat4("shadow_matrices[" + std::to_string(i) + "]", shadow_matrices[i]);
+                    depth_cube_program->set_mat4("mvps[" + std::to_string(i) + "]", mvps[i]);
                 }
 
                 depth_cube_program->set_float("light.far_plane", point_light::far_plane);
@@ -978,14 +969,11 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
             depth_program->bind();
             {
-                depth_program->set_mat4("projection", spot_light->projection);
-                depth_program->set_mat4("view", spot_light->view);
-
                 for (auto &object : objects)
                 {
                     glm::mat4 object_model = object->calc_model();
 
-                    depth_program->set_mat4("model", object_model);
+                    depth_program->set_mat4("mvp", spot_light->projection * spot_light->view * object_model);
 
                     object->model->draw();
                 }
@@ -994,7 +982,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_program->set_mat4("model", terrain_model);
+                    depth_program->set_mat4("mvp", spot_light->projection * spot_light->view * terrain_model);
 
                     terrain->mesh->draw();
                 }
@@ -1022,10 +1010,8 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
         geometry_object_program->bind();
         {
-            geometry_object_program->set_mat4("camera.projection", camera_projection);
-            geometry_object_program->set_mat4("camera.view", camera_view);
-            geometry_object_program->set_vec3("camera.position", camera->position);
             geometry_object_program->set_vec4("clipping_plane", clipping_plane);
+            geometry_object_program->set_float("tiling", 1.0f);
             geometry_object_program->set_int("material.albedo_map", 0);
             geometry_object_program->set_int("material.normal_map", 1);
             geometry_object_program->set_int("material.metallic_map", 2);
@@ -1037,7 +1023,8 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
             {
                 glm::mat4 object_model = object->calc_model();
 
-                geometry_object_program->set_mat4("object.model", object_model);
+                geometry_object_program->set_mat4("mvp", camera_projection * camera_view * object_model);
+                geometry_object_program->set_mat4("model", object_model);
 
                 object->model->draw();
             }
@@ -1046,16 +1033,21 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
         geometry_terrain_program->bind();
         {
-            geometry_terrain_program->set_mat4("camera.projection", camera_projection);
-            geometry_terrain_program->set_mat4("camera.view", camera_view);
-            geometry_terrain_program->set_vec3("camera.position", camera->position);
             geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
+            geometry_terrain_program->set_float("tiling", terrain::size);
+            geometry_terrain_program->set_int("materials[0].albedo_map", 0);
+            geometry_terrain_program->set_int("materials[0].normal_map", 1);
+            geometry_terrain_program->set_int("materials[0].metallic_map", 2);
+            geometry_terrain_program->set_int("materials[0].roughness_map", 3);
+            geometry_terrain_program->set_int("materials[0].occlusion_map", 4);
+            geometry_terrain_program->set_int("materials[0].height_map", 5);
 
             for (auto &terrain : terrains)
             {
                 glm::mat4 terrain_model = terrain->calc_model();
 
-                geometry_terrain_program->set_mat4("object.model", terrain_model);
+                geometry_terrain_program->set_mat4("mvp", camera_projection * camera_view * terrain_model);
+                geometry_terrain_program->set_mat4("model", terrain_model);
 
                 terrain->mesh->draw();
             }
@@ -1079,15 +1071,13 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         // IBL
         deferred_ambient_program->bind();
         {
-            deferred_ambient_program->set_mat4("camera.projection", camera_projection);
-            deferred_ambient_program->set_mat4("camera.view", camera_view);
             deferred_ambient_program->set_vec3("camera.position", camera->position);
             deferred_ambient_program->set_int("geometry.position_map", 0);
             deferred_ambient_program->set_int("geometry.normal_map", 1);
             deferred_ambient_program->set_int("geometry.albedo_map", 2);
             deferred_ambient_program->set_int("geometry.material_map", 3);
-            deferred_ambient_program->set_int("irradiance_cubemap", 4);
-            deferred_ambient_program->set_int("prefilter_cubemap", 5);
+            deferred_ambient_program->set_int("skybox.irradiance_cubemap", 4);
+            deferred_ambient_program->set_int("skybox.prefilter_cubemap", 5);
             deferred_ambient_program->set_int("brdf_map", 6);
 
             glActiveTexture(GL_TEXTURE0);
@@ -1137,8 +1127,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
             {
                 deferred_directional_program->bind();
                 {
-                    deferred_directional_program->set_mat4("camera.projection", camera_projection);
-                    deferred_directional_program->set_mat4("camera.view", camera_view);
                     deferred_directional_program->set_vec3("camera.position", camera->position);
                     deferred_directional_program->set_int("geometry.position_map", 0);
                     deferred_directional_program->set_int("geometry.normal_map", 1);
@@ -1159,8 +1147,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                     {
                         deferred_directional_program->set_vec3("light.direction", directional_light->direction);
                         deferred_directional_program->set_vec3("light.color", directional_light->color);
-                        deferred_directional_program->set_mat4("light.projection", directional_light->projection);
-                        deferred_directional_program->set_mat4("light.view", directional_light->view);
+                        deferred_directional_program->set_mat4("light.view_projection_matrix", directional_light->projection * directional_light->view);
 
                         glActiveTexture(GL_TEXTURE4);
                         glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
@@ -1189,8 +1176,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
             {
                 deferred_point_program->bind();
                 {
-                    deferred_point_program->set_mat4("camera.projection", camera_projection);
-                    deferred_point_program->set_mat4("camera.view", camera_view);
                     deferred_point_program->set_vec3("camera.position", camera->position);
                     deferred_point_program->set_int("geometry.position_map", 0);
                     deferred_point_program->set_int("geometry.normal_map", 1);
@@ -1240,8 +1225,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
             {
                 deferred_spot_program->bind();
                 {
-                    deferred_spot_program->set_mat4("camera.projection", camera_projection);
-                    deferred_spot_program->set_mat4("camera.view", camera_view);
                     deferred_spot_program->set_vec3("camera.position", camera->position);
                     deferred_spot_program->set_int("geometry.position_map", 0);
                     deferred_spot_program->set_int("geometry.normal_map", 1);
@@ -1265,8 +1248,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                         deferred_spot_program->set_vec3("light.color", spot_light->color);
                         deferred_spot_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
                         deferred_spot_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
-                        deferred_spot_program->set_mat4("light.projection", spot_light->projection);
-                        deferred_spot_program->set_mat4("light.view", spot_light->view);
+                        deferred_spot_program->set_mat4("light.view_projection_matrix", spot_light->projection * spot_light->view);
 
                         glActiveTexture(GL_TEXTURE4);
                         glBindTexture(GL_TEXTURE_2D, spot_light->depth_map_texture_id);
@@ -1314,23 +1296,22 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
         // draw skybox
+        if (skybox)
         {
             glDepthFunc(GL_LEQUAL);
 
             glm::mat4 camera_view_no_translate = camera_view;
-            // camera_view_no_translate = glm::rotate(camera_view_no_translate, glm::radians((float)current_time) * 0.001f, glm::vec3(0.0f, 1.0f, 0.0f));
             camera_view_no_translate[3][0] = 0.0f;
             camera_view_no_translate[3][1] = 0.0f;
             camera_view_no_translate[3][2] = 0.0f;
 
             skybox_program->bind();
             {
-                skybox_program->set_mat4("camera.projection", camera_projection);
-                skybox_program->set_mat4("camera.view", camera_view_no_translate);
-                skybox_program->set_int("environment_cubemap", 0);
+                skybox_program->set_mat4("mvp", camera_projection * camera_view_no_translate);
+                skybox_program->set_int("skybox.environment_cubemap", 0);
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_CUBE_MAP, skybox ? skybox->environment_cubemap_id : 0);
+                glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->environment_cubemap_id);
 
                 glBindVertexArray(skybox_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
@@ -1356,11 +1337,10 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                     model = glm::translate(model, point_light->position);
                     model = glm::scale(model, {0.25f, 0.25f, 0.25f});
 
-                    color_program->set_mat4("camera.projection", camera_projection);
-                    color_program->set_mat4("camera.view", camera_view);
-                    color_program->set_mat4("object.model", model);
-                    color_program->set_vec3("color", point_light->color);
+                    color_program->set_mat4("mvp", camera_projection * camera_view * model);
+                    color_program->set_mat4("model", model);
                     color_program->set_vec4("clipping_plane", clipping_plane);
+                    color_program->set_vec3("color", point_light->color);
 
                     sphere_mesh->draw();
                 }
@@ -1421,12 +1401,11 @@ void pk::renderer::render_waters(unsigned int current_time)
                 water_model = glm::translate(water_model, water->position);
                 water_model = glm::scale(water_model, {water->scale.x, 1.0f, water->scale.y});
 
+                water_program->set_mat4("mvp", camera_projection * camera_view * water_model);
+                water_program->set_mat4("model", water_model);
                 water_program->set_float("camera.near_plane", camera::near_plane);
                 water_program->set_float("camera.far_plane", camera::far_plane);
-                water_program->set_mat4("camera.projection", camera_projection);
-                water_program->set_mat4("camera.view", camera_view);
                 water_program->set_vec3("camera.position", camera->position);
-                water_program->set_mat4("water.model", water_model);
                 water_program->set_int("water.reflection_map", 0);
                 water_program->set_int("water.refraction_map", 1);
                 water_program->set_int("water.depth_map", 2);
@@ -1484,13 +1463,12 @@ void pk::renderer::render_sprites()
 
         sprite_program->bind();
         {
-            glm::mat4 camera_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
-            sprite_program->set_mat4("camera.projection", camera_projection);
+            glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
 
             for (auto &sprite : sprites)
             {
                 glm::mat4 sprite_model = sprite->calc_model();
-                sprite_program->set_mat4("sprite.model", sprite_model);
+                sprite_program->set_mat4("mvp", projection * sprite_model);
                 sprite_program->set_vec3("sprite.color", sprite->color);
                 sprite_program->set_int("sprite.texture", 0);
 
@@ -1578,4 +1556,37 @@ void pk::renderer::render_screen()
 
         glEnable(GL_DEPTH_TEST);
     }
+
+    // DEBUG: draw fbos
+    // {
+    //     glViewport(0, 0, display_width, display_height);
+
+    //     glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
+
+    //     sprite_program->bind();
+    //     {
+    //         sprite_program->set_vec3("sprite.color", glm::vec3(1.0f, 1.0f, 1.0f));
+    //         sprite_program->set_int("sprite.texture", 0);
+
+    //         glm::mat4 model = glm::identity<glm::mat4>();
+    //         model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    //         {
+    //             model = glm::translate(model, glm::vec3(-2.0f, 1.0f, 0.0f));
+
+    //             sprite_program->set_mat4("mvp", projection * model);
+
+    //             glActiveTexture(GL_TEXTURE0);
+    //             glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+
+    //             glBindVertexArray(sprite_vao_id);
+    //             glDrawArrays(GL_TRIANGLES, 0, sprite_vertices_size);
+    //             glBindVertexArray(0);
+    //         }
+
+    //         glActiveTexture(GL_TEXTURE0);
+    //         glBindTexture(GL_TEXTURE_2D, 0);
+    //     }
+    //     sprite_program->unbind();
+    // }
 }

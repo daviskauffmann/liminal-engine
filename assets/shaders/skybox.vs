@@ -7,15 +7,11 @@ out struct Vertex
 	vec3 position;
 } vertex;
 
-uniform struct Camera
-{
-	mat4 projection;
-	mat4 view;
-} camera;
+uniform mat4 mvp;
 
 void main()
 {
-    gl_Position = (camera.projection * camera.view * vec4(position, 1.0)).xyww;
+    gl_Position = (mvp * vec4(position, 1.0)).xyww;
 
     vertex.position = position;
 }

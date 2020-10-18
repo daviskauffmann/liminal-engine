@@ -81,7 +81,7 @@ pk::game_scene::game_scene()
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec2(100.0f, 100.0f));
 
-    terrain = new pk::terrain("assets/images/heightmap.png", 0, 0);
+    terrain = new pk::terrain(glm::vec3(400.0f, 0.0f, 400.0f), "assets/images/heightmap.png");
 
     ambient_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
     ambient_source->set_loop(true);

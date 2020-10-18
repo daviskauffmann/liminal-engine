@@ -3,7 +3,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
-constexpr float shadow_map_size = 20.0f;
+float pk::directional_light::shadow_map_size = 10.0f;
+float pk::directional_light::near_plane = -10.0f;
+float pk::directional_light::far_plane = 10.0f;
 
 pk::directional_light::directional_light(
     glm::vec3 direction,
@@ -77,7 +79,7 @@ void pk::directional_light::set_depth_map_size(int depth_map_size)
 
 glm::mat4 pk::directional_light::calc_projection() const
 {
-    glm::mat4 projection = glm::ortho(-shadow_map_size, shadow_map_size, -shadow_map_size, shadow_map_size, -shadow_map_size, shadow_map_size);
+    glm::mat4 projection = glm::ortho(-shadow_map_size, shadow_map_size, -shadow_map_size, shadow_map_size, near_plane, far_plane);
     return projection;
 }
 

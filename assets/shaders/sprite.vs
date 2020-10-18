@@ -8,21 +8,11 @@ out struct Vertex
 	vec2 uv;
 } vertex;
 
-uniform struct Camera
-{
-	mat4 projection;
-} camera;
-
-uniform struct Sprite
-{
-	sampler2D texture;
-	vec3 color;
-	mat4 model;
-} sprite;
+uniform mat4 mvp;
 
 void main()
 {
-    gl_Position = camera.projection * sprite.model * vec4(position, 0.0, 1.0);
+    gl_Position = mvp * vec4(position, 0.0, 1.0);
 
     vertex.uv = uv;
 }
