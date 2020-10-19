@@ -842,6 +842,7 @@ void pk::renderer::flush(unsigned int current_time, float delta_time)
     }
 
     // render everything
+    render_shadows();
     render_objects(current_time, hdr_fbo_id, render_width, render_height);
     if (waters.size() > 0)
     {
@@ -867,13 +868,11 @@ void pk::renderer::flush(unsigned int current_time, float delta_time)
     sprites.clear();
 }
 
-void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
+void pk::renderer::render_shadows()
 {
-    // update depth maps
     for (auto &directional_light : directional_lights)
     {
-        directional_light->projection = directional_light->calc_projection();
-        directional_light->view = directional_light->calc_view(camera->position);
+        directional_light->update_transformation_matrix(camera->position);
 
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
         {
@@ -888,7 +887,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 {
                     glm::mat4 object_model = object->calc_model();
 
-                    depth_program->set_mat4("mvp", directional_light->projection * directional_light->view * object_model);
+                    depth_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
 
                     object->model->draw();
                 }
@@ -897,7 +896,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_program->set_mat4("mvp", directional_light->projection * directional_light->view * terrain_model);
+                    depth_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
 
                     terrain->mesh->draw();
                 }
@@ -911,6 +910,8 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
     for (auto &point_light : point_lights)
     {
+        point_light->update_transformation_matrices();
+
         glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
         {
             glViewport(0, 0, point_light->depth_cube_size, point_light->depth_cube_size);
@@ -920,11 +921,9 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
             depth_cube_program->bind();
             {
-                std::vector<glm::mat4> mvps = point_light->calc_mvps();
-
                 for (unsigned int i = 0; i < 6; i++)
                 {
-                    depth_cube_program->set_mat4("mvps[" + std::to_string(i) + "]", mvps[i]);
+                    depth_cube_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
                 }
 
                 depth_cube_program->set_float("light.far_plane", point_light::far_plane);
@@ -957,8 +956,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
 
     for (auto &spot_light : spot_lights)
     {
-        spot_light->projection = spot_light->calc_projection();
-        spot_light->view = spot_light->calc_view();
+        spot_light->update_transformation_matrix();
 
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light->depth_map_fbo_id);
         {
@@ -973,7 +971,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 {
                     glm::mat4 object_model = object->calc_model();
 
-                    depth_program->set_mat4("mvp", spot_light->projection * spot_light->view * object_model);
+                    depth_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
 
                     object->model->draw();
                 }
@@ -982,7 +980,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_program->set_mat4("mvp", spot_light->projection * spot_light->view * terrain_model);
+                    depth_program->set_mat4("mvp", spot_light->transformation_matrix * terrain_model);
 
                     terrain->mesh->draw();
                 }
@@ -993,7 +991,10 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+}
 
+void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
+{
     // camera
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
     glm::mat4 camera_view = camera->calc_view();
@@ -1147,7 +1148,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                     {
                         deferred_directional_program->set_vec3("light.direction", directional_light->direction);
                         deferred_directional_program->set_vec3("light.color", directional_light->color);
-                        deferred_directional_program->set_mat4("light.view_projection_matrix", directional_light->projection * directional_light->view);
+                        deferred_directional_program->set_mat4("light.transformation_matrix", directional_light->transformation_matrix);
 
                         glActiveTexture(GL_TEXTURE4);
                         glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
@@ -1248,7 +1249,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                         deferred_spot_program->set_vec3("light.color", spot_light->color);
                         deferred_spot_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
                         deferred_spot_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
-                        deferred_spot_program->set_mat4("light.view_projection_matrix", spot_light->projection * spot_light->view);
+                        deferred_spot_program->set_mat4("light.transformation_matrix", spot_light->transformation_matrix);
 
                         glActiveTexture(GL_TEXTURE4);
                         glBindTexture(GL_TEXTURE_2D, spot_light->depth_map_texture_id);
@@ -1577,7 +1578,7 @@ void pk::renderer::render_screen()
     //             sprite_program->set_mat4("mvp", projection * model);
 
     //             glActiveTexture(GL_TEXTURE0);
-    //             glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+    //             glBindTexture(GL_TEXTURE_2D, directional_lights[0]->depth_map_texture_id);
 
     //             glBindVertexArray(sprite_vao_id);
     //             glDrawArrays(GL_TRIANGLES, 0, sprite_vertices_size);

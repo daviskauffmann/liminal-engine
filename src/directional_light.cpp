@@ -77,17 +77,13 @@ void pk::directional_light::set_depth_map_size(int depth_map_size)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-glm::mat4 pk::directional_light::calc_projection() const
+void pk::directional_light::update_transformation_matrix(glm::vec3 center)
 {
     glm::mat4 projection = glm::ortho(-shadow_map_size, shadow_map_size, -shadow_map_size, shadow_map_size, near_plane, far_plane);
-    return projection;
-}
-
-glm::mat4 pk::directional_light::calc_view(glm::vec3 center) const
-{
     glm::mat4 view = glm::lookAt(
         center - direction,
         center,
         glm::vec3(0.0f, 1.0f, 0.0f));
-    return view;
+
+    transformation_matrix = projection * view;
 }

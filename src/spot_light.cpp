@@ -82,17 +82,14 @@ void pk::spot_light::set_depth_map_size(int depth_map_size)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-glm::mat4 pk::spot_light::calc_projection() const
+void pk::spot_light::update_transformation_matrix()
 {
     glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane);
-    return projection;
-}
 
-glm::mat4 pk::spot_light::calc_view() const
-{
     glm::vec3 front = glm::normalize(direction);
     glm::vec3 target = position + front;
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     glm::mat4 view = glm::lookAt(position, target, up);
-    return view;
+
+    transformation_matrix = projection * view;
 }

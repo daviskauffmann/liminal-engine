@@ -6,6 +6,7 @@ uniform struct Light
 {
     float far_plane;
     vec3 position;
+    mat4 transformation_matrices[6];
 } light;
 
 void main()

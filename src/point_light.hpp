@@ -18,6 +18,7 @@ namespace pk
         int depth_cube_size;
         GLuint depth_cubemap_fbo_id;
         GLuint depth_cubemap_texture_id;
+        std::vector<glm::mat4> transformation_matrices;
 
         point_light(
             glm::vec3 position,
@@ -27,7 +28,7 @@ namespace pk
 
         void set_depth_cube_size(int depth_cube_size);
 
-        std::vector<glm::mat4> calc_mvps() const;
+        void update_transformation_matrices();
     };
 } // namespace pk
 

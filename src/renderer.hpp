@@ -121,6 +121,7 @@ namespace pk
 
         GLuint brdf_texture_id;
 
+        void render_shadows();
         void render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
         void render_waters(unsigned int current_time);
         void render_sprites();

@@ -33,8 +33,8 @@ uniform struct Light
     vec3 color;
     float inner_cutoff;
     float outer_cutoff;
-    mat4 view_projection_matrix;
     sampler2D depth_map;
+    mat4 transformation_matrix;
 } light;
 
 void main()
@@ -77,10 +77,10 @@ void main()
     float n_dot_l = max(dot(n, l), 0.0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
     
-    vec4 light_space_position = light.view_projection_matrix * vec4(position, 1.0);
+    vec4 light_space_position = light.transformation_matrix * vec4(position, 1.0);
     vec3 light_space_proj_coords = (light_space_position.xyz / light_space_position.w) * 0.5 + 0.5;
     float current_depth = light_space_proj_coords.z;
-    float bias = max(0.05 * (1.0 - dot(n, l)), 0.005);
+    float bias = max(0.005 * (1.0 - dot(n, l)), 0.005);
     float shadow = 0.0;
     vec2 texel_size = 1.0 / textureSize(light.depth_map, 0);
     for (int x = -1; x <= 1; x++)

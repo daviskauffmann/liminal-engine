@@ -18,10 +18,9 @@ namespace pk
         float inner_cutoff;
         float outer_cutoff;
         int depth_map_size;
-        glm::mat4 projection;
-        glm::mat4 view;
         GLuint depth_map_fbo_id;
         GLuint depth_map_texture_id;
+        glm::mat4 transformation_matrix;
 
         spot_light(
             glm::vec3 position,
@@ -34,8 +33,7 @@ namespace pk
 
         void set_depth_map_size(int depth_map_size);
 
-        glm::mat4 calc_projection() const;
-        glm::mat4 calc_view() const;
+        void update_transformation_matrix();
     };
 } // namespace pk
 

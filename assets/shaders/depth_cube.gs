@@ -5,7 +5,12 @@ layout (triangle_strip, max_vertices = 18) out;
 
 out vec4 frag_position;
 
-uniform mat4 mvps[6];
+uniform struct Light
+{
+    float far_plane;
+    vec3 position;
+    mat4 transformation_matrices[6];
+} light;
 
 void main()
 {
@@ -15,7 +20,7 @@ void main()
         for (int i = 0; i < 3; i++)
         {
             frag_position = gl_in[i].gl_Position;
-            gl_Position = mvps[face] * frag_position;
+            gl_Position = light.transformation_matrices[face] * frag_position;
             EmitVertex();
         }
         EndPrimitive();
