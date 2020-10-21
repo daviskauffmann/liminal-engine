@@ -19,10 +19,38 @@
 // TODO: render_scale other than 1 causes water reflection/refraction to break
 
 pk::renderer::renderer(
-    int display_width, int display_height, float render_scale,
-    int reflection_width, int reflection_height,
-    int refraction_width, int refraction_height)
+    GLsizei display_width, GLsizei display_height, float render_scale,
+    GLsizei reflection_width, GLsizei reflection_height,
+    GLsizei refraction_width, GLsizei refraction_height)
 {
+    wireframe = false;
+    greyscale = false;
+    camera = nullptr;
+    skybox = nullptr;
+
+    // setup fbos
+    hdr_fbo_id = 0;
+    hdr_texture_ids[0] = 0;
+    hdr_texture_ids[1] = 0;
+    hdr_rbo_id = 0;
+    geometry_fbo_id = 0;
+    geometry_position_texture_id = 0;
+    geometry_normal_texture_id = 0;
+    geometry_albedo_texture_id = 0;
+    geometry_material_texture_id = 0;
+    geometry_rbo_id = 0;
+    set_screen_size(display_width, display_height, render_scale);
+
+    water_reflection_fbo_id = 0;
+    water_reflection_color_texture_id = 0;
+    water_reflection_rbo_id = 0;
+    set_reflection_size(reflection_width, reflection_height);
+
+    water_refraction_fbo_id = 0;
+    water_refraction_color_texture_id = 0;
+    water_refraction_depth_texture_id = 0;
+    set_refraction_size(refraction_width, refraction_height);
+
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
@@ -34,7 +62,7 @@ pk::renderer::renderer(
     glGenVertexArrays(1, &water_vao_id);
     glBindVertexArray(water_vao_id);
     {
-        std::vector<float> water_vertices =
+        std::vector<GLfloat> water_vertices =
             {-1.0f, -1.0f,
              -1.0f, +1.0f,
              +1.0f, -1.0f,
@@ -42,7 +70,7 @@ pk::renderer::renderer(
              +1.0f, -1.0f,
              -1.0f, +1.0f,
              +1.0f, +1.0f};
-        water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(float));
+        water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &water_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
@@ -57,7 +85,7 @@ pk::renderer::renderer(
     glGenVertexArrays(1, &skybox_vao_id);
     glBindVertexArray(skybox_vao_id);
     {
-        std::vector<float> skybox_vertices =
+        std::vector<GLfloat> skybox_vertices =
             {-1.0f, +1.0f, -1.0f,
              -1.0f, -1.0f, -1.0f,
              +1.0f, -1.0f, -1.0f,
@@ -99,7 +127,7 @@ pk::renderer::renderer(
              +1.0f, -1.0f, -1.0f,
              -1.0f, -1.0f, +1.0f,
              +1.0f, -1.0f, +1.0f};
-        skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(float));
+        skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &skybox_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
@@ -114,7 +142,7 @@ pk::renderer::renderer(
     glGenVertexArrays(1, &sprite_vao_id);
     glBindVertexArray(sprite_vao_id);
     {
-        std::vector<float> sprite_vertices =
+        std::vector<GLfloat> sprite_vertices =
             {+0.0f, +1.0f, +0.0f, +1.0f,
              +1.0f, +0.0f, +1.0f, +0.0f,
              +0.0f, +0.0f, +0.0f, +0.0f,
@@ -122,7 +150,7 @@ pk::renderer::renderer(
              +0.0f, +1.0f, +0.0f, +1.0f,
              +1.0f, +1.0f, +1.0f, +1.0f,
              +1.0f, +0.0f, +1.0f, +0.0f};
-        sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(float));
+        sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &sprite_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
@@ -139,14 +167,14 @@ pk::renderer::renderer(
     glGenVertexArrays(1, &screen_vao_id);
     glBindVertexArray(screen_vao_id);
     {
-        std::vector<float> screen_vertices =
+        std::vector<GLfloat> screen_vertices =
             {-1.0f, -1.0f, +0.0f, +0.0f,
              -1.0f, +1.0f, +0.0f, +1.0f,
              +1.0f, -1.0f, +1.0f, +0.0f,
              +1.0f, -1.0f, +1.0f, +0.0f,
              -1.0f, +1.0f, +0.0f, +1.0f,
              +1.0f, +1.0f, +1.0f, +1.0f};
-        screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(float));
+        screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &screen_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
@@ -160,135 +188,9 @@ pk::renderer::renderer(
     }
     glBindVertexArray(0);
 
-    // create sphere mesh
-    // http://www.songho.ca/opengl/gl_sphere.html
-    {
-        std::vector<pk::vertex> vertices;
-        int radius = 1;
-        int stack_count = 36;
-        int sector_count = 18;
-        float length_inv = 1.0f / radius;
-        float sector_step = 2 * 3.14f / sector_count;
-        float stack_step = 3.14f / stack_count;
-        for (int i = 0; i <= stack_count; i++)
-        {
-            float stack_angle = 3.14f / 2 - i * stack_step;
-            float xy = radius * cosf(stack_angle);
-            float z = radius * sinf(stack_angle);
-            for (int j = 0; j <= sector_count; j++)
-            {
-                float sector_angle = j * sector_step;
-                pk::vertex vertex;
-                vertex.position.x = xy * cosf(sector_angle);
-                vertex.position.y = xy * sinf(sector_angle);
-                vertex.position.z = z;
-                vertex.normal.x = vertex.position.x * length_inv;
-                vertex.normal.y = vertex.position.y * length_inv;
-                vertex.normal.z = vertex.position.z * length_inv;
-                vertex.uv.s = (float)j / sector_count;
-                vertex.uv.t = (float)i / stack_count;
-                vertices.push_back(vertex);
-            }
-        }
-
-        std::vector<unsigned int> indices;
-        for (int i = 0; i < stack_count; i++)
-        {
-            int k1 = i * (sector_count + 1);
-            int k2 = k1 + sector_count + 1;
-            for (int j = 0; j < sector_count; j++, k1++, k2++)
-            {
-                if (i != 0)
-                {
-                    indices.push_back(k1);
-                    indices.push_back(k2);
-                    indices.push_back(k1 + 1);
-                }
-                if (i != stack_count - 1)
-                {
-                    indices.push_back(k1 + 1);
-                    indices.push_back(k2);
-                    indices.push_back(k2 + 1);
-                }
-            }
-        }
-        std::vector<std::vector<pk::texture *>> textures;
-
-        sphere_mesh = new pk::mesh(vertices, indices, textures);
-    }
-
-    water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
-    water_normal_texture = new pk::texture("assets/images/water_normal.png");
-
-    depth_program = new pk::program(
-        "assets/shaders/depth.vs",
-        "assets/shaders/depth.fs");
-    depth_cube_program = new pk::program(
-        "assets/shaders/depth_cube.vs",
-        "assets/shaders/depth_cube.gs",
-        "assets/shaders/depth_cube.fs");
-    color_program = new pk::program(
-        "assets/shaders/color.vs",
-        "assets/shaders/color.fs");
-    geometry_object_program = new pk::program(
-        "assets/shaders/geometry.vs",
-        "assets/shaders/geometry_object.fs");
-    geometry_terrain_program = new pk::program(
-        "assets/shaders/geometry.vs",
-        "assets/shaders/geometry_terrain.fs");
-    deferred_ambient_program = new pk::program(
-        "assets/shaders/deferred.vs",
-        "assets/shaders/deferred_ambient.fs");
-    deferred_directional_program = new pk::program(
-        "assets/shaders/deferred.vs",
-        "assets/shaders/deferred_directional.fs");
-    deferred_point_program = new pk::program(
-        "assets/shaders/deferred.vs",
-        "assets/shaders/deferred_point.fs");
-    deferred_spot_program = new pk::program(
-        "assets/shaders/deferred.vs",
-        "assets/shaders/deferred_spot.fs");
-    skybox_program = new pk::program(
-        "assets/shaders/skybox.vs",
-        "assets/shaders/skybox.fs");
-    water_program = new pk::program(
-        "assets/shaders/water.vs",
-        "assets/shaders/water.fs");
-    sprite_program = new pk::program(
-        "assets/shaders/sprite.vs",
-        "assets/shaders/sprite.fs");
-    gaussian_program = new pk::program(
-        "assets/shaders/gaussian.vs",
-        "assets/shaders/gaussian.fs");
-    screen_program = new pk::program(
-        "assets/shaders/screen.vs",
-        "assets/shaders/screen.fs");
-
-    hdr_fbo_id = 0;
-    hdr_texture_ids[0] = 0;
-    hdr_texture_ids[1] = 0;
-    hdr_rbo_id = 0;
-    geometry_fbo_id = 0;
-    geometry_position_texture_id = 0;
-    geometry_normal_texture_id = 0;
-    geometry_albedo_texture_id = 0;
-    geometry_material_texture_id = 0;
-    geometry_rbo_id = 0;
-    set_screen_size(display_width, display_height, render_scale);
-
-    water_reflection_fbo_id = 0;
-    water_reflection_color_texture_id = 0;
-    water_reflection_rbo_id = 0;
-    set_reflection_size(reflection_width, reflection_height);
-
-    water_refraction_fbo_id = 0;
-    water_refraction_color_texture_id = 0;
-    water_refraction_depth_texture_id = 0;
-    set_refraction_size(refraction_width, refraction_height);
-
     // create brdf texture
     {
-        const int brdf_size = 512;
+        const GLsizei brdf_size = 512;
 
         GLuint capture_fbo_id;
         GLuint capture_rbo_id;
@@ -377,46 +279,116 @@ pk::renderer::renderer(
         glDeleteRenderbuffers(1, &capture_rbo_id);
     }
 
-    wireframe = false;
-    greyscale = false;
-    camera = nullptr;
-    skybox = nullptr;
+    depth_program = new pk::program(
+        "assets/shaders/depth.vs",
+        "assets/shaders/depth.fs");
+    depth_cube_program = new pk::program(
+        "assets/shaders/depth_cube.vs",
+        "assets/shaders/depth_cube.gs",
+        "assets/shaders/depth_cube.fs");
+    color_program = new pk::program(
+        "assets/shaders/color.vs",
+        "assets/shaders/color.fs");
+    geometry_object_program = new pk::program(
+        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry_object.fs");
+    geometry_terrain_program = new pk::program(
+        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry_terrain.fs");
+    deferred_ambient_program = new pk::program(
+        "assets/shaders/deferred.vs",
+        "assets/shaders/deferred_ambient.fs");
+    deferred_directional_program = new pk::program(
+        "assets/shaders/deferred.vs",
+        "assets/shaders/deferred_directional.fs");
+    deferred_point_program = new pk::program(
+        "assets/shaders/deferred.vs",
+        "assets/shaders/deferred_point.fs");
+    deferred_spot_program = new pk::program(
+        "assets/shaders/deferred.vs",
+        "assets/shaders/deferred_spot.fs");
+    skybox_program = new pk::program(
+        "assets/shaders/skybox.vs",
+        "assets/shaders/skybox.fs");
+    water_program = new pk::program(
+        "assets/shaders/water.vs",
+        "assets/shaders/water.fs");
+    sprite_program = new pk::program(
+        "assets/shaders/sprite.vs",
+        "assets/shaders/sprite.fs");
+    gaussian_program = new pk::program(
+        "assets/shaders/gaussian.vs",
+        "assets/shaders/gaussian.fs");
+    screen_program = new pk::program(
+        "assets/shaders/screen.vs",
+        "assets/shaders/screen.fs");
+
+    setup_samplers();
+
+    water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
+    water_normal_texture = new pk::texture("assets/images/water_normal.png");
+
+    // create sphere mesh
+    // http://www.songho.ca/opengl/gl_sphere.html
+    {
+        std::vector<pk::vertex> vertices;
+        int radius = 1;
+        int stack_count = 36;
+        int sector_count = 18;
+        float length_inv = 1.0f / radius;
+        float sector_step = 2 * 3.14f / sector_count;
+        float stack_step = 3.14f / stack_count;
+        for (int i = 0; i <= stack_count; i++)
+        {
+            float stack_angle = 3.14f / 2 - i * stack_step;
+            float xy = radius * cosf(stack_angle);
+            float z = radius * sinf(stack_angle);
+            for (int j = 0; j <= sector_count; j++)
+            {
+                float sector_angle = j * sector_step;
+                pk::vertex vertex;
+                vertex.position.x = xy * cosf(sector_angle);
+                vertex.position.y = xy * sinf(sector_angle);
+                vertex.position.z = z;
+                vertex.normal.x = vertex.position.x * length_inv;
+                vertex.normal.y = vertex.position.y * length_inv;
+                vertex.normal.z = vertex.position.z * length_inv;
+                vertex.uv.s = (float)j / sector_count;
+                vertex.uv.t = (float)i / stack_count;
+                vertices.push_back(vertex);
+            }
+        }
+
+        std::vector<unsigned int> indices;
+        for (int i = 0; i < stack_count; i++)
+        {
+            int k1 = i * (sector_count + 1);
+            int k2 = k1 + sector_count + 1;
+            for (int j = 0; j < sector_count; j++, k1++, k2++)
+            {
+                if (i != 0)
+                {
+                    indices.push_back(k1);
+                    indices.push_back(k2);
+                    indices.push_back(k1 + 1);
+                }
+                if (i != stack_count - 1)
+                {
+                    indices.push_back(k1 + 1);
+                    indices.push_back(k2);
+                    indices.push_back(k2 + 1);
+                }
+            }
+        }
+
+        std::vector<std::vector<pk::texture *>> textures;
+
+        DEBUG_sphere_mesh = new pk::mesh(vertices, indices, textures);
+    }
 }
 
 pk::renderer::~renderer()
 {
-    glDeleteVertexArrays(1, &water_vao_id);
-    glDeleteBuffers(1, &water_vbo_id);
-
-    glDeleteVertexArrays(1, &skybox_vao_id);
-    glDeleteBuffers(1, &skybox_vbo_id);
-
-    glDeleteVertexArrays(1, &sprite_vao_id);
-    glDeleteBuffers(1, &sprite_vbo_id);
-
-    glDeleteVertexArrays(1, &screen_vao_id);
-    glDeleteBuffers(1, &screen_vbo_id);
-
-    delete sphere_mesh;
-
-    delete water_dudv_texture;
-    delete water_normal_texture;
-
-    delete depth_program;
-    delete depth_cube_program;
-    delete color_program;
-    delete geometry_object_program;
-    delete geometry_terrain_program;
-    delete deferred_ambient_program;
-    delete deferred_directional_program;
-    delete deferred_point_program;
-    delete deferred_spot_program;
-    delete skybox_program;
-    delete water_program;
-    delete sprite_program;
-    delete gaussian_program;
-    delete screen_program;
-
     glDeleteFramebuffers(1, &geometry_fbo_id);
     glDeleteTextures(1, &geometry_position_texture_id);
     glDeleteTextures(1, &geometry_normal_texture_id);
@@ -439,15 +411,47 @@ pk::renderer::~renderer()
     glDeleteFramebuffers(2, bloom_fbo_ids);
     glDeleteTextures(2, bloom_texture_ids);
 
+    glDeleteVertexArrays(1, &water_vao_id);
+    glDeleteBuffers(1, &water_vbo_id);
+
+    glDeleteVertexArrays(1, &skybox_vao_id);
+    glDeleteBuffers(1, &skybox_vbo_id);
+
+    glDeleteVertexArrays(1, &sprite_vao_id);
+    glDeleteBuffers(1, &sprite_vbo_id);
+
+    glDeleteVertexArrays(1, &screen_vao_id);
+    glDeleteBuffers(1, &screen_vbo_id);
+
     glDeleteTextures(1, &brdf_texture_id);
+
+    delete depth_program;
+    delete depth_cube_program;
+    delete color_program;
+    delete geometry_object_program;
+    delete geometry_terrain_program;
+    delete deferred_ambient_program;
+    delete deferred_directional_program;
+    delete deferred_point_program;
+    delete deferred_spot_program;
+    delete skybox_program;
+    delete water_program;
+    delete sprite_program;
+    delete gaussian_program;
+    delete screen_program;
+
+    delete water_dudv_texture;
+    delete water_normal_texture;
+
+    delete DEBUG_sphere_mesh;
 }
 
-void pk::renderer::set_screen_size(int display_width, int display_height, float render_scale)
+void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale)
 {
     this->display_width = display_width;
     this->display_height = display_height;
-    render_width = (int)(display_width * render_scale);
-    render_height = (int)(display_height * render_scale);
+    render_width = (GLsizei)(display_width * render_scale);
+    render_height = (GLsizei)(display_height * render_scale);
 
     glDeleteFramebuffers(1, &geometry_fbo_id);
     glDeleteTextures(1, &geometry_position_texture_id);
@@ -603,12 +607,14 @@ void pk::renderer::set_screen_size(int display_width, int display_height, float 
                 geometry_rbo_id);
         }
 
-        GLenum geometry_color_attachments[] = {
-            GL_COLOR_ATTACHMENT0,
-            GL_COLOR_ATTACHMENT1,
-            GL_COLOR_ATTACHMENT2,
-            GL_COLOR_ATTACHMENT3};
-        glDrawBuffers(sizeof(geometry_color_attachments) / sizeof(GLenum), geometry_color_attachments);
+        {
+            GLenum geometry_color_attachments[] = {
+                GL_COLOR_ATTACHMENT0,
+                GL_COLOR_ATTACHMENT1,
+                GL_COLOR_ATTACHMENT2,
+                GL_COLOR_ATTACHMENT3};
+            glDrawBuffers(sizeof(geometry_color_attachments) / sizeof(GLenum), geometry_color_attachments);
+        }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -618,49 +624,72 @@ void pk::renderer::set_screen_size(int display_width, int display_height, float 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup hdr fbo
-    glGenTextures(2, hdr_texture_ids);
-    for (unsigned int i = 0; i < 2; i++)
-    {
-        glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            0,
-            GL_RGBA,
-            GL_FLOAT,
-            nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    glGenRenderbuffers(1, &hdr_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, hdr_rbo_id);
-    glRenderbufferStorage(
-        GL_RENDERBUFFER,
-        GL_DEPTH_STENCIL,
-        display_width,
-        display_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
     glGenFramebuffers(1, &hdr_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdr_texture_ids[0], 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, hdr_texture_ids[1], 0);
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_RENDERBUFFER,
-        hdr_rbo_id);
-    GLenum hdr_color_attachments[] = {
-        GL_COLOR_ATTACHMENT0,
-        GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(sizeof(hdr_color_attachments) / sizeof(GLenum), hdr_color_attachments);
+    {
+        {
+            glGenTextures(2, hdr_texture_ids);
+            for (unsigned int i = 0; i < 2; i++)
+            {
+                glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
+                {
+                    glTexImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        GL_RGBA16F,
+                        render_width,
+                        render_height,
+                        0,
+                        GL_RGBA,
+                        GL_FLOAT,
+                        nullptr);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                }
+                glBindTexture(GL_TEXTURE_2D, 0);
+
+                glFramebufferTexture2D(
+                    GL_FRAMEBUFFER,
+                    GL_COLOR_ATTACHMENT0 + i,
+                    GL_TEXTURE_2D,
+                    hdr_texture_ids[i],
+                    0);
+            }
+        }
+
+        {
+            glGenRenderbuffers(1, &hdr_rbo_id);
+            glBindRenderbuffer(GL_RENDERBUFFER, hdr_rbo_id);
+            {
+                glRenderbufferStorage(
+                    GL_RENDERBUFFER,
+                    GL_DEPTH_STENCIL,
+                    display_width,
+                    display_height);
+            }
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+            glFramebufferRenderbuffer(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_RENDERBUFFER,
+                hdr_rbo_id);
+        }
+
+        {
+            GLenum hdr_color_attachments[] = {
+                GL_COLOR_ATTACHMENT0,
+                GL_COLOR_ATTACHMENT1};
+            glDrawBuffers(sizeof(hdr_color_attachments) / sizeof(GLenum), hdr_color_attachments);
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
+        }
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // setup bloom fbo
@@ -669,31 +698,45 @@ void pk::renderer::set_screen_size(int display_width, int display_height, float 
     for (unsigned int i = 0; i < 2; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[i]);
-        glBindTexture(GL_TEXTURE_2D, bloom_texture_ids[i]);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA16F,
-            display_width / 8,
-            display_height / 8,
-            0,
-            GL_RGBA,
-            GL_FLOAT,
-            NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bloom_texture_ids[i], 0);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete brdf capture framebuffer" << std::endl;
+            {
+                glBindTexture(GL_TEXTURE_2D, bloom_texture_ids[i]);
+                {
+                    glTexImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        GL_RGBA16F,
+                        display_width / 8,
+                        display_height / 8,
+                        0,
+                        GL_RGBA,
+                        GL_FLOAT,
+                        NULL);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                }
+                glBindTexture(GL_TEXTURE_2D, 0);
+
+                glFramebufferTexture2D(
+                    GL_FRAMEBUFFER,
+                    GL_COLOR_ATTACHMENT0,
+                    GL_TEXTURE_2D,
+                    bloom_texture_ids[i],
+                    0);
+            }
+
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                std::cout << "Error: Couldn't complete brdf capture framebuffer" << std::endl;
+            }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
 
-void pk::renderer::set_reflection_size(int reflection_width, int reflection_height)
+void pk::renderer::set_reflection_size(GLsizei reflection_width, GLsizei reflection_height)
 {
     this->reflection_width = reflection_width;
     this->reflection_height = reflection_height;
@@ -703,53 +746,64 @@ void pk::renderer::set_reflection_size(int reflection_width, int reflection_heig
     glDeleteRenderbuffers(1, &water_reflection_rbo_id);
 
     // setup water reflection fbo
-    glGenTextures(1, &water_reflection_color_texture_id);
-    glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA16F,
-        reflection_width,
-        reflection_height,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenRenderbuffers(1, &water_reflection_rbo_id);
-    glBindRenderbuffer(GL_RENDERBUFFER, water_reflection_rbo_id);
-    glRenderbufferStorage(
-        GL_RENDERBUFFER,
-        GL_DEPTH_COMPONENT,
-        reflection_width,
-        reflection_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
     glGenFramebuffers(1, &water_reflection_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, water_reflection_fbo_id);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        water_reflection_color_texture_id,
-        0);
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_RENDERBUFFER,
-        water_reflection_rbo_id);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
+        {
+            glGenTextures(1, &water_reflection_color_texture_id);
+            glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_RGBA16F,
+                    reflection_width,
+                    reflection_height,
+                    0,
+                    GL_RGBA,
+                    GL_FLOAT,
+                    nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D,
+                water_reflection_color_texture_id,
+                0);
+        }
+
+        {
+            glGenRenderbuffers(1, &water_reflection_rbo_id);
+            glBindRenderbuffer(GL_RENDERBUFFER, water_reflection_rbo_id);
+            {
+                glRenderbufferStorage(
+                    GL_RENDERBUFFER,
+                    GL_DEPTH_COMPONENT,
+                    reflection_width,
+                    reflection_height);
+            }
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+            glFramebufferRenderbuffer(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_RENDERBUFFER,
+                water_reflection_rbo_id);
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void pk::renderer::set_refraction_size(int refraction_width, int refraction_height)
+void pk::renderer::set_refraction_size(GLsizei refraction_width, GLsizei refraction_height)
 {
     this->refraction_width = refraction_width;
     this->refraction_height = refraction_height;
@@ -759,58 +813,69 @@ void pk::renderer::set_refraction_size(int refraction_width, int refraction_heig
     glDeleteTextures(1, &water_refraction_depth_texture_id);
 
     // setup water refraction fbo
-    glGenTextures(1, &water_refraction_color_texture_id);
-    glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA16F,
-        refraction_width,
-        refraction_height,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenTextures(1, &water_refraction_depth_texture_id);
-    glBindTexture(GL_TEXTURE_2D, water_refraction_depth_texture_id);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_DEPTH_COMPONENT,
-        refraction_width,
-        refraction_height,
-        0,
-        GL_DEPTH_COMPONENT,
-        GL_FLOAT,
-        nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     glGenFramebuffers(1, &water_refraction_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        water_refraction_color_texture_id,
-        0);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_ATTACHMENT,
-        GL_TEXTURE_2D,
-        water_refraction_depth_texture_id,
-        0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "Error: Couldn't complete water refraction framebuffer" << std::endl;
+        {
+            glGenTextures(1, &water_refraction_color_texture_id);
+            glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_RGBA16F,
+                    refraction_width,
+                    refraction_height,
+                    0,
+                    GL_RGBA,
+                    GL_FLOAT,
+                    nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D,
+                water_refraction_color_texture_id,
+                0);
+        }
+
+        {
+            glGenTextures(1, &water_refraction_depth_texture_id);
+            glBindTexture(GL_TEXTURE_2D, water_refraction_depth_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_DEPTH_COMPONENT,
+                    refraction_width,
+                    refraction_height,
+                    0,
+                    GL_DEPTH_COMPONENT,
+                    GL_FLOAT,
+                    nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_TEXTURE_2D,
+                water_refraction_depth_texture_id,
+                0);
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cout << "Error: Couldn't complete water refraction framebuffer" << std::endl;
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -831,6 +896,110 @@ void pk::renderer::reload_programs()
     sprite_program->reload();
     gaussian_program->reload();
     screen_program->reload();
+
+    setup_samplers();
+}
+
+void pk::renderer::setup_samplers()
+{
+    geometry_object_program->bind();
+    {
+        geometry_object_program->set_int("material.albedo_map", 0);
+        geometry_object_program->set_int("material.normal_map", 1);
+        geometry_object_program->set_int("material.metallic_map", 2);
+        geometry_object_program->set_int("material.roughness_map", 3);
+        geometry_object_program->set_int("material.occlusion_map", 4);
+        geometry_object_program->set_int("material.height_map", 5);
+    }
+    geometry_object_program->unbind();
+
+    geometry_terrain_program->bind();
+    {
+        geometry_terrain_program->set_int("materials[0].albedo_map", 0);
+        geometry_terrain_program->set_int("materials[0].normal_map", 1);
+        geometry_terrain_program->set_int("materials[0].metallic_map", 2);
+        geometry_terrain_program->set_int("materials[0].roughness_map", 3);
+        geometry_terrain_program->set_int("materials[0].occlusion_map", 4);
+        geometry_terrain_program->set_int("materials[0].height_map", 5);
+    }
+    geometry_terrain_program->unbind();
+
+    deferred_ambient_program->bind();
+    {
+        deferred_ambient_program->set_int("geometry.position_map", 0);
+        deferred_ambient_program->set_int("geometry.normal_map", 1);
+        deferred_ambient_program->set_int("geometry.albedo_map", 2);
+        deferred_ambient_program->set_int("geometry.material_map", 3);
+        deferred_ambient_program->set_int("skybox.irradiance_cubemap", 4);
+        deferred_ambient_program->set_int("skybox.prefilter_cubemap", 5);
+        deferred_ambient_program->set_int("brdf_map", 6);
+    }
+    deferred_ambient_program->unbind();
+
+    deferred_directional_program->bind();
+    {
+        deferred_directional_program->set_int("geometry.position_map", 0);
+        deferred_directional_program->set_int("geometry.normal_map", 1);
+        deferred_directional_program->set_int("geometry.albedo_map", 2);
+        deferred_directional_program->set_int("geometry.material_map", 3);
+        deferred_directional_program->set_int("light.depth_map", 4);
+    }
+    deferred_directional_program->unbind();
+
+    deferred_point_program->bind();
+    {
+        deferred_point_program->set_int("geometry.position_map", 0);
+        deferred_point_program->set_int("geometry.normal_map", 1);
+        deferred_point_program->set_int("geometry.albedo_map", 2);
+        deferred_point_program->set_int("geometry.material_map", 3);
+        deferred_point_program->set_int("light.depth_cubemap", 4);
+    }
+    deferred_point_program->unbind();
+
+    deferred_spot_program->bind();
+    {
+        deferred_spot_program->set_int("geometry.position_map", 0);
+        deferred_spot_program->set_int("geometry.normal_map", 1);
+        deferred_spot_program->set_int("geometry.albedo_map", 2);
+        deferred_spot_program->set_int("geometry.material_map", 3);
+        deferred_spot_program->set_int("light.depth_map", 4);
+    }
+    deferred_spot_program->unbind();
+
+    skybox_program->bind();
+    {
+        skybox_program->set_int("skybox.environment_cubemap", 0);
+    }
+    skybox_program->unbind();
+
+    water_program->bind();
+    {
+        water_program->set_int("water.reflection_map", 0);
+        water_program->set_int("water.refraction_map", 1);
+        water_program->set_int("water.depth_map", 2);
+        water_program->set_int("water.dudv_map", 3);
+        water_program->set_int("water.normal_map", 4);
+    }
+    water_program->unbind();
+
+    sprite_program->bind();
+    {
+        sprite_program->set_int("sprite.texture", 0);
+    }
+    sprite_program->unbind();
+
+    gaussian_program->bind();
+    {
+        gaussian_program->set_int("image", 0);
+    }
+    gaussian_program->unbind();
+
+    screen_program->bind();
+    {
+        screen_program->set_int("hdr_map", 0);
+        screen_program->set_int("bloom_map", 1);
+    }
+    screen_program->unbind();
 }
 
 void pk::renderer::flush(unsigned int current_time, float delta_time)
@@ -993,7 +1162,7 @@ void pk::renderer::render_shadows()
     }
 }
 
-void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane)
+void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
 {
     // camera
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
@@ -1013,12 +1182,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         {
             geometry_object_program->set_vec4("clipping_plane", clipping_plane);
             geometry_object_program->set_float("tiling", 1.0f);
-            geometry_object_program->set_int("material.albedo_map", 0);
-            geometry_object_program->set_int("material.normal_map", 1);
-            geometry_object_program->set_int("material.metallic_map", 2);
-            geometry_object_program->set_int("material.roughness_map", 3);
-            geometry_object_program->set_int("material.occlusion_map", 4);
-            geometry_object_program->set_int("material.height_map", 5);
 
             for (auto &object : objects)
             {
@@ -1036,12 +1199,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         {
             geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
             geometry_terrain_program->set_float("tiling", terrain::size);
-            geometry_terrain_program->set_int("materials[0].albedo_map", 0);
-            geometry_terrain_program->set_int("materials[0].normal_map", 1);
-            geometry_terrain_program->set_int("materials[0].metallic_map", 2);
-            geometry_terrain_program->set_int("materials[0].roughness_map", 3);
-            geometry_terrain_program->set_int("materials[0].occlusion_map", 4);
-            geometry_terrain_program->set_int("materials[0].height_map", 5);
 
             for (auto &terrain : terrains)
             {
@@ -1073,13 +1230,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
         deferred_ambient_program->bind();
         {
             deferred_ambient_program->set_vec3("camera.position", camera->position);
-            deferred_ambient_program->set_int("geometry.position_map", 0);
-            deferred_ambient_program->set_int("geometry.normal_map", 1);
-            deferred_ambient_program->set_int("geometry.albedo_map", 2);
-            deferred_ambient_program->set_int("geometry.material_map", 3);
-            deferred_ambient_program->set_int("skybox.irradiance_cubemap", 4);
-            deferred_ambient_program->set_int("skybox.prefilter_cubemap", 5);
-            deferred_ambient_program->set_int("brdf_map", 6);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1129,11 +1279,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 deferred_directional_program->bind();
                 {
                     deferred_directional_program->set_vec3("camera.position", camera->position);
-                    deferred_directional_program->set_int("geometry.position_map", 0);
-                    deferred_directional_program->set_int("geometry.normal_map", 1);
-                    deferred_directional_program->set_int("geometry.albedo_map", 2);
-                    deferred_directional_program->set_int("geometry.material_map", 3);
-                    deferred_directional_program->set_int("light.depth_map", 4);
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1178,12 +1323,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 deferred_point_program->bind();
                 {
                     deferred_point_program->set_vec3("camera.position", camera->position);
-                    deferred_point_program->set_int("geometry.position_map", 0);
-                    deferred_point_program->set_int("geometry.normal_map", 1);
-                    deferred_point_program->set_int("geometry.albedo_map", 2);
-                    deferred_point_program->set_int("geometry.material_map", 3);
                     deferred_point_program->set_float("light.far_plane", point_light::far_plane);
-                    deferred_point_program->set_int("light.depth_cubemap", 4);
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1227,11 +1367,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                 deferred_spot_program->bind();
                 {
                     deferred_spot_program->set_vec3("camera.position", camera->position);
-                    deferred_spot_program->set_int("geometry.position_map", 0);
-                    deferred_spot_program->set_int("geometry.normal_map", 1);
-                    deferred_spot_program->set_int("geometry.albedo_map", 2);
-                    deferred_spot_program->set_int("geometry.material_map", 3);
-                    deferred_spot_program->set_int("light.depth_map", 4);
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1309,7 +1444,6 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
             skybox_program->bind();
             {
                 skybox_program->set_mat4("mvp", camera_projection * camera_view_no_translate);
-                skybox_program->set_int("skybox.environment_cubemap", 0);
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->environment_cubemap_id);
@@ -1343,7 +1477,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, int 
                     color_program->set_vec4("clipping_plane", clipping_plane);
                     color_program->set_vec3("color", point_light->color);
 
-                    sphere_mesh->draw();
+                    DEBUG_sphere_mesh->draw();
                 }
                 color_program->unbind();
             }
@@ -1407,11 +1541,6 @@ void pk::renderer::render_waters(unsigned int current_time)
                 water_program->set_float("camera.near_plane", camera::near_plane);
                 water_program->set_float("camera.far_plane", camera::far_plane);
                 water_program->set_vec3("camera.position", camera->position);
-                water_program->set_int("water.reflection_map", 0);
-                water_program->set_int("water.refraction_map", 1);
-                water_program->set_int("water.depth_map", 2);
-                water_program->set_int("water.dudv_map", 3);
-                water_program->set_int("water.normal_map", 4);
                 if (directional_lights.size() > 0)
                 {
                     // TODO: specular reflections for all lights
@@ -1471,7 +1600,6 @@ void pk::renderer::render_sprites()
                 glm::mat4 sprite_model = sprite->calc_model();
                 sprite_program->set_mat4("mvp", projection * sprite_model);
                 sprite_program->set_vec3("sprite.color", sprite->color);
-                sprite_program->set_int("sprite.texture", 0);
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, sprite->texture->texture_id);
@@ -1504,7 +1632,6 @@ void pk::renderer::render_screen()
                 glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[horizontal]);
                 {
                     gaussian_program->set_int("horizontal", horizontal);
-                    gaussian_program->set_int("image", 0);
 
                     glActiveTexture(GL_TEXTURE0);
                     glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids[1] : bloom_texture_ids[!horizontal]);
@@ -1535,8 +1662,6 @@ void pk::renderer::render_screen()
 
         screen_program->bind();
         {
-            screen_program->set_int("hdr_map", 0);
-            screen_program->set_int("bloom_map", 1);
             screen_program->set_unsigned_int("greyscale", greyscale);
 
             glActiveTexture(GL_TEXTURE0);

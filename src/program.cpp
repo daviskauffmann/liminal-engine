@@ -33,6 +33,7 @@ pk::program::~program()
 void pk::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
+    // would need some way to update texture samplers, but only the renderer knows that information right now
     GLuint new_program_id = create_program();
     if (new_program_id)
     {
@@ -51,17 +52,17 @@ void pk::program::unbind(void) const
     glUseProgram(0);
 }
 
-void pk::program::set_int(const std::string &name, int value) const
+void pk::program::set_int(const std::string &name, GLint value) const
 {
     glUniform1i(get_location(name), value);
 }
 
-void pk::program::set_unsigned_int(const std::string &name, unsigned int value) const
+void pk::program::set_unsigned_int(const std::string &name, GLuint value) const
 {
     glUniform1ui(get_location(name), value);
 }
 
-void pk::program::set_float(const std::string &name, float value) const
+void pk::program::set_float(const std::string &name, GLfloat value) const
 {
     glUniform1f(get_location(name), value);
 }
@@ -84,12 +85,14 @@ void pk::program::set_mat4(const std::string &name, glm::mat4 mat4) const
 GLuint pk::program::create_program() const
 {
     GLuint program_id = glCreateProgram();
+
     GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
     if (!vertex_shader)
     {
         return 0;
     }
     glAttachShader(program_id, vertex_shader);
+
     GLuint geometry_shader = 0;
     if (!geometry_filename.empty())
     {
@@ -100,12 +103,14 @@ GLuint pk::program::create_program() const
         }
         glAttachShader(program_id, geometry_shader);
     }
+
     GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
     if (!fragment_shader)
     {
         return 0;
     }
     glAttachShader(program_id, fragment_shader);
+
     glLinkProgram(program_id);
     {
         GLint success;
@@ -114,22 +119,30 @@ GLuint pk::program::create_program() const
         {
             GLint length;
             glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
+
             std::cout << "Error: Program linking failed\n"
+                      << "Program ID: " << program_id << "\n"
                       << &info_log[0] << std::endl;
+
             return 0;
         }
     }
+
     glDetachShader(program_id, vertex_shader);
     glDeleteShader(vertex_shader);
+
     if (geometry_shader)
     {
         glDetachShader(program_id, geometry_shader);
         glDeleteShader(geometry_shader);
     }
+
     glDetachShader(program_id, fragment_shader);
     glDeleteShader(fragment_shader);
+
     glValidateProgram(program_id);
     {
         GLint success;
@@ -138,19 +151,25 @@ GLuint pk::program::create_program() const
         {
             GLint length;
             glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &length);
+
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
+
             std::cout << "Error: Program validation failed\n"
+                      << "Program ID: " << program_id << "\n"
                       << &info_log[0] << std::endl;
+
             return 0;
         }
     }
+
     return program_id;
 }
 
 GLuint pk::program::create_shader(GLenum type, const std::string &filename) const
 {
     GLuint shader_id = glCreateShader(type);
+
     char error[256];
     char *source = stb_include_file(
         const_cast<char *>(filename.c_str()),
@@ -162,24 +181,33 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
         std::cout << "Error: Shader preprocessing failed\n"
                   << "File: " << filename << "\n"
                   << error << std::endl;
+
         return 0;
     }
+    std::cout << "Loaded: " << filename << std::endl;
+
     glShaderSource(shader_id, 1, &source, nullptr);
     glCompileShader(shader_id);
+
     free(source);
+
     GLint success;
     glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
     if (!success)
     {
         GLint length;
         glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
+
         std::vector<GLchar> info_log(length);
         glGetShaderInfoLog(shader_id, length, &length, &info_log[0]);
+
         std::cout << "Error: Shader compilation failed\n"
                   << "File: " << filename << "\n"
                   << &info_log[0] << std::endl;
+
         return 0;
     }
+
     return shader_id;
 }
 

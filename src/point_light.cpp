@@ -9,7 +9,7 @@ float pk::point_light::far_plane = 25.0f;
 pk::point_light::point_light(
     glm::vec3 position,
     glm::vec3 color,
-    int depth_cube_size)
+    GLsizei depth_cube_size)
     : position(position),
       color(color)
 {
@@ -24,7 +24,7 @@ pk::point_light::~point_light()
     glDeleteTextures(1, &depth_cubemap_texture_id);
 }
 
-void pk::point_light::set_depth_cube_size(int depth_cube_size)
+void pk::point_light::set_depth_cube_size(GLsizei depth_cube_size)
 {
     this->depth_cube_size = depth_cube_size;
 

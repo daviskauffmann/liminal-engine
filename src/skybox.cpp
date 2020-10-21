@@ -8,9 +8,9 @@
 
 #include "program.hpp"
 
-constexpr int environment_size = 4096;
-constexpr int irradiance_size = 32;
-constexpr int prefilter_size = 128;
+constexpr GLsizei environment_size = 4096;
+constexpr GLsizei irradiance_size = 32;
+constexpr GLsizei prefilter_size = 128;
 
 pk::skybox::skybox(const std::string &filename)
 {

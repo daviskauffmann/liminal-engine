@@ -10,7 +10,7 @@ float pk::directional_light::far_plane = 10.0f;
 pk::directional_light::directional_light(
     glm::vec3 direction,
     glm::vec3 color,
-    int depth_map_size)
+    GLsizei depth_map_size)
     : direction(direction),
       color(color)
 {
@@ -25,7 +25,7 @@ pk::directional_light::~directional_light()
     glDeleteTextures(1, &depth_map_texture_id);
 }
 
-void pk::directional_light::set_depth_map_size(int depth_map_size)
+void pk::directional_light::set_depth_map_size(GLsizei depth_map_size)
 {
     this->depth_map_size = depth_map_size;
 

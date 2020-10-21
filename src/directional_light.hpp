@@ -15,7 +15,7 @@ namespace pk
 
         glm::vec3 direction;
         glm::vec3 color;
-        int depth_map_size;
+        GLsizei depth_map_size;
         GLuint depth_map_fbo_id;
         GLuint depth_map_texture_id;
         glm::mat4 transformation_matrix;
@@ -23,10 +23,10 @@ namespace pk
         directional_light(
             glm::vec3 direction,
             glm::vec3 color,
-            int depth_map_size);
+            GLsizei depth_map_size);
         ~directional_light();
 
-        void set_depth_map_size(int depth_map_size);
+        void set_depth_map_size(GLsizei depth_map_size);
 
         void update_transformation_matrix(glm::vec3 center);
     };

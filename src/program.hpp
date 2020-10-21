@@ -25,9 +25,9 @@ namespace pk
         void bind() const;
         void unbind(void) const;
 
-        void set_int(const std::string &name, int value) const;
-        void set_unsigned_int(const std::string &name, unsigned int value) const;
-        void set_float(const std::string &name, float value) const;
+        void set_int(const std::string &name, GLint value) const;
+        void set_unsigned_int(const std::string &name, GLuint value) const;
+        void set_float(const std::string &name, GLfloat value) const;
         void set_vec3(const std::string &name, glm::vec3 vec3) const;
         void set_vec4(const std::string &name, glm::vec4 vec4) const;
         void set_mat4(const std::string &name, glm::mat4 mat4) const;

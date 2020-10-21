@@ -38,64 +38,28 @@ namespace pk
         std::vector<pk::sprite *> sprites;
 
         renderer(
-            int display_width, int display_height, float render_scale,
-            int reflection_width, int reflection_height,
-            int refraction_width, int refraction_height);
+            GLsizei display_width, GLsizei display_height, float render_scale,
+            GLsizei reflection_width, GLsizei reflection_height,
+            GLsizei refraction_width, GLsizei refraction_height);
         ~renderer();
 
-        void set_screen_size(int display_width, int display_height, float render_scale);
-        void set_reflection_size(int reflection_width, int reflection_height);
-        void set_refraction_size(int refraction_width, int refraction_height);
+        void set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale);
+        void set_reflection_size(GLsizei reflection_width, GLsizei reflection_height);
+        void set_refraction_size(GLsizei refraction_width, GLsizei refraction_height);
 
         void reload_programs();
 
         void flush(unsigned int current_time, float delta_time);
 
     private:
-        int display_width;
-        int display_height;
-        int render_width;
-        int render_height;
-        int reflection_width;
-        int reflection_height;
-        int refraction_width;
-        int refraction_height;
-
-        GLsizei water_vertices_size;
-        GLuint water_vao_id;
-        GLuint water_vbo_id;
-
-        GLsizei skybox_vertices_size;
-        GLuint skybox_vao_id;
-        GLuint skybox_vbo_id;
-
-        GLsizei sprite_vertices_size;
-        GLuint sprite_vao_id;
-        GLuint sprite_vbo_id;
-
-        GLsizei screen_vertices_size;
-        GLuint screen_vao_id;
-        GLuint screen_vbo_id;
-
-        pk::mesh *sphere_mesh;
-
-        pk::texture *water_dudv_texture;
-        pk::texture *water_normal_texture;
-
-        pk::program *depth_program;
-        pk::program *depth_cube_program;
-        pk::program *color_program;
-        pk::program *geometry_object_program;
-        pk::program *geometry_terrain_program;
-        pk::program *deferred_ambient_program;
-        pk::program *deferred_directional_program;
-        pk::program *deferred_point_program;
-        pk::program *deferred_spot_program;
-        pk::program *skybox_program;
-        pk::program *water_program;
-        pk::program *sprite_program;
-        pk::program *gaussian_program;
-        pk::program *screen_program;
+        GLsizei display_width;
+        GLsizei display_height;
+        GLsizei render_width;
+        GLsizei render_height;
+        GLsizei reflection_width;
+        GLsizei reflection_height;
+        GLsizei refraction_width;
+        GLsizei refraction_height;
 
         GLuint geometry_fbo_id;
         GLuint geometry_position_texture_id;
@@ -119,10 +83,48 @@ namespace pk
         GLuint bloom_fbo_ids[2];
         GLuint bloom_texture_ids[2];
 
+        GLsizei water_vertices_size;
+        GLuint water_vao_id;
+        GLuint water_vbo_id;
+
+        GLsizei skybox_vertices_size;
+        GLuint skybox_vao_id;
+        GLuint skybox_vbo_id;
+
+        GLsizei sprite_vertices_size;
+        GLuint sprite_vao_id;
+        GLuint sprite_vbo_id;
+
+        GLsizei screen_vertices_size;
+        GLuint screen_vao_id;
+        GLuint screen_vbo_id;
+
         GLuint brdf_texture_id;
 
+        pk::program *depth_program;
+        pk::program *depth_cube_program;
+        pk::program *color_program;
+        pk::program *geometry_object_program;
+        pk::program *geometry_terrain_program;
+        pk::program *deferred_ambient_program;
+        pk::program *deferred_directional_program;
+        pk::program *deferred_point_program;
+        pk::program *deferred_spot_program;
+        pk::program *skybox_program;
+        pk::program *water_program;
+        pk::program *sprite_program;
+        pk::program *gaussian_program;
+        pk::program *screen_program;
+
+        pk::texture *water_dudv_texture;
+        pk::texture *water_normal_texture;
+
+        pk::mesh *DEBUG_sphere_mesh;
+
+        void setup_samplers();
+
         void render_shadows();
-        void render_objects(unsigned int current_time, GLuint fbo_id, int width, int height, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_objects(unsigned int current_time, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
         void render_waters(unsigned int current_time);
         void render_sprites();
         void render_screen();

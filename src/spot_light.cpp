@@ -12,7 +12,7 @@ pk::spot_light::spot_light(
     glm::vec3 color,
     float inner_cutoff,
     float outer_cutoff,
-    int depth_map_size)
+    GLsizei depth_map_size)
     : position(position),
       direction(direction),
       color(color),
@@ -30,7 +30,7 @@ pk::spot_light::~spot_light()
     glDeleteTextures(1, &depth_map_texture_id);
 }
 
-void pk::spot_light::set_depth_map_size(int depth_map_size)
+void pk::spot_light::set_depth_map_size(GLsizei depth_map_size)
 {
     this->depth_map_size = depth_map_size;
 

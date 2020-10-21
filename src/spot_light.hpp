@@ -17,7 +17,7 @@ namespace pk
         glm::vec3 color;
         float inner_cutoff;
         float outer_cutoff;
-        int depth_map_size;
+        GLsizei depth_map_size;
         GLuint depth_map_fbo_id;
         GLuint depth_map_texture_id;
         glm::mat4 transformation_matrix;
@@ -28,10 +28,10 @@ namespace pk
             glm::vec3 color,
             float inner_cutoff,
             float outer_cutoff,
-            int depth_map_size);
+            GLsizei depth_map_size);
         ~spot_light();
 
-        void set_depth_map_size(int depth_map_size);
+        void set_depth_map_size(GLsizei depth_map_size);
 
         void update_transformation_matrix();
     };

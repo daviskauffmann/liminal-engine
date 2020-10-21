@@ -2,9 +2,9 @@
 
 #include <assimp/scene.h>
 
-pk::mesh::mesh(std::vector<pk::vertex> vertices, std::vector<unsigned int> indices, std::vector<std::vector<pk::texture *>> textures)
+pk::mesh::mesh(std::vector<pk::vertex> vertices, std::vector<GLuint> indices, std::vector<std::vector<pk::texture *>> textures)
     : vertices_size((GLsizei)(vertices.size() * sizeof(pk::vertex))),
-      indices_size((GLsizei)(indices.size() * sizeof(unsigned int))),
+      indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)
 {
     glGenVertexArrays(1, &vao_id);
