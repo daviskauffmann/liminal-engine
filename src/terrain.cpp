@@ -2,8 +2,8 @@
 
 #include <assimp/scene.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <SDL2/SDL_image.h>
+#include <spdlog/spdlog.h>
 
 #include "texture.hpp"
 
@@ -23,9 +23,9 @@ pk::terrain::terrain(glm::vec3 position, const std::string &heightmap_filename)
     SDL_Surface *heightmap_surface = IMG_Load(heightmap_filename.c_str());
     if (!heightmap_surface)
     {
-        std::cout << "Error: " << IMG_GetError() << std::endl;
+        spdlog::error("Failed to load terrain heightmap texture: {}", IMG_GetError());
+        return;
     }
-    std::cout << "Loaded: " << heightmap_filename << std::endl;
 
     std::vector<pk::vertex> vertices;
     for (int z = 0; z < heightmap_surface->h; z++)

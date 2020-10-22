@@ -1,17 +1,18 @@
 #include "texture.hpp"
 
-#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <spdlog/spdlog.h>
 
 pk::texture::texture(const std::string &filename, bool srgb)
 {
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
     {
-        std::cout << "Error: " << IMG_GetError() << std::endl;
+        spdlog::error("Failed to load texture: {}", IMG_GetError());
+        return;
     }
-    std::cout << "Loaded: " << filename << std::endl;
+
     GLenum internal_format;
     GLenum format;
     if (surface->format->BytesPerPixel == 1)

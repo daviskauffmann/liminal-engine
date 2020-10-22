@@ -1,7 +1,7 @@
 #include "spot_light.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 float pk::spot_light::near_plane = 0.1f;
 float pk::spot_light::far_plane = 10.0f;
@@ -76,7 +76,8 @@ void pk::spot_light::set_depth_map_size(GLsizei depth_map_size)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete depth map framebuffer" << std::endl;
+            spdlog::error("Failed to create spot light depth map framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

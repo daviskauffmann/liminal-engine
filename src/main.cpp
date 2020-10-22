@@ -1,6 +1,8 @@
+#include <cxxopts.hpp>
 #include <iostream>
 #include <imgui.h>
 #include <SDL2/SDL.h>
+#include <spdlog/spdlog.h>
 
 #include "audio.hpp"
 #include "display.hpp"
@@ -10,45 +12,48 @@
 #include "renderer.hpp"
 #include "scene.hpp"
 
-constexpr const char *window_title = "Project Kilonova";
-constexpr const char *version = "0.0.1";
-
-int window_width = 1280;
-int window_height = 720;
-float render_scale = 1.0f;
+#define WINDOW_TITLE "Project Kilonova"
+#define VERSION "v0.0.1"
 
 int main(int argc, char *argv[])
 {
-    for (int i = 1; i < argc; i++)
+    int window_width;
+    int window_height;
+    float render_scale;
+
+    try
     {
-        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
+        cxxopts::Options options("pk");
+
+        auto option_adder = options.add_options();
+        option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
+        option_adder("h,help", "Print usage");
+        option_adder("scale", "Set render scale", cxxopts::value<float>()->default_value("1.0"));
+        option_adder("v,version", "Print version");
+        option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
+
+        auto result = options.parse(argc, argv);
+        window_height = result["height"].as<int>();
+        if (result.count("help"))
         {
-            std::cout << "Options:" << std::endl;
-            std::cout << "  -h, --help       Print this message" << std::endl;
-            std::cout << "  --width <int>    Set window width" << std::endl;
-            std::cout << "  --height <int>   Set window height" << std::endl;
-            std::cout << "  --scale <float>  Set render scale" << std::endl;
-            std::cout << "  -v, --version    Print version information" << std::endl;
+            std::cout << options.help() << std::endl;
+            return 0;
         }
-        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
+        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
+        if (result.count("version"))
         {
-            std::cout << window_title << " " << version << std::endl;
+            std::cout << VERSION << std::endl;
+            return 0;
         }
-        else if (strcmp(argv[i], "--width") == 0)
-        {
-            window_width = atoi(argv[i + 1]);
-        }
-        else if (strcmp(argv[i], "--height") == 0)
-        {
-            window_height = atoi(argv[i + 1]);
-        }
-        else if (strcmp(argv[i], "--scale") == 0)
-        {
-            render_scale = glm::clamp((float)atof(argv[i + 1]), 0.1f, 1.0f);
-        }
+        window_width = result["width"].as<int>();
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+        return 0;
     }
 
-    pk::display display(window_title, window_width, window_height);
+    pk::display display(WINDOW_TITLE, window_width, window_height);
     pk::renderer renderer(
         window_width, window_height, render_scale,
         window_width, window_height,
@@ -96,7 +101,7 @@ int main(int argc, char *argv[])
                     renderer.set_screen_size(window_width, window_height, render_scale);
                     renderer.set_reflection_size(window_width, window_height);
                     renderer.set_refraction_size(window_width, window_height);
-                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
+                    spdlog::info("Window resized to {}x{}", window_width, window_height);
                 }
                 break;
                 }
@@ -123,7 +128,7 @@ int main(int argc, char *argv[])
                             render_scale -= 0.1f;
                         }
                         renderer.set_screen_size(window_width, window_height, render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                        spdlog::info("Render scale changed to {}", render_scale);
                     }
                     break;
                     case SDLK_EQUALS:
@@ -133,7 +138,7 @@ int main(int argc, char *argv[])
                             render_scale += 0.1f;
                         }
                         renderer.set_screen_size(window_width, window_height, render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                        spdlog::info("Render scale changed to {}", render_scale);
                     }
                     break;
                     case SDLK_BACKQUOTE:

@@ -1,7 +1,7 @@
 #include "directional_light.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 float pk::directional_light::shadow_map_size = 10.0f;
 float pk::directional_light::near_plane = -10.0f;
@@ -71,7 +71,8 @@ void pk::directional_light::set_depth_map_size(GLsizei depth_map_size)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete depth map framebuffer" << std::endl;
+            spdlog::error("Failed to create directional light depth map framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

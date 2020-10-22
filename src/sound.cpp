@@ -1,16 +1,16 @@
 #include "sound.hpp"
 
-#include <iostream>
 #include <SDL2/SDL_mixer.h>
+#include <spdlog/spdlog.h>
 
 pk::sound::sound(const std::string &filename)
 {
     Mix_Chunk *chunk = Mix_LoadWAV(filename.c_str());
     if (!chunk)
     {
-        std::cout << "Error: " << Mix_GetError() << std::endl;
+        spdlog::error("Failed to load sound: {}", Mix_GetError());
+        return;
     }
-    std::cout << "Loaded: " << filename << std::endl;
 
     alGenBuffers(1, &buffer_id);
     alBufferData(

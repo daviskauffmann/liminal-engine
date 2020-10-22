@@ -1,8 +1,8 @@
 #include "cubemap.hpp"
 
-#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <spdlog/spdlog.h>
 
 pk::cubemap::cubemap(std::vector<std::string> filenames)
 {
@@ -14,9 +14,9 @@ pk::cubemap::cubemap(std::vector<std::string> filenames)
             SDL_Surface *surface = IMG_Load(filenames[i].c_str());
             if (!surface)
             {
-                std::cout << "Error: " << IMG_GetError() << std::endl;
+                spdlog::error("Failed to load cubemap: {}", IMG_GetError());
+                return;
             }
-            std::cout << "Loaded: " << filenames[i] << std::endl;
 
             glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,

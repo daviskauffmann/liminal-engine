@@ -2,8 +2,7 @@
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
-#include <sstream>
+#include <spdlog/spdlog.h>
 #include <stb_include.h>
 #include <vector>
 
@@ -123,10 +122,7 @@ GLuint pk::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
 
-            std::cout << "Error: Program linking failed\n"
-                      << "Program ID: " << program_id << "\n"
-                      << &info_log[0] << std::endl;
-
+            spdlog::error("Failed to link program: {}", &info_log[0]);
             return 0;
         }
     }
@@ -155,10 +151,7 @@ GLuint pk::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
 
-            std::cout << "Error: Program validation failed\n"
-                      << "Program ID: " << program_id << "\n"
-                      << &info_log[0] << std::endl;
-
+            spdlog::error("Failed to validate program: {}", &info_log[0]);
             return 0;
         }
     }
@@ -178,13 +171,9 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
         error);
     if (!source)
     {
-        std::cout << "Error: Shader preprocessing failed\n"
-                  << "File: " << filename << "\n"
-                  << error << std::endl;
-
+        spdlog::error("Failed to preprocess shader: {}", error);
         return 0;
     }
-    std::cout << "Loaded: " << filename << std::endl;
 
     glShaderSource(shader_id, 1, &source, nullptr);
     glCompileShader(shader_id);
@@ -201,10 +190,7 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
         std::vector<GLchar> info_log(length);
         glGetShaderInfoLog(shader_id, length, &length, &info_log[0]);
 
-        std::cout << "Error: Shader compilation failed\n"
-                  << "File: " << filename << "\n"
-                  << &info_log[0] << std::endl;
-
+        spdlog::error("Failed to compile shader: {}", error);
         return 0;
     }
 

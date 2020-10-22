@@ -2,25 +2,30 @@
 
 #include <AL/al.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
+
+// TODO: error strings
 
 pk::audio::audio()
 {
     device = alcOpenDevice(nullptr);
     if (!device)
     {
-        std::cout << "Error: Couldn't open device" << std::endl;
+        spdlog::error("Failed to open device");
+        return;
     }
 
     context = alcCreateContext(device, nullptr);
     if (!context)
     {
-        std::cout << "Error: Couldn't create context" << std::endl;
+        spdlog::error("Failed to create context");
+        return;
     }
 
     if (!alcMakeContextCurrent(context))
     {
-        std::cout << "Error: Couldn't make context current" << std::endl;
+        spdlog::error("Failed to make context current");
+        return;
     }
 }
 

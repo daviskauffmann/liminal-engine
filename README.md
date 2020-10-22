@@ -8,12 +8,14 @@ Make sure the following are present on your system:
 
 - Assimp
 - Bullet
+- cxxopts
 - GLEW
 - GLM
 - OpenAL
 - SDL2
 - SDL2_image
 - SDL2_mixer
+- spdlog
 
 These dependencies are included as submodules:
 

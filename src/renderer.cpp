@@ -2,7 +2,7 @@
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 // TODO: reloading shaders when a spot light is not active causes directional light shadow to stop working
 // shadows come back after turning on the spot light
@@ -17,6 +17,8 @@
 // currently they are stored on each instance of a light
 
 // TODO: render_scale other than 1 causes water reflection/refraction to break
+
+// TODO: print more specific errors when framebuffers fail
 
 pk::renderer::renderer(
     GLsizei display_width, GLsizei display_height, float render_scale,
@@ -248,7 +250,8 @@ pk::renderer::renderer(
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cout << "Error: Couldn't complete brdf capture framebuffer" << std::endl;
+                spdlog::error("Failed to create brdf capture framebuffer");
+                return;
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -618,7 +621,8 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
+            spdlog::error("Failed to create geometry framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -687,7 +691,8 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete geometry framebuffer" << std::endl;
+            spdlog::error("Failed to create hdr framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -729,7 +734,8 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cout << "Error: Couldn't complete brdf capture framebuffer" << std::endl;
+                spdlog::error("Failed to create bloom framebuffer");
+                return;
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -797,7 +803,8 @@ void pk::renderer::set_reflection_size(GLsizei reflection_width, GLsizei reflect
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete water reflection framebuffer" << std::endl;
+            spdlog::error("Failed to create water reflection framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -874,7 +881,8 @@ void pk::renderer::set_refraction_size(GLsizei refraction_width, GLsizei refract
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete water refraction framebuffer" << std::endl;
+            spdlog::error("Failed to create water refraction framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

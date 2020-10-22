@@ -1,4 +1,4 @@
-PKGS = assimp bullet glew openal sdl2 sdl2_image sdl2_mixer
+PKGS = assimp bullet glew openal sdl2 sdl2_image sdl2_mixer spdlog
 
 CXX = g++
 CXXFLAGS = -ggdb -Iextern/imgui -Iextern/imgui/examples -Iextern/stb -std=c++11 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`

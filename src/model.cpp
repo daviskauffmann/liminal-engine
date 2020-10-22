@@ -2,24 +2,27 @@
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 pk::model::model(const std::string &filename, bool flip_uvs)
+    : directory(filename.substr(0, filename.find_last_of('/')))
 {
     Assimp::Importer importer;
+
     unsigned int flags = aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices;
     if (flip_uvs)
     {
         flags |= aiProcess_FlipUVs;
     }
+
     const aiScene *scene = importer.ReadFile(filename, flags);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cout << "Error: " << importer.GetErrorString() << std::endl;
+        spdlog::error("Failed to load model: {}", importer.GetErrorString());
+        return;
     }
-    directory = filename.substr(0, filename.find_last_of('/'));
+
     process_node(scene->mRootNode, scene);
-    std::cout << "Loaded: " << filename << std::endl;
 }
 
 pk::model::~model()
@@ -50,6 +53,7 @@ void pk::model::process_node(aiNode *node, const aiScene *scene)
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(process_mesh(mesh, scene));
     }
+
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
         process_node(node->mChildren[i], scene);

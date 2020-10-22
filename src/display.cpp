@@ -4,56 +4,34 @@
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
-#include <iostream>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
+#include <spdlog/spdlog.h>
 #include <string>
 
-const char *severity_to_string(GLenum severity)
-{
-    switch (severity)
-    {
-    case GL_DEBUG_SEVERITY_NOTIFICATION:
-        return "Notification";
-    case GL_DEBUG_SEVERITY_HIGH:
-        return "High";
-    case GL_DEBUG_SEVERITY_MEDIUM:
-        return "Medium";
-    case GL_DEBUG_SEVERITY_LOW:
-        return "Low";
-    default:
-        return "Unknown";
-    }
-}
-
-void GLAPIENTRY
-MessageCallback(GLenum source,
-                GLenum type,
-                GLuint id,
-                GLenum severity,
-                GLsizei length,
-                const GLchar *message,
-                const void *userParam)
-{
-    // fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = %s, message = %s\n",
-    //         (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-    //         type, severity_to_string(severity), message);
-}
+#define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
+#define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
+#define MIX_FLAGS (0)
 
 pk::display::display(const char *title, int width, int height)
 {
-    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
-    SDL_version sdl_version;
-    SDL_GetVersion(&sdl_version);
-    std::cout << "SDL " << std::to_string(sdl_version.major) << "." << std::to_string(sdl_version.minor) << "." << std::to_string(sdl_version.patch) << std::endl;
+    if (SDL_Init(SDL_FLAGS) != 0)
+    {
+        spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
+        return;
+    }
 
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-    const SDL_version *img_version = IMG_Linked_Version();
-    std::cout << "SDL_image " << std::to_string(img_version->major) << "." << std::to_string(img_version->minor) << "." << std::to_string(img_version->patch) << std::endl;
+    if (IMG_Init(IMG_FLAGS) != IMG_FLAGS)
+    {
+        spdlog::error("Failed to initialize SDL_image: {}", IMG_GetError());
+        return;
+    }
 
-    Mix_Init(0);
-    const SDL_version *mix_version = Mix_Linked_Version();
-    std::cout << "SDL_mixer " << std::to_string(mix_version->major) << "." << std::to_string(mix_version->minor) << "." << std::to_string(mix_version->patch) << std::endl;
+    if (Mix_Init(MIX_FLAGS) != MIX_FLAGS)
+    {
+        spdlog::error("Failed to initialize SDL_mixer: {}", IMG_GetError());
+        return;
+    }
 
     window = SDL_CreateWindow(
         title,
@@ -62,30 +40,37 @@ pk::display::display(const char *title, int width, int height)
         width,
         height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (!window)
+    {
+        spdlog::error("Failed to create window: {}", SDL_GetError());
+        return;
+    }
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetSwapInterval(0);
     context = SDL_GL_CreateContext(window);
+    if (!context)
+    {
+        spdlog::error("Failed to create OpenGL context: {}", SDL_GetError());
+        return;
+    }
 
-    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
+    {
+        spdlog::error("Failed to initialize the mixer API: {}", IMG_GetError());
+        return;
+    }
 
     GLenum error = glewInit();
     if (error != GLEW_OK)
     {
-        std::cout << "Error: Couldn't initialize GLEW\n"
-                  << glewGetErrorString(error) << std::endl;
+        spdlog::error("Failed to initialize GLEW: {}", glewGetErrorString(error));
+        return;
     }
-    std::cout << "GLEW " << glewGetString(GLEW_VERSION) << std::endl;
-    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "Vendor " << glGetString(GL_VENDOR) << std::endl;
-    std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
-
+    // TODO: error handling?
     ImGui::CreateContext();
     ImGui_ImplSDL2_InitForOpenGL(window, context);
     ImGui_ImplOpenGL3_Init("#version 460");

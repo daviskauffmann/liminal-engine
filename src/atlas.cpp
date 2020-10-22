@@ -1,7 +1,5 @@
 #include "atlas.hpp"
 
-#include <iostream>
-
 pk::atlas::atlas(const std::string &filename, GLuint size, GLuint texture_size)
     : texture(filename),
       size(size),

@@ -2,7 +2,7 @@
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <stb_image.h>
 #include <vector>
 
@@ -131,7 +131,8 @@ void pk::skybox::set_cubemap(const std::string &filename)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "Error: Couldn't complete skybox capture framebuffer" << std::endl;
+            spdlog::error("Failed to create skybox capture framebuffer");
+            return;
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -145,7 +146,11 @@ void pk::skybox::set_cubemap(const std::string &filename)
         stbi_set_flip_vertically_on_load(true);
         int width, height, num_components;
         float *image = stbi_loadf(filename.c_str(), &width, &height, &num_components, 0);
-        std::cout << "Loaded: " << filename << std::endl;
+        if (!image)
+        {
+            spdlog::error("Failed to load skybox texture: {}", stbi_failure_reason());
+            return;
+        }
 
         glTexImage2D(
             GL_TEXTURE_2D,
