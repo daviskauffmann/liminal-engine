@@ -4,10 +4,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
-// TODO: reloading shaders when a spot light is not active causes directional light shadow to stop working
-// shadows come back after turning on the spot light
-// maybe because both light types use the same depthmap shader?
-
 // TODO: framebuffer helper class
 // should store info about width/height
 // when binding the framebuffer, automatically set viewport to those values
@@ -53,6 +49,7 @@ pk::renderer::renderer(
     water_refraction_depth_texture_id = 0;
     set_refraction_size(refraction_width, refraction_height);
 
+    // init OpenGL state
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
@@ -61,6 +58,7 @@ pk::renderer::renderer(
     // glEnable(GL_MULTISAMPLE);
     // glEnable(GL_FRAMEBUFFER_SRGB);
 
+    // create water mesh
     glGenVertexArrays(1, &water_vao_id);
     glBindVertexArray(water_vao_id);
     {
@@ -84,6 +82,7 @@ pk::renderer::renderer(
     }
     glBindVertexArray(0);
 
+    // create skybox mesh
     glGenVertexArrays(1, &skybox_vao_id);
     glBindVertexArray(skybox_vao_id);
     {
@@ -141,6 +140,7 @@ pk::renderer::renderer(
     }
     glBindVertexArray(0);
 
+    // create sprite mesh
     glGenVertexArrays(1, &sprite_vao_id);
     glBindVertexArray(sprite_vao_id);
     {
@@ -166,6 +166,7 @@ pk::renderer::renderer(
     }
     glBindVertexArray(0);
 
+    // create screen mesh
     glGenVertexArrays(1, &screen_vao_id);
     glBindVertexArray(screen_vao_id);
     {
@@ -282,6 +283,7 @@ pk::renderer::renderer(
         glDeleteRenderbuffers(1, &capture_rbo_id);
     }
 
+    // create shader programs
     depth_program = new pk::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
@@ -328,10 +330,11 @@ pk::renderer::renderer(
 
     setup_samplers();
 
+    // create water textures
     water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
     water_normal_texture = new pk::texture("assets/images/water_normal.png");
 
-    // create sphere mesh
+    // DEBUG: create sphere mesh
     // http://www.songho.ca/opengl/gl_sphere.html
     {
         std::vector<pk::vertex> vertices;

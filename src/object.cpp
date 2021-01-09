@@ -27,6 +27,12 @@ pk::object::object(
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(mass, motion_state, collision_shape, local_intertia));
 }
 
+pk::object::~object()
+{
+    delete motion_state;
+    delete collision_shape;
+}
+
 glm::mat4 pk::object::calc_model() const
 {
     glm::mat4 model = glm::identity<glm::mat4>();

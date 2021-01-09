@@ -6,6 +6,7 @@
 #include <imgui_impl_opengl3.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_net.h>
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -29,7 +30,7 @@ pk::display::display(const char *title, int width, int height)
 
     if (Mix_Init(MIX_FLAGS) != MIX_FLAGS)
     {
-        spdlog::error("Failed to initialize SDL_mixer: {}", IMG_GetError());
+        spdlog::error("Failed to initialize SDL_mixer: {}", Mix_GetError());
         return;
     }
 
@@ -59,7 +60,7 @@ pk::display::display(const char *title, int width, int height)
 
     if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
     {
-        spdlog::error("Failed to initialize the mixer API: {}", IMG_GetError());
+        spdlog::error("Failed to initialize the mixer API: {}", Mix_GetError());
         return;
     }
 
@@ -89,7 +90,6 @@ pk::display::~display()
 
     IMG_Quit();
     Mix_Quit();
-
     SDL_Quit();
 }
 

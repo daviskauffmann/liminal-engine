@@ -9,6 +9,7 @@
 #include "empty_scene.hpp"
 #include "game_scene.hpp"
 #include "pause_scene.hpp"
+#include "net.hpp"
 #include "renderer.hpp"
 #include "scene.hpp"
 
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
         window_width, window_height,
         window_width, window_height);
     pk::audio audio;
+    pk::net net;
 
     pk::scene *scene = new pk::game_scene();
 

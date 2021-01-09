@@ -1,4 +1,4 @@
-PKGS = assimp bullet glew openal sdl2 sdl2_image sdl2_mixer spdlog
+PKGS = assimp bullet glew openal sdl2 sdl2_image sdl2_mixer sdl2_net spdlog
 
 CXX = g++
 CXXFLAGS = -ggdb -Iextern/imgui -Iextern/imgui/examples -Iextern/stb -std=c++11 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`
@@ -10,6 +10,7 @@ SRC = \
 	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
+	src/client.cpp \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
 	src/display.cpp \
@@ -19,11 +20,13 @@ SRC = \
 	src/main.cpp \
 	src/mesh.cpp \
 	src/model.cpp \
+	src/net.cpp \
 	src/object.cpp \
 	src/pause_scene.cpp \
 	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
+	src/server.cpp \
 	src/skybox.cpp \
 	src/sound.cpp \
 	src/source.cpp \

@@ -1,5 +1,6 @@
 #include "terrain.hpp"
 
+#include <bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <assimp/scene.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SDL2/SDL_image.h>
@@ -52,6 +53,10 @@ pk::terrain::terrain(glm::vec3 position, const std::string &heightmap_filename)
             vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
 
             vertices.push_back(vertex);
+
+            heightfield.push_back(position.x);
+            heightfield.push_back(position.y);
+            heightfield.push_back(position.z);
         }
     }
 
@@ -72,6 +77,8 @@ pk::terrain::terrain(glm::vec3 position, const std::string &heightmap_filename)
             indices.push_back(bottom_right);
         }
     }
+
+    SDL_FreeSurface(heightmap_surface);
 
     std::vector<std::vector<pk::texture *>> textures;
     for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
@@ -112,11 +119,21 @@ pk::terrain::terrain(glm::vec3 position, const std::string &heightmap_filename)
 
     mesh = new pk::mesh(vertices, indices, textures);
 
-    SDL_FreeSurface(heightmap_surface);
+    btTransform transform;
+    transform.setIdentity();
+    transform.setOrigin(btVector3(0.0f, -50.0f, 0.0f));
+
+    motion_state = new btDefaultMotionState(transform);
+
+    collision_shape = new btHeightfieldTerrainShape(size, size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
+    rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0.0f, motion_state, collision_shape));
 }
 
 pk::terrain::~terrain()
 {
+    delete motion_state;
+    delete collision_shape;
+
     delete mesh;
 }
 

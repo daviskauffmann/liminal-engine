@@ -20,12 +20,13 @@ namespace pk
             glm::vec3 rotation,
             glm::vec3 scale,
             float mass);
+        ~object();
 
         glm::mat4 calc_model() const;
 
     private:
-        btCollisionShape *collision_shape;
         btDefaultMotionState *motion_state;
+        btCollisionShape *collision_shape;
     };
 } // namespace pk
 
