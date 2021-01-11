@@ -68,6 +68,7 @@ make clean
 - Terrain (WIP)
 - 2D sprites (WIP)
 - Physics (WIP)
+- Networking (WIP)
 
 ### Upcoming
 

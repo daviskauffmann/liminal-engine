@@ -19,8 +19,8 @@ SRC = \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
+	src/message.cpp \
 	src/model.cpp \
-	src/net.cpp \
 	src/object.cpp \
 	src/pause_scene.cpp \
 	src/point_light.cpp \

@@ -33,7 +33,7 @@ pk::game_scene::game_scene()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         1.0f);
-    world->addRigidBody(backpack->rigidbody);
+    // world->addRigidBody(backpack->rigidbody);
 
     cube_model = new pk::model("assets/models/cube/cube.obj");
     cube = new pk::object(
@@ -42,7 +42,7 @@ pk::game_scene::game_scene()
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f),
         1.0f);
-    world->addRigidBody(cube->rigidbody);
+    // world->addRigidBody(cube->rigidbody);
 
     const float sun_intensity = 10.0f;
     sun = new pk::directional_light(
@@ -82,7 +82,7 @@ pk::game_scene::game_scene()
         glm::vec2(100.0f, 100.0f));
 
     terrain = new pk::terrain(glm::vec3(400.0f, 0.0f, 400.0f), "assets/images/heightmap.png");
-    world->addRigidBody(terrain->rigidbody);
+    // world->addRigidBody(terrain->rigidbody);
 
     ambient_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
     ambient_source->set_loop(true);
@@ -345,7 +345,7 @@ void pk::game_scene::render(pk::renderer *renderer) const
     renderer->camera = camera;
     renderer->skybox = skybox;
     renderer->objects.push_back(backpack);
-    renderer->objects.push_back(cube);
+    // renderer->objects.push_back(cube);
     renderer->directional_lights.push_back(sun);
     renderer->point_lights.push_back(red_light);
     renderer->point_lights.push_back(yellow_light);

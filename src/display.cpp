@@ -4,36 +4,11 @@
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_net.h>
 #include <spdlog/spdlog.h>
 #include <string>
 
-#define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
-#define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
-#define MIX_FLAGS (0)
-
 pk::display::display(const char *title, int width, int height)
 {
-    if (SDL_Init(SDL_FLAGS) != 0)
-    {
-        spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
-        return;
-    }
-
-    if (IMG_Init(IMG_FLAGS) != IMG_FLAGS)
-    {
-        spdlog::error("Failed to initialize SDL_image: {}", IMG_GetError());
-        return;
-    }
-
-    if (Mix_Init(MIX_FLAGS) != MIX_FLAGS)
-    {
-        spdlog::error("Failed to initialize SDL_mixer: {}", Mix_GetError());
-        return;
-    }
-
     window = SDL_CreateWindow(
         title,
         SDL_WINDOWPOS_CENTERED,
@@ -58,12 +33,6 @@ pk::display::display(const char *title, int width, int height)
         return;
     }
 
-    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
-    {
-        spdlog::error("Failed to initialize the mixer API: {}", Mix_GetError());
-        return;
-    }
-
     GLenum error = glewInit();
     if (error != GLEW_OK)
     {
@@ -83,14 +52,8 @@ pk::display::~display()
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
-    Mix_CloseAudio();
-
     SDL_DestroyWindow(window);
     SDL_GL_DeleteContext(context);
-
-    IMG_Quit();
-    Mix_Quit();
-    SDL_Quit();
 }
 
 bool pk::display::poll_event(SDL_Event *event)
