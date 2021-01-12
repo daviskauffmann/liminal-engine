@@ -1,5 +1,6 @@
 #include "client.hpp"
 
+#include <bullet/btBulletDynamicsCommon.h>
 #include <cxxopts.hpp>
 #include <iostream>
 #include <imgui.h>
@@ -11,12 +12,20 @@
 
 #include "audio.hpp"
 #include "display.hpp"
-#include "empty_scene.hpp"
-#include "game_scene.hpp"
+#include "directional_light.hpp"
+#include "camera.hpp"
 #include "message.hpp"
-#include "pause_scene.hpp"
+#include "model.hpp"
+#include "object.hpp"
+#include "point_light.hpp"
 #include "renderer.hpp"
-#include "scene.hpp"
+#include "skybox.hpp"
+#include "sound.hpp"
+#include "source.hpp"
+#include "spot_light.hpp"
+#include "sprite.hpp"
+#include "terrain.hpp"
+#include "water.hpp"
 
 #define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
 #define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
@@ -151,10 +160,101 @@ int pk::client_main(cxxopts::ParseResult result)
         window_width, window_height);
     pk::audio audio;
 
-    pk::scene *scene = new pk::game_scene();
-
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = "assets/imgui.ini";
+
+    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
+    btCollisionDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
+    btBroadphaseInterface *overlapping_pair_cache = new btDbvtBroadphase();
+    btSequentialImpulseConstraintSolver *solver = new btSequentialImpulseConstraintSolver();
+    btDiscreteDynamicsWorld *world = new btDiscreteDynamicsWorld(dispatcher, overlapping_pair_cache, solver, collision_configuration);
+
+    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
+
+    pk::camera *camera = new pk::camera(
+        glm::vec3(0.0f, 0.0f, 3.0f),
+        0.0f,
+        -90.0f,
+        0.0f,
+        45.0f);
+
+    // skybox = nullptr;
+    // skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
+    pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+
+    pk::model *backpack_model = new pk::model("assets/models/backpack/backpack.obj");
+    pk::object *backpack = new pk::object(
+        backpack_model,
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        1.0f);
+    // world->addRigidBody(backpack->rigidbody);
+
+    pk::model *cube_model = new pk::model("assets/models/cube/cube.obj");
+    pk::object *cube = new pk::object(
+        cube_model,
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        1.0f);
+    // world->addRigidBody(cube->rigidbody);
+
+    const float sun_intensity = 10.0f;
+    pk::directional_light *sun = new pk::directional_light(
+        glm::vec3(0.352286f, -0.547564f, -0.758992f),
+        glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
+        4096);
+
+    const float light_intensity = 10.0f;
+    pk::point_light *red_light = new pk::point_light(
+        glm::vec3(2.0f, 0.0f, 2.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity,
+        512);
+    pk::point_light *yellow_light = new pk::point_light(
+        glm::vec3(-2.0f, 0.0f, -2.0f),
+        glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity,
+        512);
+    pk::point_light *green_light = new pk::point_light(
+        glm::vec3(2.0f, 0.0f, -2.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity,
+        512);
+    pk::point_light *blue_light = new pk::point_light(
+        glm::vec3(-2.0f, 0.0f, 2.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity,
+        512);
+
+    const float torch_intensity = 20.0f;
+    pk::spot_light *torch = new pk::spot_light(
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f) * torch_intensity,
+        cosf(glm::radians(12.5f)),
+        cosf(glm::radians(15.0f)),
+        1024);
+
+    pk::water *water = new pk::water(
+        glm::vec3(0.0f, -2.0f, 0.0f),
+        glm::vec2(100.0f, 100.0f));
+
+    pk::terrain *terrain = new pk::terrain(glm::vec3(400.0f, 0.0f, 400.0f), "assets/images/heightmap.png");
+    // world->addRigidBody(terrain->rigidbody);
+
+    pk::sound *ambient_sound = new pk::sound("assets/audio/ambient.wav");
+    pk::sound *bounce_sound = new pk::sound("assets/audio/bounce.wav");
+    pk::sound *shoot_sound = new pk::sound("assets/audio/shoot.wav");
+
+    pk::source *ambient_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    ambient_source->set_loop(true);
+    ambient_source->set_gain(0.25f);
+    // ambient_source->play(ambient_sound);
+    pk::source *bounce_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    pk::source *shoot_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    bool edit_mode = false;
+    bool lock_cursor = true;
+    bool torch_on = true;
+    bool torch_follow = true;
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;
@@ -167,6 +267,13 @@ int pk::client_main(cxxopts::ParseResult result)
         unsigned int previous_time = current_time;
         current_time = SDL_GetTicks();
         float delta_time = ((current_time - previous_time) / 1000.0f) * time_scale;
+
+        int num_keys;
+        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
+        int mouse_x, mouse_y;
+        unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
+
+        SDL_SetRelativeMouseMode((SDL_bool)lock_cursor);
 
         if (connected)
         {
@@ -227,8 +334,6 @@ int pk::client_main(cxxopts::ParseResult result)
             }
         }
 
-        int num_keys;
-        const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
         SDL_Event event;
         while (display.poll_event(&event))
         {
@@ -263,6 +368,11 @@ int pk::client_main(cxxopts::ParseResult result)
                 {
                     switch (event.key.keysym.sym)
                     {
+                    case SDLK_TAB:
+                    {
+                        lock_cursor = !lock_cursor;
+                    }
+                    break;
                     case SDLK_RETURN:
                     {
                         if (keys[SDL_SCANCODE_LALT])
@@ -296,6 +406,21 @@ int pk::client_main(cxxopts::ParseResult result)
                         console_open = !console_open;
                     }
                     break;
+                    case SDLK_e:
+                    {
+                        edit_mode = !edit_mode;
+                    }
+                    break;
+                    case SDLK_f:
+                    {
+                        torch_on = !torch_on;
+                    }
+                    break;
+                    case SDLK_g:
+                    {
+                        torch_follow = !torch_follow;
+                    }
+                    break;
                     case SDLK_r:
                     {
                         renderer.reload_programs();
@@ -325,36 +450,171 @@ int pk::client_main(cxxopts::ParseResult result)
                 }
             }
             break;
-            }
-
-            scene = scene->handle_event(event);
-            if (!scene)
+            case SDL_MOUSEMOTION:
             {
-                quit = true;
+                if (!io.WantCaptureMouse)
+                {
+                    if (SDL_GetRelativeMouseMode())
+                    {
+                        camera->pitch -= event.motion.yrel * 0.1f;
+                        camera->yaw += event.motion.xrel * 0.1f;
+                        if (camera->pitch > 89.0f)
+                        {
+                            camera->pitch = 89.0f;
+                        }
+                        if (camera->pitch < -89.0f)
+                        {
+                            camera->pitch = -89.0f;
+                        }
+                    }
+                }
+            }
+            break;
+            case SDL_MOUSEWHEEL:
+            {
+                if (!io.WantCaptureMouse)
+                {
+                    if (SDL_GetRelativeMouseMode())
+                    {
+                        camera->fov -= event.wheel.y;
+                        if (camera->fov <= 1.0f)
+                        {
+                            camera->fov = 1.0f;
+                        }
+                        if (camera->fov >= 120.0f)
+                        {
+                            camera->fov = 120.0f;
+                        }
+                    }
+                }
+            }
+            break;
             }
         }
 
-        scene = scene->update(&audio, delta_time);
-        if (!scene)
+        glm::vec3 camera_front = camera->calc_front();
+        glm::vec3 camera_right = camera->calc_right();
+
+        static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
+        glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
+        const float speed = 50.0f;
+        bool sprint = false;
+        if (!io.WantCaptureKeyboard)
         {
-            quit = true;
+            if (keys[SDL_SCANCODE_W])
+            {
+                acceleration += camera_front;
+            }
+            if (keys[SDL_SCANCODE_A])
+            {
+                acceleration -= camera_right;
+            }
+            if (keys[SDL_SCANCODE_S])
+            {
+                acceleration -= camera_front;
+            }
+            if (keys[SDL_SCANCODE_D])
+            {
+                acceleration += camera_right;
+            }
+            if (keys[SDL_SCANCODE_SPACE])
+            {
+                acceleration.y = 1.0f;
+            }
+            if (keys[SDL_SCANCODE_LCTRL])
+            {
+                acceleration.y = -1.0f;
+            }
+            if (keys[SDL_SCANCODE_LSHIFT])
+            {
+                sprint = true;
+            }
         }
+        float acceleration_length = glm::length(acceleration);
+        if (acceleration_length > 1.0f)
+        {
+            acceleration /= acceleration_length;
+        }
+        acceleration *= speed * (sprint ? 2.0f : 1.0f);
+        acceleration -= velocity * 10.0f;
+        camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
+        velocity = acceleration * delta_time + velocity;
+        // camera->pitch = -glm::dot(camera_front, velocity);
+        camera->roll = glm::dot(camera_right, velocity);
+
+        static float angle = 0.0f;
+        const float pi = 3.14159f;
+        const float distance = 6.0f;
+        angle += 0.5f * delta_time;
+        if (angle > 2 * pi)
+        {
+            angle = 0;
+        }
+        red_light->position.x = distance * sinf(angle);
+        red_light->position.z = distance * cosf(angle);
+        yellow_light->position.x = distance * sinf(angle + pi / 2);
+        yellow_light->position.z = distance * cosf(angle + pi / 2);
+        green_light->position.x = distance * sinf(angle + pi);
+        green_light->position.z = distance * cosf(angle + pi);
+        blue_light->position.x = distance * sinf(angle + 3 * pi / 2);
+        blue_light->position.z = distance * cosf(angle + 3 * pi / 2);
+
+        if (torch_follow)
+        {
+            torch->position = camera->position;
+            torch->direction = glm::mix(torch->direction, camera_front, 30.0f * delta_time);
+        }
+
+        audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+        ambient_source->set_position(camera->position);
+        shoot_source->set_position(camera->position);
+
+        if (!io.WantCaptureMouse)
+        {
+            if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+            {
+                if (!shoot_source->is_playing())
+                {
+                    shoot_source->play(shoot_sound);
+                }
+            }
+
+            if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
+            {
+                if (!bounce_source->is_playing())
+                {
+                    bounce_source->play(bounce_sound);
+                }
+            }
+        }
+
+        world->stepSimulation(delta_time);
 
         display.make_current();
 
-        if (scene)
-        {
-            scene->render(&renderer);
-        }
-
         renderer.wireframe = wireframe;
+        renderer.camera = camera;
+        renderer.skybox = skybox;
+        renderer.objects.push_back(backpack);
+        // renderer->objects.push_back(cube);
+        renderer.directional_lights.push_back(sun);
+        renderer.point_lights.push_back(red_light);
+        renderer.point_lights.push_back(yellow_light);
+        renderer.point_lights.push_back(green_light);
+        renderer.point_lights.push_back(blue_light);
+        if (torch_on)
+        {
+            renderer.spot_lights.push_back(torch);
+        }
+        renderer.terrains.push_back(terrain);
+        renderer.waters.push_back(water);
         renderer.flush(current_time, delta_time);
 
         display.start_gui();
 
-        if (scene)
+        if (edit_mode)
         {
-            scene->gui();
+            ImGui::ShowDemoWindow();
         }
 
         if (console_open)
@@ -374,14 +634,6 @@ int pk::client_main(cxxopts::ParseResult result)
                 else if (strcmp(command, "quit") == 0)
                 {
                     quit = true;
-                }
-                else if (strcmp(command, "map") == 0)
-                {
-                    if (scene)
-                    {
-                        delete scene;
-                    }
-                    scene = new pk::game_scene();
                 }
                 else if (strcmp(command, "twf") == 0)
                 {
@@ -408,16 +660,48 @@ int pk::client_main(cxxopts::ParseResult result)
         display.swap();
     }
 
-    if (scene)
-    {
-        delete scene;
-    }
-
     if (connected)
     {
         pk::message message = pk::message(pk::message_type::MESSAGE_DISCONNECT_REQUEST);
         SDLNet_TCP_Send(tcp_socket, &message, sizeof(message));
     }
+
+    delete world;
+    delete solver;
+    delete overlapping_pair_cache;
+    delete dispatcher;
+    delete collision_configuration;
+
+    delete camera;
+
+    delete skybox;
+
+    delete backpack_model;
+    delete backpack;
+
+    delete cube_model;
+    delete cube;
+
+    delete sun;
+
+    delete red_light;
+    delete yellow_light;
+    delete green_light;
+    delete blue_light;
+
+    delete torch;
+
+    delete water;
+
+    delete terrain;
+
+    delete ambient_sound;
+    delete bounce_sound;
+    delete shoot_sound;
+
+    delete ambient_source;
+    delete bounce_source;
+    delete shoot_source;
 
     IMG_Quit();
 

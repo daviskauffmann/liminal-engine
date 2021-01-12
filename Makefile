@@ -14,15 +14,12 @@ SRC = \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
 	src/display.cpp \
-	src/empty_scene.cpp \
-	src/game_scene.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
 	src/message.cpp \
 	src/model.cpp \
 	src/object.cpp \
-	src/pause_scene.cpp \
 	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
