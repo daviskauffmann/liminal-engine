@@ -2,7 +2,7 @@
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <spdlog/spdlog.h>
+#include <iostream>
 
 pk::model::model(const std::string &filename, bool flip_uvs)
     : directory(filename.substr(0, filename.find_last_of('/')))
@@ -18,7 +18,7 @@ pk::model::model(const std::string &filename, bool flip_uvs)
     const aiScene *scene = importer.ReadFile(filename, flags);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        spdlog::error("Failed to load model: {}", importer.GetErrorString());
+        std::cerr << "Error: Failed to load model: " << importer.GetErrorString() << std::endl;
         return;
     }
 

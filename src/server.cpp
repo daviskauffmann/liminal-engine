@@ -4,7 +4,6 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
-#include <spdlog/spdlog.h>
 
 #include "message.hpp"
 
@@ -26,7 +25,7 @@ static void broadcast_tcp(client *clients, void *data, int len, int exclude_id)
         {
             if (SDLNet_TCP_Send(clients[i].socket, data, len) < len)
             {
-                spdlog::error("Failed to send TCP packet");
+                std::cerr << "Error: Failed to send TCP packet" << std::endl;
             }
         }
     }
@@ -46,7 +45,7 @@ static void broadcast_udp(UDPsocket socket, client *clients, void *data, int len
 
             if (SDLNet_UDP_Send(socket, -1, packet) != 1)
             {
-                spdlog::error("Failed to send UDP packet");
+                std::cerr << "Error: Failed to send UDP packet" << std::endl;
             }
         }
     }
@@ -58,13 +57,13 @@ int pk::server_main(cxxopts::ParseResult result)
 {
     if (SDL_Init(SDL_FLAGS) != 0)
     {
-        spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
+        std::cerr << "Error: Failed to initialize SDL: " << SDL_GetError() << std::endl;
         return 1;
     }
 
     if (SDLNet_Init() != 0)
     {
-        spdlog::error("Failed to initialize SDL_net: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to initialize SDL_net: " << SDLNet_GetError() << std::endl;
         return 1;
     }
 
@@ -72,28 +71,28 @@ int pk::server_main(cxxopts::ParseResult result)
     unsigned short server_port = result["port"].as<unsigned short>();
     if (SDLNet_ResolveHost(&server_address, INADDR_ANY, server_port))
     {
-        spdlog::error("Failed to resolve host: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to resolve host: " << SDLNet_GetError() << std::endl;
         return 1;
     }
 
     TCPsocket tcp_socket = SDLNet_TCP_Open(&server_address);
     if (!tcp_socket)
     {
-        spdlog::error("Failed to open TCP socket: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to open TCP socket: {}" << SDLNet_GetError() << std::endl;
         return 1;
     }
 
     UDPsocket udp_socket = SDLNet_UDP_Open(server_port);
     if (!udp_socket)
     {
-        spdlog::error("Failed to open UDP socket: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to open UDP socket: " << SDLNet_GetError() << std::endl;
         return 1;
     }
 
     SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(MAX_CLIENTS + 2);
     if (!socket_set)
     {
-        spdlog::error("Failed to allocate socket set: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to allocate socket set: " << SDLNet_GetError() << std::endl;
         return 1;
     }
     SDLNet_TCP_AddSocket(socket_set, tcp_socket);
@@ -136,7 +135,7 @@ int pk::server_main(cxxopts::ParseResult result)
                     }
                     if (client_id != -1)
                     {
-                        spdlog::info("Connected to client");
+                        std::cout << "Connected to client" << std::endl;
 
                         clients[client_id].id = client_id;
                         clients[client_id].socket = socket;
@@ -166,7 +165,7 @@ int pk::server_main(cxxopts::ParseResult result)
                     }
                     else
                     {
-                        spdlog::info("A client tried to connect, but the server is full");
+                        std::cout << "A client tried to connect, but the server is full" << std::endl;
 
                         pk::message message = pk::message(pk::message_type::MESSAGE_CONNECT_FULL);
                         SDLNet_TCP_Send(socket, &message, sizeof(message));
@@ -188,7 +187,7 @@ int pk::server_main(cxxopts::ParseResult result)
                             {
                             case pk::message_type::MESSAGE_DISCONNECT_REQUEST:
                             {
-                                spdlog::info("Client disconnected");
+                                std::cout << "Client disconnected" << std::endl;
 
                                 pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_DISCONNECT_BROADCAST, clients[i].id);
                                 broadcast_tcp(clients, &id_message, sizeof(id_message), clients[i].id);
@@ -203,7 +202,7 @@ int pk::server_main(cxxopts::ParseResult result)
                             case pk::message_type::MESSAGE_CHAT_REQUEST:
                             {
                                 pk::chat_message *chat_message = (pk::chat_message *)message;
-                                spdlog::info("Client {} says: {}", chat_message->id, chat_message->str);
+                                std::cout << "Client " << chat_message->id << " says: " << chat_message->str << std::endl;
 
                                 chat_message->type = MESSAGE_CHAT_BROADCAST;
                                 broadcast_tcp(clients, chat_message, sizeof(*chat_message), clients[i].id);
@@ -211,7 +210,7 @@ int pk::server_main(cxxopts::ParseResult result)
                             break;
                             default:
                             {
-                                spdlog::error("Unknown TCP packet type: {}", message->type);
+                                std::cerr << "Error: Unknown TCP packet type: " << message->type << std::endl;
                             }
                             break;
                             }
@@ -233,12 +232,14 @@ int pk::server_main(cxxopts::ParseResult result)
                         pk::id_message *id_message = (pk::id_message *)message;
                         clients[id_message->id].udp_address = packet->address;
 
-                        spdlog::info("Saving UDP info of client {}", id_message->id);
+                        std::cout << "Saving UDP info of client " << id_message->id << std::endl;
                     }
                     break;
                     case pk::message_type::MESSAGE_POSITION_REQUEST:
                     {
                         pk::position_message *position_message = (pk::position_message *)message;
+
+                        // TODO: validate position
 
                         pk::position_message *position_message2 = (pk::position_message *)malloc(sizeof(*position_message2));
                         position_message2->type = pk::message_type::MESSAGE_POSITION_BROADCAST;
@@ -252,7 +253,7 @@ int pk::server_main(cxxopts::ParseResult result)
                     break;
                     default:
                     {
-                        spdlog::error("Unknown UDP packet type: {}", message->type);
+                        std::cerr << "Error: Unknown UDP packet type: " << message->type << std::endl;
                     }
                     break;
                     }

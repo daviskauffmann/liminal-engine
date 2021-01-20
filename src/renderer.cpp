@@ -2,7 +2,7 @@
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <spdlog/spdlog.h>
+#include <iostream>
 
 // TODO: framebuffer helper class
 // should store info about width/height
@@ -251,7 +251,7 @@ pk::renderer::renderer(
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create brdf capture framebuffer");
+                std::cerr << "Error: Failed to create brdf capture framebuffer" << std::endl;
                 return;
             }
         }
@@ -624,7 +624,7 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create geometry framebuffer");
+            std::cerr << "Error: Failed to create geometry framebuffer" << std::endl;
             return;
         }
     }
@@ -694,7 +694,7 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create hdr framebuffer");
+            std::cerr << "Error: Failed to create hdr framebuffer" << std::endl;
             return;
         }
     }
@@ -737,7 +737,7 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create bloom framebuffer");
+                std::cerr << "Error: Failed to create bloom framebuffer" << std::endl;
                 return;
             }
         }
@@ -806,7 +806,7 @@ void pk::renderer::set_reflection_size(GLsizei reflection_width, GLsizei reflect
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create water reflection framebuffer");
+            std::cerr << "Error: Failed to create water reflection framebuffer" << std::endl;
             return;
         }
     }
@@ -884,7 +884,7 @@ void pk::renderer::set_refraction_size(GLsizei refraction_width, GLsizei refract
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create water refraction framebuffer");
+            std::cerr << "Error: Failed to create water refraction framebuffer" << std::endl;
             return;
         }
     }

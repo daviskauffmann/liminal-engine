@@ -16,7 +16,6 @@ Make sure the following are present on your system:
 - SDL2_image
 - SDL2_mixer
 - SDL2_net
-- spdlog
 
 These dependencies are included as submodules:
 

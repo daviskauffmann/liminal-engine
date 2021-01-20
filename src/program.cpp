@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-#include <spdlog/spdlog.h>
+#include <iostream>
 #include <stb_include.h>
 #include <vector>
 
@@ -122,7 +122,7 @@ GLuint pk::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
 
-            spdlog::error("Failed to link program: {}", &info_log[0]);
+            std::cerr << "Error: Failed to link program: " << &info_log[0] << std::endl;
             return 0;
         }
     }
@@ -151,7 +151,7 @@ GLuint pk::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(program_id, length, &length, &info_log[0]);
 
-            spdlog::error("Failed to validate program: {}", &info_log[0]);
+            std::cerr << "Error: Failed to validate program: " << &info_log[0] << std::endl;
             return 0;
         }
     }
@@ -171,7 +171,7 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
         error);
     if (!source)
     {
-        spdlog::error("Failed to preprocess shader: {}", error);
+        std::cerr << "Error: Failed to preprocess shader: " << error << std::endl;
         return 0;
     }
 
@@ -190,7 +190,7 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
         std::vector<GLchar> info_log(length);
         glGetShaderInfoLog(shader_id, length, &length, &info_log[0]);
 
-        spdlog::error("Failed to compile shader: {}", error);
+        std::cerr << "Error: Failed to compile shader: " << &info_log[0] << std::endl;
         return 0;
     }
 

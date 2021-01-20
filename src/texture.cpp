@@ -1,15 +1,15 @@
 #include "texture.hpp"
 
+#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <spdlog/spdlog.h>
 
 pk::texture::texture(const std::string &filename, bool srgb)
 {
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
     {
-        spdlog::error("Failed to load texture: {}", IMG_GetError());
+        std::cerr << "Error: Failed to load texture: " << IMG_GetError() << std::endl;
         return;
     }
 

@@ -9,7 +9,6 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_net.h>
-#include <spdlog/spdlog.h>
 
 #include "audio.hpp"
 #include "directional_light.hpp"
@@ -44,25 +43,25 @@ int pk::client_main(cxxopts::ParseResult result)
 {
     if (SDL_Init(SDL_FLAGS) != 0)
     {
-        spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
+        std::cerr << "Error: Failed to initialize SDL: " << SDL_GetError() << std::endl;
         return 1;
     }
 
     if (IMG_Init(IMG_FLAGS) != IMG_FLAGS)
     {
-        spdlog::error("Failed to initialize SDL_image: {}", IMG_GetError());
+        std::cerr << "Error: Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
         return 1;
     }
 
     if (Mix_Init(MIX_FLAGS) != MIX_FLAGS)
     {
-        spdlog::error("Failed to initialize SDL_mixer: {}", Mix_GetError());
+        std::cerr << "Error: Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
         return 1;
     }
 
     if (SDLNet_Init() != 0)
     {
-        spdlog::error("Failed to initialize SDL_net: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to initialize SDL_net: " << SDLNet_GetError() << std::endl;
         return 1;
     }
 
@@ -79,7 +78,7 @@ int pk::client_main(cxxopts::ParseResult result)
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window)
     {
-        spdlog::error("Failed to create window: {}", SDL_GetError());
+        std::cerr << "Error: Failed to create window: " << SDL_GetError() << std::endl;
         return 1;
     }
 
@@ -90,14 +89,14 @@ int pk::client_main(cxxopts::ParseResult result)
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if (!context)
     {
-        spdlog::error("Failed to create OpenGL context: {}", SDL_GetError());
+        std::cerr << "Error: Failed to create OpenGL context: " << SDL_GetError() << std::endl;
         return 1;
     }
 
     GLenum error = glewInit();
     if (error != GLEW_OK)
     {
-        spdlog::error("Failed to initialize GLEW: {}", glewGetErrorString(error));
+        std::cerr << "Error: Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
         return 1;
     }
 
@@ -109,7 +108,7 @@ int pk::client_main(cxxopts::ParseResult result)
 
     if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
     {
-        spdlog::error("Failed to initialize the mixer API: {}", Mix_GetError());
+        std::cerr << "Error: Failed to initialize the mixer API: " << Mix_GetError() << std::endl;
         return 1;
     }
 
@@ -134,9 +133,9 @@ int pk::client_main(cxxopts::ParseResult result)
         0.0f,
         45.0f);
 
-    pk::skybox *skybox = nullptr;
+    // pk::skybox *skybox = nullptr;
     // pk::skybox *skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
-    // pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
     pk::model *backpack_model = new pk::model("assets/models/backpack/backpack.obj");
     pk::object *backpack = new pk::object(
@@ -214,28 +213,28 @@ int pk::client_main(cxxopts::ParseResult result)
     unsigned short server_port = result["port"].as<unsigned short>();
     if (SDLNet_ResolveHost(&server_address, server_host.c_str(), server_port))
     {
-        spdlog::error("Failed to resolve host: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to resolve host: " << SDLNet_GetError() << std::endl;
         online = false;
     }
 
     TCPsocket tcp_socket = SDLNet_TCP_Open(&server_address);
     if (!tcp_socket)
     {
-        spdlog::error("Failed to open TCP socket: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to open TCP socket: " << SDLNet_GetError() << std::endl;
         online = false;
     }
 
     UDPsocket udp_socket = SDLNet_UDP_Open(0);
     if (!udp_socket)
     {
-        spdlog::error("Failed to open UDP socket: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to open UDP socket: " << SDLNet_GetError() << std::endl;
         return 1;
     }
 
     SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(2);
     if (!socket_set)
     {
-        spdlog::error("Failed to allocate socket set: {}", SDLNet_GetError());
+        std::cerr << "Error: Failed to allocate socket set: " << SDLNet_GetError() << std::endl;
         return 1;
     }
     SDLNet_TCP_AddSocket(socket_set, tcp_socket);
@@ -262,6 +261,7 @@ int pk::client_main(cxxopts::ParseResult result)
                 pk::connect_ok_message *connect_ok_message = (pk::connect_ok_message *)message;
 
                 client_id = connect_ok_message->id;
+                // TODO: server should tell client their own position
 
                 for (int i = 0; i < MAX_CLIENTS; i++)
                 {
@@ -281,13 +281,13 @@ int pk::client_main(cxxopts::ParseResult result)
             break;
             case pk::message_type::MESSAGE_CONNECT_FULL:
             {
-                spdlog::error("Server is full");
+                std::cerr << "Error: Server is full" << std::endl;
                 online = false;
             }
             break;
             default:
             {
-                spdlog::error("Unknown server response");
+                std::cerr << "Error: Unknown server response" << std::endl;
                 online = false;
             }
             break;
@@ -307,7 +307,7 @@ int pk::client_main(cxxopts::ParseResult result)
         packet->len = sizeof(*id_message);
         if (!SDLNet_UDP_Send(udp_socket, -1, packet))
         {
-            spdlog::error("Failed to make UDP connection");
+            std::cerr << "Error: Failed to make UDP connection" << std::endl;
             online = false;
         }
         SDLNet_FreePacket(packet);
@@ -315,7 +315,7 @@ int pk::client_main(cxxopts::ParseResult result)
 
     if (!online)
     {
-        spdlog::info("Starting in offline mode");
+        std::cout << "Starting in offline mode" << std::endl;
     }
 
     unsigned int current_time = 0;
@@ -365,7 +365,7 @@ int pk::client_main(cxxopts::ParseResult result)
                                 glm::vec3(1.0f, 1.0f, 1.0f),
                                 1.0f);
 
-                            spdlog::info("Client with ID {} has joined", connect_broadcast_message->id);
+                            std::cout << "Client with ID " << connect_broadcast_message->id << " has joined " << std::endl;
                         }
                         break;
                         case pk::message_type::MESSAGE_DISCONNECT_BROADCAST:
@@ -376,19 +376,19 @@ int pk::client_main(cxxopts::ParseResult result)
                             delete players[id_message->id].avatar;
                             players[id_message->id].avatar = nullptr;
 
-                            spdlog::info("Client with ID {} has disconnected", id_message->id);
+                            std::cout << "Client with ID " << id_message->id << " has disconnected" << std::endl;
                         }
                         break;
                         case pk::message_type::MESSAGE_CHAT_BROADCAST:
                         {
                             pk::chat_message *chat_message = (pk::chat_message *)message;
 
-                            spdlog::info("Client {}: {}", chat_message->id, chat_message->str);
+                            std::cout << "Client " << chat_message->id << ": " << chat_message->str << std::endl;
                         }
                         break;
                         default:
                         {
-                            spdlog::error("Unknown TCP packet type: {}", message->type);
+                            std::cerr << "Error: Unknown TCP packet type: " << message->type << std::endl;
                         }
                         break;
                         }
@@ -419,7 +419,7 @@ int pk::client_main(cxxopts::ParseResult result)
                         break;
                         default:
                         {
-                            spdlog::error("Unknown UDP packet type: {}", message->type);
+                            std::cerr << "Error: Unknown UDP packet type: " << message->type << std::endl;
                         }
                         break;
                         }
@@ -453,7 +453,7 @@ int pk::client_main(cxxopts::ParseResult result)
                     renderer.set_screen_size(window_width, window_height, render_scale);
                     renderer.set_reflection_size(window_width, window_height);
                     renderer.set_refraction_size(window_width, window_height);
-                    spdlog::info("Window resized to {}x{}", window_width, window_height);
+                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
                 }
                 break;
                 }
@@ -493,7 +493,7 @@ int pk::client_main(cxxopts::ParseResult result)
                             render_scale -= 0.1f;
                         }
                         renderer.set_screen_size(window_width, window_height, render_scale);
-                        spdlog::info("Render scale changed to {}", render_scale);
+                        std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     break;
                     case SDLK_EQUALS:
@@ -503,7 +503,7 @@ int pk::client_main(cxxopts::ParseResult result)
                             render_scale += 0.1f;
                         }
                         renderer.set_screen_size(window_width, window_height, render_scale);
-                        spdlog::info("Render scale changed to {}", render_scale);
+                        std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     break;
                     case SDLK_BACKQUOTE:
@@ -661,7 +661,7 @@ int pk::client_main(cxxopts::ParseResult result)
             packet->len = sizeof(*position_message);
             if (!SDLNet_UDP_Send(udp_socket, -1, packet))
             {
-                spdlog::error("Failed to send UDP packet");
+                std::cerr << "Error: Failed to send UDP packet" << std::endl;
                 return 1;
             }
             SDLNet_FreePacket(packet);

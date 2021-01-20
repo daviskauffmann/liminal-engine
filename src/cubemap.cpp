@@ -1,8 +1,8 @@
 #include "cubemap.hpp"
 
+#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <spdlog/spdlog.h>
 
 pk::cubemap::cubemap(std::vector<std::string> filenames)
 {
@@ -14,7 +14,7 @@ pk::cubemap::cubemap(std::vector<std::string> filenames)
             SDL_Surface *surface = IMG_Load(filenames[i].c_str());
             if (!surface)
             {
-                spdlog::error("Failed to load cubemap: {}", IMG_GetError());
+                std::cerr << "Error: Failed to load cubemap: " << IMG_GetError() << std::endl;
                 return;
             }
 
@@ -25,7 +25,8 @@ pk::cubemap::cubemap(std::vector<std::string> filenames)
                 surface->w,
                 surface->h,
                 0,
-                surface->format->BytesPerPixel == 4 ? GL_RGBA : surface->format->BytesPerPixel == 1 ? GL_RED : GL_RGB,
+                surface->format->BytesPerPixel == 4 ? GL_RGBA : surface->format->BytesPerPixel == 1 ? GL_RED
+                                                                                                    : GL_RGB,
                 GL_UNSIGNED_BYTE,
                 surface->pixels);
 

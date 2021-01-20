@@ -1,7 +1,7 @@
 #include "point_light.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <spdlog/spdlog.h>
+#include <iostream>
 
 float pk::point_light::near_plane = 1.0f;
 float pk::point_light::far_plane = 25.0f;
@@ -71,7 +71,7 @@ void pk::point_light::set_depth_cube_size(GLsizei depth_cube_size)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create point light depth cubemap framebuffer");
+            std::cerr << "Error: Failed to create point light depth cubemap framebuffer" << std::endl;
             return;
         }
     }
