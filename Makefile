@@ -13,7 +13,6 @@ SRC = \
 	src/client.cpp \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
-	src/display.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
@@ -53,6 +52,10 @@ obj/%.o: src/%.cpp
 .PHONY: run
 run: all
 	./$(TARGET)
+
+.PHONY: run_server
+run_server: all
+	./$(TARGET) -s
 
 .PHONY: clean
 clean:

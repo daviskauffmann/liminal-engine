@@ -1,9 +1,10 @@
 #include "client.hpp"
 
 #include <bullet/btBulletDynamicsCommon.h>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
@@ -11,7 +12,6 @@
 #include <spdlog/spdlog.h>
 
 #include "audio.hpp"
-#include "display.hpp"
 #include "directional_light.hpp"
 #include "camera.hpp"
 #include "message.hpp"
@@ -19,6 +19,7 @@
 #include "object.hpp"
 #include "point_light.hpp"
 #include "renderer.hpp"
+#include "server.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 #include "source.hpp"
@@ -33,15 +34,14 @@
 
 #define WINDOW_TITLE "Project Kilonova"
 
-#define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 3000
+struct player
+{
+    int client_id;
+    pk::object *avatar;
+};
 
 int pk::client_main(cxxopts::ParseResult result)
 {
-    int window_width = result["width"].as<int>();
-    int window_height = result["height"].as<int>();
-    int render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
-
     if (SDL_Init(SDL_FLAGS) != 0)
     {
         spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
@@ -60,108 +60,64 @@ int pk::client_main(cxxopts::ParseResult result)
         return 1;
     }
 
-    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
-    {
-        spdlog::error("Failed to initialize the mixer API: {}", Mix_GetError());
-        return 1;
-    }
-
     if (SDLNet_Init() != 0)
     {
         spdlog::error("Failed to initialize SDL_net: {}", SDLNet_GetError());
         return 1;
     }
 
-    IPaddress server_address;
-    if (SDLNet_ResolveHost(&server_address, SERVER_HOST, SERVER_PORT))
+    int window_width = result["width"].as<int>();
+    int window_height = result["height"].as<int>();
+    int render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
+
+    SDL_Window *window = SDL_CreateWindow(
+        WINDOW_TITLE,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        window_width,
+        window_height,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (!window)
     {
-        spdlog::error("Failed to resolve host: {}", SDLNet_GetError());
+        spdlog::error("Failed to create window: {}", SDL_GetError());
         return 1;
     }
 
-    TCPsocket tcp_socket = SDLNet_TCP_Open(&server_address);
-    bool connected = false;
-    if (!tcp_socket)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+    SDL_GL_SetSwapInterval(0);
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+    if (!context)
     {
-        spdlog::error("Failed to open TCP socket: {}", SDLNet_GetError());
-        spdlog::info("Starting in offline mode");
-    }
-    else
-    {
-        connected = true;
-    }
-
-    UDPsocket udp_socket = SDLNet_UDP_Open(0);
-    if (!udp_socket)
-    {
-        spdlog::error("Failed to open UDP socket: {}", SDLNet_GetError());
+        spdlog::error("Failed to create OpenGL context: {}", SDL_GetError());
         return 1;
     }
 
-    SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(2);
-    if (!socket_set)
+    GLenum error = glewInit();
+    if (error != GLEW_OK)
     {
-        spdlog::error("Failed to allocate socket set: {}", SDLNet_GetError());
+        spdlog::error("Failed to initialize GLEW: {}", glewGetErrorString(error));
         return 1;
     }
-    SDLNet_TCP_AddSocket(socket_set, tcp_socket);
-    SDLNet_UDP_AddSocket(socket_set, udp_socket);
 
-    int client_id = -1;
+    ImGui::CreateContext();
+    ImGui_ImplSDL2_InitForOpenGL(window, context);
+    ImGui_ImplOpenGL3_Init("#version 460");
+    ImGuiIO &io = ImGui::GetIO();
+    io.IniFilename = "assets/imgui.ini";
 
-    if (connected)
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
     {
-        char buffer[PACKET_SIZE];
-        if (SDLNet_TCP_Recv(tcp_socket, buffer, sizeof(buffer)) > 1)
-        {
-            pk::message *message = (pk::message *)buffer;
-            switch (message->type)
-            {
-            case pk::message_type::MESSAGE_CONNECT_OK:
-            {
-                pk::id_message *id_message = (pk::id_message *)message;
-                client_id = id_message->id;
-            }
-            break;
-            case pk::message_type::MESSAGE_CONNECT_FULL:
-            {
-                spdlog::error("Server is full");
-                return 1;
-            }
-            break;
-            default:
-            {
-                spdlog::error("Unknown server response");
-                return 1;
-            }
-            break;
-            }
-        }
-
-        {
-            pk::id_message *id_message = new pk::id_message(pk::message_type::MESSAGE_UDP_CONNECT_REQUEST, client_id);
-            UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-            packet->address = server_address;
-            packet->data = (unsigned char *)id_message;
-            packet->len = sizeof(*id_message);
-            if (!SDLNet_UDP_Send(udp_socket, -1, packet))
-            {
-                spdlog::error("Failed to send UDP packet");
-                return 1;
-            }
-            SDLNet_FreePacket(packet);
-        }
+        spdlog::error("Failed to initialize the mixer API: {}", Mix_GetError());
+        return 1;
     }
 
-    pk::display display(WINDOW_TITLE, window_width, window_height);
     pk::renderer renderer(
         window_width, window_height, render_scale,
         window_width, window_height,
         window_width, window_height);
     pk::audio audio;
-
-    ImGuiIO &io = ImGui::GetIO();
-    io.IniFilename = "assets/imgui.ini";
 
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btCollisionDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
@@ -178,9 +134,9 @@ int pk::client_main(cxxopts::ParseResult result)
         0.0f,
         45.0f);
 
-    // skybox = nullptr;
-    // skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
-    pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    pk::skybox *skybox = nullptr;
+    // pk::skybox *skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
+    // pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
     pk::model *backpack_model = new pk::model("assets/models/backpack/backpack.obj");
     pk::object *backpack = new pk::object(
@@ -224,11 +180,11 @@ int pk::client_main(cxxopts::ParseResult result)
         glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity,
         512);
 
-    const float torch_intensity = 20.0f;
-    pk::spot_light *torch = new pk::spot_light(
+    const float flashlight_intensity = 20.0f;
+    pk::spot_light *flashlight = new pk::spot_light(
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f) * torch_intensity,
+        glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
         cosf(glm::radians(12.5f)),
         cosf(glm::radians(15.0f)),
         1024);
@@ -251,15 +207,125 @@ int pk::client_main(cxxopts::ParseResult result)
     pk::source *bounce_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
     pk::source *shoot_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    bool edit_mode = false;
-    bool lock_cursor = true;
-    bool torch_on = true;
-    bool torch_follow = true;
+    bool online = true;
+
+    IPaddress server_address;
+    std::string server_host = result["host"].as<std::string>();
+    unsigned short server_port = result["port"].as<unsigned short>();
+    if (SDLNet_ResolveHost(&server_address, server_host.c_str(), server_port))
+    {
+        spdlog::error("Failed to resolve host: {}", SDLNet_GetError());
+        online = false;
+    }
+
+    TCPsocket tcp_socket = SDLNet_TCP_Open(&server_address);
+    if (!tcp_socket)
+    {
+        spdlog::error("Failed to open TCP socket: {}", SDLNet_GetError());
+        online = false;
+    }
+
+    UDPsocket udp_socket = SDLNet_UDP_Open(0);
+    if (!udp_socket)
+    {
+        spdlog::error("Failed to open UDP socket: {}", SDLNet_GetError());
+        return 1;
+    }
+
+    SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(2);
+    if (!socket_set)
+    {
+        spdlog::error("Failed to allocate socket set: {}", SDLNet_GetError());
+        return 1;
+    }
+    SDLNet_TCP_AddSocket(socket_set, tcp_socket);
+    SDLNet_UDP_AddSocket(socket_set, udp_socket);
+
+    player players[MAX_CLIENTS];
+    for (int i = 0; i < MAX_CLIENTS; i++)
+    {
+        players[i].client_id = -1;
+    }
+
+    int client_id = -1;
+
+    if (online)
+    {
+        char buffer[PACKET_SIZE];
+        if (SDLNet_TCP_Recv(tcp_socket, buffer, sizeof(buffer)) > 1)
+        {
+            pk::message *message = (pk::message *)buffer;
+            switch (message->type)
+            {
+            case pk::message_type::MESSAGE_CONNECT_OK:
+            {
+                pk::connect_ok_message *connect_ok_message = (pk::connect_ok_message *)message;
+
+                client_id = connect_ok_message->id;
+
+                for (int i = 0; i < MAX_CLIENTS; i++)
+                {
+                    players[i].client_id = connect_ok_message->clients[i].id;
+
+                    if (players[i].client_id != -1 && players[i].client_id != client_id)
+                    {
+                        players[connect_ok_message->clients[i].id].avatar = new pk::object(
+                            cube_model,
+                            glm::vec3(connect_ok_message->clients[i].x, connect_ok_message->clients[i].y, connect_ok_message->clients[i].z),
+                            glm::vec3(0.0f, 0.0f, 0.0f),
+                            glm::vec3(1.0f, 1.0f, 1.0f),
+                            1.0f);
+                    }
+                }
+            }
+            break;
+            case pk::message_type::MESSAGE_CONNECT_FULL:
+            {
+                spdlog::error("Server is full");
+                online = false;
+            }
+            break;
+            default:
+            {
+                spdlog::error("Unknown server response");
+                online = false;
+            }
+            break;
+            }
+        }
+    }
+
+    if (online)
+    {
+        pk::id_message *id_message = (pk::id_message *)malloc(sizeof(*id_message));
+        id_message->type = pk::message_type::MESSAGE_UDP_CONNECT_REQUEST;
+        id_message->id = client_id;
+
+        UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
+        packet->address = server_address;
+        packet->data = (unsigned char *)id_message;
+        packet->len = sizeof(*id_message);
+        if (!SDLNet_UDP_Send(udp_socket, -1, packet))
+        {
+            spdlog::error("Failed to make UDP connection");
+            online = false;
+        }
+        SDLNet_FreePacket(packet);
+    }
+
+    if (!online)
+    {
+        spdlog::info("Starting in offline mode");
+    }
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
     bool wireframe = false;
+    bool edit_mode = false;
+    bool lock_cursor = true;
+    bool flashlight_on = true;
+    bool flashlight_follow = true;
 
     bool quit = false;
     while (!quit)
@@ -275,7 +341,7 @@ int pk::client_main(cxxopts::ParseResult result)
 
         SDL_SetRelativeMouseMode((SDL_bool)lock_cursor);
 
-        if (connected)
+        if (online)
         {
             while (SDLNet_CheckSockets(socket_set, 0) > 0)
             {
@@ -289,19 +355,34 @@ int pk::client_main(cxxopts::ParseResult result)
                         {
                         case pk::message_type::MESSAGE_CONNECT_BROADCAST:
                         {
-                            pk::id_message *id_message = (pk::id_message *)message;
-                            spdlog::info("Client with ID {} has joined", id_message->id);
+                            pk::connect_broadcast_message *connect_broadcast_message = (pk::connect_broadcast_message *)message;
+
+                            players[connect_broadcast_message->id].client_id = connect_broadcast_message->id;
+                            players[connect_broadcast_message->id].avatar = new pk::object(
+                                cube_model,
+                                glm::vec3(connect_broadcast_message->client.x, connect_broadcast_message->client.y, connect_broadcast_message->client.z),
+                                glm::vec3(0.0f, 0.0f, 0.0f),
+                                glm::vec3(1.0f, 1.0f, 1.0f),
+                                1.0f);
+
+                            spdlog::info("Client with ID {} has joined", connect_broadcast_message->id);
                         }
                         break;
                         case pk::message_type::MESSAGE_DISCONNECT_BROADCAST:
                         {
                             pk::id_message *id_message = (pk::id_message *)message;
+
+                            players[id_message->id].client_id = -1;
+                            delete players[id_message->id].avatar;
+                            players[id_message->id].avatar = nullptr;
+
                             spdlog::info("Client with ID {} has disconnected", id_message->id);
                         }
                         break;
                         case pk::message_type::MESSAGE_CHAT_BROADCAST:
                         {
                             pk::chat_message *chat_message = (pk::chat_message *)message;
+
                             spdlog::info("Client {}: {}", chat_message->id, chat_message->str);
                         }
                         break;
@@ -322,6 +403,20 @@ int pk::client_main(cxxopts::ParseResult result)
                         pk::message *message = (pk::message *)packet->data;
                         switch (message->type)
                         {
+                        case pk::message_type::MESSAGE_POSITION_BROADCAST:
+                        {
+                            pk::position_message *position_message = (pk::position_message *)message;
+
+                            if (players[position_message->id].client_id != -1)
+                            {
+                                btTransform transform;
+                                transform.setIdentity();
+                                transform.setOrigin(btVector3(position_message->x, position_message->y, position_message->z));
+                                transform.setRotation(btQuaternion(0, 0, 0));
+                                players[position_message->id].avatar->rigidbody->setWorldTransform(transform);
+                            }
+                        }
+                        break;
                         default:
                         {
                             spdlog::error("Unknown UDP packet type: {}", message->type);
@@ -335,8 +430,10 @@ int pk::client_main(cxxopts::ParseResult result)
         }
 
         SDL_Event event;
-        while (display.poll_event(&event))
+        while (SDL_PollEvent(&event))
         {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+
             switch (event.type)
             {
             case SDL_QUIT:
@@ -352,7 +449,7 @@ int pk::client_main(cxxopts::ParseResult result)
                 {
                     window_width = event.window.data1;
                     window_height = event.window.data2;
-                    display.set_window_size(window_width, window_height);
+                    SDL_SetWindowSize(window, window_width, window_height);
                     renderer.set_screen_size(window_width, window_height, render_scale);
                     renderer.set_reflection_size(window_width, window_height);
                     renderer.set_refraction_size(window_width, window_height);
@@ -377,7 +474,15 @@ int pk::client_main(cxxopts::ParseResult result)
                     {
                         if (keys[SDL_SCANCODE_LALT])
                         {
-                            display.toggle_fullscreen();
+                            unsigned int flags = SDL_GetWindowFlags(window);
+                            if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
+                            {
+                                SDL_SetWindowFullscreen(window, 0);
+                            }
+                            else
+                            {
+                                SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            }
                         }
                     }
                     break;
@@ -413,12 +518,12 @@ int pk::client_main(cxxopts::ParseResult result)
                     break;
                     case SDLK_f:
                     {
-                        torch_on = !torch_on;
+                        flashlight_on = !flashlight_on;
                     }
                     break;
                     case SDLK_g:
                     {
-                        torch_follow = !torch_follow;
+                        flashlight_follow = !flashlight_follow;
                     }
                     break;
                     case SDLK_r:
@@ -542,6 +647,26 @@ int pk::client_main(cxxopts::ParseResult result)
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
+        {
+            pk::position_message *position_message = (pk::position_message *)malloc(sizeof(*position_message));
+            position_message->type = pk::message_type::MESSAGE_POSITION_REQUEST;
+            position_message->id = client_id;
+            position_message->x = camera->position.x;
+            position_message->y = camera->position.y;
+            position_message->z = camera->position.z;
+
+            UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
+            packet->address = server_address;
+            packet->data = (unsigned char *)position_message;
+            packet->len = sizeof(*position_message);
+            if (!SDLNet_UDP_Send(udp_socket, -1, packet))
+            {
+                spdlog::error("Failed to send UDP packet");
+                return 1;
+            }
+            SDLNet_FreePacket(packet);
+        }
+
         static float angle = 0.0f;
         const float pi = 3.14159f;
         const float distance = 6.0f;
@@ -559,10 +684,10 @@ int pk::client_main(cxxopts::ParseResult result)
         blue_light->position.x = distance * sinf(angle + 3 * pi / 2);
         blue_light->position.z = distance * cosf(angle + 3 * pi / 2);
 
-        if (torch_follow)
+        if (flashlight_follow)
         {
-            torch->position = camera->position;
-            torch->direction = glm::mix(torch->direction, camera_front, 30.0f * delta_time);
+            flashlight->position = camera->position;
+            flashlight->direction = glm::mix(flashlight->direction, camera_front, 30.0f * delta_time);
         }
 
         audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -590,27 +715,36 @@ int pk::client_main(cxxopts::ParseResult result)
 
         world->stepSimulation(delta_time);
 
-        display.make_current();
+        SDL_GL_MakeCurrent(window, context);
 
         renderer.wireframe = wireframe;
         renderer.camera = camera;
         renderer.skybox = skybox;
         renderer.objects.push_back(backpack);
         // renderer->objects.push_back(cube);
+        for (int i = 0; i < MAX_CLIENTS; i++)
+        {
+            if (players[i].client_id != -1 && players[i].client_id != client_id)
+            {
+                renderer.objects.push_back(players[i].avatar);
+            }
+        }
         renderer.directional_lights.push_back(sun);
         renderer.point_lights.push_back(red_light);
         renderer.point_lights.push_back(yellow_light);
         renderer.point_lights.push_back(green_light);
         renderer.point_lights.push_back(blue_light);
-        if (torch_on)
+        if (flashlight_on)
         {
-            renderer.spot_lights.push_back(torch);
+            renderer.spot_lights.push_back(flashlight);
         }
         renderer.terrains.push_back(terrain);
         renderer.waters.push_back(water);
         renderer.flush(current_time, delta_time);
 
-        display.start_gui();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
+        ImGui::NewFrame();
 
         if (edit_mode)
         {
@@ -624,7 +758,7 @@ int pk::client_main(cxxopts::ParseResult result)
             static std::vector<std::string> messages;
 
             // TODO: command arguments
-            char command[256];
+            char command[256] = {};
             if (ImGui::InputText("Input", command, sizeof(command), ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 if (strcmp(command, "help") == 0)
@@ -635,9 +769,10 @@ int pk::client_main(cxxopts::ParseResult result)
                 {
                     quit = true;
                 }
-                else if (strcmp(command, "twf") == 0)
+                else if (strcmp(command, "wireframe") == 0)
                 {
                     wireframe = !wireframe;
+                    messages.push_back("Wireframe " + wireframe ? "on" : "off");
                 }
                 else
                 {
@@ -655,12 +790,21 @@ int pk::client_main(cxxopts::ParseResult result)
             ImGui::End();
         }
 
-        display.end_gui();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        display.swap();
+        SDL_GL_SwapWindow(window);
     }
 
-    if (connected)
+    for (int i = 0; i < MAX_CLIENTS; i++)
+    {
+        if (players[i].client_id != -1 && players[i].client_id != client_id)
+        {
+            delete players[i].avatar;
+        }
+    }
+
+    if (online)
     {
         pk::message message = pk::message(pk::message_type::MESSAGE_DISCONNECT_REQUEST);
         SDLNet_TCP_Send(tcp_socket, &message, sizeof(message));
@@ -689,24 +833,19 @@ int pk::client_main(cxxopts::ParseResult result)
     delete green_light;
     delete blue_light;
 
-    delete torch;
+    delete flashlight;
 
     delete water;
 
     delete terrain;
 
-    delete ambient_sound;
-    delete bounce_sound;
-    delete shoot_sound;
-
     delete ambient_source;
     delete bounce_source;
     delete shoot_source;
 
-    IMG_Quit();
-
-    Mix_CloseAudio();
-    Mix_Quit();
+    delete ambient_sound;
+    delete bounce_sound;
+    delete shoot_sound;
 
     SDLNet_UDP_DelSocket(socket_set, udp_socket);
     SDLNet_TCP_DelSocket(socket_set, tcp_socket);
@@ -716,6 +855,17 @@ int pk::client_main(cxxopts::ParseResult result)
     SDLNet_UDP_Close(udp_socket);
     SDLNet_TCP_Close(tcp_socket);
 
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
+    Mix_CloseAudio();
+
+    SDL_DestroyWindow(window);
+    SDL_GL_DeleteContext(context);
+
+    IMG_Quit();
+    Mix_Quit();
     SDLNet_Quit();
 
     SDL_Quit();

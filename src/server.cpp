@@ -1,6 +1,6 @@
 #include "server.hpp"
 
-#include <cxxopts.hpp>
+#include <glm/vec3.hpp>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
@@ -10,30 +10,48 @@
 
 #define SDL_FLAGS (0)
 
-#define WINDOW_TITLE "Project Kilonova"
-
-#define SERVER_HOST "127.0.0.1"
-#define SERVER_PORT 3000
-#define MAX_CLIENTS 8
-
 struct client
 {
     int id;
     TCPsocket socket;
     IPaddress udp_address;
+    glm::vec3 position;
 };
 
-static struct client clients[MAX_CLIENTS];
-
-static void broadcast(void *data, int len, int exclude_id)
+static void broadcast_tcp(client *clients, void *data, int len, int exclude_id)
 {
     for (int i = 0; i < MAX_CLIENTS; i++)
     {
         if (clients[i].id != -1 && clients[i].id != exclude_id)
         {
-            SDLNet_TCP_Send(clients[i].socket, data, len);
+            if (SDLNet_TCP_Send(clients[i].socket, data, len) < len)
+            {
+                spdlog::error("Failed to send TCP packet");
+            }
         }
     }
+}
+
+static void broadcast_udp(UDPsocket socket, client *clients, void *data, int len, int exclude_id)
+{
+    UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
+
+    for (int i = 0; i < MAX_CLIENTS; i++)
+    {
+        if (clients[i].id != -1 && clients[i].id != exclude_id)
+        {
+            packet->address = clients[i].udp_address;
+            packet->data = (unsigned char *)data;
+            packet->len = len;
+
+            if (SDLNet_UDP_Send(socket, -1, packet) != 1)
+            {
+                spdlog::error("Failed to send UDP packet");
+            }
+        }
+    }
+
+    SDLNet_FreePacket(packet);
 }
 
 int pk::server_main(cxxopts::ParseResult result)
@@ -51,7 +69,8 @@ int pk::server_main(cxxopts::ParseResult result)
     }
 
     IPaddress server_address;
-    if (SDLNet_ResolveHost(&server_address, INADDR_ANY, SERVER_PORT))
+    unsigned short server_port = result["port"].as<unsigned short>();
+    if (SDLNet_ResolveHost(&server_address, INADDR_ANY, server_port))
     {
         spdlog::error("Failed to resolve host: {}", SDLNet_GetError());
         return 1;
@@ -64,7 +83,7 @@ int pk::server_main(cxxopts::ParseResult result)
         return 1;
     }
 
-    UDPsocket udp_socket = SDLNet_UDP_Open(SERVER_PORT);
+    UDPsocket udp_socket = SDLNet_UDP_Open(server_port);
     if (!udp_socket)
     {
         spdlog::error("Failed to open UDP socket: {}", SDLNet_GetError());
@@ -80,10 +99,13 @@ int pk::server_main(cxxopts::ParseResult result)
     SDLNet_TCP_AddSocket(socket_set, tcp_socket);
     SDLNet_UDP_AddSocket(socket_set, udp_socket);
 
+    client clients[MAX_CLIENTS];
     for (int i = 0; i < MAX_CLIENTS; i++)
     {
         clients[i].id = -1;
-        clients[i].socket = NULL;
+        clients[i].position.x = 0;
+        clients[i].position.y = 0;
+        clients[i].position.z = 0;
     }
 
     // unsigned int current_time = 0;
@@ -121,13 +143,26 @@ int pk::server_main(cxxopts::ParseResult result)
 
                         SDLNet_TCP_AddSocket(socket_set, clients[client_id].socket);
 
+                        pk::connect_ok_message connect_ok_message = pk::connect_ok_message(pk::message_type::MESSAGE_CONNECT_OK, clients[client_id].id);
+                        for (int i = 0; i < MAX_CLIENTS; i++)
                         {
-                            pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_CONNECT_OK, clients[client_id].id);
-                            SDLNet_TCP_Send(socket, &id_message, sizeof(id_message));
-                        }
+                            connect_ok_message.clients[i].id = clients[i].id;
 
-                        pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_CONNECT_BROADCAST, clients[client_id].id);
-                        broadcast(&id_message, sizeof(id_message), clients[client_id].id);
+                            if (clients[i].id != -1)
+                            {
+                                connect_ok_message.clients[i].x = clients[i].position.x;
+                                connect_ok_message.clients[i].y = clients[i].position.y;
+                                connect_ok_message.clients[i].z = clients[i].position.z;
+                            }
+                        }
+                        SDLNet_TCP_Send(socket, &connect_ok_message, sizeof(connect_ok_message));
+
+                        client_info client;
+                        client.x = clients[client_id].position.x;
+                        client.y = clients[client_id].position.y;
+                        client.z = clients[client_id].position.z;
+                        pk::connect_broadcast_message connect_broadcast_message = pk::connect_broadcast_message(pk::message_type::MESSAGE_CONNECT_BROADCAST, clients[client_id].id, client);
+                        broadcast_tcp(clients, &connect_broadcast_message, sizeof(connect_broadcast_message), clients[client_id].id);
                     }
                     else
                     {
@@ -156,22 +191,22 @@ int pk::server_main(cxxopts::ParseResult result)
                                 spdlog::info("Client disconnected");
 
                                 pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_DISCONNECT_BROADCAST, clients[i].id);
-                                broadcast(&id_message, sizeof(id_message), clients[i].id);
+                                broadcast_tcp(clients, &id_message, sizeof(id_message), clients[i].id);
 
                                 SDLNet_TCP_DelSocket(socket_set, clients[i].socket);
                                 SDLNet_TCP_Close(clients[i].socket);
 
                                 clients[i].id = -1;
-                                clients[i].socket = NULL;
+                                clients[i].socket = nullptr;
                             }
                             break;
                             case pk::message_type::MESSAGE_CHAT_REQUEST:
                             {
                                 pk::chat_message *chat_message = (pk::chat_message *)message;
-                                spdlog::info("Client {}: {}", chat_message->id, chat_message->str);
+                                spdlog::info("Client {} says: {}", chat_message->id, chat_message->str);
 
-                                pk::chat_message chat_message2 = pk::chat_message(pk::message_type::MESSAGE_CHAT_BROADCAST, chat_message->id, chat_message->str);
-                                broadcast(&chat_message2, sizeof(chat_message2), clients[i].id);
+                                chat_message->type = MESSAGE_CHAT_BROADCAST;
+                                broadcast_tcp(clients, chat_message, sizeof(*chat_message), clients[i].id);
                             }
                             break;
                             default:
@@ -201,11 +236,18 @@ int pk::server_main(cxxopts::ParseResult result)
                         spdlog::info("Saving UDP info of client {}", id_message->id);
                     }
                     break;
-                    case pk::message_type::MESSAGE_MOUSEDOWN_REQUEST:
+                    case pk::message_type::MESSAGE_POSITION_REQUEST:
                     {
-                        pk::mouse_message *mouse_message = (pk::mouse_message *)message;
+                        pk::position_message *position_message = (pk::position_message *)message;
 
-                        spdlog::info("Client {} mouse down: ({}, {})", mouse_message->id, mouse_message->x, mouse_message->y);
+                        pk::position_message *position_message2 = (pk::position_message *)malloc(sizeof(*position_message2));
+                        position_message2->type = pk::message_type::MESSAGE_POSITION_BROADCAST;
+                        position_message2->id = position_message->id;
+                        position_message2->x = position_message->x;
+                        position_message2->y = position_message->y;
+                        position_message2->z = position_message->z;
+
+                        broadcast_udp(udp_socket, clients, position_message2, sizeof(*position_message2), position_message2->id);
                     }
                     break;
                     default:
@@ -226,9 +268,6 @@ int pk::server_main(cxxopts::ParseResult result)
         {
             SDLNet_TCP_DelSocket(socket_set, clients[i].socket);
             SDLNet_TCP_Close(clients[i].socket);
-
-            clients[i].id = -1;
-            clients[i].socket = NULL;
         }
     }
 

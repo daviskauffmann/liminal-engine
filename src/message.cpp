@@ -12,8 +12,18 @@ pk::id_message::id_message(enum message_type type, int id)
 {
 }
 
-pk::mouse_message::mouse_message(enum message_type type, int id, int x, int y)
-    : message(type), id(id), x(x), y(y)
+pk::connect_ok_message::connect_ok_message(enum message_type type, int id)
+    : message(type), id(id)
+{
+}
+
+pk::connect_broadcast_message::connect_broadcast_message(enum message_type type, int id, client_info client)
+    : message(type), id(id), client(client)
+{
+}
+
+pk::position_message::position_message(enum message_type type, float id, float x, float y, float z)
+    : message(type), id(id), x(x), y(y), z(z)
 {
 }
 

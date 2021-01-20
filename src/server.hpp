@@ -6,6 +6,6 @@
 namespace pk
 {
     int server_main(cxxopts::ParseResult result);
-}
+} // namespace pk
 
 #endif
