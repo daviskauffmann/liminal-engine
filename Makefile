@@ -10,7 +10,6 @@ SRC = \
 	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
-	src/client.cpp \
 	src/cubemap.cpp \
 	src/directional_light.cpp \
 	src/imgui.cpp \
@@ -22,7 +21,6 @@ SRC = \
 	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
-	src/server.cpp \
 	src/skybox.cpp \
 	src/sound.cpp \
 	src/source.cpp \
@@ -53,9 +51,9 @@ obj/%.o: src/%.cpp
 run: all
 	./$(TARGET)
 
-.PHONY: run_server
-run_server: all
-	./$(TARGET) -s
+.PHONY: run_join
+run_join: all
+	./$(TARGET) -j
 
 .PHONY: clean
 clean:
