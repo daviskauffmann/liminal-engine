@@ -39,7 +39,9 @@ struct client
     TCPsocket socket;
     IPaddress udp_address;
     glm::vec3 position;
+    glm::vec3 rotation;
     pk::object *avatar;
+    pk::spot_light *flashlight;
 };
 
 int main(int argc, char *argv[])
@@ -326,16 +328,23 @@ int main(int argc, char *argv[])
 
                 for (int i = 0; i < MAX_CLIENTS; i++)
                 {
-                    clients[i].id = connect_ok_message->clients[i].id;
+                    clients[i].id = connect_ok_message->client_ids[i];
 
                     if (clients[i].id != -1 && clients[i].id != client_id)
                     {
-                        clients[connect_ok_message->clients[i].id].avatar = new pk::object(
+                        clients[connect_ok_message->client_ids[i]].avatar = new pk::object(
                             cube_model,
-                            glm::vec3(connect_ok_message->clients[i].x, connect_ok_message->clients[i].y, connect_ok_message->clients[i].z),
+                            glm::vec3(0.0f, 0.0f, 0.0f),
                             glm::vec3(0.0f, 0.0f, 0.0f),
                             glm::vec3(1.0f, 1.0f, 1.0f),
                             1.0f);
+                        clients[connect_ok_message->client_ids[i]].flashlight = new pk::spot_light(
+                            glm::vec3(0.0f, 0.0f, 0.0f),
+                            glm::vec3(0.0f, 0.0f, 0.0f),
+                            glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
+                            cosf(glm::radians(12.5f)),
+                            cosf(glm::radians(15.0f)),
+                            1024);
                     }
                 }
             }
@@ -423,39 +432,38 @@ int main(int argc, char *argv[])
                             clients[new_client_id].position.x = 0;
                             clients[new_client_id].position.y = 0;
                             clients[new_client_id].position.z = 0;
+                            clients[new_client_id].rotation.x = 0;
+                            clients[new_client_id].rotation.y = 0;
+                            clients[new_client_id].rotation.z = 0;
                             clients[new_client_id].avatar = new pk::object(
                                 cube_model,
                                 glm::vec3(clients[new_client_id].position.x, clients[new_client_id].position.y, clients[new_client_id].position.z),
                                 glm::vec3(0.0f, 0.0f, 0.0f),
                                 glm::vec3(1.0f, 1.0f, 1.0f),
                                 1.0f);
+                            clients[new_client_id].flashlight = new pk::spot_light(
+                                glm::vec3(0.0f, 0.0f, 0.0f),
+                                glm::vec3(0.0f, 0.0f, 0.0f),
+                                glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
+                                cosf(glm::radians(12.5f)),
+                                cosf(glm::radians(15.0f)),
+                                1024);
 
                             SDLNet_TCP_AddSocket(socket_set, clients[new_client_id].socket);
 
                             pk::connect_ok_message connect_ok_message = pk::connect_ok_message(pk::message_type::MESSAGE_CONNECT_OK, clients[new_client_id].id);
                             for (int i = 0; i < MAX_CLIENTS; i++)
                             {
-                                connect_ok_message.clients[i].id = clients[i].id;
-
-                                if (clients[i].id != -1)
-                                {
-                                    connect_ok_message.clients[i].x = clients[i].position.x;
-                                    connect_ok_message.clients[i].y = clients[i].position.y;
-                                    connect_ok_message.clients[i].z = clients[i].position.z;
-                                }
+                                connect_ok_message.client_ids[i] = clients[i].id;
                             }
                             SDLNet_TCP_Send(socket, &connect_ok_message, sizeof(connect_ok_message));
 
-                            pk::client_info client;
-                            client.x = clients[new_client_id].position.x;
-                            client.y = clients[new_client_id].position.y;
-                            client.z = clients[new_client_id].position.z;
-                            pk::connect_broadcast_message connect_broadcast_message = pk::connect_broadcast_message(pk::message_type::MESSAGE_CONNECT_BROADCAST, clients[new_client_id].id, client);
+                            pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_CONNECT_BROADCAST, clients[new_client_id].id);
                             for (int i = 0; i < MAX_CLIENTS; i++)
                             {
                                 if (clients[i].id != -1 && clients[i].id != client_id && clients[i].id != clients[new_client_id].id)
                                 {
-                                    if (SDLNet_TCP_Send(clients[i].socket, &connect_broadcast_message, sizeof(connect_broadcast_message)) < (int)sizeof(connect_broadcast_message))
+                                    if (SDLNet_TCP_Send(clients[i].socket, &id_message, sizeof(id_message)) < (int)sizeof(id_message))
                                     {
                                         std::cerr << "Error: Failed to send TCP packet" << std::endl;
                                     }
@@ -505,6 +513,10 @@ int main(int argc, char *argv[])
 
                                     clients[i].id = -1;
                                     clients[i].socket = nullptr;
+                                    delete clients[i].avatar;
+                                    clients[i].avatar = nullptr;
+                                    delete clients[i].flashlight;
+                                    clients[i].flashlight = nullptr;
                                 }
                                 break;
                                 case pk::message_type::MESSAGE_CHAT_REQUEST:
@@ -556,13 +568,15 @@ int main(int argc, char *argv[])
                         {
                             pk::position_message *position_message = (pk::position_message *)message;
 
-                            // TODO: validate position
-
                             if (clients[position_message->id].id != -1)
                             {
+                                // TODO: validate position
                                 clients[position_message->id].position.x = position_message->x;
                                 clients[position_message->id].position.y = position_message->y;
                                 clients[position_message->id].position.z = position_message->z;
+                                clients[position_message->id].rotation.x = position_message->x_rot;
+                                clients[position_message->id].rotation.y = position_message->y_rot;
+                                clients[position_message->id].rotation.z = position_message->z_rot;
 
                                 pk::position_message *position_message2 = (pk::position_message *)malloc(sizeof(*position_message2));
                                 position_message2->type = pk::message_type::MESSAGE_POSITION_BROADCAST;
@@ -570,6 +584,9 @@ int main(int argc, char *argv[])
                                 position_message2->x = position_message->x;
                                 position_message2->y = position_message->y;
                                 position_message2->z = position_message->z;
+                                position_message2->x_rot = position_message->x_rot;
+                                position_message2->y_rot = position_message->y_rot;
+                                position_message2->z_rot = position_message->z_rot;
 
                                 UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
                                 for (int i = 0; i < MAX_CLIENTS; i++)
@@ -615,17 +632,24 @@ int main(int argc, char *argv[])
                         {
                         case pk::message_type::MESSAGE_CONNECT_BROADCAST:
                         {
-                            pk::connect_broadcast_message *connect_broadcast_message = (pk::connect_broadcast_message *)message;
+                            pk::id_message *id_message = (pk::id_message *)message;
 
-                            clients[connect_broadcast_message->id].id = connect_broadcast_message->id;
-                            clients[connect_broadcast_message->id].avatar = new pk::object(
+                            clients[id_message->id].id = id_message->id;
+                            clients[id_message->id].avatar = new pk::object(
                                 cube_model,
-                                glm::vec3(connect_broadcast_message->client.x, connect_broadcast_message->client.y, connect_broadcast_message->client.z),
+                                glm::vec3(0.0f, 0.0f, 0.0f),
                                 glm::vec3(0.0f, 0.0f, 0.0f),
                                 glm::vec3(1.0f, 1.0f, 1.0f),
                                 1.0f);
+                            clients[id_message->id].flashlight = new pk::spot_light(
+                                glm::vec3(0.0f, 0.0f, 0.0f),
+                                glm::vec3(0.0f, 0.0f, 0.0f),
+                                glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
+                                cosf(glm::radians(12.5f)),
+                                cosf(glm::radians(15.0f)),
+                                1024);
 
-                            std::cout << "Client with ID " << connect_broadcast_message->id << " has joined " << std::endl;
+                            std::cout << "Client with ID " << id_message->id << " has joined " << std::endl;
                         }
                         break;
                         case pk::message_type::MESSAGE_DISCONNECT_BROADCAST:
@@ -635,6 +659,8 @@ int main(int argc, char *argv[])
                             clients[id_message->id].id = -1;
                             delete clients[id_message->id].avatar;
                             clients[id_message->id].avatar = nullptr;
+                            delete clients[id_message->id].flashlight;
+                            clients[id_message->id].flashlight = nullptr;
 
                             std::cout << "Client with ID " << id_message->id << " has disconnected" << std::endl;
                         }
@@ -672,6 +698,9 @@ int main(int argc, char *argv[])
                                 clients[position_message->id].position.x = position_message->x;
                                 clients[position_message->id].position.y = position_message->y;
                                 clients[position_message->id].position.z = position_message->z;
+                                clients[position_message->id].rotation.x = position_message->x_rot;
+                                clients[position_message->id].rotation.y = position_message->y_rot;
+                                clients[position_message->id].rotation.z = position_message->z_rot;
                             }
                         }
                         break;
@@ -913,6 +942,9 @@ int main(int argc, char *argv[])
             position_message->x = camera->position.x;
             position_message->y = camera->position.y;
             position_message->z = camera->position.z;
+            position_message->x_rot = camera_front.x;
+            position_message->y_rot = camera_front.y;
+            position_message->z_rot = camera_front.z;
 
             UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
             for (int i = 0; i < MAX_CLIENTS; i++)
@@ -939,6 +971,9 @@ int main(int argc, char *argv[])
             position_message->x = camera->position.x;
             position_message->y = camera->position.y;
             position_message->z = camera->position.z;
+            position_message->x_rot = camera_front.x;
+            position_message->y_rot = camera_front.y;
+            position_message->z_rot = camera_front.z;
 
             UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
             packet->address = server_address;
@@ -1015,10 +1050,17 @@ int main(int argc, char *argv[])
                 btTransform transform;
                 transform.setIdentity();
                 transform.setOrigin(btVector3(clients[i].position.x, clients[i].position.y, clients[i].position.z));
-                transform.setRotation(btQuaternion(0, 0, 0));
+                transform.setRotation(btQuaternion(clients[i].rotation.y, clients[i].rotation.x, clients[i].rotation.z));
                 clients[i].avatar->rigidbody->setWorldTransform(transform);
-
                 renderer.objects.push_back(clients[i].avatar);
+
+                clients[i].flashlight->position.x = clients[i].position.x;
+                clients[i].flashlight->position.y = clients[i].position.y;
+                clients[i].flashlight->position.z = clients[i].position.z;
+                clients[i].flashlight->direction.x = clients[i].rotation.x;
+                clients[i].flashlight->direction.y = clients[i].rotation.y;
+                clients[i].flashlight->direction.z = clients[i].rotation.z;
+                renderer.spot_lights.push_back(clients[i].flashlight);
             }
         }
         renderer.directional_lights.push_back(sun);
@@ -1093,6 +1135,7 @@ int main(int argc, char *argv[])
         if (clients[i].id != -1 && clients[i].id != client_id)
         {
             delete clients[i].avatar;
+            delete clients[i].flashlight;
         }
     }
 

@@ -17,13 +17,8 @@ pk::connect_ok_message::connect_ok_message(enum message_type type, int id)
 {
 }
 
-pk::connect_broadcast_message::connect_broadcast_message(enum message_type type, int id, client_info client)
-    : message(type), id(id), client(client)
-{
-}
-
-pk::position_message::position_message(enum message_type type, float id, float x, float y, float z)
-    : message(type), id(id), x(x), y(y), z(z)
+pk::position_message::position_message(enum message_type type, float id, float x, float y, float z, float x_rot, float y_rot, float z_rot)
+    : message(type), id(id), x(x), y(y), z(z), x_rot(x_rot), y_rot(y_rot), z_rot(z_rot)
 {
 }
 

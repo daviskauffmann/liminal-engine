@@ -35,28 +35,12 @@ namespace pk
         id_message(enum message_type type, int id);
     };
 
-    struct client_info
-    {
-        int id;
-        float x;
-        float y;
-        float z;
-    };
-
     struct connect_ok_message : public message
     {
         int id;
-        client_info clients[MAX_CLIENTS];
+        int client_ids[MAX_CLIENTS];
 
         connect_ok_message(enum message_type type, int id);
-    };
-
-    struct connect_broadcast_message : public message
-    {
-        int id;
-        client_info client;
-
-        connect_broadcast_message(enum message_type type, int id, client_info client);
     };
 
     struct position_message : public message
@@ -65,8 +49,11 @@ namespace pk
         float x;
         float y;
         float z;
+        float x_rot;
+        float y_rot;
+        float z_rot;
 
-        position_message(enum message_type type, float id, float x, float y, float z);
+        position_message(enum message_type type, float id, float x, float y, float z, float x_rot, float y_rot, float z_rot);
     };
 
     struct chat_message : public message
