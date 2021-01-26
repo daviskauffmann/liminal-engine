@@ -15,7 +15,6 @@ Make sure the following are present on your system:
 - SDL2
 - SDL2_image
 - SDL2_mixer
-- SDL2_net
 
 These dependencies are included as submodules:
 
@@ -67,7 +66,6 @@ make clean
 - Terrain (WIP)
 - 2D sprites (WIP)
 - Physics (WIP)
-- Networking (WIP)
 
 ### Upcoming
 
