@@ -7,12 +7,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_net.h>
 
 #include "audio.hpp"
 #include "directional_light.hpp"
 #include "camera.hpp"
-#include "message.hpp"
 #include "model.hpp"
 #include "object.hpp"
 #include "point_light.hpp"
@@ -33,23 +31,8 @@
 
 #define WINDOW_TITLE "Project Kilonova"
 
-struct client
-{
-    int id;
-    TCPsocket socket;
-    IPaddress udp_address;
-    glm::vec3 position;
-    glm::vec3 rotation;
-    pk::object *avatar;
-    pk::spot_light *flashlight;
-};
-
 int main(int argc, char *argv[])
 {
-    bool server;
-    bool dedicated;
-    std::string server_host;
-    unsigned short server_port;
     int window_width;
     int window_height;
     int render_scale;
@@ -59,19 +42,13 @@ int main(int argc, char *argv[])
         cxxopts::Options options("pk");
 
         cxxopts::OptionAdder option_adder = options.add_options();
-        option_adder("d,dedicated", "Run as dedicated server (does nothing ATM)");
         option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
         option_adder("h,help", "Print usage");
-        option_adder("host", "Set server host (client only)", cxxopts::value<std::string>()->default_value("127.0.0.1"));
-        option_adder("j,join", "Join a server");
-        option_adder("port", "Set server port", cxxopts::value<unsigned short>()->default_value("3000"));
         option_adder("scale", "Set render scale", cxxopts::value<float>()->default_value("1.0"));
         option_adder("v,version", "Print version");
         option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
 
         cxxopts::ParseResult result = options.parse(argc, argv);
-
-        dedicated = result.count("dedicated");
 
         window_height = result["height"].as<int>();
 
@@ -80,12 +57,6 @@ int main(int argc, char *argv[])
             std::cout << options.help() << std::endl;
             return 0;
         }
-
-        server_host = result["host"].as<std::string>();
-
-        server = !result.count("join");
-
-        server_port = result["port"].as<unsigned short>();
 
         render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
 
@@ -121,14 +92,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (SDLNet_Init() != 0)
-    {
-        std::cerr << "Error: Failed to initialize SDL_net: " << SDLNet_GetError() << std::endl;
-        return 1;
-    }
-
     SDL_Window *window = SDL_CreateWindow(
-        (std::string(WINDOW_TITLE) + (server ? " (Server)" : " (Client)")).c_str(),
+        WINDOW_TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         window_width,
@@ -264,124 +229,6 @@ int main(int argc, char *argv[])
     pk::source *bounce_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
     pk::source *shoot_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    IPaddress server_address;
-    if (SDLNet_ResolveHost(&server_address, server ? INADDR_ANY : server_host.c_str(), server_port))
-    {
-        std::cerr << "Error: Failed to resolve host: " << SDLNet_GetError() << std::endl;
-        return 1;
-    }
-
-    TCPsocket tcp_socket = SDLNet_TCP_Open(&server_address);
-    if (!tcp_socket)
-    {
-        std::cerr << "Error: Failed to open TCP socket: " << SDLNet_GetError() << std::endl;
-        return 1;
-    }
-
-    UDPsocket udp_socket = SDLNet_UDP_Open(server ? server_port : 0);
-    if (!udp_socket)
-    {
-        std::cerr << "Error: Failed to open UDP socket: " << SDLNet_GetError() << std::endl;
-        return 1;
-    }
-
-    SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(server ? MAX_CLIENTS + 2 : 2);
-    if (!socket_set)
-    {
-        std::cerr << "Error: Failed to allocate socket set: " << SDLNet_GetError() << std::endl;
-        return 1;
-    }
-    SDLNet_TCP_AddSocket(socket_set, tcp_socket);
-    SDLNet_UDP_AddSocket(socket_set, udp_socket);
-
-    client clients[MAX_CLIENTS];
-    for (int i = 0; i < MAX_CLIENTS; i++)
-    {
-        clients[i].id = -1;
-        clients[i].position.x = 0;
-        clients[i].position.y = 0;
-        clients[i].position.z = 0;
-        clients[i].avatar = nullptr;
-    }
-
-    int client_id = -1;
-    if (server)
-    {
-        client_id = 0;
-        clients[0].id = 0;
-    }
-    else
-    {
-        char buffer[PACKET_SIZE];
-        if (SDLNet_TCP_Recv(tcp_socket, buffer, sizeof(buffer)) > 1)
-        {
-            pk::message *message = (pk::message *)buffer;
-            switch (message->type)
-            {
-            case pk::message_type::MESSAGE_CONNECT_OK:
-            {
-                pk::connect_ok_message *connect_ok_message = (pk::connect_ok_message *)message;
-
-                client_id = connect_ok_message->id;
-                std::cout << "ID " << client_id << " assigned by server" << std::endl;
-                // TODO: server should tell client their own position
-
-                for (int i = 0; i < MAX_CLIENTS; i++)
-                {
-                    clients[i].id = connect_ok_message->client_ids[i];
-
-                    if (clients[i].id != -1 && clients[i].id != client_id)
-                    {
-                        clients[connect_ok_message->client_ids[i]].avatar = new pk::object(
-                            cube_model,
-                            glm::vec3(0.0f, 0.0f, 0.0f),
-                            glm::vec3(0.0f, 0.0f, 0.0f),
-                            glm::vec3(1.0f, 1.0f, 1.0f),
-                            1.0f);
-                        clients[connect_ok_message->client_ids[i]].flashlight = new pk::spot_light(
-                            glm::vec3(0.0f, 0.0f, 0.0f),
-                            glm::vec3(0.0f, 0.0f, 0.0f),
-                            glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
-                            cosf(glm::radians(12.5f)),
-                            cosf(glm::radians(15.0f)),
-                            1024);
-                    }
-                }
-            }
-            break;
-            case pk::message_type::MESSAGE_CONNECT_FULL:
-            {
-                std::cerr << "Error: Server is full" << std::endl;
-                return 1;
-            }
-            break;
-            default:
-            {
-                std::cerr << "Error: Unknown server response" << std::endl;
-                return 1;
-            }
-            break;
-            }
-        }
-
-        {
-            pk::id_message *id_message = (pk::id_message *)malloc(sizeof(*id_message));
-            id_message->type = pk::message_type::MESSAGE_UDP_CONNECT_REQUEST;
-            id_message->id = client_id;
-
-            UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-            packet->address = server_address;
-            packet->data = (unsigned char *)id_message;
-            packet->len = sizeof(*id_message);
-            if (!SDLNet_UDP_Send(udp_socket, -1, packet))
-            {
-                std::cerr << "Error: Failed to make UDP connection" << std::endl;
-                return 1;
-            }
-            SDLNet_FreePacket(packet);
-        }
-    }
-
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
@@ -402,319 +249,6 @@ int main(int argc, char *argv[])
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
         int mouse_x, mouse_y;
         unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
-
-        SDL_SetRelativeMouseMode((SDL_bool)lock_cursor);
-
-        if (server)
-        {
-            while (SDLNet_CheckSockets(socket_set, 0) > 0)
-            {
-                if (SDLNet_SocketReady(tcp_socket))
-                {
-                    TCPsocket socket = SDLNet_TCP_Accept(tcp_socket);
-                    if (socket)
-                    {
-                        int new_client_id = -1;
-                        for (int i = 0; i < MAX_CLIENTS; i++)
-                        {
-                            if (clients[i].id == -1)
-                            {
-                                new_client_id = i;
-                                break;
-                            }
-                        }
-                        if (new_client_id != -1)
-                        {
-                            std::cout << "Connected to client, assigning ID " << new_client_id << std::endl;
-
-                            clients[new_client_id].id = new_client_id;
-                            clients[new_client_id].socket = socket;
-                            clients[new_client_id].position.x = 0;
-                            clients[new_client_id].position.y = 0;
-                            clients[new_client_id].position.z = 0;
-                            clients[new_client_id].rotation.x = 0;
-                            clients[new_client_id].rotation.y = 0;
-                            clients[new_client_id].rotation.z = 0;
-                            clients[new_client_id].avatar = new pk::object(
-                                cube_model,
-                                glm::vec3(clients[new_client_id].position.x, clients[new_client_id].position.y, clients[new_client_id].position.z),
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(1.0f, 1.0f, 1.0f),
-                                1.0f);
-                            clients[new_client_id].flashlight = new pk::spot_light(
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
-                                cosf(glm::radians(12.5f)),
-                                cosf(glm::radians(15.0f)),
-                                1024);
-
-                            SDLNet_TCP_AddSocket(socket_set, clients[new_client_id].socket);
-
-                            pk::connect_ok_message connect_ok_message = pk::connect_ok_message(pk::message_type::MESSAGE_CONNECT_OK, clients[new_client_id].id);
-                            for (int i = 0; i < MAX_CLIENTS; i++)
-                            {
-                                connect_ok_message.client_ids[i] = clients[i].id;
-                            }
-                            SDLNet_TCP_Send(socket, &connect_ok_message, sizeof(connect_ok_message));
-
-                            pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_CONNECT_BROADCAST, clients[new_client_id].id);
-                            for (int i = 0; i < MAX_CLIENTS; i++)
-                            {
-                                if (clients[i].id != -1 && clients[i].id != client_id && clients[i].id != clients[new_client_id].id)
-                                {
-                                    if (SDLNet_TCP_Send(clients[i].socket, &id_message, sizeof(id_message)) < (int)sizeof(id_message))
-                                    {
-                                        std::cerr << "Error: Failed to send TCP packet" << std::endl;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            std::cout << "A client tried to connect, but the server is full" << std::endl;
-
-                            pk::message message = pk::message(pk::message_type::MESSAGE_CONNECT_FULL);
-                            SDLNet_TCP_Send(socket, &message, sizeof(message));
-                        }
-                    }
-                }
-
-                for (int i = 0; i < MAX_CLIENTS; i++)
-                {
-                    if (clients[i].id != -1 && clients[i].id != client_id)
-                    {
-                        if (SDLNet_SocketReady(clients[i].socket))
-                        {
-                            char buffer[PACKET_SIZE];
-                            if (SDLNet_TCP_Recv(clients[i].socket, buffer, sizeof(buffer)) > 1)
-                            {
-                                pk::message *message = (pk::message *)buffer;
-                                switch (message->type)
-                                {
-                                case pk::message_type::MESSAGE_DISCONNECT_REQUEST:
-                                {
-                                    std::cout << "Client disconnected" << std::endl;
-
-                                    pk::id_message id_message = pk::id_message(pk::message_type::MESSAGE_DISCONNECT_BROADCAST, clients[i].id);
-                                    for (int j = 0; j < MAX_CLIENTS; j++)
-                                    {
-                                        if (clients[j].id != -1 && clients[j].id != client_id && clients[j].id != clients[i].id)
-                                        {
-                                            if (SDLNet_TCP_Send(clients[j].socket, &id_message, sizeof(id_message)) < (int)sizeof(id_message))
-                                            {
-                                                std::cerr << "Error: Failed to send TCP packet" << std::endl;
-                                            }
-                                        }
-                                    }
-
-                                    SDLNet_TCP_DelSocket(socket_set, clients[i].socket);
-                                    SDLNet_TCP_Close(clients[i].socket);
-
-                                    clients[i].id = -1;
-                                    clients[i].socket = nullptr;
-                                    delete clients[i].avatar;
-                                    clients[i].avatar = nullptr;
-                                    delete clients[i].flashlight;
-                                    clients[i].flashlight = nullptr;
-                                }
-                                break;
-                                case pk::message_type::MESSAGE_CHAT_REQUEST:
-                                {
-                                    pk::chat_message *chat_message = (pk::chat_message *)message;
-                                    std::cout << "Client " << chat_message->id << " says: " << chat_message->str << std::endl;
-
-                                    chat_message->type = pk::message_type::MESSAGE_CHAT_BROADCAST;
-                                    for (int j = 0; j < MAX_CLIENTS; j++)
-                                    {
-                                        if (clients[j].id != -1 && clients[j].id != client_id && clients[j].id != clients[i].id)
-                                        {
-                                            if (SDLNet_TCP_Send(clients[j].socket, &chat_message, sizeof(chat_message)) < (int)sizeof(chat_message))
-                                            {
-                                                std::cerr << "Error: Failed to send TCP packet" << std::endl;
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                                default:
-                                {
-                                    std::cerr << "Error: Unknown TCP packet type: " << message->type << std::endl;
-                                }
-                                break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (SDLNet_SocketReady(udp_socket))
-                {
-                    UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-                    if (SDLNet_UDP_Recv(udp_socket, packet) == 1)
-                    {
-                        pk::message *message = (pk::message *)packet->data;
-                        switch (message->type)
-                        {
-                        case pk::message_type::MESSAGE_UDP_CONNECT_REQUEST:
-                        {
-                            pk::id_message *id_message = (pk::id_message *)message;
-                            clients[id_message->id].udp_address = packet->address;
-
-                            std::cout << "Saving UDP info of client " << id_message->id << std::endl;
-                        }
-                        break;
-                        case pk::message_type::MESSAGE_POSITION_REQUEST:
-                        {
-                            pk::position_message *position_message = (pk::position_message *)message;
-
-                            if (clients[position_message->id].id != -1)
-                            {
-                                // TODO: validate position
-                                clients[position_message->id].position.x = position_message->x;
-                                clients[position_message->id].position.y = position_message->y;
-                                clients[position_message->id].position.z = position_message->z;
-                                clients[position_message->id].rotation.x = position_message->x_rot;
-                                clients[position_message->id].rotation.y = position_message->y_rot;
-                                clients[position_message->id].rotation.z = position_message->z_rot;
-
-                                pk::position_message *position_message2 = (pk::position_message *)malloc(sizeof(*position_message2));
-                                position_message2->type = pk::message_type::MESSAGE_POSITION_BROADCAST;
-                                position_message2->id = position_message->id;
-                                position_message2->x = position_message->x;
-                                position_message2->y = position_message->y;
-                                position_message2->z = position_message->z;
-                                position_message2->x_rot = position_message->x_rot;
-                                position_message2->y_rot = position_message->y_rot;
-                                position_message2->z_rot = position_message->z_rot;
-
-                                UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-                                for (int i = 0; i < MAX_CLIENTS; i++)
-                                {
-                                    if (clients[i].id != -1 && clients[i].id != client_id && clients[i].id != position_message2->id)
-                                    {
-                                        packet->address = clients[i].udp_address;
-                                        packet->data = (unsigned char *)position_message2;
-                                        packet->len = sizeof(*position_message2);
-
-                                        if (SDLNet_UDP_Send(udp_socket, -1, packet) != 1)
-                                        {
-                                            std::cerr << "Error: Failed to send UDP packet" << std::endl;
-                                        }
-                                    }
-                                }
-                                SDLNet_FreePacket(packet);
-                            }
-                        }
-                        break;
-                        default:
-                        {
-                            std::cerr << "Error: Unknown UDP packet type: " << message->type << std::endl;
-                        }
-                        break;
-                        }
-                    }
-                    SDLNet_FreePacket(packet);
-                }
-            }
-        }
-        else
-        {
-            while (SDLNet_CheckSockets(socket_set, 0) > 0)
-            {
-                if (SDLNet_SocketReady(tcp_socket))
-                {
-                    char buffer[PACKET_SIZE];
-                    if (SDLNet_TCP_Recv(tcp_socket, buffer, sizeof(buffer)) > 1)
-                    {
-                        pk::message *message = (pk::message *)buffer;
-                        switch (message->type)
-                        {
-                        case pk::message_type::MESSAGE_CONNECT_BROADCAST:
-                        {
-                            pk::id_message *id_message = (pk::id_message *)message;
-
-                            clients[id_message->id].id = id_message->id;
-                            clients[id_message->id].avatar = new pk::object(
-                                cube_model,
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(1.0f, 1.0f, 1.0f),
-                                1.0f);
-                            clients[id_message->id].flashlight = new pk::spot_light(
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(0.0f, 0.0f, 0.0f),
-                                glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
-                                cosf(glm::radians(12.5f)),
-                                cosf(glm::radians(15.0f)),
-                                1024);
-
-                            std::cout << "Client with ID " << id_message->id << " has joined " << std::endl;
-                        }
-                        break;
-                        case pk::message_type::MESSAGE_DISCONNECT_BROADCAST:
-                        {
-                            pk::id_message *id_message = (pk::id_message *)message;
-
-                            clients[id_message->id].id = -1;
-                            delete clients[id_message->id].avatar;
-                            clients[id_message->id].avatar = nullptr;
-                            delete clients[id_message->id].flashlight;
-                            clients[id_message->id].flashlight = nullptr;
-
-                            std::cout << "Client with ID " << id_message->id << " has disconnected" << std::endl;
-                        }
-                        break;
-                        case pk::message_type::MESSAGE_CHAT_BROADCAST:
-                        {
-                            pk::chat_message *chat_message = (pk::chat_message *)message;
-
-                            std::cout << "Client " << chat_message->id << ": " << chat_message->str << std::endl;
-                        }
-                        break;
-                        default:
-                        {
-                            std::cerr << "Error: Unknown TCP packet type: " << message->type << std::endl;
-                        }
-                        break;
-                        }
-                    }
-                }
-
-                if (SDLNet_SocketReady(udp_socket))
-                {
-                    UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-                    if (SDLNet_UDP_Recv(udp_socket, packet) == 1)
-                    {
-                        pk::message *message = (pk::message *)packet->data;
-                        switch (message->type)
-                        {
-                        case pk::message_type::MESSAGE_POSITION_BROADCAST:
-                        {
-                            pk::position_message *position_message = (pk::position_message *)message;
-
-                            if (clients[position_message->id].id != -1)
-                            {
-                                clients[position_message->id].position.x = position_message->x;
-                                clients[position_message->id].position.y = position_message->y;
-                                clients[position_message->id].position.z = position_message->z;
-                                clients[position_message->id].rotation.x = position_message->x_rot;
-                                clients[position_message->id].rotation.y = position_message->y_rot;
-                                clients[position_message->id].rotation.z = position_message->z_rot;
-                            }
-                        }
-                        break;
-                        default:
-                        {
-                            std::cerr << "Error: Unknown UDP packet type: " << message->type << std::endl;
-                        }
-                        break;
-                        }
-                    }
-                    SDLNet_FreePacket(packet);
-                }
-            }
-        }
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -884,6 +418,8 @@ int main(int argc, char *argv[])
             }
         }
 
+        SDL_SetRelativeMouseMode((SDL_bool)lock_cursor);
+
         glm::vec3 camera_front = camera->calc_front();
         glm::vec3 camera_right = camera->calc_right();
 
@@ -933,60 +469,6 @@ int main(int argc, char *argv[])
         velocity = acceleration * delta_time + velocity;
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
-
-        if (server)
-        {
-            pk::position_message *position_message = (pk::position_message *)malloc(sizeof(*position_message));
-            position_message->type = pk::message_type::MESSAGE_POSITION_BROADCAST;
-            position_message->id = client_id;
-            position_message->x = camera->position.x;
-            position_message->y = camera->position.y;
-            position_message->z = camera->position.z;
-            position_message->x_rot = camera_front.x;
-            position_message->y_rot = camera_front.y;
-            position_message->z_rot = camera_front.z;
-
-            UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-            for (int i = 0; i < MAX_CLIENTS; i++)
-            {
-                if (clients[i].id != -1 && clients[i].id != client_id)
-                {
-                    packet->address = clients[i].udp_address;
-                    packet->data = (unsigned char *)position_message;
-                    packet->len = sizeof(*position_message);
-
-                    if (SDLNet_UDP_Send(udp_socket, -1, packet) != 1)
-                    {
-                        std::cerr << "Error: Failed to send UDP packet" << std::endl;
-                    }
-                }
-            }
-            SDLNet_FreePacket(packet);
-        }
-        else
-        {
-            pk::position_message *position_message = (pk::position_message *)malloc(sizeof(*position_message));
-            position_message->type = pk::message_type::MESSAGE_POSITION_REQUEST;
-            position_message->id = client_id;
-            position_message->x = camera->position.x;
-            position_message->y = camera->position.y;
-            position_message->z = camera->position.z;
-            position_message->x_rot = camera_front.x;
-            position_message->y_rot = camera_front.y;
-            position_message->z_rot = camera_front.z;
-
-            UDPpacket *packet = SDLNet_AllocPacket(PACKET_SIZE);
-            packet->address = server_address;
-            packet->data = (unsigned char *)position_message;
-            packet->len = sizeof(*position_message);
-
-            if (!SDLNet_UDP_Send(udp_socket, -1, packet))
-            {
-                std::cerr << "Error: Failed to send UDP packet" << std::endl;
-                return 1;
-            }
-            SDLNet_FreePacket(packet);
-        }
 
         static float angle = 0.0f;
         const float pi = 3.14159f;
@@ -1043,26 +525,6 @@ int main(int argc, char *argv[])
         renderer.skybox = skybox;
         renderer.objects.push_back(backpack);
         // renderer->objects.push_back(cube);
-        for (int i = 0; i < MAX_CLIENTS; i++)
-        {
-            if (clients[i].id != -1 && clients[i].id != client_id)
-            {
-                btTransform transform;
-                transform.setIdentity();
-                transform.setOrigin(btVector3(clients[i].position.x, clients[i].position.y, clients[i].position.z));
-                transform.setRotation(btQuaternion(clients[i].rotation.y, clients[i].rotation.x, clients[i].rotation.z));
-                clients[i].avatar->rigidbody->setWorldTransform(transform);
-                renderer.objects.push_back(clients[i].avatar);
-
-                clients[i].flashlight->position.x = clients[i].position.x;
-                clients[i].flashlight->position.y = clients[i].position.y;
-                clients[i].flashlight->position.z = clients[i].position.z;
-                clients[i].flashlight->direction.x = clients[i].rotation.x;
-                clients[i].flashlight->direction.y = clients[i].rotation.y;
-                clients[i].flashlight->direction.z = clients[i].rotation.z;
-                renderer.spot_lights.push_back(clients[i].flashlight);
-            }
-        }
         renderer.directional_lights.push_back(sun);
         renderer.point_lights.push_back(red_light);
         renderer.point_lights.push_back(yellow_light);
@@ -1130,33 +592,6 @@ int main(int argc, char *argv[])
         SDL_GL_SwapWindow(window);
     }
 
-    for (int i = 0; i < MAX_CLIENTS; i++)
-    {
-        if (clients[i].id != -1 && clients[i].id != client_id)
-        {
-            delete clients[i].avatar;
-            delete clients[i].flashlight;
-        }
-    }
-
-    if (server)
-    {
-        // TODO: inform clients that server shut down
-        for (int i = 0; i < MAX_CLIENTS; i++)
-        {
-            if (clients[i].id != -1 && clients[i].id != client_id)
-            {
-                SDLNet_TCP_DelSocket(socket_set, clients[i].socket);
-                SDLNet_TCP_Close(clients[i].socket);
-            }
-        }
-    }
-    else
-    {
-        pk::message message = pk::message(pk::message_type::MESSAGE_DISCONNECT_REQUEST);
-        SDLNet_TCP_Send(tcp_socket, &message, sizeof(message));
-    }
-
     delete world;
     delete solver;
     delete overlapping_pair_cache;
@@ -1194,14 +629,6 @@ int main(int argc, char *argv[])
     delete bounce_sound;
     delete shoot_sound;
 
-    SDLNet_UDP_DelSocket(socket_set, udp_socket);
-    SDLNet_TCP_DelSocket(socket_set, tcp_socket);
-
-    SDLNet_FreeSocketSet(socket_set);
-
-    SDLNet_UDP_Close(udp_socket);
-    SDLNet_TCP_Close(tcp_socket);
-
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
@@ -1213,7 +640,6 @@ int main(int argc, char *argv[])
 
     IMG_Quit();
     Mix_Quit();
-    SDLNet_Quit();
 
     SDL_Quit();
 
