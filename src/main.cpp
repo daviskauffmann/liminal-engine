@@ -426,6 +426,7 @@ int main(int argc, char *argv[])
         static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
         glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
         const float speed = 50.0f;
+        const float drag = 10.0f;
         bool sprint = false;
         if (!io.WantCaptureKeyboard)
         {
@@ -464,7 +465,7 @@ int main(int argc, char *argv[])
             acceleration /= acceleration_length;
         }
         acceleration *= speed * (sprint ? 2.0f : 1.0f);
-        acceleration -= velocity * 10.0f;
+        acceleration -= velocity * drag;
         camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
         velocity = acceleration * delta_time + velocity;
         // camera->pitch = -glm::dot(camera_front, velocity);
