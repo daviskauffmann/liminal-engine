@@ -7,6 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
+#include <sol/sol.hpp>
 
 #include "audio.hpp"
 #include "directional_light.hpp"
@@ -149,6 +150,16 @@ int main(int argc, char *argv[])
 
     world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
 
+    sol::state lua;
+    lua.open_libraries(sol::lib::base);
+    lua.set_function("HelloWorld", []() -> void {
+        std::cout << "Hello, World!" << std::endl;
+    });
+    lua.set_function("GetRandomNumber", [](int mod) -> int {
+        return 4 + mod;
+    });
+    lua.script_file("assets/scripts/test.lua");
+
     pk::camera *camera = new pk::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
@@ -156,9 +167,9 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    // pk::skybox *skybox = nullptr;
+    pk::skybox *skybox = nullptr;
     // pk::skybox *skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
-    pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    // pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
     pk::model *backpack_model = new pk::model("assets/models/backpack/backpack.obj");
     pk::object *backpack = new pk::object(

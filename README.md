@@ -11,10 +11,12 @@ Make sure the following are present on your system:
 - cxxopts
 - GLEW
 - GLM
+- Lua
 - OpenAL
 - SDL2
 - SDL2_image
 - SDL2_mixer
+- sol2
 
 These dependencies are included as submodules:
 
@@ -66,6 +68,7 @@ make clean
 - Terrain (WIP)
 - 2D sprites (WIP)
 - Physics (WIP)
+- LUA scripting (WIP)
 
 ### Upcoming
 
@@ -77,7 +80,6 @@ make clean
 - Anti-aliasing
 - Animation
 - Real-time level editing
-- LUA scripting
 
 ## Screenshots
 
