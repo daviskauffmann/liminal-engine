@@ -24,10 +24,6 @@
 #include "terrain.hpp"
 #include "water.hpp"
 
-#define SDL_FLAGS (SDL_INIT_AUDIO | SDL_INIT_VIDEO)
-#define IMG_FLAGS (IMG_INIT_JPG | IMG_INIT_PNG)
-#define MIX_FLAGS (0)
-
 #define VERSION "v0.0.1"
 
 #define WINDOW_TITLE "Project Kilonova"
@@ -75,19 +71,21 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (SDL_Init(SDL_FLAGS) != 0)
+    if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
     {
         std::cerr << "Error: Failed to initialize SDL: " << SDL_GetError() << std::endl;
         return 1;
     }
 
-    if (IMG_Init(IMG_FLAGS) != IMG_FLAGS)
+    int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
+    if (IMG_Init(img_flags) != img_flags)
     {
         std::cerr << "Error: Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
         return 1;
     }
 
-    if (Mix_Init(MIX_FLAGS) != MIX_FLAGS)
+    int mix_flags = 0;
+    if (Mix_Init(mix_flags) != mix_flags)
     {
         std::cerr << "Error: Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
         return 1;
