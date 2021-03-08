@@ -2,7 +2,10 @@
 
 #include <assimp/scene.h>
 
-pk::mesh::mesh(std::vector<pk::vertex> vertices, std::vector<GLuint> indices, std::vector<std::vector<pk::texture *>> textures)
+pk::mesh::mesh(
+    std::vector<pk::vertex> vertices,
+    std::vector<GLuint> indices,
+    std::vector<std::vector<pk::texture *>> textures)
     : vertices_size((GLsizei)(vertices.size() * sizeof(pk::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)
@@ -23,12 +26,16 @@ pk::mesh::mesh(std::vector<pk::vertex> vertices, std::vector<GLuint> indices, st
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, uv));
         glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, tangent));
         glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, bitangent));
+        glVertexAttribIPointer(5, 4, GL_INT, sizeof(pk::vertex), (void *)offsetof(pk::vertex, bone_ids));
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, bone_weights));
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
         glEnableVertexAttribArray(3);
         glEnableVertexAttribArray(4);
+        glEnableVertexAttribArray(5);
+        glEnableVertexAttribArray(6);
     }
     glBindVertexArray(0);
 }

@@ -4,6 +4,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#define NUM_BONES_PER_VERTEX 4
+
 namespace pk
 {
     struct vertex
@@ -13,6 +15,8 @@ namespace pk
         glm::vec2 uv;
         glm::vec3 tangent;
         glm::vec3 bitangent;
+        unsigned int bone_ids[NUM_BONES_PER_VERTEX];
+        float bone_weights[NUM_BONES_PER_VERTEX];
     };
 } // namespace pk
 

@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace pk
 {
@@ -31,6 +32,7 @@ namespace pk
         void set_vec3(const std::string &name, glm::vec3 vec3) const;
         void set_vec4(const std::string &name, glm::vec4 vec4) const;
         void set_mat4(const std::string &name, glm::mat4 mat4) const;
+        void set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const;
 
     private:
         const std::string vertex_filename;

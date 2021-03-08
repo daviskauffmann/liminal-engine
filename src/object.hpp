@@ -25,6 +25,7 @@ namespace pk
         glm::mat4 calc_model() const;
 
     private:
+        glm::vec3 scale;
         btDefaultMotionState *motion_state;
         btCollisionShape *collision_shape;
     };

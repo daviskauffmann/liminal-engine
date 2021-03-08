@@ -62,13 +62,14 @@ make clean
 - Water
   - Planar reflections
   - Refraction
-- Model loading (WIP)
 - 3D sound
 - Runtime shader reloading
+- Model loading (WIP)
 - Terrain (WIP)
 - 2D sprites (WIP)
 - Physics (WIP)
 - LUA scripting (WIP)
+- Animation (WIP)
 
 ### Upcoming
 
@@ -78,7 +79,6 @@ make clean
 - Fog and other atmospheric effects
 - Underwater effects
 - Anti-aliasing
-- Animation
 - Real-time level editing
 
 ## Screenshots
@@ -104,3 +104,5 @@ make clean
 [Hopson](https://www.youtube.com/channel/UCeQhZOvNKSBRU0Mdg7V44wA)
 
 [Byungil Jeong - CS594 - Project 2](https://www.evl.uic.edu/bijeong/cs594/proj2)
+
+http://www.xphere.me/2019/05/bones-animation-with-openglassimpglm/

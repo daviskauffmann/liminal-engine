@@ -8,7 +8,8 @@ pk::object::object(
     glm::vec3 rotation,
     glm::vec3 scale,
     float mass)
-    : model(model)
+    : model(model),
+      scale(scale)
 {
     btTransform transform;
     transform.setIdentity();
@@ -50,7 +51,6 @@ glm::mat4 pk::object::calc_model() const
     model = glm::rotate(model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::rotate(model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
-    btVector3 scale = collision_shape->getLocalScaling();
-    model = glm::scale(model, glm::vec3(scale.x(), scale.y(), scale.z()));
+    model = glm::scale(model, scale);
     return model;
 }

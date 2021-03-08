@@ -165,27 +165,27 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    pk::skybox *skybox = nullptr;
+    // pk::skybox *skybox = nullptr;
     // pk::skybox *skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
-    // pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
-    pk::model *backpack_model = new pk::model("assets/models/backpack/backpack.obj");
-    pk::object *backpack = new pk::object(
-        backpack_model,
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        1.0f);
-    // world->addRigidBody(backpack->rigidbody);
+    // pk::model *model = new pk::model("assets/models/cube/cube.obj");
+    // pk::model *model = new pk::model("assets/models/backpack/backpack.obj");
+    pk::model *model = new pk::model("assets/models/boblampclean/boblampclean.md5mesh", true);
 
-    pk::model *cube_model = new pk::model("assets/models/cube/cube.obj");
-    pk::object *cube = new pk::object(
-        cube_model,
+    // pk::object *object = new pk::object(
+    //     model,
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(1.0f, 1.0f, 1.0f),
+    //     1.0f);
+    pk::object *object = new pk::object(
+        model,
         glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(0.0f, -1.57f, 0.0f),
+        glm::vec3(0.05f, 0.05f, 0.05f),
         1.0f);
-    // world->addRigidBody(cube->rigidbody);
+    // world->addRigidBody(object->rigidbody);
 
     const float sun_intensity = 10.0f;
     pk::directional_light *sun = new pk::directional_light(
@@ -533,8 +533,7 @@ int main(int argc, char *argv[])
         renderer.wireframe = wireframe;
         renderer.camera = camera;
         renderer.skybox = skybox;
-        renderer.objects.push_back(backpack);
-        // renderer->objects.push_back(cube);
+        renderer.objects.push_back(object);
         renderer.directional_lights.push_back(sun);
         renderer.point_lights.push_back(red_light);
         renderer.point_lights.push_back(yellow_light);
@@ -612,11 +611,8 @@ int main(int argc, char *argv[])
 
     delete skybox;
 
-    delete backpack_model;
-    delete backpack;
-
-    delete cube_model;
-    delete cube;
+    delete model;
+    delete object;
 
     delete sun;
 

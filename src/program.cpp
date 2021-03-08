@@ -4,7 +4,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stb_include.h>
-#include <vector>
 
 pk::program::program(
     const std::string &vertex_filename,
@@ -79,6 +78,11 @@ void pk::program::set_vec4(const std::string &name, glm::vec4 vec4) const
 void pk::program::set_mat4(const std::string &name, glm::mat4 mat4) const
 {
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
+}
+
+void pk::program::set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const
+{
+    glUniformMatrix4fv(get_location(name), mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
 }
 
 GLuint pk::program::create_program() const

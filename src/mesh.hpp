@@ -20,7 +20,10 @@ namespace pk
         GLuint ebo_id;
         std::vector<std::vector<pk::texture *>> textures;
 
-        mesh(std::vector<pk::vertex> vertices, std::vector<unsigned int> indices, std::vector<std::vector<pk::texture *>> textures);
+        mesh(
+            std::vector<pk::vertex> vertices,
+            std::vector<unsigned int> indices,
+            std::vector<std::vector<pk::texture *>> textures);
         ~mesh();
 
         void draw() const;

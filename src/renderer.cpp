@@ -295,10 +295,10 @@ pk::renderer::renderer(
         "assets/shaders/color.vs",
         "assets/shaders/color.fs");
     geometry_object_program = new pk::program(
-        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry_object.vs",
         "assets/shaders/geometry_object.fs");
     geometry_terrain_program = new pk::program(
-        "assets/shaders/geometry.vs",
+        "assets/shaders/geometry_terrain.vs",
         "assets/shaders/geometry_terrain.fs");
     deferred_ambient_program = new pk::program(
         "assets/shaders/deferred.vs",
@@ -1197,8 +1197,10 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsi
             for (auto &object : objects)
             {
                 glm::mat4 object_model = object->calc_model();
+                std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
 
                 geometry_object_program->set_mat4("mvp", camera_projection * camera_view * object_model);
+                geometry_object_program->set_mat4_vector("bone_transformations", object_bone_transformations);
                 geometry_object_program->set_mat4("model", object_model);
 
                 object->model->draw();
