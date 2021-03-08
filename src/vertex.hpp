@@ -17,6 +17,8 @@ namespace pk
         glm::vec3 bitangent;
         unsigned int bone_ids[NUM_BONES_PER_VERTEX];
         float bone_weights[NUM_BONES_PER_VERTEX];
+
+        void add_bone_data(unsigned int id, float weight);
     };
 } // namespace pk
 

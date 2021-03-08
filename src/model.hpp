@@ -41,14 +41,17 @@ namespace pk
         std::vector<bone_info> bone_infos;
         std::unordered_map<std::string, pk::texture *> loaded_textures;
 
-        void process_node(aiNode *node, const aiScene *scene);
-        pk::mesh *process_mesh(aiMesh *mesh, const aiScene *scene);
+        void process_node_meshes(const aiNode *node, const aiScene *scene);
+        pk::mesh *create_mesh(const aiMesh *mesh, const aiScene *scene);
 
-        void read_node_heirarchy(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
+        void process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string node_name);
         void calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
+        unsigned int find_position_index(float animation_time, const aiNodeAnim *node_animation);
         void calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation);
+        unsigned int find_rotation_index(float animation_time, const aiNodeAnim *node_animation);
         void calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
+        unsigned int find_scale_index(float animation_time, const aiNodeAnim *node_animation);
     };
 } // namespace pk
 

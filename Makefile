@@ -29,6 +29,7 @@ SRC = \
 	src/stb_include.cpp \
 	src/terrain.cpp \
 	src/texture.cpp \
+	src/vertex.cpp \
 	src/water.cpp
 TARGET = bin/pk
 

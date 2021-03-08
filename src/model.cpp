@@ -31,7 +31,7 @@ pk::model::model(const std::string &filename, bool flip_uvs)
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
     num_bones = 0;
 
-    process_node(scene->mRootNode, scene);
+    process_node_meshes(scene->mRootNode, scene);
 }
 
 pk::model::~model()
@@ -49,16 +49,14 @@ pk::model::~model()
 
 std::vector<glm::mat4> pk::model::calc_bone_transformations(unsigned int current_time)
 {
-    // TODO: parameterize
-    const unsigned int animation_index = 0;
-
     glm::mat4 identity = glm::identity<glm::mat4>();
 
+    unsigned int animation_index = 0;
     float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
     float time_in_ticks = ticks_per_second * (current_time / 1000.0f);
     float animation_time = fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
-    read_node_heirarchy(animation_time, scene->mRootNode, identity);
+    process_node_animations(animation_time, scene->mRootNode, identity);
 
     std::vector<glm::mat4> bone_transformations;
     bone_transformations.resize(num_bones);
@@ -77,83 +75,83 @@ void pk::model::draw() const
     }
 }
 
-void pk::model::process_node(aiNode *node, const aiScene *scene)
+void pk::model::process_node_meshes(const aiNode *node, const aiScene *scene)
 {
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
-        aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(process_mesh(mesh, scene));
+        aiMesh *scene_mesh = scene->mMeshes[node->mMeshes[i]];
+        meshes.push_back(create_mesh(scene_mesh, scene));
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        process_node(node->mChildren[i], scene);
+        process_node_meshes(node->mChildren[i], scene);
     }
 }
 
-pk::mesh *pk::model::process_mesh(aiMesh *mesh, const aiScene *scene)
+pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
 {
     std::vector<pk::vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<std::vector<pk::texture *>> textures;
 
     // process vertices
-    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+    for (unsigned int i = 0; i < scene_mesh->mNumVertices; i++)
     {
         pk::vertex vertex;
 
         vertex.position = glm::vec3(
-            mesh->mVertices[i].x,
-            mesh->mVertices[i].y,
-            mesh->mVertices[i].z);
+            scene_mesh->mVertices[i].x,
+            scene_mesh->mVertices[i].y,
+            scene_mesh->mVertices[i].z);
 
-        if (mesh->mNormals)
+        if (scene_mesh->mNormals)
         {
             vertex.normal = glm::vec3(
-                mesh->mNormals[i].x,
-                mesh->mNormals[i].y,
-                mesh->mNormals[i].z);
+                scene_mesh->mNormals[i].x,
+                scene_mesh->mNormals[i].y,
+                scene_mesh->mNormals[i].z);
         }
         else
         {
             vertex.normal = glm::vec3(1.0f, 1.0f, 1.0f);
         }
 
-        if (mesh->mTextureCoords[0])
+        if (scene_mesh->mTextureCoords[0])
         {
             vertex.uv = glm::vec2(
-                mesh->mTextureCoords[0][i].x,
-                mesh->mTextureCoords[0][i].y);
+                scene_mesh->mTextureCoords[0][i].x,
+                scene_mesh->mTextureCoords[0][i].y);
         }
         else
         {
             vertex.uv = glm::vec2(0.0f, 0.0f);
         }
 
-        if (mesh->mTangents)
+        if (scene_mesh->mTangents)
         {
             vertex.tangent = glm::vec3(
-                mesh->mTangents[i].x,
-                mesh->mTangents[i].y,
-                mesh->mTangents[i].z);
+                scene_mesh->mTangents[i].x,
+                scene_mesh->mTangents[i].y,
+                scene_mesh->mTangents[i].z);
         }
 
-        if (mesh->mBitangents)
+        if (scene_mesh->mBitangents)
         {
             vertex.bitangent = glm::vec3(
-                mesh->mBitangents[i].x,
-                mesh->mBitangents[i].y,
-                mesh->mBitangents[i].z);
+                scene_mesh->mBitangents[i].x,
+                scene_mesh->mBitangents[i].y,
+                scene_mesh->mBitangents[i].z);
         }
 
         vertices.push_back(vertex);
     }
 
     // process bones
-    for (unsigned int i = 0; i < mesh->mNumBones; i++)
+    for (unsigned int i = 0; i < scene_mesh->mNumBones; i++)
     {
         unsigned int bone_index = 0;
-        std::string bone_name(mesh->mBones[i]->mName.data);
+        std::string bone_name(scene_mesh->mBones[i]->mName.data);
 
         if (loaded_bone_indexes.find(bone_name) == loaded_bone_indexes.end())
         {
@@ -161,7 +159,7 @@ pk::mesh *pk::model::process_mesh(aiMesh *mesh, const aiScene *scene)
             loaded_bone_indexes[bone_name] = bone_index;
 
             bone_info bone_info;
-            bone_info.offset = mat4_cast(mesh->mBones[i]->mOffsetMatrix);
+            bone_info.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
             bone_infos.push_back(bone_info);
         }
         else
@@ -169,26 +167,19 @@ pk::mesh *pk::model::process_mesh(aiMesh *mesh, const aiScene *scene)
             bone_index = loaded_bone_indexes[bone_name];
         }
 
-        for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++)
+        for (unsigned int j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
         {
-            unsigned int vertex_id = mesh->mBones[i]->mWeights[j].mVertexId;
-            float weight = mesh->mBones[i]->mWeights[j].mWeight;
-            for (unsigned int k = 0; k < NUM_BONES_PER_VERTEX; k++)
-            {
-                if (vertices[vertex_id].bone_weights[k] == 0)
-                {
-                    vertices[vertex_id].bone_ids[k] = bone_index;
-                    vertices[vertex_id].bone_weights[k] = weight;
-                    break;
-                }
-            }
+            unsigned int vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
+            float weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
+            std::cout << vertex_id << " " << bone_index << " " << weight << std::endl;
+            vertices[vertex_id].add_bone_data(bone_index, weight);
         }
     }
 
     // process indices
-    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+    for (unsigned int i = 0; i < scene_mesh->mNumFaces; i++)
     {
-        aiFace face = mesh->mFaces[i];
+        aiFace face = scene_mesh->mFaces[i];
         for (unsigned int j = 0; j < face.mNumIndices; j++)
         {
             indices.push_back(face.mIndices[j]);
@@ -196,15 +187,15 @@ pk::mesh *pk::model::process_mesh(aiMesh *mesh, const aiScene *scene)
     }
 
     // process textures
-    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+    aiMaterial *scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
     for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
     {
         std::vector<pk::texture *> material_textures;
 
-        for (unsigned int i = 0; i < material->GetTextureCount(type); i++)
+        for (unsigned int i = 0; i < scene_material->GetTextureCount(type); i++)
         {
             aiString path;
-            material->GetTexture(type, i, &path);
+            scene_material->GetTexture(type, i, &path);
             const std::string filename = directory + "/" + path.C_Str();
             if (loaded_textures.find(filename) == loaded_textures.end())
             {
@@ -224,19 +215,13 @@ pk::mesh *pk::model::process_mesh(aiMesh *mesh, const aiScene *scene)
     return new pk::mesh(vertices, indices, textures);
 }
 
-void pk::model::read_node_heirarchy(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
+void pk::model::process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
 {
-    // TODO: parameterize
-    const unsigned int animation_index = 0;
-
+    unsigned int animation_index = 0;
+    const aiAnimation *scene_animation = scene->mAnimations[animation_index];
     std::string node_name(node->mName.data);
-
-    const aiAnimation *animation = scene->mAnimations[animation_index];
-
     glm::mat4 node_transformation = mat4_cast(node->mTransformation);
-
-    const aiNodeAnim *node_animation = find_node_animation(animation, node_name);
-
+    const aiNodeAnim *node_animation = find_node_animation(scene_animation, node_name);
     if (node_animation)
     {
         aiVector3D interpolated_position;
@@ -267,15 +252,15 @@ void pk::model::read_node_heirarchy(float animation_time, const aiNode *node, co
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        read_node_heirarchy(animation_time, node->mChildren[i], global_transformation);
+        process_node_animations(animation_time, node->mChildren[i], global_transformation);
     }
 }
 
-const aiNodeAnim *pk::model::find_node_animation(const aiAnimation *animation, const std::string node_name)
+const aiNodeAnim *pk::model::find_node_animation(const aiAnimation *scene_animation, const std::string node_name)
 {
-    for (unsigned int i = 0; i < animation->mNumChannels; i++)
+    for (unsigned int i = 0; i < scene_animation->mNumChannels; i++)
     {
-        const aiNodeAnim *node_animation = animation->mChannels[i];
+        const aiNodeAnim *node_animation = scene_animation->mChannels[i];
 
         if (std::string(node_animation->mNodeName.data) == node_name)
         {
@@ -294,14 +279,7 @@ void pk::model::calc_interpolated_position(aiVector3D &out, float animation_time
         return;
     }
 
-    unsigned int position_index = 0;
-    for (unsigned int i = 0; i < node_animation->mNumPositionKeys - 1; i++)
-    {
-        if (animation_time < (float)node_animation->mPositionKeys[i + 1].mTime)
-        {
-            position_index = i;
-        }
-    }
+    unsigned int position_index = find_position_index(animation_time, node_animation);
     unsigned int next_position_index = position_index + 1;
 
     float delta_time = (float)(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
@@ -314,6 +292,21 @@ void pk::model::calc_interpolated_position(aiVector3D &out, float animation_time
     out = start + factor * delta;
 }
 
+unsigned int pk::model::find_position_index(float animation_time, const aiNodeAnim *node_animation)
+{
+    for (unsigned int i = 0; i < node_animation->mNumPositionKeys - 1; i++)
+    {
+        if (animation_time < (float)node_animation->mPositionKeys[i + 1].mTime)
+        {
+            return i;
+        }
+    }
+
+    std::cerr << "Error: Unable to find position index" << std::endl;
+
+    return 0;
+}
+
 void pk::model::calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation)
 {
     if (node_animation->mNumRotationKeys == 1)
@@ -322,14 +315,7 @@ void pk::model::calc_interpolated_rotation(aiQuaternion &out, float animation_ti
         return;
     }
 
-    unsigned int rotation_index = 0;
-    for (unsigned int i = 0; i < node_animation->mNumRotationKeys - 1; i++)
-    {
-        if (animation_time < (float)node_animation->mRotationKeys[i + 1].mTime)
-        {
-            rotation_index = i;
-        }
-    }
+    unsigned int rotation_index = find_rotation_index(animation_time, node_animation);
     unsigned int next_rotation_index = rotation_index + 1;
 
     float delta_time = (float)(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
@@ -342,6 +328,21 @@ void pk::model::calc_interpolated_rotation(aiQuaternion &out, float animation_ti
     out = out.Normalize();
 }
 
+unsigned int pk::model::find_rotation_index(float animation_time, const aiNodeAnim *node_animation)
+{
+    for (unsigned int i = 0; i < node_animation->mNumRotationKeys - 1; i++)
+    {
+        if (animation_time < (float)node_animation->mRotationKeys[i + 1].mTime)
+        {
+            return i;
+        }
+    }
+
+    std::cerr << "Error: Unable to find rotation index" << std::endl;
+
+    return 0;
+}
+
 void pk::model::calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
 {
     if (node_animation->mNumScalingKeys == 1)
@@ -350,14 +351,7 @@ void pk::model::calc_interpolated_scale(aiVector3D &out, float animation_time, c
         return;
     }
 
-    unsigned int scale_index = 0;
-    for (unsigned int i = 0; i < node_animation->mNumScalingKeys - 1; i++)
-    {
-        if (animation_time < (float)node_animation->mScalingKeys[i + 1].mTime)
-        {
-            scale_index = i;
-        }
-    }
+    unsigned int scale_index = find_scale_index(animation_time, node_animation);
     unsigned int next_scale_index = scale_index + 1;
 
     float delta_time = (float)(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
@@ -368,4 +362,19 @@ void pk::model::calc_interpolated_scale(aiVector3D &out, float animation_time, c
     aiVector3D delta = end - start;
 
     out = start + factor * delta;
+}
+
+unsigned int pk::model::find_scale_index(float animation_time, const aiNodeAnim *node_animation)
+{
+    for (unsigned int i = 0; i < node_animation->mNumScalingKeys - 1; i++)
+    {
+        if (animation_time < (float)node_animation->mScalingKeys[i + 1].mTime)
+        {
+            return i;
+        }
+    }
+
+    std::cerr << "Error: Unable to find scale index" << std::endl;
+
+    return 0;
 }
