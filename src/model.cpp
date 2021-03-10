@@ -144,6 +144,12 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
                 scene_mesh->mBitangents[i].z);
         }
 
+        for (unsigned int j = 0; j < NUM_BONES_PER_VERTEX; j++)
+        {
+            vertex.bone_ids[j] = 0;
+            vertex.bone_weights[j] = 0;
+        }
+
         vertices.push_back(vertex);
     }
 
@@ -153,10 +159,10 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
         unsigned int bone_index = 0;
         std::string bone_name(scene_mesh->mBones[i]->mName.data);
 
-        if (loaded_bone_indexes.find(bone_name) == loaded_bone_indexes.end())
+        if (loaded_bone_indices.find(bone_name) == loaded_bone_indices.end())
         {
             bone_index = num_bones++;
-            loaded_bone_indexes[bone_name] = bone_index;
+            loaded_bone_indices[bone_name] = bone_index;
 
             bone_info bone_info;
             bone_info.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
@@ -164,7 +170,7 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
         }
         else
         {
-            bone_index = loaded_bone_indexes[bone_name];
+            bone_index = loaded_bone_indices[bone_name];
         }
 
         for (unsigned int j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
@@ -244,9 +250,9 @@ void pk::model::process_node_animations(float animation_time, const aiNode *node
 
     glm::mat4 global_transformation = parent_transformation * node_transformation;
 
-    if (loaded_bone_indexes.find(node_name) != loaded_bone_indexes.end())
+    if (loaded_bone_indices.find(node_name) != loaded_bone_indices.end())
     {
-        unsigned int bone_index = loaded_bone_indexes[node_name];
+        unsigned int bone_index = loaded_bone_indices[node_name];
         bone_infos[bone_index].transformation = global_inverse_transform * global_transformation * bone_infos[bone_index].offset;
     }
 

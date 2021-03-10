@@ -37,7 +37,7 @@ namespace pk
         const aiScene *scene;
         glm::mat4 global_inverse_transform;
         unsigned int num_bones;
-        std::unordered_map<std::string, unsigned int> loaded_bone_indexes;
+        std::unordered_map<std::string, unsigned int> loaded_bone_indices;
         std::vector<bone_info> bone_infos;
         std::unordered_map<std::string, pk::texture *> loaded_textures;
 
