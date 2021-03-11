@@ -170,22 +170,34 @@ int main(int argc, char *argv[])
     pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
     // pk::model *model = new pk::model("assets/models/cube/cube.obj");
-    // pk::model *model = new pk::model("assets/models/backpack/backpack.obj");
-    pk::model *model = new pk::model("assets/models/boblampclean/boblampclean.md5mesh", true);
-
-    // pk::object *object = new pk::object(
-    //     model,
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(1.0f, 1.0f, 1.0f),
-    //     1.0f);
+    pk::model *model = new pk::model("assets/models/backpack/backpack.obj");
     pk::object *object = new pk::object(
         model,
         glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        1.0f);
+    // world->addRigidBody(object->rigidbody);
+
+    pk::model *animated_model = new pk::model("assets/models/boblampclean/boblampclean.md5mesh", true);
+    animated_model->set_animation(0);
+    pk::object *animated_object = new pk::object(
+        animated_model,
+        glm::vec3(5.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, -1.57f, 0.0f),
         glm::vec3(0.05f, 0.05f, 0.05f),
         1.0f);
-    // world->addRigidBody(object->rigidbody);
+    // world->addRigidBody(animated_object->rigidbody);
+
+    pk::model *animated_model2 = new pk::model("assets/models/dude/model.dae", true);
+    animated_model2->set_animation(0);
+    pk::object *animated_object2 = new pk::object(
+        animated_model2,
+        glm::vec3(-5.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, -1.57f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        1.0f);
+    // world->addRigidBody(animated_object2->rigidbody);
 
     const float sun_intensity = 10.0f;
     pk::directional_light *sun = new pk::directional_light(
@@ -534,6 +546,8 @@ int main(int argc, char *argv[])
         renderer.camera = camera;
         renderer.skybox = skybox;
         renderer.objects.push_back(object);
+        renderer.objects.push_back(animated_object);
+        renderer.objects.push_back(animated_object2);
         renderer.directional_lights.push_back(sun);
         renderer.point_lights.push_back(red_light);
         renderer.point_lights.push_back(yellow_light);
@@ -613,6 +627,12 @@ int main(int argc, char *argv[])
 
     delete model;
     delete object;
+
+    delete animated_model;
+    delete animated_object;
+
+    delete animated_model2;
+    delete animated_object2;
 
     delete sun;
 

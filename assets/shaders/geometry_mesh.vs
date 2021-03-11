@@ -18,7 +18,7 @@ uniform mat4 mvp;
 uniform mat4 model;
 uniform vec4 clipping_plane;
 
-uniform float tiling;
+uniform float tiling = 1.0;
 
 void main()
 {

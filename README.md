@@ -105,4 +105,4 @@ make clean
 
 [Byungil Jeong - CS594 - Project 2](https://www.evl.uic.edu/bijeong/cs594/proj2)
 
-http://www.xphere.me/2019/05/bones-animation-with-openglassimpglm/
+[Bones animation with OpenGL, ASSIMP and GLM](http://www.xphere.me/2019/05/bones-animation-with-openglassimpglm/)

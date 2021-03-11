@@ -294,11 +294,14 @@ pk::renderer::renderer(
     color_program = new pk::program(
         "assets/shaders/color.vs",
         "assets/shaders/color.fs");
-    geometry_object_program = new pk::program(
-        "assets/shaders/geometry_object.vs",
-        "assets/shaders/geometry_object.fs");
+    geometry_mesh_program = new pk::program(
+        "assets/shaders/geometry_mesh.vs",
+        "assets/shaders/geometry_mesh.fs");
+    geometry_skinned_mesh_program = new pk::program(
+        "assets/shaders/geometry_skinned_mesh.vs",
+        "assets/shaders/geometry_mesh.fs");
     geometry_terrain_program = new pk::program(
-        "assets/shaders/geometry_terrain.vs",
+        "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_terrain.fs");
     deferred_ambient_program = new pk::program(
         "assets/shaders/deferred.vs",
@@ -434,7 +437,8 @@ pk::renderer::~renderer()
     delete depth_program;
     delete depth_cube_program;
     delete color_program;
-    delete geometry_object_program;
+    delete geometry_mesh_program;
+    delete geometry_skinned_mesh_program;
     delete geometry_terrain_program;
     delete deferred_ambient_program;
     delete deferred_directional_program;
@@ -896,7 +900,8 @@ void pk::renderer::reload_programs()
     depth_program->reload();
     depth_cube_program->reload();
     color_program->reload();
-    geometry_object_program->reload();
+    geometry_mesh_program->reload();
+    geometry_skinned_mesh_program->reload();
     geometry_terrain_program->reload();
     deferred_ambient_program->reload();
     deferred_directional_program->reload();
@@ -913,16 +918,27 @@ void pk::renderer::reload_programs()
 
 void pk::renderer::setup_samplers()
 {
-    geometry_object_program->bind();
+    geometry_mesh_program->bind();
     {
-        geometry_object_program->set_int("material.albedo_map", 0);
-        geometry_object_program->set_int("material.normal_map", 1);
-        geometry_object_program->set_int("material.metallic_map", 2);
-        geometry_object_program->set_int("material.roughness_map", 3);
-        geometry_object_program->set_int("material.occlusion_map", 4);
-        geometry_object_program->set_int("material.height_map", 5);
+        geometry_mesh_program->set_int("material.albedo_map", 0);
+        geometry_mesh_program->set_int("material.normal_map", 1);
+        geometry_mesh_program->set_int("material.metallic_map", 2);
+        geometry_mesh_program->set_int("material.roughness_map", 3);
+        geometry_mesh_program->set_int("material.occlusion_map", 4);
+        geometry_mesh_program->set_int("material.height_map", 5);
     }
-    geometry_object_program->unbind();
+    geometry_mesh_program->unbind();
+
+    geometry_skinned_mesh_program->bind();
+    {
+        geometry_skinned_mesh_program->set_int("material.albedo_map", 0);
+        geometry_skinned_mesh_program->set_int("material.normal_map", 1);
+        geometry_skinned_mesh_program->set_int("material.metallic_map", 2);
+        geometry_skinned_mesh_program->set_int("material.roughness_map", 3);
+        geometry_skinned_mesh_program->set_int("material.occlusion_map", 4);
+        geometry_skinned_mesh_program->set_int("material.height_map", 5);
+    }
+    geometry_skinned_mesh_program->unbind();
 
     geometry_terrain_program->bind();
     {
@@ -1069,7 +1085,7 @@ void pk::renderer::render_shadows()
 
                     depth_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
 
-                    object->model->draw();
+                    object->model->draw_meshes(depth_program);
                 }
 
                 for (auto &terrain : terrains)
@@ -1078,7 +1094,7 @@ void pk::renderer::render_shadows()
 
                     depth_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
 
-                    terrain->mesh->draw();
+                    terrain->mesh->draw(depth_program);
                 }
             }
             depth_program->unbind();
@@ -1115,7 +1131,7 @@ void pk::renderer::render_shadows()
 
                     depth_cube_program->set_mat4("model", object_model);
 
-                    object->model->draw();
+                    object->model->draw_meshes(depth_cube_program);
                 }
 
                 for (auto &terrain : terrains)
@@ -1124,7 +1140,7 @@ void pk::renderer::render_shadows()
 
                     depth_cube_program->set_mat4("model", terrain_model);
 
-                    terrain->mesh->draw();
+                    terrain->mesh->draw(depth_cube_program);
                 }
             }
             depth_cube_program->unbind();
@@ -1153,7 +1169,7 @@ void pk::renderer::render_shadows()
 
                     depth_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
 
-                    object->model->draw();
+                    object->model->draw_meshes(depth_program);
                 }
 
                 for (auto &terrain : terrains)
@@ -1162,7 +1178,7 @@ void pk::renderer::render_shadows()
 
                     depth_program->set_mat4("mvp", spot_light->transformation_matrix * terrain_model);
 
-                    terrain->mesh->draw();
+                    terrain->mesh->draw(depth_program);
                 }
             }
             depth_program->unbind();
@@ -1189,24 +1205,37 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsi
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        geometry_object_program->bind();
+        for (auto &object : objects)
         {
-            geometry_object_program->set_vec4("clipping_plane", clipping_plane);
-            geometry_object_program->set_float("tiling", 1.0f);
-
-            for (auto &object : objects)
+            glm::mat4 object_model = object->calc_model();
+            if (object->model->has_animations())
             {
-                glm::mat4 object_model = object->calc_model();
                 std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
 
-                geometry_object_program->set_mat4("mvp", camera_projection * camera_view * object_model);
-                geometry_object_program->set_mat4_vector("bone_transformations", object_bone_transformations);
-                geometry_object_program->set_mat4("model", object_model);
+                geometry_skinned_mesh_program->bind();
+                {
+                    geometry_skinned_mesh_program->set_mat4("mvp", camera_projection * camera_view * object_model);
+                    geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
+                    geometry_skinned_mesh_program->set_mat4("model", object_model);
+                    geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
 
-                object->model->draw();
+                    object->model->draw_meshes(geometry_skinned_mesh_program);
+                }
+                geometry_skinned_mesh_program->unbind();
+            }
+            else
+            {
+                geometry_mesh_program->bind();
+                {
+                    geometry_mesh_program->set_mat4("mvp", camera_projection * camera_view * object_model);
+                    geometry_mesh_program->set_mat4("model", object_model);
+                    geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
+
+                    object->model->draw_meshes(geometry_mesh_program);
+                }
+                geometry_mesh_program->unbind();
             }
         }
-        geometry_object_program->unbind();
 
         geometry_terrain_program->bind();
         {
@@ -1220,7 +1249,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsi
                 geometry_terrain_program->set_mat4("mvp", camera_projection * camera_view * terrain_model);
                 geometry_terrain_program->set_mat4("model", terrain_model);
 
-                terrain->mesh->draw();
+                terrain->mesh->draw(geometry_terrain_program);
             }
         }
         geometry_terrain_program->unbind();
@@ -1490,7 +1519,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsi
                     color_program->set_vec4("clipping_plane", clipping_plane);
                     color_program->set_vec3("color", point_light->color);
 
-                    DEBUG_sphere_mesh->draw();
+                    DEBUG_sphere_mesh->draw(color_program);
                 }
                 color_program->unbind();
             }

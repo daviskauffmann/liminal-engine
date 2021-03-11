@@ -47,21 +47,77 @@ pk::mesh::~mesh()
     glDeleteBuffers(1, &ebo_id);
 }
 
-void pk::mesh::draw() const
+void pk::mesh::draw(pk::program *program) const
 {
     // TODO: support multiple textures per type in the shader?
+
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_DIFFUSE].size() > 0 ? textures[aiTextureType_DIFFUSE][0]->texture_id : 0 : 0);
+    if (textures.size() > 0 && textures[aiTextureType_DIFFUSE].size() > 0)
+    {
+        glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_DIFFUSE][0]->texture_id);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_NORMALS].size() > 0 ? textures[aiTextureType_NORMALS][0]->texture_id : 0 : 0);
+    if (textures.size() > 0 && textures[aiTextureType_NORMALS].size() > 0)
+    {
+        glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_NORMALS][0]->texture_id);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_SHININESS].size() > 0 ? textures[aiTextureType_SHININESS][0]->texture_id : 0 : 0);
+    if (textures.size() > 0 && textures[aiTextureType_SHININESS].size() > 0)
+    {
+        program->set_int("material.has_metallic_map", 1);
+        glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_SHININESS][0]->texture_id);
+    }
+    else
+    {
+        program->set_int("material.has_metallic_map", 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_OPACITY].size() > 0 ? textures[aiTextureType_OPACITY][0]->texture_id : 0 : 0);
+    if (textures.size() > 0 && textures[aiTextureType_OPACITY].size() > 0)
+    {
+        program->set_int("material.has_roughness_map", 1);
+        glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_OPACITY][0]->texture_id);
+    }
+    else
+    {
+        program->set_int("material.has_roughness_map", 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_AMBIENT].size() > 0 ? textures[aiTextureType_AMBIENT][0]->texture_id : 0 : 0);
+    if (textures.size() > 0 && textures[aiTextureType_AMBIENT].size() > 0)
+    {
+        program->set_int("material.has_occlusion_map", 1);
+        glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_AMBIENT][0]->texture_id);
+    }
+    else
+    {
+        program->set_int("material.has_occlusion_map", 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, textures.size() ? textures[aiTextureType_HEIGHT].size() > 0 ? textures[aiTextureType_HEIGHT][0]->texture_id : 0 : 0);
+    if (textures.size() > 0 && textures[aiTextureType_HEIGHT].size() > 0)
+    {
+        program->set_int("material.has_height_map", 1);
+        glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_HEIGHT][0]->texture_id);
+    }
+    else
+    {
+        program->set_int("material.has_height_map", 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 
     glBindVertexArray(vao_id);
     glDrawElements(GL_TRIANGLES, indices_size, GL_UNSIGNED_INT, nullptr);

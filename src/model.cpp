@@ -30,6 +30,7 @@ pk::model::model(const std::string &filename, bool flip_uvs)
 
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
     num_bones = 0;
+    animation_index = 0;
 
     process_node_meshes(scene->mRootNode, scene);
 }
@@ -47,31 +48,46 @@ pk::model::~model()
     }
 }
 
+bool pk::model::has_animations() const
+{
+    return scene->HasAnimations();
+}
+
+void pk::model::set_animation(unsigned int index)
+{
+    if (index >= 0 && index < scene->mNumAnimations)
+    {
+        animation_index = index;
+    }
+}
+
 std::vector<glm::mat4> pk::model::calc_bone_transformations(unsigned int current_time)
 {
-    glm::mat4 identity = glm::identity<glm::mat4>();
-
-    unsigned int animation_index = 0;
-    float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
-    float time_in_ticks = ticks_per_second * (current_time / 1000.0f);
-    float animation_time = fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
-
-    process_node_animations(animation_time, scene->mRootNode, identity);
-
     std::vector<glm::mat4> bone_transformations;
-    bone_transformations.resize(num_bones);
-    for (unsigned int i = 0; i < num_bones; i++)
+
+    if (scene->mNumAnimations > 0)
     {
-        bone_transformations[i] = bone_infos[i].transformation;
+        float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
+        float time_in_ticks = ticks_per_second * (current_time / 1000.0f);
+        float animation_time = fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
+
+        process_node_animations(animation_time, scene->mRootNode, glm::identity<glm::mat4>());
+
+        bone_transformations.resize(num_bones);
+        for (unsigned int i = 0; i < num_bones; i++)
+        {
+            bone_transformations[i] = bone_infos[i].transformation;
+        }
     }
+
     return bone_transformations;
 }
 
-void pk::model::draw() const
+void pk::model::draw_meshes(pk::program *program) const
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
-        meshes[i]->draw();
+        meshes[i]->draw(program);
     }
 }
 
@@ -100,44 +116,35 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
     {
         pk::vertex vertex;
 
-        vertex.position = glm::vec3(
-            scene_mesh->mVertices[i].x,
-            scene_mesh->mVertices[i].y,
-            scene_mesh->mVertices[i].z);
+        if (scene_mesh->HasPositions())
+        {
+            vertex.position = glm::vec3(
+                scene_mesh->mVertices[i].x,
+                scene_mesh->mVertices[i].y,
+                scene_mesh->mVertices[i].z);
+        }
 
-        if (scene_mesh->mNormals)
+        if (scene_mesh->HasNormals())
         {
             vertex.normal = glm::vec3(
                 scene_mesh->mNormals[i].x,
                 scene_mesh->mNormals[i].y,
                 scene_mesh->mNormals[i].z);
         }
-        else
-        {
-            vertex.normal = glm::vec3(1.0f, 1.0f, 1.0f);
-        }
 
-        if (scene_mesh->mTextureCoords[0])
+        if (scene_mesh->HasTextureCoords(0))
         {
             vertex.uv = glm::vec2(
                 scene_mesh->mTextureCoords[0][i].x,
                 scene_mesh->mTextureCoords[0][i].y);
         }
-        else
-        {
-            vertex.uv = glm::vec2(0.0f, 0.0f);
-        }
 
-        if (scene_mesh->mTangents)
+        if (scene_mesh->HasTangentsAndBitangents())
         {
             vertex.tangent = glm::vec3(
                 scene_mesh->mTangents[i].x,
                 scene_mesh->mTangents[i].y,
                 scene_mesh->mTangents[i].z);
-        }
-
-        if (scene_mesh->mBitangents)
-        {
             vertex.bitangent = glm::vec3(
                 scene_mesh->mBitangents[i].x,
                 scene_mesh->mBitangents[i].y,
@@ -154,68 +161,82 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
     }
 
     // process bones
-    for (unsigned int i = 0; i < scene_mesh->mNumBones; i++)
+    if (scene_mesh->HasBones())
     {
-        unsigned int bone_index = 0;
-        std::string bone_name(scene_mesh->mBones[i]->mName.data);
-
-        if (loaded_bone_indices.find(bone_name) == loaded_bone_indices.end())
+        for (unsigned int i = 0; i < scene_mesh->mNumBones; i++)
         {
-            bone_index = num_bones++;
-            loaded_bone_indices[bone_name] = bone_index;
+            unsigned int bone_index = 0;
+            std::string bone_name(scene_mesh->mBones[i]->mName.data);
 
-            bone_info bone_info;
-            bone_info.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
-            bone_infos.push_back(bone_info);
-        }
-        else
-        {
-            bone_index = loaded_bone_indices[bone_name];
-        }
+            if (bone_indices.find(bone_name) == bone_indices.end())
+            {
+                bone_index = num_bones++;
+                bone_indices[bone_name] = bone_index;
 
-        for (unsigned int j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
-        {
-            unsigned int vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
-            float weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
-            std::cout << vertex_id << " " << bone_index << " " << weight << std::endl;
-            vertices[vertex_id].add_bone_data(bone_index, weight);
+                bone_info bone_info;
+                bone_info.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
+                bone_infos.push_back(bone_info);
+            }
+            else
+            {
+                bone_index = bone_indices[bone_name];
+            }
+
+            for (unsigned int j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
+            {
+                unsigned int vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
+                float weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
+                vertices[vertex_id].add_bone_data(bone_index, weight);
+            }
         }
     }
 
     // process indices
-    for (unsigned int i = 0; i < scene_mesh->mNumFaces; i++)
+    if (scene_mesh->HasFaces())
     {
-        aiFace face = scene_mesh->mFaces[i];
-        for (unsigned int j = 0; j < face.mNumIndices; j++)
+        for (unsigned int i = 0; i < scene_mesh->mNumFaces; i++)
         {
-            indices.push_back(face.mIndices[j]);
+            aiFace face = scene_mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++)
+            {
+                indices.push_back(face.mIndices[j]);
+            }
         }
     }
 
     // process textures
-    aiMaterial *scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
-    for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
+    if (scene->HasMaterials())
     {
-        std::vector<pk::texture *> material_textures;
-
-        for (unsigned int i = 0; i < scene_material->GetTextureCount(type); i++)
+        aiMaterial *scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
+        for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
         {
-            aiString path;
-            scene_material->GetTexture(type, i, &path);
-            const std::string filename = directory + "/" + path.C_Str();
-            if (loaded_textures.find(filename) == loaded_textures.end())
-            {
-                pk::texture *texture = new pk::texture(filename);
-                material_textures.push_back(texture);
-                loaded_textures[filename] = texture;
-            }
-            else
-            {
-                material_textures.push_back(loaded_textures[filename]);
-            }
-        }
+            std::vector<pk::texture *> material_textures;
 
-        textures.push_back(material_textures);
+            for (unsigned int i = 0; i < scene_material->GetTextureCount(type); i++)
+            {
+                aiString path;
+                scene_material->GetTexture(type, i, &path);
+                std::string filename = directory + "/" + path.C_Str();
+                if (loaded_textures.find(filename) == loaded_textures.end())
+                {
+                    pk::texture *texture = new pk::texture(filename);
+                    material_textures.push_back(texture);
+                    loaded_textures[filename] = texture;
+                }
+                else
+                {
+                    material_textures.push_back(loaded_textures[filename]);
+                }
+            }
+
+            textures.push_back(material_textures);
+        }
+    }
+
+    // process animations
+    if (scene->HasAnimations())
+    {
+        // TODO: store animations in a map to prevent calls to `find_node_animation` every frame
     }
 
     return new pk::mesh(vertices, indices, textures);
@@ -223,10 +244,10 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
 
 void pk::model::process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
 {
-    unsigned int animation_index = 0;
-    const aiAnimation *scene_animation = scene->mAnimations[animation_index];
     std::string node_name(node->mName.data);
     glm::mat4 node_transformation = mat4_cast(node->mTransformation);
+
+    const aiAnimation *scene_animation = scene->mAnimations[animation_index];
     const aiNodeAnim *node_animation = find_node_animation(scene_animation, node_name);
     if (node_animation)
     {
@@ -250,9 +271,9 @@ void pk::model::process_node_animations(float animation_time, const aiNode *node
 
     glm::mat4 global_transformation = parent_transformation * node_transformation;
 
-    if (loaded_bone_indices.find(node_name) != loaded_bone_indices.end())
+    if (bone_indices.find(node_name) != bone_indices.end())
     {
-        unsigned int bone_index = loaded_bone_indices[node_name];
+        unsigned int bone_index = bone_indices[node_name];
         bone_infos[bone_index].transformation = global_inverse_transform * global_transformation * bone_infos[bone_index].offset;
     }
 

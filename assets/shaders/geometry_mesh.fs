@@ -16,9 +16,13 @@ uniform struct Material
 {
     sampler2D albedo_map;
     sampler2D normal_map;
+    bool has_metallic_map;
     sampler2D metallic_map;
+    bool has_roughness_map;
     sampler2D roughness_map;
+    bool has_occlusion_map;
     sampler2D occlusion_map;
+    bool has_height_map;
     sampler2D height_map;
 } material;
 
@@ -44,12 +48,8 @@ void main()
     position_map = vertex.position;
     normal_map = calc_normal();
     albedo_map = texture(material.albedo_map, vertex.uv).rgb;
-    // material_map.r = texture(material.metallic_map, vertex.uv).r;
-    // material_map.g = texture(material.roughness_map, vertex.uv).r;
-    // material_map.b = texture(material.occlusion_map, vertex.uv).r;
-    // material_map.a = texture(material.height_map, vertex.uv).r;
-    material_map.r = 0.0;
-    material_map.g = 1.0;
-    material_map.b = 1.0;
-    material_map.a = 0.0;
+    material_map.r = material.has_metallic_map ? texture(material.metallic_map, vertex.uv).r : 0.0;
+    material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : 1.0;
+    material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1.0;
+    material_map.a = material.has_height_map ? texture(material.height_map, vertex.uv).r : 0.0;
 }

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "mesh.hpp"
+#include "program.hpp"
 #include "texture.hpp"
 
 namespace pk
@@ -22,23 +23,29 @@ namespace pk
     struct model
     {
     public:
-        std::vector<pk::mesh *> meshes;
-
         model(const std::string &filename, bool flip_uvs = false);
         ~model();
 
+        bool has_animations() const;
+        unsigned int num_animations() const;
+        void set_animation(unsigned int index);
         std::vector<glm::mat4> calc_bone_transformations(unsigned int current_time);
 
-        void draw() const;
+        void draw_meshes(pk::program *program) const;
 
     private:
         std::string directory;
         Assimp::Importer importer;
         const aiScene *scene;
+
+        std::vector<pk::mesh *> meshes;
+
         glm::mat4 global_inverse_transform;
         unsigned int num_bones;
-        std::unordered_map<std::string, unsigned int> loaded_bone_indices;
+        std::unordered_map<std::string, unsigned int> bone_indices;
         std::vector<bone_info> bone_infos;
+        unsigned int animation_index;
+
         std::unordered_map<std::string, pk::texture *> loaded_textures;
 
         void process_node_meshes(const aiNode *node, const aiScene *scene);

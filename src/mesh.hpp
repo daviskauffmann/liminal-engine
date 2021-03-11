@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "texture.hpp"
+#include "program.hpp"
 #include "vertex.hpp"
 
 namespace pk
@@ -26,7 +27,7 @@ namespace pk
             std::vector<std::vector<pk::texture *>> textures);
         ~mesh();
 
-        void draw() const;
+        void draw(pk::program *program) const;
     };
 } // namespace pk
 
