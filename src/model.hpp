@@ -14,7 +14,7 @@
 
 namespace pk
 {
-    struct bone_info
+    struct bone
     {
         glm::mat4 offset;
         glm::mat4 transformation;
@@ -42,8 +42,8 @@ namespace pk
 
         glm::mat4 global_inverse_transform;
         unsigned int num_bones;
+        std::vector<bone> bones;
         std::unordered_map<std::string, unsigned int> bone_indices;
-        std::vector<bone_info> bone_infos;
         unsigned int animation_index;
 
         std::unordered_map<std::string, pk::texture *> loaded_textures;

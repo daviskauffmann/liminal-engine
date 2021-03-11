@@ -28,6 +28,6 @@ void main()
 	gl_ClipDistance[0] = dot(world_position, clipping_plane);
 
     vertex.position = world_position.xyz;
-    vertex.normal = mat3(transpose(inverse(model))) * normal;
-    vertex.uv = vec2(uv.x, uv.y) * tiling;
+    vertex.normal = (model * vec4(normal, 0.0)).xyz;
+    vertex.uv = uv * tiling;
 }

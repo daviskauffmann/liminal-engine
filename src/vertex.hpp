@@ -4,7 +4,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#define NUM_BONES_PER_VERTEX 4
+#define NUM_BONES_PER_VERTEX 10
 
 namespace pk
 {

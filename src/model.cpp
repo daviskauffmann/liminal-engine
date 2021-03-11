@@ -76,7 +76,7 @@ std::vector<glm::mat4> pk::model::calc_bone_transformations(unsigned int current
         bone_transformations.resize(num_bones);
         for (unsigned int i = 0; i < num_bones; i++)
         {
-            bone_transformations[i] = bone_infos[i].transformation;
+            bone_transformations[i] = bones[i].transformation;
         }
     }
 
@@ -118,37 +118,23 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
 
         if (scene_mesh->HasPositions())
         {
-            vertex.position = glm::vec3(
-                scene_mesh->mVertices[i].x,
-                scene_mesh->mVertices[i].y,
-                scene_mesh->mVertices[i].z);
+            vertex.position = vec3_cast(scene_mesh->mVertices[i]);
         }
 
         if (scene_mesh->HasNormals())
         {
-            vertex.normal = glm::vec3(
-                scene_mesh->mNormals[i].x,
-                scene_mesh->mNormals[i].y,
-                scene_mesh->mNormals[i].z);
+            vertex.normal = vec3_cast(scene_mesh->mNormals[i]);
         }
 
         if (scene_mesh->HasTextureCoords(0))
         {
-            vertex.uv = glm::vec2(
-                scene_mesh->mTextureCoords[0][i].x,
-                scene_mesh->mTextureCoords[0][i].y);
+            vertex.uv = vec2_cast(scene_mesh->mTextureCoords[0][i]);
         }
 
         if (scene_mesh->HasTangentsAndBitangents())
         {
-            vertex.tangent = glm::vec3(
-                scene_mesh->mTangents[i].x,
-                scene_mesh->mTangents[i].y,
-                scene_mesh->mTangents[i].z);
-            vertex.bitangent = glm::vec3(
-                scene_mesh->mBitangents[i].x,
-                scene_mesh->mBitangents[i].y,
-                scene_mesh->mBitangents[i].z);
+            vertex.tangent = vec3_cast(scene_mesh->mTangents[i]);
+            vertex.bitangent = vec3_cast(scene_mesh->mBitangents[i]);
         }
 
         for (unsigned int j = 0; j < NUM_BONES_PER_VERTEX; j++)
@@ -173,9 +159,9 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
                 bone_index = num_bones++;
                 bone_indices[bone_name] = bone_index;
 
-                bone_info bone_info;
-                bone_info.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
-                bone_infos.push_back(bone_info);
+                pk::bone bone;
+                bone.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
+                bones.push_back(bone);
             }
             else
             {
@@ -274,7 +260,7 @@ void pk::model::process_node_animations(float animation_time, const aiNode *node
     if (bone_indices.find(node_name) != bone_indices.end())
     {
         unsigned int bone_index = bone_indices[node_name];
-        bone_infos[bone_index].transformation = global_inverse_transform * global_transformation * bone_infos[bone_index].offset;
+        bones[bone_index].transformation = global_inverse_transform * global_transformation * bones[bone_index].offset;
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)

@@ -1,6 +1,6 @@
 #version 460 core
 
-#define NUM_BONES_PER_VERTEX 4
+#define NUM_BONES_PER_VERTEX 10
 #define MAX_BONE_TRANSFORMATIONS 100
 
 layout (location = 0) in vec3 position;
@@ -41,6 +41,6 @@ void main()
 	gl_ClipDistance[0] = dot(world_position, clipping_plane);
 
     vertex.position = world_position.xyz;
-    vertex.normal = mat3(transpose(inverse(model))) * normal;
-    vertex.uv = vec2(uv.x, uv.y) * tiling;
+    vertex.normal = (model * bone_transformation * vec4(normal, 0.0)).xyz;
+    vertex.uv = uv * tiling;
 }
