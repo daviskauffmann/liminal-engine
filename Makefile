@@ -31,7 +31,7 @@ SRC = \
 	src/texture.cpp \
 	src/vertex.cpp \
 	src/water.cpp
-TARGET = bin/pk
+TARGET = bin/liminal
 
 .PHONY: all
 all: $(TARGET)

@@ -26,7 +26,7 @@
 
 #define VERSION "v0.0.1"
 
-#define WINDOW_TITLE "Project Kilonova"
+#define WINDOW_TITLE "Liminal Engine"
 
 int main(int argc, char *argv[])
 {
@@ -134,11 +134,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    pk::renderer renderer(
+    liminal::renderer renderer(
         window_width, window_height, render_scale,
         window_width, window_height,
         window_width, window_height);
-    pk::audio audio;
+    liminal::audio audio;
 
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btCollisionDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
@@ -158,20 +158,20 @@ int main(int argc, char *argv[])
     });
     lua.script_file("assets/scripts/test.lua");
 
-    pk::camera *camera = new pk::camera(
+    liminal::camera *camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
         -90.0f,
         0.0f,
         45.0f);
 
-    // pk::skybox *skybox = nullptr;
-    // pk::skybox *skybox = new pk::skybox("assets/images/Circus_Backstage_8k.jpg");
-    pk::skybox *skybox = new pk::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    // liminal::skybox *skybox = nullptr;
+    // liminal::skybox *skybox = new liminal::skybox("assets/images/Circus_Backstage_8k.jpg");
+    liminal::skybox *skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
 
-    // pk::model *model = new pk::model("assets/models/cube/cube.obj");
-    pk::model *model = new pk::model("assets/models/backpack/backpack.obj");
-    pk::object *object = new pk::object(
+    // liminal::model *model = new liminal::model("assets/models/cube/cube.obj");
+    liminal::model *model = new liminal::model("assets/models/backpack/backpack.obj");
+    liminal::object *object = new liminal::object(
         model,
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -179,9 +179,9 @@ int main(int argc, char *argv[])
         1.0f);
     // world->addRigidBody(object->rigidbody);
 
-    pk::model *animated_model = new pk::model("assets/models/boblampclean/boblampclean.md5mesh", true);
+    liminal::model *animated_model = new liminal::model("assets/models/boblampclean/boblampclean.md5mesh", true);
     animated_model->set_animation(0);
-    pk::object *animated_object = new pk::object(
+    liminal::object *animated_object = new liminal::object(
         animated_model,
         glm::vec3(5.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, -1.57f, 0.0f),
@@ -189,9 +189,9 @@ int main(int argc, char *argv[])
         1.0f);
     // world->addRigidBody(animated_object->rigidbody);
 
-    pk::model *animated_model2 = new pk::model("assets/models/dude/model.dae", true);
+    liminal::model *animated_model2 = new liminal::model("assets/models/dude/model.dae", true);
     animated_model2->set_animation(0);
-    pk::object *animated_object2 = new pk::object(
+    liminal::object *animated_object2 = new liminal::object(
         animated_model2,
         glm::vec3(-5.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, -1.57f, 0.0f),
@@ -200,31 +200,31 @@ int main(int argc, char *argv[])
     // world->addRigidBody(animated_object2->rigidbody);
 
     const float sun_intensity = 10.0f;
-    pk::directional_light *sun = new pk::directional_light(
+    liminal::directional_light *sun = new liminal::directional_light(
         glm::vec3(0.352286f, -0.547564f, -0.758992f),
         glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
         4096);
 
     const float light_intensity = 10.0f;
-    pk::point_light *red_light = new pk::point_light(
+    liminal::point_light *red_light = new liminal::point_light(
         glm::vec3(2.0f, 0.0f, 2.0f),
         glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity,
         512);
-    pk::point_light *yellow_light = new pk::point_light(
+    liminal::point_light *yellow_light = new liminal::point_light(
         glm::vec3(-2.0f, 0.0f, -2.0f),
         glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity,
         512);
-    pk::point_light *green_light = new pk::point_light(
+    liminal::point_light *green_light = new liminal::point_light(
         glm::vec3(2.0f, 0.0f, -2.0f),
         glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity,
         512);
-    pk::point_light *blue_light = new pk::point_light(
+    liminal::point_light *blue_light = new liminal::point_light(
         glm::vec3(-2.0f, 0.0f, 2.0f),
         glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity,
         512);
 
     const float flashlight_intensity = 20.0f;
-    pk::spot_light *flashlight = new pk::spot_light(
+    liminal::spot_light *flashlight = new liminal::spot_light(
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
@@ -232,23 +232,23 @@ int main(int argc, char *argv[])
         cosf(glm::radians(15.0f)),
         1024);
 
-    pk::water *water = new pk::water(
+    liminal::water *water = new liminal::water(
         glm::vec3(0.0f, -2.0f, 0.0f),
         glm::vec2(100.0f, 100.0f));
 
-    pk::terrain *terrain = new pk::terrain(glm::vec3(400.0f, 0.0f, 400.0f), "assets/images/heightmap.png");
+    liminal::terrain *terrain = new liminal::terrain(glm::vec3(400.0f, 0.0f, 400.0f), "assets/images/heightmap.png");
     // world->addRigidBody(terrain->rigidbody);
 
-    pk::sound *ambient_sound = new pk::sound("assets/audio/ambient.wav");
-    pk::sound *bounce_sound = new pk::sound("assets/audio/bounce.wav");
-    pk::sound *shoot_sound = new pk::sound("assets/audio/shoot.wav");
+    liminal::sound *ambient_sound = new liminal::sound("assets/audio/ambient.wav");
+    liminal::sound *bounce_sound = new liminal::sound("assets/audio/bounce.wav");
+    liminal::sound *shoot_sound = new liminal::sound("assets/audio/shoot.wav");
 
-    pk::source *ambient_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    liminal::source *ambient_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
     ambient_source->set_loop(true);
     ambient_source->set_gain(0.25f);
     // ambient_source->play(ambient_sound);
-    pk::source *bounce_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
-    pk::source *shoot_source = new pk::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    liminal::source *bounce_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    liminal::source *shoot_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;

@@ -4,7 +4,7 @@
 #include <AL/alc.h>
 #include <glm/vec3.hpp>
 
-namespace pk
+namespace liminal
 {
     class audio
     {
@@ -19,6 +19,6 @@ namespace pk
         ALCcontext *context;
         mutable glm::vec3 position;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

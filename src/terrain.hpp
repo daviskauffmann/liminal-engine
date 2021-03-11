@@ -8,7 +8,7 @@
 
 #include "mesh.hpp"
 
-namespace pk
+namespace liminal
 {
     struct terrain
     {
@@ -16,7 +16,7 @@ namespace pk
         static float height_scale;
 
         glm::vec3 position;
-        pk::mesh *mesh;
+        liminal::mesh *mesh;
         btRigidBody *rigidbody;
 
         terrain(glm::vec3 position, const std::string &heightmap_filename);
@@ -31,6 +31,6 @@ namespace pk
 
         float get_height(SDL_Surface *surface, int x, int z) const;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

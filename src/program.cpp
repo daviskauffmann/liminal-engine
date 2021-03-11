@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stb_include.h>
 
-pk::program::program(
+liminal::program::program(
     const std::string &vertex_filename,
     const std::string &geometry_filename,
     const std::string &fragment_filename)
@@ -16,19 +16,19 @@ pk::program::program(
     program_id = create_program();
 }
 
-pk::program::program(
+liminal::program::program(
     const std::string &vertex_filename,
     const std::string &fragment_filename)
     : program(vertex_filename, "", fragment_filename)
 {
 }
 
-pk::program::~program()
+liminal::program::~program()
 {
     glDeleteProgram(program_id);
 }
 
-void pk::program::reload()
+void liminal::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
     // would need some way to update texture samplers, but only the renderer knows that information right now
@@ -40,52 +40,52 @@ void pk::program::reload()
     }
 }
 
-void pk::program::bind() const
+void liminal::program::bind() const
 {
     glUseProgram(program_id);
 }
 
-void pk::program::unbind(void) const
+void liminal::program::unbind(void) const
 {
     glUseProgram(0);
 }
 
-void pk::program::set_int(const std::string &name, GLint value) const
+void liminal::program::set_int(const std::string &name, GLint value) const
 {
     glUniform1i(get_location(name), value);
 }
 
-void pk::program::set_unsigned_int(const std::string &name, GLuint value) const
+void liminal::program::set_unsigned_int(const std::string &name, GLuint value) const
 {
     glUniform1ui(get_location(name), value);
 }
 
-void pk::program::set_float(const std::string &name, GLfloat value) const
+void liminal::program::set_float(const std::string &name, GLfloat value) const
 {
     glUniform1f(get_location(name), value);
 }
 
-void pk::program::set_vec3(const std::string &name, glm::vec3 vec3) const
+void liminal::program::set_vec3(const std::string &name, glm::vec3 vec3) const
 {
     glUniform3fv(get_location(name), 1, glm::value_ptr(vec3));
 }
 
-void pk::program::set_vec4(const std::string &name, glm::vec4 vec4) const
+void liminal::program::set_vec4(const std::string &name, glm::vec4 vec4) const
 {
     glUniform4fv(get_location(name), 1, glm::value_ptr(vec4));
 }
 
-void pk::program::set_mat4(const std::string &name, glm::mat4 mat4) const
+void liminal::program::set_mat4(const std::string &name, glm::mat4 mat4) const
 {
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
-void pk::program::set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const
+void liminal::program::set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const
 {
     glUniformMatrix4fv(get_location(name), mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
 }
 
-GLuint pk::program::create_program() const
+GLuint liminal::program::create_program() const
 {
     GLuint program_id = glCreateProgram();
 
@@ -163,7 +163,7 @@ GLuint pk::program::create_program() const
     return program_id;
 }
 
-GLuint pk::program::create_shader(GLenum type, const std::string &filename) const
+GLuint liminal::program::create_shader(GLenum type, const std::string &filename) const
 {
     GLuint shader_id = glCreateShader(type);
 
@@ -201,7 +201,7 @@ GLuint pk::program::create_shader(GLenum type, const std::string &filename) cons
     return shader_id;
 }
 
-GLint pk::program::get_location(const std::string &name) const
+GLint liminal::program::get_location(const std::string &name) const
 {
     GLint location;
     if (uniforms.find(name) == uniforms.end())

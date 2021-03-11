@@ -3,7 +3,7 @@
 #include <iostream>
 #include <SDL2/SDL_mixer.h>
 
-pk::sound::sound(const std::string &filename)
+liminal::sound::sound(const std::string &filename)
 {
     Mix_Chunk *chunk = Mix_LoadWAV(filename.c_str());
     if (!chunk)
@@ -23,7 +23,7 @@ pk::sound::sound(const std::string &filename)
     Mix_FreeChunk(chunk);
 }
 
-pk::sound::~sound()
+liminal::sound::~sound()
 {
     alDeleteBuffers(1, &buffer_id);
 }

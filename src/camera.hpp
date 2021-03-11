@@ -4,7 +4,7 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
-namespace pk
+namespace liminal
 {
     struct camera
     {
@@ -29,6 +29,6 @@ namespace pk
         glm::mat4 calc_projection(float aspect) const;
         glm::mat4 calc_view() const;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

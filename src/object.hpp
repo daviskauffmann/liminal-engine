@@ -7,15 +7,15 @@
 
 #include "model.hpp"
 
-namespace pk
+namespace liminal
 {
     struct object
     {
-        pk::model *model;
+        liminal::model *model;
         btRigidBody *rigidbody;
 
         object(
-            pk::model *model,
+            liminal::model *model,
             glm::vec3 position,
             glm::vec3 rotation,
             glm::vec3 scale,
@@ -29,6 +29,6 @@ namespace pk
         btDefaultMotionState *motion_state;
         btCollisionShape *collision_shape;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

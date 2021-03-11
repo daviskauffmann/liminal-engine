@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace pk
+namespace liminal
 {
     class program
     {
@@ -48,6 +48,6 @@ namespace pk
 
         GLint get_location(const std::string &name) const;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

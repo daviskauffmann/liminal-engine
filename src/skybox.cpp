@@ -12,7 +12,7 @@ constexpr GLsizei environment_size = 4096;
 constexpr GLsizei irradiance_size = 32;
 constexpr GLsizei prefilter_size = 128;
 
-pk::skybox::skybox(const std::string &filename)
+liminal::skybox::skybox(const std::string &filename)
 {
     this->environment_cubemap_id = 0;
     this->irradiance_cubemap_id = 0;
@@ -20,14 +20,14 @@ pk::skybox::skybox(const std::string &filename)
     set_cubemap(filename);
 }
 
-pk::skybox::~skybox()
+liminal::skybox::~skybox()
 {
     glDeleteTextures(1, &environment_cubemap_id);
     glDeleteTextures(1, &irradiance_cubemap_id);
     glDeleteTextures(1, &prefilter_cubemap_id);
 }
 
-void pk::skybox::set_cubemap(const std::string &filename)
+void liminal::skybox::set_cubemap(const std::string &filename)
 {
     glDeleteTextures(1, &environment_cubemap_id);
     glDeleteTextures(1, &irradiance_cubemap_id);
@@ -195,7 +195,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    pk::program *equirectangular_to_cubemap_program = new pk::program(
+    liminal::program *equirectangular_to_cubemap_program = new liminal::program(
         "assets/shaders/cubemap.vs",
         "assets/shaders/equirectangular_to_cubemap.fs");
 
@@ -282,7 +282,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    pk::program *irradiance_convolution_program = new pk::program(
+    liminal::program *irradiance_convolution_program = new liminal::program(
         "assets/shaders/cubemap.vs",
         "assets/shaders/irradiance_convolution.fs");
 
@@ -348,7 +348,7 @@ void pk::skybox::set_cubemap(const std::string &filename)
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    pk::program *prefilter_convolution_program = new pk::program(
+    liminal::program *prefilter_convolution_program = new liminal::program(
         "assets/shaders/cubemap.vs",
         "assets/shaders/prefilter_convolution.fs");
 

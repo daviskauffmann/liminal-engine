@@ -16,7 +16,7 @@
 
 // TODO: print more specific errors when framebuffers fail
 
-pk::renderer::renderer(
+liminal::renderer::renderer(
     GLsizei display_width, GLsizei display_height, float render_scale,
     GLsizei reflection_width, GLsizei reflection_height,
     GLsizei refraction_width, GLsizei refraction_height)
@@ -257,7 +257,7 @@ pk::renderer::renderer(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        pk::program *brdf_program = new pk::program(
+        liminal::program *brdf_program = new liminal::program(
             "assets/shaders/brdf.vs",
             "assets/shaders/brdf.fs");
 
@@ -284,63 +284,63 @@ pk::renderer::renderer(
     }
 
     // create shader programs
-    depth_program = new pk::program(
+    depth_program = new liminal::program(
         "assets/shaders/depth.vs",
         "assets/shaders/depth.fs");
-    depth_cube_program = new pk::program(
+    depth_cube_program = new liminal::program(
         "assets/shaders/depth_cube.vs",
         "assets/shaders/depth_cube.gs",
         "assets/shaders/depth_cube.fs");
-    color_program = new pk::program(
+    color_program = new liminal::program(
         "assets/shaders/color.vs",
         "assets/shaders/color.fs");
-    geometry_mesh_program = new pk::program(
+    geometry_mesh_program = new liminal::program(
         "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_mesh.fs");
-    geometry_skinned_mesh_program = new pk::program(
+    geometry_skinned_mesh_program = new liminal::program(
         "assets/shaders/geometry_skinned_mesh.vs",
         "assets/shaders/geometry_mesh.fs");
-    geometry_terrain_program = new pk::program(
+    geometry_terrain_program = new liminal::program(
         "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_terrain.fs");
-    deferred_ambient_program = new pk::program(
+    deferred_ambient_program = new liminal::program(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_ambient.fs");
-    deferred_directional_program = new pk::program(
+    deferred_directional_program = new liminal::program(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_directional.fs");
-    deferred_point_program = new pk::program(
+    deferred_point_program = new liminal::program(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_point.fs");
-    deferred_spot_program = new pk::program(
+    deferred_spot_program = new liminal::program(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_spot.fs");
-    skybox_program = new pk::program(
+    skybox_program = new liminal::program(
         "assets/shaders/skybox.vs",
         "assets/shaders/skybox.fs");
-    water_program = new pk::program(
+    water_program = new liminal::program(
         "assets/shaders/water.vs",
         "assets/shaders/water.fs");
-    sprite_program = new pk::program(
+    sprite_program = new liminal::program(
         "assets/shaders/sprite.vs",
         "assets/shaders/sprite.fs");
-    gaussian_program = new pk::program(
+    gaussian_program = new liminal::program(
         "assets/shaders/gaussian.vs",
         "assets/shaders/gaussian.fs");
-    screen_program = new pk::program(
+    screen_program = new liminal::program(
         "assets/shaders/screen.vs",
         "assets/shaders/screen.fs");
 
     setup_samplers();
 
     // create water textures
-    water_dudv_texture = new pk::texture("assets/images/water_dudv.png");
-    water_normal_texture = new pk::texture("assets/images/water_normal.png");
+    water_dudv_texture = new liminal::texture("assets/images/water_dudv.png");
+    water_normal_texture = new liminal::texture("assets/images/water_normal.png");
 
     // DEBUG: create sphere mesh
     // http://www.songho.ca/opengl/gl_sphere.html
     {
-        std::vector<pk::vertex> vertices;
+        std::vector<liminal::vertex> vertices;
         int radius = 1;
         int stack_count = 36;
         int sector_count = 18;
@@ -355,7 +355,7 @@ pk::renderer::renderer(
             for (int j = 0; j <= sector_count; j++)
             {
                 float sector_angle = j * sector_step;
-                pk::vertex vertex;
+                liminal::vertex vertex;
                 vertex.position.x = xy * cosf(sector_angle);
                 vertex.position.y = xy * sinf(sector_angle);
                 vertex.position.z = z;
@@ -390,13 +390,13 @@ pk::renderer::renderer(
             }
         }
 
-        std::vector<std::vector<pk::texture *>> textures;
+        std::vector<std::vector<liminal::texture *>> textures;
 
-        DEBUG_sphere_mesh = new pk::mesh(vertices, indices, textures);
+        DEBUG_sphere_mesh = new liminal::mesh(vertices, indices, textures);
     }
 }
 
-pk::renderer::~renderer()
+liminal::renderer::~renderer()
 {
     glDeleteFramebuffers(1, &geometry_fbo_id);
     glDeleteTextures(1, &geometry_position_texture_id);
@@ -456,7 +456,7 @@ pk::renderer::~renderer()
     delete DEBUG_sphere_mesh;
 }
 
-void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale)
+void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale)
 {
     this->display_width = display_width;
     this->display_height = display_height;
@@ -749,7 +749,7 @@ void pk::renderer::set_screen_size(GLsizei display_width, GLsizei display_height
     }
 }
 
-void pk::renderer::set_reflection_size(GLsizei reflection_width, GLsizei reflection_height)
+void liminal::renderer::set_reflection_size(GLsizei reflection_width, GLsizei reflection_height)
 {
     this->reflection_width = reflection_width;
     this->reflection_height = reflection_height;
@@ -817,7 +817,7 @@ void pk::renderer::set_reflection_size(GLsizei reflection_width, GLsizei reflect
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void pk::renderer::set_refraction_size(GLsizei refraction_width, GLsizei refraction_height)
+void liminal::renderer::set_refraction_size(GLsizei refraction_width, GLsizei refraction_height)
 {
     this->refraction_width = refraction_width;
     this->refraction_height = refraction_height;
@@ -895,7 +895,7 @@ void pk::renderer::set_refraction_size(GLsizei refraction_width, GLsizei refract
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void pk::renderer::reload_programs()
+void liminal::renderer::reload_programs()
 {
     depth_program->reload();
     depth_cube_program->reload();
@@ -916,7 +916,7 @@ void pk::renderer::reload_programs()
     setup_samplers();
 }
 
-void pk::renderer::setup_samplers()
+void liminal::renderer::setup_samplers()
 {
     geometry_mesh_program->bind();
     {
@@ -1029,7 +1029,7 @@ void pk::renderer::setup_samplers()
     screen_program->unbind();
 }
 
-void pk::renderer::flush(unsigned int current_time, float delta_time)
+void liminal::renderer::flush(unsigned int current_time, float delta_time)
 {
     if (!camera)
     {
@@ -1064,7 +1064,7 @@ void pk::renderer::flush(unsigned int current_time, float delta_time)
     sprites.clear();
 }
 
-void pk::renderer::render_shadows()
+void liminal::renderer::render_shadows()
 {
     for (auto &directional_light : directional_lights)
     {
@@ -1189,7 +1189,7 @@ void pk::renderer::render_shadows()
     }
 }
 
-void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
+void liminal::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
 {
     // camera
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
@@ -1532,7 +1532,7 @@ void pk::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsi
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void pk::renderer::render_waters(unsigned int current_time)
+void liminal::renderer::render_waters(unsigned int current_time)
 {
     for (auto &water : waters)
     {
@@ -1627,7 +1627,7 @@ void pk::renderer::render_waters(unsigned int current_time)
     }
 }
 
-void pk::renderer::render_sprites()
+void liminal::renderer::render_sprites()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
     {
@@ -1659,7 +1659,7 @@ void pk::renderer::render_sprites()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void pk::renderer::render_screen()
+void liminal::renderer::render_screen()
 {
     // apply gaussian blur to brightness map
     bool horizontal = true;

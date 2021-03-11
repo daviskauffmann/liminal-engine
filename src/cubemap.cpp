@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-pk::cubemap::cubemap(std::vector<std::string> filenames)
+liminal::cubemap::cubemap(std::vector<std::string> filenames)
 {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
@@ -41,7 +41,7 @@ pk::cubemap::cubemap(std::vector<std::string> filenames)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-pk::cubemap::~cubemap()
+liminal::cubemap::~cubemap()
 {
     glDeleteTextures(1, &texture_id);
 }

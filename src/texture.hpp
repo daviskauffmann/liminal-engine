@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include <string>
 
-namespace pk
+namespace liminal
 {
     struct texture
     {
@@ -15,6 +15,6 @@ namespace pk
 
         void bind(unsigned int index) const;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

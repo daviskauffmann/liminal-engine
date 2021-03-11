@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace pk
+namespace liminal
 {
     struct cubemap
     {
@@ -14,6 +14,6 @@ namespace pk
         cubemap(std::vector<std::string> filenames);
         ~cubemap();
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

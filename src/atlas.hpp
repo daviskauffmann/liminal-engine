@@ -6,9 +6,9 @@
 
 #include "texture.hpp"
 
-namespace pk
+namespace liminal
 {
-	class atlas : public pk::texture
+	class atlas : public liminal::texture
 	{
 	public:
 		atlas(const std::string &filename, GLuint size, GLuint texture_size);
@@ -19,6 +19,6 @@ namespace pk
 		GLuint size;
 		GLuint texture_size;
 	};
-} // namespace pk
+} // namespace liminal
 
 #endif

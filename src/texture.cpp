@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-pk::texture::texture(const std::string &filename, bool srgb)
+liminal::texture::texture(const std::string &filename, bool srgb)
 {
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
@@ -55,12 +55,12 @@ pk::texture::texture(const std::string &filename, bool srgb)
     SDL_FreeSurface(surface);
 }
 
-pk::texture::~texture()
+liminal::texture::~texture()
 {
     glDeleteTextures(1, &texture_id);
 }
 
-void pk::texture::bind(unsigned int index) const
+void liminal::texture::bind(unsigned int index) const
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, texture_id);

@@ -1,4 +1,4 @@
-# Project Kilonova
+# Liminal Engine
 
 ## Getting Started
 
@@ -26,8 +26,8 @@ These dependencies are included as submodules:
 ### Download
 
 ```sh
-git clone https://github.com/daviskauffmann/project-kilonova.git
-cd project-kilonova
+git clone https://github.com/daviskauffmann/liminal-engine.git
+cd liminal-engine
 git submodule update --init
 ```
 

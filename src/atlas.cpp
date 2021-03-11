@@ -1,13 +1,13 @@
 #include "atlas.hpp"
 
-pk::atlas::atlas(const std::string &filename, GLuint size, GLuint texture_size)
+liminal::atlas::atlas(const std::string &filename, GLuint size, GLuint texture_size)
     : texture(filename),
       size(size),
       texture_size(texture_size)
 {
 }
 
-std::vector<GLfloat> pk::atlas::get_texture_coords(const glm::vec2 &location)
+std::vector<GLfloat> liminal::atlas::get_texture_coords(const glm::vec2 &location)
 {
     static auto textures_per_row = size / texture_size;
     static auto unit_size = 1.0f / (float)textures_per_row;

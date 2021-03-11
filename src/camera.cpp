@@ -2,10 +2,10 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-float pk::camera::near_plane = 0.1f;
-float pk::camera::far_plane = 1000.0f;
+float liminal::camera::near_plane = 0.1f;
+float liminal::camera::far_plane = 1000.0f;
 
-pk::camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float fov)
+liminal::camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float fov)
     : position(position),
       pitch(pitch),
       yaw(yaw),
@@ -14,7 +14,7 @@ pk::camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float
 {
 }
 
-glm::vec3 pk::camera::calc_front() const
+glm::vec3 liminal::camera::calc_front() const
 {
     glm::vec3 front(
         cosf(glm::radians(yaw)) * cosf(glm::radians(pitch)),
@@ -23,20 +23,20 @@ glm::vec3 pk::camera::calc_front() const
     return glm::normalize(front);
 }
 
-glm::vec3 pk::camera::calc_right() const
+glm::vec3 liminal::camera::calc_right() const
 {
     glm::vec3 front = calc_front();
     glm::vec3 right = glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f));
     return glm::normalize(right);
 }
 
-glm::mat4 pk::camera::calc_projection(float aspect) const
+glm::mat4 liminal::camera::calc_projection(float aspect) const
 {
     glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, near_plane, far_plane);
     return projection;
 }
 
-glm::mat4 pk::camera::calc_view() const
+glm::mat4 liminal::camera::calc_view() const
 {
     glm::vec3 front = calc_front();
     glm::vec3 target = position + front;

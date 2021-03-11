@@ -5,7 +5,7 @@
 #include <glm/vec3.hpp>
 #include <GL/glew.h>
 
-namespace pk
+namespace liminal
 {
     struct directional_light
     {
@@ -30,6 +30,6 @@ namespace pk
 
         void update_transformation_matrix(glm::vec3 center);
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

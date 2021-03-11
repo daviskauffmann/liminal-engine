@@ -6,7 +6,7 @@
 
 #define NUM_BONES_PER_VERTEX 10
 
-namespace pk
+namespace liminal
 {
     struct vertex
     {
@@ -20,6 +20,6 @@ namespace pk
 
         void add_bone_data(unsigned int id, float weight);
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void pk::vertex::add_bone_data(unsigned int id, float weight)
+void liminal::vertex::add_bone_data(unsigned int id, float weight)
 {
     for (unsigned int i = 0; i < NUM_BONES_PER_VERTEX; i++)
     {

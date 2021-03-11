@@ -5,7 +5,7 @@
 #include <glm/vec3.hpp>
 #include <GL/glew.h>
 
-namespace pk
+namespace liminal
 {
     struct spot_light
     {
@@ -35,6 +35,6 @@ namespace pk
 
         void update_transformation_matrix();
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

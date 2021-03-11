@@ -10,7 +10,7 @@
 #include "program.hpp"
 #include "vertex.hpp"
 
-namespace pk
+namespace liminal
 {
     struct mesh
     {
@@ -19,16 +19,16 @@ namespace pk
         GLuint vao_id;
         GLuint vbo_id;
         GLuint ebo_id;
-        std::vector<std::vector<pk::texture *>> textures;
+        std::vector<std::vector<liminal::texture *>> textures;
 
         mesh(
-            std::vector<pk::vertex> vertices,
+            std::vector<liminal::vertex> vertices,
             std::vector<unsigned int> indices,
-            std::vector<std::vector<pk::texture *>> textures);
+            std::vector<std::vector<liminal::texture *>> textures);
         ~mesh();
 
-        void draw(pk::program *program) const;
+        void draw(liminal::program *program) const;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

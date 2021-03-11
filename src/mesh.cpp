@@ -2,11 +2,11 @@
 
 #include <assimp/scene.h>
 
-pk::mesh::mesh(
-    std::vector<pk::vertex> vertices,
+liminal::mesh::mesh(
+    std::vector<liminal::vertex> vertices,
     std::vector<GLuint> indices,
-    std::vector<std::vector<pk::texture *>> textures)
-    : vertices_size((GLsizei)(vertices.size() * sizeof(pk::vertex))),
+    std::vector<std::vector<liminal::texture *>> textures)
+    : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)
 {
@@ -21,13 +21,13 @@ pk::mesh::mesh(
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_id);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, position));
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, normal));
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, uv));
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, tangent));
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, bitangent));
-        glVertexAttribIPointer(5, 4, GL_INT, sizeof(pk::vertex), (void *)offsetof(pk::vertex, bone_ids));
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(pk::vertex), (void *)offsetof(pk::vertex, bone_weights));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, position));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, normal));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, uv));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, tangent));
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bitangent));
+        glVertexAttribIPointer(5, 4, GL_INT, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bone_ids));
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bone_weights));
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -40,14 +40,14 @@ pk::mesh::mesh(
     glBindVertexArray(0);
 }
 
-pk::mesh::~mesh()
+liminal::mesh::~mesh()
 {
     glDeleteVertexArrays(1, &vao_id);
     glDeleteBuffers(1, &vbo_id);
     glDeleteBuffers(1, &ebo_id);
 }
 
-void pk::mesh::draw(pk::program *program) const
+void liminal::mesh::draw(liminal::program *program) const
 {
     // TODO: support multiple textures per type in the shader?
 

@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include <string>
 
-namespace pk
+namespace liminal
 {
     struct skybox
     {
@@ -17,6 +17,6 @@ namespace pk
 
         void set_cubemap(const std::string &filename);
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

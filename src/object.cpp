@@ -2,8 +2,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-pk::object::object(
-    pk::model *model,
+liminal::object::object(
+    liminal::model *model,
     glm::vec3 position,
     glm::vec3 rotation,
     glm::vec3 scale,
@@ -28,13 +28,13 @@ pk::object::object(
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(mass, motion_state, collision_shape, local_intertia));
 }
 
-pk::object::~object()
+liminal::object::~object()
 {
     delete motion_state;
     delete collision_shape;
 }
 
-glm::mat4 pk::object::calc_model() const
+glm::mat4 liminal::object::calc_model() const
 {
     glm::mat4 model = glm::identity<glm::mat4>();
     btTransform transform = rigidbody->getWorldTransform();

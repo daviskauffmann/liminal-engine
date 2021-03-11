@@ -4,7 +4,7 @@
 #include <AL/al.h>
 #include <string>
 
-namespace pk
+namespace liminal
 {
     struct sound
     {
@@ -13,6 +13,6 @@ namespace pk
         sound(const std::string &filename);
         ~sound();
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

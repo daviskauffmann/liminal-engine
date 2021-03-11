@@ -6,7 +6,7 @@
 
 // TODO: error strings
 
-pk::audio::audio()
+liminal::audio::audio()
 {
     device = alcOpenDevice(nullptr);
     if (!device)
@@ -29,7 +29,7 @@ pk::audio::audio()
     }
 }
 
-pk::audio::~audio()
+liminal::audio::~audio()
 {
     alcMakeContextCurrent(nullptr);
 
@@ -38,7 +38,7 @@ pk::audio::~audio()
     alcCloseDevice(device);
 }
 
-void pk::audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const
+void liminal::audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const
 {
     alListenerfv(AL_POSITION, glm::value_ptr(position));
 

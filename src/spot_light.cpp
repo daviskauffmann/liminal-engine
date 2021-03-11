@@ -3,10 +3,10 @@
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
-float pk::spot_light::near_plane = 0.1f;
-float pk::spot_light::far_plane = 10.0f;
+float liminal::spot_light::near_plane = 0.1f;
+float liminal::spot_light::far_plane = 10.0f;
 
-pk::spot_light::spot_light(
+liminal::spot_light::spot_light(
     glm::vec3 position,
     glm::vec3 direction,
     glm::vec3 color,
@@ -24,13 +24,13 @@ pk::spot_light::spot_light(
     set_depth_map_size(depth_map_size);
 }
 
-pk::spot_light::~spot_light()
+liminal::spot_light::~spot_light()
 {
     glDeleteFramebuffers(1, &depth_map_fbo_id);
     glDeleteTextures(1, &depth_map_texture_id);
 }
 
-void pk::spot_light::set_depth_map_size(GLsizei depth_map_size)
+void liminal::spot_light::set_depth_map_size(GLsizei depth_map_size)
 {
     this->depth_map_size = depth_map_size;
 
@@ -83,7 +83,7 @@ void pk::spot_light::set_depth_map_size(GLsizei depth_map_size)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void pk::spot_light::update_transformation_matrix()
+void liminal::spot_light::update_transformation_matrix()
 {
     glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane);
 

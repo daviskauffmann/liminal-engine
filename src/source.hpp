@@ -5,7 +5,7 @@
 
 #include "sound.hpp"
 
-namespace pk
+namespace liminal
 {
     class source
     {
@@ -18,7 +18,7 @@ namespace pk
         void set_pitch(float pitch) const;
         void set_position(glm::vec3 position) const;
         bool is_playing() const;
-        void play(pk::sound *sound) const;
+        void play(liminal::sound *sound) const;
         void pause() const;
         void resume() const;
         void stop() const;
@@ -27,6 +27,6 @@ namespace pk
         ALuint source_id;
         mutable glm::vec3 position;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

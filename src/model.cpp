@@ -12,7 +12,7 @@ static inline glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w,
 static inline glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
-pk::model::model(const std::string &filename, bool flip_uvs)
+liminal::model::model(const std::string &filename, bool flip_uvs)
     : directory(filename.substr(0, filename.find_last_of('/')))
 {
     unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_GenSmoothNormals;
@@ -35,7 +35,7 @@ pk::model::model(const std::string &filename, bool flip_uvs)
     process_node_meshes(scene->mRootNode, scene);
 }
 
-pk::model::~model()
+liminal::model::~model()
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
@@ -48,12 +48,12 @@ pk::model::~model()
     }
 }
 
-bool pk::model::has_animations() const
+bool liminal::model::has_animations() const
 {
     return scene->HasAnimations();
 }
 
-void pk::model::set_animation(unsigned int index)
+void liminal::model::set_animation(unsigned int index)
 {
     if (index >= 0 && index < scene->mNumAnimations)
     {
@@ -61,7 +61,7 @@ void pk::model::set_animation(unsigned int index)
     }
 }
 
-std::vector<glm::mat4> pk::model::calc_bone_transformations(unsigned int current_time)
+std::vector<glm::mat4> liminal::model::calc_bone_transformations(unsigned int current_time)
 {
     std::vector<glm::mat4> bone_transformations;
 
@@ -83,7 +83,7 @@ std::vector<glm::mat4> pk::model::calc_bone_transformations(unsigned int current
     return bone_transformations;
 }
 
-void pk::model::draw_meshes(pk::program *program) const
+void liminal::model::draw_meshes(liminal::program *program) const
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
@@ -91,7 +91,7 @@ void pk::model::draw_meshes(pk::program *program) const
     }
 }
 
-void pk::model::process_node_meshes(const aiNode *node, const aiScene *scene)
+void liminal::model::process_node_meshes(const aiNode *node, const aiScene *scene)
 {
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
@@ -105,16 +105,16 @@ void pk::model::process_node_meshes(const aiNode *node, const aiScene *scene)
     }
 }
 
-pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
+liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
 {
-    std::vector<pk::vertex> vertices;
+    std::vector<liminal::vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<std::vector<pk::texture *>> textures;
+    std::vector<std::vector<liminal::texture *>> textures;
 
     // process vertices
     for (unsigned int i = 0; i < scene_mesh->mNumVertices; i++)
     {
-        pk::vertex vertex;
+        liminal::vertex vertex;
 
         if (scene_mesh->HasPositions())
         {
@@ -159,7 +159,7 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
                 bone_index = num_bones++;
                 bone_indices[bone_name] = bone_index;
 
-                pk::bone bone;
+                liminal::bone bone;
                 bone.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
                 bones.push_back(bone);
             }
@@ -196,7 +196,7 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
         aiMaterial *scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
         for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
         {
-            std::vector<pk::texture *> material_textures;
+            std::vector<liminal::texture *> material_textures;
 
             for (unsigned int i = 0; i < scene_material->GetTextureCount(type); i++)
             {
@@ -205,7 +205,7 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
                 std::string filename = directory + "/" + path.C_Str();
                 if (loaded_textures.find(filename) == loaded_textures.end())
                 {
-                    pk::texture *texture = new pk::texture(filename);
+                    liminal::texture *texture = new liminal::texture(filename);
                     material_textures.push_back(texture);
                     loaded_textures[filename] = texture;
                 }
@@ -225,10 +225,10 @@ pk::mesh *pk::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
         // TODO: store animations in a map to prevent calls to `find_node_animation` every frame
     }
 
-    return new pk::mesh(vertices, indices, textures);
+    return new liminal::mesh(vertices, indices, textures);
 }
 
-void pk::model::process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
+void liminal::model::process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
 {
     std::string node_name(node->mName.data);
     glm::mat4 node_transformation = mat4_cast(node->mTransformation);
@@ -269,7 +269,7 @@ void pk::model::process_node_animations(float animation_time, const aiNode *node
     }
 }
 
-const aiNodeAnim *pk::model::find_node_animation(const aiAnimation *scene_animation, const std::string node_name)
+const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *scene_animation, const std::string node_name)
 {
     for (unsigned int i = 0; i < scene_animation->mNumChannels; i++)
     {
@@ -284,7 +284,7 @@ const aiNodeAnim *pk::model::find_node_animation(const aiAnimation *scene_animat
     return nullptr;
 }
 
-void pk::model::calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
+void liminal::model::calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
 {
     if (node_animation->mNumPositionKeys == 1)
     {
@@ -305,7 +305,7 @@ void pk::model::calc_interpolated_position(aiVector3D &out, float animation_time
     out = start + factor * delta;
 }
 
-unsigned int pk::model::find_position_index(float animation_time, const aiNodeAnim *node_animation)
+unsigned int liminal::model::find_position_index(float animation_time, const aiNodeAnim *node_animation)
 {
     for (unsigned int i = 0; i < node_animation->mNumPositionKeys - 1; i++)
     {
@@ -320,7 +320,7 @@ unsigned int pk::model::find_position_index(float animation_time, const aiNodeAn
     return 0;
 }
 
-void pk::model::calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation)
+void liminal::model::calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation)
 {
     if (node_animation->mNumRotationKeys == 1)
     {
@@ -341,7 +341,7 @@ void pk::model::calc_interpolated_rotation(aiQuaternion &out, float animation_ti
     out = out.Normalize();
 }
 
-unsigned int pk::model::find_rotation_index(float animation_time, const aiNodeAnim *node_animation)
+unsigned int liminal::model::find_rotation_index(float animation_time, const aiNodeAnim *node_animation)
 {
     for (unsigned int i = 0; i < node_animation->mNumRotationKeys - 1; i++)
     {
@@ -356,7 +356,7 @@ unsigned int pk::model::find_rotation_index(float animation_time, const aiNodeAn
     return 0;
 }
 
-void pk::model::calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
+void liminal::model::calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
 {
     if (node_animation->mNumScalingKeys == 1)
     {
@@ -377,7 +377,7 @@ void pk::model::calc_interpolated_scale(aiVector3D &out, float animation_time, c
     out = start + factor * delta;
 }
 
-unsigned int pk::model::find_scale_index(float animation_time, const aiNodeAnim *node_animation)
+unsigned int liminal::model::find_scale_index(float animation_time, const aiNodeAnim *node_animation)
 {
     for (unsigned int i = 0; i < node_animation->mNumScalingKeys - 1; i++)
     {

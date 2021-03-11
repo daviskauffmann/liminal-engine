@@ -4,7 +4,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-namespace pk
+namespace liminal
 {
     struct water
     {
@@ -13,6 +13,6 @@ namespace pk
 
         water(glm::vec3 position, glm::vec2 scale);
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

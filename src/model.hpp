@@ -12,7 +12,7 @@
 #include "program.hpp"
 #include "texture.hpp"
 
-namespace pk
+namespace liminal
 {
     struct bone
     {
@@ -31,14 +31,14 @@ namespace pk
         void set_animation(unsigned int index);
         std::vector<glm::mat4> calc_bone_transformations(unsigned int current_time);
 
-        void draw_meshes(pk::program *program) const;
+        void draw_meshes(liminal::program *program) const;
 
     private:
         std::string directory;
         Assimp::Importer importer;
         const aiScene *scene;
 
-        std::vector<pk::mesh *> meshes;
+        std::vector<liminal::mesh *> meshes;
 
         glm::mat4 global_inverse_transform;
         unsigned int num_bones;
@@ -46,10 +46,10 @@ namespace pk
         std::unordered_map<std::string, unsigned int> bone_indices;
         unsigned int animation_index;
 
-        std::unordered_map<std::string, pk::texture *> loaded_textures;
+        std::unordered_map<std::string, liminal::texture *> loaded_textures;
 
         void process_node_meshes(const aiNode *node, const aiScene *scene);
-        pk::mesh *create_mesh(const aiMesh *mesh, const aiScene *scene);
+        liminal::mesh *create_mesh(const aiMesh *mesh, const aiScene *scene);
 
         void process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string node_name);
@@ -60,6 +60,6 @@ namespace pk
         void calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
         unsigned int find_scale_index(float animation_time, const aiNodeAnim *node_animation);
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

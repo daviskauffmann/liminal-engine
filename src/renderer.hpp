@@ -20,22 +20,22 @@
 #include "texture.hpp"
 #include "water.hpp"
 
-namespace pk
+namespace liminal
 {
     class renderer
     {
     public:
         bool wireframe;
         bool greyscale;
-        pk::camera *camera;
-        pk::skybox *skybox;
-        std::vector<pk::object *> objects;
-        std::vector<pk::directional_light *> directional_lights;
-        std::vector<pk::point_light *> point_lights;
-        std::vector<pk::spot_light *> spot_lights;
-        std::vector<pk::water *> waters;
-        std::vector<pk::terrain *> terrains;
-        std::vector<pk::sprite *> sprites;
+        liminal::camera *camera;
+        liminal::skybox *skybox;
+        std::vector<liminal::object *> objects;
+        std::vector<liminal::directional_light *> directional_lights;
+        std::vector<liminal::point_light *> point_lights;
+        std::vector<liminal::spot_light *> spot_lights;
+        std::vector<liminal::water *> waters;
+        std::vector<liminal::terrain *> terrains;
+        std::vector<liminal::sprite *> sprites;
 
         renderer(
             GLsizei display_width, GLsizei display_height, float render_scale,
@@ -101,26 +101,26 @@ namespace pk
 
         GLuint brdf_texture_id;
 
-        pk::program *depth_program;
-        pk::program *depth_cube_program;
-        pk::program *color_program;
-        pk::program *geometry_mesh_program;
-        pk::program *geometry_skinned_mesh_program;
-        pk::program *geometry_terrain_program;
-        pk::program *deferred_ambient_program;
-        pk::program *deferred_directional_program;
-        pk::program *deferred_point_program;
-        pk::program *deferred_spot_program;
-        pk::program *skybox_program;
-        pk::program *water_program;
-        pk::program *sprite_program;
-        pk::program *gaussian_program;
-        pk::program *screen_program;
+        liminal::program *depth_program;
+        liminal::program *depth_cube_program;
+        liminal::program *color_program;
+        liminal::program *geometry_mesh_program;
+        liminal::program *geometry_skinned_mesh_program;
+        liminal::program *geometry_terrain_program;
+        liminal::program *deferred_ambient_program;
+        liminal::program *deferred_directional_program;
+        liminal::program *deferred_point_program;
+        liminal::program *deferred_spot_program;
+        liminal::program *skybox_program;
+        liminal::program *water_program;
+        liminal::program *sprite_program;
+        liminal::program *gaussian_program;
+        liminal::program *screen_program;
 
-        pk::texture *water_dudv_texture;
-        pk::texture *water_normal_texture;
+        liminal::texture *water_dudv_texture;
+        liminal::texture *water_normal_texture;
 
-        pk::mesh *DEBUG_sphere_mesh;
+        liminal::mesh *DEBUG_sphere_mesh;
 
         void setup_samplers();
 
@@ -130,6 +130,6 @@ namespace pk
         void render_sprites();
         void render_screen();
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

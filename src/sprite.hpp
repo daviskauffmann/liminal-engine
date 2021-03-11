@@ -7,18 +7,18 @@
 
 #include "texture.hpp"
 
-namespace pk
+namespace liminal
 {
     struct sprite
     {
-        pk::texture *texture;
+        liminal::texture *texture;
         glm::vec3 color;
         glm::vec2 position;
         float rotation;
         glm::vec2 scale;
 
         sprite(
-            pk::texture *texture,
+            liminal::texture *texture,
             glm::vec3 color,
             glm::vec2 position,
             float rotation,
@@ -26,6 +26,6 @@ namespace pk
 
         glm::mat4 calc_model() const;
     };
-} // namespace pk
+} // namespace liminal
 
 #endif

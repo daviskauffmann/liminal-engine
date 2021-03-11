@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <vector>
 
-namespace pk
+namespace liminal
 {
     struct point_light
     {
@@ -30,6 +30,6 @@ namespace pk
 
         void update_transformation_matrices();
     };
-} // namespace pk
+} // namespace liminal
 
 #endif
