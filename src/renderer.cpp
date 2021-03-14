@@ -284,11 +284,18 @@ liminal::renderer::renderer(
     }
 
     // create shader programs
-    depth_program = new liminal::program(
-        "assets/shaders/depth.vs",
+    depth_mesh_program = new liminal::program(
+        "assets/shaders/depth_mesh.vs",
         "assets/shaders/depth.fs");
-    depth_cube_program = new liminal::program(
-        "assets/shaders/depth_cube.vs",
+    depth_skinned_mesh_program = new liminal::program(
+        "assets/shaders/depth_skinned_mesh.vs",
+        "assets/shaders/depth.fs");
+    depth_cube_mesh_program = new liminal::program(
+        "assets/shaders/depth_cube_mesh.vs",
+        "assets/shaders/depth_cube.gs",
+        "assets/shaders/depth_cube.fs");
+    depth_cube_skinned_mesh_program = new liminal::program(
+        "assets/shaders/depth_cube_skinned_mesh.vs",
         "assets/shaders/depth_cube.gs",
         "assets/shaders/depth_cube.fs");
     color_program = new liminal::program(
@@ -434,8 +441,10 @@ liminal::renderer::~renderer()
 
     glDeleteTextures(1, &brdf_texture_id);
 
-    delete depth_program;
-    delete depth_cube_program;
+    delete depth_mesh_program;
+    delete depth_skinned_mesh_program;
+    delete depth_cube_mesh_program;
+    delete depth_cube_skinned_mesh_program;
     delete color_program;
     delete geometry_mesh_program;
     delete geometry_skinned_mesh_program;
@@ -897,8 +906,10 @@ void liminal::renderer::set_refraction_size(GLsizei refraction_width, GLsizei re
 
 void liminal::renderer::reload_programs()
 {
-    depth_program->reload();
-    depth_cube_program->reload();
+    depth_mesh_program->reload();
+    depth_skinned_mesh_program->reload();
+    depth_cube_mesh_program->reload();
+    depth_cube_skinned_mesh_program->reload();
     color_program->reload();
     geometry_mesh_program->reload();
     geometry_skinned_mesh_program->reload();
@@ -1038,7 +1049,7 @@ void liminal::renderer::flush(unsigned int current_time, float delta_time)
     }
 
     // render everything
-    render_shadows();
+    render_shadows(current_time);
     render_objects(current_time, hdr_fbo_id, render_width, render_height);
     if (waters.size() > 0)
     {
@@ -1064,7 +1075,7 @@ void liminal::renderer::flush(unsigned int current_time, float delta_time)
     sprites.clear();
 }
 
-void liminal::renderer::render_shadows()
+void liminal::renderer::render_shadows(unsigned int current_time)
 {
     for (auto &directional_light : directional_lights)
     {
@@ -1077,27 +1088,47 @@ void liminal::renderer::render_shadows()
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            depth_program->bind();
+            for (auto &object : objects)
             {
-                for (auto &object : objects)
+                glm::mat4 object_model = object->calc_model();
+                if (object->model->has_animations())
                 {
-                    glm::mat4 object_model = object->calc_model();
+                    std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
 
-                    depth_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
+                    depth_skinned_mesh_program->bind();
+                    {
+                        depth_skinned_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
+                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
 
-                    object->model->draw_meshes(depth_program);
+                        object->model->draw_meshes(depth_skinned_mesh_program);
+                    }
+                    depth_skinned_mesh_program->unbind();
                 }
+                else
+                {
+                    depth_mesh_program->bind();
+                    {
+                        depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
+
+                        object->model->draw_meshes(depth_mesh_program);
+                    }
+                    depth_mesh_program->unbind();
+                }
+            }
+
+            depth_mesh_program->bind();
+            {
 
                 for (auto &terrain : terrains)
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
+                    depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
 
-                    terrain->mesh->draw(depth_program);
+                    terrain->mesh->draw(depth_mesh_program);
                 }
             }
-            depth_program->unbind();
+            depth_mesh_program->unbind();
 
             glDisable(GL_CULL_FACE);
         }
@@ -1115,35 +1146,70 @@ void liminal::renderer::render_shadows()
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            depth_cube_program->bind();
+            for (auto &object : objects)
+            {
+                glm::mat4 object_model = object->calc_model();
+                if (object->model->has_animations())
+                {
+                    std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
+
+                    depth_cube_skinned_mesh_program->bind();
+                    {
+                        depth_cube_skinned_mesh_program->set_mat4("model", object_model);
+                        depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
+
+                        for (unsigned int i = 0; i < 6; i++)
+                        {
+                            depth_cube_skinned_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
+                        }
+
+                        depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light::far_plane);
+                        depth_cube_skinned_mesh_program->set_vec3("light.position", point_light->position);
+
+                        object->model->draw_meshes(depth_cube_skinned_mesh_program);
+                    }
+                    depth_cube_skinned_mesh_program->unbind();
+                }
+                else
+                {
+                    depth_cube_mesh_program->bind();
+                    {
+                        depth_cube_mesh_program->set_mat4("model", object_model);
+
+                        for (unsigned int i = 0; i < 6; i++)
+                        {
+                            depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
+                        }
+
+                        depth_cube_mesh_program->set_float("light.far_plane", point_light::far_plane);
+                        depth_cube_mesh_program->set_vec3("light.position", point_light->position);
+
+                        object->model->draw_meshes(depth_cube_mesh_program);
+                    }
+                    depth_cube_mesh_program->unbind();
+                }
+            }
+
+            depth_cube_mesh_program->bind();
             {
                 for (unsigned int i = 0; i < 6; i++)
                 {
-                    depth_cube_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
+                    depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
                 }
 
-                depth_cube_program->set_float("light.far_plane", point_light::far_plane);
-                depth_cube_program->set_vec3("light.position", point_light->position);
-
-                for (auto &object : objects)
-                {
-                    glm::mat4 object_model = object->calc_model();
-
-                    depth_cube_program->set_mat4("model", object_model);
-
-                    object->model->draw_meshes(depth_cube_program);
-                }
+                depth_cube_mesh_program->set_float("light.far_plane", point_light::far_plane);
+                depth_cube_mesh_program->set_vec3("light.position", point_light->position);
 
                 for (auto &terrain : terrains)
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_cube_program->set_mat4("model", terrain_model);
+                    depth_cube_mesh_program->set_mat4("model", terrain_model);
 
-                    terrain->mesh->draw(depth_cube_program);
+                    terrain->mesh->draw(depth_cube_mesh_program);
                 }
             }
-            depth_cube_program->unbind();
+            depth_cube_mesh_program->unbind();
 
             glDisable(GL_CULL_FACE);
         }
@@ -1161,27 +1227,47 @@ void liminal::renderer::render_shadows()
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            depth_program->bind();
+            for (auto &object : objects)
             {
-                for (auto &object : objects)
+                glm::mat4 object_model = object->calc_model();
+                if (object->model->has_animations())
                 {
-                    glm::mat4 object_model = object->calc_model();
+                    std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
 
-                    depth_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
+                    depth_skinned_mesh_program->bind();
+                    {
+                        depth_skinned_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
+                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
 
-                    object->model->draw_meshes(depth_program);
+                        object->model->draw_meshes(depth_skinned_mesh_program);
+                    }
+                    depth_skinned_mesh_program->unbind();
                 }
+                else
+                {
+                    depth_mesh_program->bind();
+                    {
+                        depth_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
+
+                        object->model->draw_meshes(depth_mesh_program);
+                    }
+                    depth_mesh_program->unbind();
+                }
+            }
+
+            depth_mesh_program->bind();
+            {
 
                 for (auto &terrain : terrains)
                 {
                     glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_program->set_mat4("mvp", spot_light->transformation_matrix * terrain_model);
+                    depth_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * terrain_model);
 
-                    terrain->mesh->draw(depth_program);
+                    terrain->mesh->draw(depth_mesh_program);
                 }
             }
-            depth_program->unbind();
+            depth_mesh_program->unbind();
 
             glDisable(GL_CULL_FACE);
         }
@@ -1240,7 +1326,6 @@ void liminal::renderer::render_objects(unsigned int current_time, GLuint fbo_id,
         geometry_terrain_program->bind();
         {
             geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
-            geometry_terrain_program->set_float("tiling", terrain::size);
 
             for (auto &terrain : terrains)
             {
@@ -1248,6 +1333,7 @@ void liminal::renderer::render_objects(unsigned int current_time, GLuint fbo_id,
 
                 geometry_terrain_program->set_mat4("mvp", camera_projection * camera_view * terrain_model);
                 geometry_terrain_program->set_mat4("model", terrain_model);
+                geometry_terrain_program->set_float("tiling", terrain->size);
 
                 terrain->mesh->draw(geometry_terrain_program);
             }
@@ -1574,12 +1660,11 @@ void liminal::renderer::render_waters(unsigned int current_time)
                 glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
                 glm::mat4 camera_view = camera->calc_view();
 
-                glm::mat4 water_model(1.0f);
-                water_model = glm::translate(water_model, water->position);
-                water_model = glm::scale(water_model, {water->scale.x, 1.0f, water->scale.y});
+                glm::mat4 water_model = water->calc_model();
 
                 water_program->set_mat4("mvp", camera_projection * camera_view * water_model);
                 water_program->set_mat4("model", water_model);
+                water_program->set_float("tiling", water->size / 10);
                 water_program->set_float("camera.near_plane", camera::near_plane);
                 water_program->set_float("camera.far_plane", camera::far_plane);
                 water_program->set_vec3("camera.position", camera->position);

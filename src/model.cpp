@@ -232,7 +232,7 @@ void liminal::model::process_node_animations(float animation_time, const aiNode 
 {
     std::string node_name(node->mName.data);
     glm::mat4 node_transformation = mat4_cast(node->mTransformation);
-
+ 
     const aiAnimation *scene_animation = scene->mAnimations[animation_index];
     const aiNodeAnim *node_animation = find_node_animation(scene_animation, node_name);
     if (node_animation)

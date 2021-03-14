@@ -234,9 +234,13 @@ int main(int argc, char *argv[])
 
     liminal::water *water = new liminal::water(
         glm::vec3(0.0f, -2.0f, 0.0f),
-        glm::vec2(100.0f, 100.0f));
+        100.0f);
 
-    liminal::terrain *terrain = new liminal::terrain(glm::vec3(400.0f, 0.0f, 400.0f), "assets/images/heightmap.png");
+    liminal::terrain *terrain = new liminal::terrain(
+        "assets/images/heightmap.png",
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        100.0f,
+        10.0f);
     // world->addRigidBody(terrain->rigidbody);
 
     liminal::sound *ambient_sound = new liminal::sound("assets/audio/ambient.wav");

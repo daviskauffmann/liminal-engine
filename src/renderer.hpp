@@ -101,8 +101,10 @@ namespace liminal
 
         GLuint brdf_texture_id;
 
-        liminal::program *depth_program;
-        liminal::program *depth_cube_program;
+        liminal::program *depth_mesh_program;
+        liminal::program *depth_skinned_mesh_program;
+        liminal::program *depth_cube_mesh_program;
+        liminal::program *depth_cube_skinned_mesh_program;
         liminal::program *color_program;
         liminal::program *geometry_mesh_program;
         liminal::program *geometry_skinned_mesh_program;
@@ -124,7 +126,7 @@ namespace liminal
 
         void setup_samplers();
 
-        void render_shadows();
+        void render_shadows(unsigned int current_time);
         void render_objects(unsigned int current_time, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
         void render_waters(unsigned int current_time);
         void render_sprites();

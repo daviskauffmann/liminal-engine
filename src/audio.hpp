@@ -12,12 +12,12 @@ namespace liminal
         audio();
         ~audio();
 
-        void set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const;
+        void set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up);
 
     private:
         ALCdevice *device;
         ALCcontext *context;
-        mutable glm::vec3 position;
+        glm::vec3 position;
     };
 } // namespace liminal
 

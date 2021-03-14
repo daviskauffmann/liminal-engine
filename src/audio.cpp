@@ -38,7 +38,7 @@ liminal::audio::~audio()
     alcCloseDevice(device);
 }
 
-void liminal::audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up) const
+void liminal::audio::set_listener(glm::vec3 position, glm::vec3 front, glm::vec3 up)
 {
     alListenerfv(AL_POSITION, glm::value_ptr(position));
 

@@ -12,19 +12,19 @@ namespace liminal
 {
     struct terrain
     {
-        static float size;
-        static float height_scale;
-
         glm::vec3 position;
+        float size;
         liminal::mesh *mesh;
         btRigidBody *rigidbody;
 
-        terrain(glm::vec3 position, const std::string &heightmap_filename);
+        terrain(const std::string &heightmap_filename, glm::vec3 position, float size, float height_scale);
         ~terrain();
 
         glm::mat4 calc_model() const;
 
     private:
+        float height_scale;
+
         std::vector<float> heightfield;
         btDefaultMotionState *motion_state;
         btCollisionShape *collision_shape;

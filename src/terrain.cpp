@@ -8,9 +8,6 @@
 
 #include "texture.hpp"
 
-float liminal::terrain::size = 800;
-float liminal::terrain::height_scale = 100;
-
 // TODO: read from heightmap image file
 
 // TODO: multiple textures w/ blend map
@@ -18,8 +15,8 @@ float liminal::terrain::height_scale = 100;
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(glm::vec3 position, const std::string &heightmap_filename)
-    : position(position)
+liminal::terrain::terrain(const std::string &heightmap_filename, glm::vec3 position, float size, float height_scale)
+    : position(position), size(size), height_scale(height_scale)
 {
     SDL_Surface *heightmap_surface = IMG_Load(heightmap_filename.c_str());
     if (!heightmap_surface)
@@ -33,30 +30,23 @@ liminal::terrain::terrain(glm::vec3 position, const std::string &heightmap_filen
     {
         for (int x = 0; x < heightmap_surface->w; x++)
         {
-            glm::vec3 position(
+            liminal::vertex vertex;
+            vertex.position = glm::vec3(
                 -(float)x / ((float)heightmap_surface->w - 1) * size,
                 get_height(heightmap_surface, x, z),
                 -(float)z / ((float)heightmap_surface->h - 1) * size);
-            glm::vec3 normal = glm::normalize(glm::vec3(
+            vertex.normal = glm::normalize(glm::vec3(
                 get_height(heightmap_surface, x + 1, z) - get_height(heightmap_surface, x - 1, z),
                 2.0f,
                 get_height(heightmap_surface, x, z + 1) - get_height(heightmap_surface, x, z - 1)));
-            glm::vec2 uv(
+            vertex.uv = glm::vec2(
                 (float)x / ((float)heightmap_surface->w - 1),
                 (float)z / ((float)heightmap_surface->h - 1));
-
-            liminal::vertex vertex;
-            vertex.position = position;
-            vertex.normal = normal;
-            vertex.uv = uv;
-            vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
-
             vertices.push_back(vertex);
 
-            heightfield.push_back(position.x);
-            heightfield.push_back(position.y);
-            heightfield.push_back(position.z);
+            heightfield.push_back(vertex.position.x);
+            heightfield.push_back(vertex.position.y);
+            heightfield.push_back(vertex.position.z);
         }
     }
 

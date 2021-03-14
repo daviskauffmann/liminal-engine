@@ -11,7 +11,5 @@ uniform struct Light
 
 void main()
 {
-    float light_distance = length(frag_position.xyz - light.position);
-    light_distance = light_distance / light.far_plane;
-    gl_FragDepth = light_distance;
+    gl_FragDepth = length(frag_position.xyz - light.position) / light.far_plane;
 }

@@ -44,6 +44,7 @@ glm::mat4 liminal::camera::calc_view() const
     glm::vec3 right = calc_right();
     glm::mat4 rotation = glm::rotate(glm::identity<glm::mat4>(), glm::radians(roll), front);
     right = glm::vec3(rotation * glm::vec4(right, 1.0f));
+
     glm::vec3 up = glm::cross(right, front);
     up = glm::normalize(up);
 

@@ -22,12 +22,10 @@ uniform float tiling = 1.0;
 
 void main()
 {
-    vec4 world_position = model * vec4(position, 1.0);
-
-    gl_Position = mvp * vec4(position, 1.0);
-	gl_ClipDistance[0] = dot(world_position, clipping_plane);
-
-    vertex.position = world_position.xyz;
+    vertex.position = (model * vec4(position, 1.0)).xyz;
     vertex.normal = (model * vec4(normal, 0.0)).xyz;
     vertex.uv = uv * tiling;
+
+    gl_Position = mvp * vec4(position, 1.0);
+	gl_ClipDistance[0] = dot(vec4(vertex.position, 1.0), clipping_plane);
 }

@@ -12,7 +12,7 @@ uniform mat4 mvp;
 
 void main()
 {
-    gl_Position = mvp * vec4(position, 0.0, 1.0);
-
     vertex.uv = uv;
+
+    gl_Position = mvp * vec4(position, 0.0, 1.0);
 }
