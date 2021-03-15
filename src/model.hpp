@@ -23,13 +23,15 @@ namespace liminal
     struct model
     {
     public:
+        std::vector<glm::mat4> bone_transformations;
+
         model(const std::string &filename, bool flip_uvs = false);
         ~model();
 
         bool has_animations() const;
         unsigned int num_animations() const;
         void set_animation(unsigned int index);
-        std::vector<glm::mat4> calc_bone_transformations(unsigned int current_time);
+        void update_bone_transformations(unsigned int current_time);
 
         void draw_meshes(liminal::program *program) const;
 

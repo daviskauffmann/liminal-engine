@@ -61,9 +61,9 @@ void liminal::model::set_animation(unsigned int index)
     }
 }
 
-std::vector<glm::mat4> liminal::model::calc_bone_transformations(unsigned int current_time)
+void liminal::model::update_bone_transformations(unsigned int current_time)
 {
-    std::vector<glm::mat4> bone_transformations;
+    bone_transformations.clear();
 
     if (scene->mNumAnimations > 0)
     {
@@ -79,8 +79,6 @@ std::vector<glm::mat4> liminal::model::calc_bone_transformations(unsigned int cu
             bone_transformations[i] = bones[i].transformation;
         }
     }
-
-    return bone_transformations;
 }
 
 void liminal::model::draw_meshes(liminal::program *program) const

@@ -64,10 +64,12 @@ void liminal::mesh::draw(liminal::program *program) const
     glActiveTexture(GL_TEXTURE1);
     if (textures.size() > 0 && textures[aiTextureType_NORMALS].size() > 0)
     {
+        program->set_int("material.has_normal_map", 1);
         glBindTexture(GL_TEXTURE_2D, textures[aiTextureType_NORMALS][0]->texture_id);
     }
     else
     {
+        program->set_int("material.has_normal_map", 0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 

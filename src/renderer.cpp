@@ -1048,9 +1048,18 @@ void liminal::renderer::flush(unsigned int current_time, float delta_time)
         return;
     }
 
+    // update animations
+    for (auto &object : objects)
+    {
+        if (object->model->has_animations())
+        {
+            object->model->update_bone_transformations(current_time);
+        }
+    }
+
     // render everything
-    render_shadows(current_time);
-    render_objects(current_time, hdr_fbo_id, render_width, render_height);
+    render_shadows();
+    render_objects(hdr_fbo_id, render_width, render_height);
     if (waters.size() > 0)
     {
         render_waters(current_time);
@@ -1075,7 +1084,7 @@ void liminal::renderer::flush(unsigned int current_time, float delta_time)
     sprites.clear();
 }
 
-void liminal::renderer::render_shadows(unsigned int current_time)
+void liminal::renderer::render_shadows()
 {
     for (auto &directional_light : directional_lights)
     {
@@ -1093,12 +1102,10 @@ void liminal::renderer::render_shadows(unsigned int current_time)
                 glm::mat4 object_model = object->calc_model();
                 if (object->model->has_animations())
                 {
-                    std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
-
                     depth_skinned_mesh_program->bind();
                     {
                         depth_skinned_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
-                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
+                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
 
                         object->model->draw_meshes(depth_skinned_mesh_program);
                     }
@@ -1151,12 +1158,10 @@ void liminal::renderer::render_shadows(unsigned int current_time)
                 glm::mat4 object_model = object->calc_model();
                 if (object->model->has_animations())
                 {
-                    std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
-
                     depth_cube_skinned_mesh_program->bind();
                     {
                         depth_cube_skinned_mesh_program->set_mat4("model", object_model);
-                        depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
+                        depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
 
                         for (unsigned int i = 0; i < 6; i++)
                         {
@@ -1232,12 +1237,10 @@ void liminal::renderer::render_shadows(unsigned int current_time)
                 glm::mat4 object_model = object->calc_model();
                 if (object->model->has_animations())
                 {
-                    std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
-
                     depth_skinned_mesh_program->bind();
                     {
                         depth_skinned_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
-                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
+                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
 
                         object->model->draw_meshes(depth_skinned_mesh_program);
                     }
@@ -1275,7 +1278,7 @@ void liminal::renderer::render_shadows(unsigned int current_time)
     }
 }
 
-void liminal::renderer::render_objects(unsigned int current_time, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
+void liminal::renderer::render_objects(GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
 {
     // camera
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
@@ -1296,12 +1299,10 @@ void liminal::renderer::render_objects(unsigned int current_time, GLuint fbo_id,
             glm::mat4 object_model = object->calc_model();
             if (object->model->has_animations())
             {
-                std::vector<glm::mat4> object_bone_transformations = object->model->calc_bone_transformations(current_time);
-
                 geometry_skinned_mesh_program->bind();
                 {
                     geometry_skinned_mesh_program->set_mat4("mvp", camera_projection * camera_view * object_model);
-                    geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", object_bone_transformations);
+                    geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
                     geometry_skinned_mesh_program->set_mat4("model", object_model);
                     geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
 
@@ -1634,7 +1635,7 @@ void liminal::renderer::render_waters(unsigned int current_time)
         camera->position.y -= 2 * (camera->position.y - water->position.y);
         camera->pitch = -camera->pitch;
         camera->roll = -camera->roll;
-        render_objects(current_time, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
+        render_objects(water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
         camera->position.y = previous_camera_y;
         camera->pitch = previous_camera_pitch;
         camera->roll = previous_camera_roll;
@@ -1645,7 +1646,7 @@ void liminal::renderer::render_waters(unsigned int current_time)
         {
             refraction_clipping_plane *= -1;
         }
-        render_objects(current_time, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
+        render_objects(water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
 
         // draw water meshes
         glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
