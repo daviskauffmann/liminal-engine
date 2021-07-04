@@ -1090,52 +1090,62 @@ void liminal::renderer::render_shadows()
     {
         directional_light->update_transformation_matrix(camera->position);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
+        for (unsigned int i = 0; i < NUM_CASCADES; i++)
         {
-            glViewport(0, 0, directional_light->depth_map_size, directional_light->depth_map_size);
-            glEnable(GL_CULL_FACE);
-
-            glClear(GL_DEPTH_BUFFER_BIT);
-
-            for (auto &object : objects)
+            glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
             {
-                glm::mat4 object_model = object->calc_model();
-                if (object->model->has_animations())
+                glViewport(0, 0, directional_light->depth_map_size, directional_light->depth_map_size);
+                glEnable(GL_CULL_FACE);
+
+                glFramebufferTexture2D(
+                    GL_FRAMEBUFFER,
+                    GL_DEPTH_ATTACHMENT,
+                    GL_TEXTURE_2D,
+                    directional_light->depth_map_texture_ids[i],
+                    0);
+
+                glClear(GL_DEPTH_BUFFER_BIT);
+
+                for (auto &object : objects)
                 {
-                    depth_skinned_mesh_program->bind();
+                    glm::mat4 object_model = object->calc_model();
+                    if (object->model->has_animations())
                     {
-                        depth_skinned_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
-                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
+                        depth_skinned_mesh_program->bind();
+                        {
+                            depth_skinned_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
 
-                        object->model->draw_meshes(depth_skinned_mesh_program);
+                            object->model->draw_meshes(depth_skinned_mesh_program);
+                        }
+                        depth_skinned_mesh_program->unbind();
                     }
-                    depth_skinned_mesh_program->unbind();
-                }
-                else
-                {
-                    depth_mesh_program->bind();
+                    else
                     {
-                        depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
+                        depth_mesh_program->bind();
+                        {
+                            depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
 
-                        object->model->draw_meshes(depth_mesh_program);
+                            object->model->draw_meshes(depth_mesh_program);
+                        }
+                        depth_mesh_program->unbind();
                     }
-                    depth_mesh_program->unbind();
                 }
-            }
 
-            depth_mesh_program->bind();
-            {
-
-                for (auto &terrain : terrains)
+                depth_mesh_program->bind();
                 {
-                    glm::mat4 terrain_model = terrain->calc_model();
 
-                    depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
+                    for (auto &terrain : terrains)
+                    {
+                        glm::mat4 terrain_model = terrain->calc_model();
 
-                    terrain->mesh->draw(depth_mesh_program);
+                        depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
+
+                        terrain->mesh->draw(depth_mesh_program);
+                    }
                 }
+                depth_mesh_program->unbind();
             }
-            depth_mesh_program->unbind();
 
             glDisable(GL_CULL_FACE);
         }
@@ -1425,7 +1435,7 @@ void liminal::renderer::render_objects(GLuint fbo_id, GLsizei width, GLsizei hei
                         deferred_directional_program->set_mat4("light.transformation_matrix", directional_light->transformation_matrix);
 
                         glActiveTexture(GL_TEXTURE4);
-                        glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_id);
+                        glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_ids[0]);
 
                         glBindVertexArray(screen_vao_id);
                         glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);

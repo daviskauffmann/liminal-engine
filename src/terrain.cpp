@@ -111,7 +111,7 @@ liminal::terrain::terrain(const std::string &heightmap_filename, glm::vec3 posit
 
     btTransform transform;
     transform.setIdentity();
-    transform.setOrigin(btVector3(0.0f, -50.0f, 0.0f));
+    transform.setOrigin(btVector3(position.x, position.y, position.z));
 
     motion_state = new btDefaultMotionState(transform);
 

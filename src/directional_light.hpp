@@ -5,6 +5,8 @@
 #include <glm/vec3.hpp>
 #include <GL/glew.h>
 
+#define NUM_CASCADES 1
+
 namespace liminal
 {
     struct directional_light
@@ -17,7 +19,7 @@ namespace liminal
         glm::vec3 color;
         GLsizei depth_map_size;
         GLuint depth_map_fbo_id;
-        GLuint depth_map_texture_id;
+        GLuint depth_map_texture_ids[NUM_CASCADES];
         glm::mat4 transformation_matrix;
 
         directional_light(

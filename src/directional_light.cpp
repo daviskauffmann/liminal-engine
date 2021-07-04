@@ -15,14 +15,20 @@ liminal::directional_light::directional_light(
       color(color)
 {
     this->depth_map_fbo_id = 0;
-    this->depth_map_texture_id = 0;
+    for (unsigned int i = 0; i < NUM_CASCADES; i++)
+    {
+        depth_map_texture_ids[i] = 0;
+    }
     set_depth_map_size(depth_map_size);
 }
 
 liminal::directional_light::~directional_light()
 {
     glDeleteFramebuffers(1, &depth_map_fbo_id);
-    glDeleteTextures(1, &depth_map_texture_id);
+    for (unsigned int i = 0; i < NUM_CASCADES; i++)
+    {
+        glDeleteTextures(1, &depth_map_texture_ids[i]);
+    }
 }
 
 void liminal::directional_light::set_depth_map_size(GLsizei depth_map_size)
@@ -30,7 +36,10 @@ void liminal::directional_light::set_depth_map_size(GLsizei depth_map_size)
     this->depth_map_size = depth_map_size;
 
     glDeleteFramebuffers(1, &depth_map_fbo_id);
-    glDeleteTextures(1, &depth_map_texture_id);
+    for (unsigned int i = 0; i < NUM_CASCADES; i++)
+    {
+        glDeleteTextures(1, &depth_map_texture_ids[i]);
+    }
 
     glGenFramebuffers(1, &depth_map_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo_id);
@@ -38,14 +47,15 @@ void liminal::directional_light::set_depth_map_size(GLsizei depth_map_size)
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
 
+        glGenTextures(NUM_CASCADES, depth_map_texture_ids);
+        for (unsigned int i = 0; i < NUM_CASCADES; i++)
         {
-            glGenTextures(1, &depth_map_texture_id);
-            glBindTexture(GL_TEXTURE_2D, depth_map_texture_id);
+            glBindTexture(GL_TEXTURE_2D, depth_map_texture_ids[i]);
             {
                 glTexImage2D(
                     GL_TEXTURE_2D,
                     0,
-                    GL_DEPTH_COMPONENT,
+                    GL_DEPTH_COMPONENT32,
                     depth_map_size,
                     depth_map_size,
                     0,
@@ -60,14 +70,14 @@ void liminal::directional_light::set_depth_map_size(GLsizei depth_map_size)
                 glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
             }
             glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                depth_map_texture_id,
-                0);
         }
+
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_TEXTURE_2D,
+            depth_map_texture_ids[0],
+            0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
