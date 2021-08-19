@@ -17,6 +17,7 @@ SRC = \
 	src/mesh.cpp \
 	src/model.cpp \
 	src/object.cpp \
+	src/platform.cpp \
 	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \

@@ -2,11 +2,7 @@
 #include <cxxopts.hpp>
 #include <iostream>
 #include <imgui.h>
-#include <imgui_impl_sdl.h>
-#include <imgui_impl_opengl3.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_image.h>
 #include <sol/sol.hpp>
 
 #include "audio.hpp"
@@ -14,6 +10,7 @@
 #include "camera.hpp"
 #include "model.hpp"
 #include "object.hpp"
+#include "platform.hpp"
 #include "point_light.hpp"
 #include "renderer.hpp"
 #include "skybox.hpp"
@@ -36,7 +33,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        cxxopts::Options options("pk");
+        cxxopts::Options options("liminal");
 
         cxxopts::OptionAdder option_adder = options.add_options();
         option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
@@ -71,74 +68,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
-    {
-        std::cerr << "Error: Failed to initialize SDL: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
-    if (IMG_Init(img_flags) != img_flags)
-    {
-        std::cerr << "Error: Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
-        return 1;
-    }
-
-    int mix_flags = 0;
-    if (Mix_Init(mix_flags) != mix_flags)
-    {
-        std::cerr << "Error: Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_Window *window = SDL_CreateWindow(
-        WINDOW_TITLE,
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        window_width,
-        window_height,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!window)
-    {
-        std::cerr << "Error: Failed to create window: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-    SDL_GL_SetSwapInterval(0);
-    SDL_GLContext context = SDL_GL_CreateContext(window);
-    if (!context)
-    {
-        std::cerr << "Error: Failed to create OpenGL context: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    GLenum error = glewInit();
-    if (error != GLEW_OK)
-    {
-        std::cerr << "Error: Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
-        return 1;
-    }
-
-    ImGui::CreateContext();
-    ImGui_ImplSDL2_InitForOpenGL(window, context);
-    ImGui_ImplOpenGL3_Init("#version 460");
-    ImGuiIO &io = ImGui::GetIO();
-    io.IniFilename = "assets/imgui.ini";
-
-    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
-    {
-        std::cerr << "Error: Failed to initialize the mixer API: " << Mix_GetError() << std::endl;
-        return 1;
-    }
-
+    liminal::platform platform(WINDOW_TITLE, window_width, window_height);
     liminal::renderer renderer(
         window_width, window_height, render_scale,
         window_width, window_height,
         window_width, window_height);
     liminal::audio audio;
+
+    ImGuiIO &io = ImGui::GetIO();
 
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btCollisionDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
@@ -150,12 +87,10 @@ int main(int argc, char *argv[])
 
     sol::state lua;
     lua.open_libraries(sol::lib::base);
-    lua.set_function("HelloWorld", []() -> void {
-        std::cout << "Hello, World!" << std::endl;
-    });
-    lua.set_function("GetRandomNumber", [](int mod) -> int {
-        return 4 + mod;
-    });
+    lua.set_function("PrintHelloWorld", []() -> void
+                     { std::cout << "Hello, World!" << std::endl; });
+    lua.set_function("GetRandomNumber", [](int mod) -> int
+                     { return 4 + mod; });
     lua.script_file("assets/scripts/test.lua");
 
     liminal::camera *camera = new liminal::camera(
@@ -278,7 +213,7 @@ int main(int argc, char *argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            platform.process_event(&event);
 
             switch (event.type)
             {
@@ -295,7 +230,7 @@ int main(int argc, char *argv[])
                 {
                     window_width = event.window.data1;
                     window_height = event.window.data2;
-                    SDL_SetWindowSize(window, window_width, window_height);
+                    platform.set_window_size(window_width, window_height);
                     renderer.set_screen_size(window_width, window_height, render_scale);
                     renderer.set_reflection_size(window_width, window_height);
                     renderer.set_refraction_size(window_width, window_height);
@@ -320,15 +255,7 @@ int main(int argc, char *argv[])
                     {
                         if (keys[SDL_SCANCODE_LALT])
                         {
-                            unsigned int flags = SDL_GetWindowFlags(window);
-                            if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
-                            {
-                                SDL_SetWindowFullscreen(window, 0);
-                            }
-                            else
-                            {
-                                SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-                            }
+                            platform.toggle_fullscreen();
                         }
                     }
                     break;
@@ -544,7 +471,7 @@ int main(int argc, char *argv[])
 
         world->stepSimulation(delta_time);
 
-        SDL_GL_MakeCurrent(window, context);
+        platform.begin_render();
 
         renderer.wireframe = wireframe;
         renderer.camera = camera;
@@ -561,13 +488,9 @@ int main(int argc, char *argv[])
         {
             renderer.spot_lights.push_back(flashlight);
         }
-        renderer.terrains.push_back(terrain);
+        // renderer.terrains.push_back(terrain);
         renderer.waters.push_back(water);
         renderer.flush(current_time, delta_time);
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(window);
-        ImGui::NewFrame();
 
         if (edit_mode)
         {
@@ -613,10 +536,7 @@ int main(int argc, char *argv[])
             ImGui::End();
         }
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        SDL_GL_SwapWindow(window);
+        platform.end_render();
     }
 
     delete world;
@@ -658,20 +578,6 @@ int main(int argc, char *argv[])
     delete ambient_sound;
     delete bounce_sound;
     delete shoot_sound;
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
-
-    Mix_CloseAudio();
-
-    SDL_DestroyWindow(window);
-    SDL_GL_DeleteContext(context);
-
-    IMG_Quit();
-    Mix_Quit();
-
-    SDL_Quit();
 
     return 0;
 }

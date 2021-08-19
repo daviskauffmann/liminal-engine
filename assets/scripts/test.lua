@@ -1,4 +1,4 @@
-HelloWorld()
+PrintHelloWorld()
 
 local num = GetRandomNumber(2)
-print(num)
+print("random number is: " .. num)
