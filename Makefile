@@ -7,6 +7,7 @@ LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
 LDLIBS = -lopengl32
 
 SRC = \
+	src/components/transform.cpp \
 	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \

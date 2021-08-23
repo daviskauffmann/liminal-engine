@@ -11,6 +11,7 @@
 #include "object.hpp"
 #include "point_light.hpp"
 #include "program.hpp"
+#include "scene.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 #include "source.hpp"
@@ -29,13 +30,13 @@ namespace liminal
         bool greyscale;
         liminal::camera *camera;
         liminal::skybox *skybox;
-        std::vector<liminal::object *> objects;
-        std::vector<liminal::directional_light *> directional_lights;
-        std::vector<liminal::point_light *> point_lights;
-        std::vector<liminal::spot_light *> spot_lights;
-        std::vector<liminal::water *> waters;
-        std::vector<liminal::terrain *> terrains;
-        std::vector<liminal::sprite *> sprites;
+        // std::vector<liminal::object *> objects;
+        // std::vector<liminal::directional_light *> directional_lights;
+        // std::vector<liminal::point_light *> point_lights;
+        // std::vector<liminal::spot_light *> spot_lights;
+        // std::vector<liminal::water *> waters;
+        // std::vector<liminal::terrain *> terrains;
+        // std::vector<liminal::sprite *> sprites;
 
         renderer(
             GLsizei display_width, GLsizei display_height, float render_scale,
@@ -49,7 +50,7 @@ namespace liminal
 
         void reload_programs();
 
-        void flush(unsigned int current_time, float delta_time);
+        void flush(liminal::scene *scene, unsigned int current_time, float delta_time);
 
     private:
         GLsizei display_width;
@@ -127,7 +128,7 @@ namespace liminal
         void setup_samplers();
 
         void render_shadows();
-        void render_objects(GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_objects(liminal::scene *scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
         void render_waters(unsigned int current_time);
         void render_sprites();
         void render_screen();

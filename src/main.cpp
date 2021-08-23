@@ -13,6 +13,7 @@
 #include "platform.hpp"
 #include "point_light.hpp"
 #include "renderer.hpp"
+#include "scene.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 #include "source.hpp"
@@ -27,6 +28,7 @@
 
 int main(int argc, char *argv[])
 {
+    // parse command line options
     int window_width;
     int window_height;
     int render_scale;
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // init subsystems
     liminal::platform platform(WINDOW_TITLE, window_width, window_height);
     liminal::renderer renderer(
         window_width, window_height, render_scale,
@@ -75,8 +78,10 @@ int main(int argc, char *argv[])
         window_width, window_height);
     liminal::audio audio;
 
+    // get imgui reference
     ImGuiIO &io = ImGui::GetIO();
 
+    // init physics
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btCollisionDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
     btBroadphaseInterface *overlapping_pair_cache = new btDbvtBroadphase();
@@ -85,6 +90,7 @@ int main(int argc, char *argv[])
 
     world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
 
+    // lua test
     sol::state lua;
     lua.open_libraries(sol::lib::base);
     lua.set_function("PrintHelloWorld", []() -> void
@@ -93,6 +99,13 @@ int main(int argc, char *argv[])
                      { return 4 + mod; });
     lua.script_file("assets/scripts/test.lua");
 
+    // load assets
+    // TODO: asset management
+    liminal::skybox *skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    liminal::model *backpack_model = new liminal::model("assets/models/backpack/backpack.obj");
+    liminal::model *boblamp_model = new liminal::model("assets/models/boblampclean/boblampclean.md5mesh", true);
+    liminal::model *dude_model = new liminal::model("assets/models/dude/model.dae", true);
+
     liminal::camera *camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
@@ -100,82 +113,92 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    // liminal::skybox *skybox = nullptr;
-    // liminal::skybox *skybox = new liminal::skybox("assets/images/Circus_Backstage_8k.jpg");
-    liminal::skybox *skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    liminal::scene scene;
+    for (uint16_t id = 0; id < MAX_ENTITIES; id++)
+    {
+        scene.entities[id].id = -1;
+        scene.transforms[id].id = -1;
+        scene.mesh_renderers[id].id = -1;
+    }
 
-    // liminal::model *model = new liminal::model("assets/models/cube/cube.obj");
-    liminal::model *model = new liminal::model("assets/models/backpack/backpack.obj");
-    liminal::object *object = new liminal::object(
-        model,
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        1.0f);
-    // world->addRigidBody(object->rigidbody);
+    liminal::entity *backpack_entity = &scene.entities[0];
+    backpack_entity->id = 0;
+    scene.transforms[backpack_entity->id].id = backpack_entity->id;
+    scene.transforms[backpack_entity->id].parent = nullptr;
+    scene.transforms[backpack_entity->id].position = glm::vec3(0.0f, 0.0f, 0.0f);
+    scene.transforms[backpack_entity->id].rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    scene.transforms[backpack_entity->id].scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    scene.mesh_renderers[backpack_entity->id].id = backpack_entity->id;
+    scene.mesh_renderers[backpack_entity->id].model = backpack_model;
 
-    liminal::model *animated_model = new liminal::model("assets/models/boblampclean/boblampclean.md5mesh", true);
-    animated_model->set_animation(0);
-    liminal::object *animated_object = new liminal::object(
-        animated_model,
-        glm::vec3(5.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, -1.57f, 0.0f),
-        glm::vec3(0.05f, 0.05f, 0.05f),
-        1.0f);
-    // world->addRigidBody(animated_object->rigidbody);
+    // liminal::object *backpack = new liminal::object(
+    //     backpack_model,
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(1.0f, 1.0f, 1.0f),
+    //     1.0f);
+    // world->addRigidBody(backpack->rigidbody);
 
-    liminal::model *animated_model2 = new liminal::model("assets/models/dude/model.dae", true);
-    animated_model2->set_animation(0);
-    liminal::object *animated_object2 = new liminal::object(
-        animated_model2,
-        glm::vec3(-5.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, -1.57f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        1.0f);
-    // world->addRigidBody(animated_object2->rigidbody);
+    // liminal::object *boblamp = new liminal::object(
+    //     boblamp_model,
+    //     glm::vec3(5.0f, 0.0f, 0.0f),
+    //     glm::vec3(0.0f, -1.57f, 0.0f),
+    //     glm::vec3(0.05f, 0.05f, 0.05f),
+    //     1.0f);
+    // boblamp_model->set_animation(0);
+    // world->addRigidBody(boblamp->rigidbody);
 
-    const float sun_intensity = 10.0f;
-    liminal::directional_light *sun = new liminal::directional_light(
-        glm::vec3(0.352286f, -0.547564f, -0.758992f),
-        glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
-        4096);
+    // liminal::object *dude = new liminal::object(
+    //     dude_model,
+    //     glm::vec3(-5.0f, 0.0f, 0.0f),
+    //     glm::vec3(0.0f, -1.57f, 0.0f),
+    //     glm::vec3(1.0f, 1.0f, 1.0f),
+    //     1.0f);
+    // dude_model->set_animation(0);
+    // world->addRigidBody(dude->rigidbody);
 
-    const float light_intensity = 10.0f;
-    liminal::point_light *red_light = new liminal::point_light(
-        glm::vec3(2.0f, 0.0f, 2.0f),
-        glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity,
-        512);
-    liminal::point_light *yellow_light = new liminal::point_light(
-        glm::vec3(-2.0f, 0.0f, -2.0f),
-        glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity,
-        512);
-    liminal::point_light *green_light = new liminal::point_light(
-        glm::vec3(2.0f, 0.0f, -2.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity,
-        512);
-    liminal::point_light *blue_light = new liminal::point_light(
-        glm::vec3(-2.0f, 0.0f, 2.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity,
-        512);
+    // const float sun_intensity = 10.0f;
+    // liminal::directional_light *sun = new liminal::directional_light(
+    //     glm::vec3(0.352286f, -0.547564f, -0.758992f),
+    //     glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
+    //     4096);
 
-    const float flashlight_intensity = 20.0f;
-    liminal::spot_light *flashlight = new liminal::spot_light(
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
-        cosf(glm::radians(12.5f)),
-        cosf(glm::radians(15.0f)),
-        1024);
+    // const float light_intensity = 10.0f;
+    // liminal::point_light *red_light = new liminal::point_light(
+    //     glm::vec3(2.0f, 0.0f, 2.0f),
+    //     glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity,
+    //     512);
+    // liminal::point_light *yellow_light = new liminal::point_light(
+    //     glm::vec3(-2.0f, 0.0f, -2.0f),
+    //     glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity,
+    //     512);
+    // liminal::point_light *green_light = new liminal::point_light(
+    //     glm::vec3(2.0f, 0.0f, -2.0f),
+    //     glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity,
+    //     512);
+    // liminal::point_light *blue_light = new liminal::point_light(
+    //     glm::vec3(-2.0f, 0.0f, 2.0f),
+    //     glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity,
+    //     512);
 
-    liminal::water *water = new liminal::water(
-        glm::vec3(0.0f, -2.0f, 0.0f),
-        100.0f);
+    // const float flashlight_intensity = 20.0f;
+    // liminal::spot_light *flashlight = new liminal::spot_light(
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
+    //     cosf(glm::radians(12.5f)),
+    //     cosf(glm::radians(15.0f)),
+    //     1024);
 
-    liminal::terrain *terrain = new liminal::terrain(
-        "assets/images/heightmap.png",
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        100.0f,
-        10.0f);
+    // liminal::water *water = new liminal::water(
+    //     glm::vec3(0.0f, -2.0f, 0.0f),
+    //     100.0f);
+
+    // liminal::terrain *terrain = new liminal::terrain(
+    //     "assets/images/heightmap.png",
+    //     glm::vec3(0.0f, 0.0f, 0.0f),
+    //     100.0f,
+    //     10.0f);
     // world->addRigidBody(terrain->rigidbody);
 
     liminal::sound *ambient_sound = new liminal::sound("assets/audio/ambient.wav");
@@ -423,28 +446,28 @@ int main(int argc, char *argv[])
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
-        static float angle = 0.0f;
-        const float pi = 3.14159f;
-        const float distance = 6.0f;
-        angle += 0.5f * delta_time;
-        if (angle > 2 * pi)
-        {
-            angle = 0;
-        }
-        red_light->position.x = distance * sinf(angle);
-        red_light->position.z = distance * cosf(angle);
-        yellow_light->position.x = distance * sinf(angle + pi / 2);
-        yellow_light->position.z = distance * cosf(angle + pi / 2);
-        green_light->position.x = distance * sinf(angle + pi);
-        green_light->position.z = distance * cosf(angle + pi);
-        blue_light->position.x = distance * sinf(angle + 3 * pi / 2);
-        blue_light->position.z = distance * cosf(angle + 3 * pi / 2);
+        // static float angle = 0.0f;
+        // const float pi = 3.14159f;
+        // const float distance = 6.0f;
+        // angle += 0.5f * delta_time;
+        // if (angle > 2 * pi)
+        // {
+        //     angle = 0;
+        // }
+        // red_light->position.x = distance * sinf(angle);
+        // red_light->position.z = distance * cosf(angle);
+        // yellow_light->position.x = distance * sinf(angle + pi / 2);
+        // yellow_light->position.z = distance * cosf(angle + pi / 2);
+        // green_light->position.x = distance * sinf(angle + pi);
+        // green_light->position.z = distance * cosf(angle + pi);
+        // blue_light->position.x = distance * sinf(angle + 3 * pi / 2);
+        // blue_light->position.z = distance * cosf(angle + 3 * pi / 2);
 
-        if (flashlight_follow)
-        {
-            flashlight->position = camera->position;
-            flashlight->direction = glm::mix(flashlight->direction, camera_front, 30.0f * delta_time);
-        }
+        // if (flashlight_follow)
+        // {
+        //     flashlight->position = camera->position;
+        //     flashlight->direction = glm::mix(flashlight->direction, camera_front, 30.0f * delta_time);
+        // }
 
         audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
         ambient_source->set_position(camera->position);
@@ -476,21 +499,21 @@ int main(int argc, char *argv[])
         renderer.wireframe = wireframe;
         renderer.camera = camera;
         renderer.skybox = skybox;
-        renderer.objects.push_back(object);
-        renderer.objects.push_back(animated_object);
-        renderer.objects.push_back(animated_object2);
-        renderer.directional_lights.push_back(sun);
-        renderer.point_lights.push_back(red_light);
-        renderer.point_lights.push_back(yellow_light);
-        renderer.point_lights.push_back(green_light);
-        renderer.point_lights.push_back(blue_light);
-        if (flashlight_on)
-        {
-            renderer.spot_lights.push_back(flashlight);
-        }
+        // renderer.objects.push_back(backpack);
+        // renderer.objects.push_back(boblamp);
+        // renderer.objects.push_back(dude);
+        // renderer.directional_lights.push_back(sun);
+        // renderer.point_lights.push_back(red_light);
+        // renderer.point_lights.push_back(yellow_light);
+        // renderer.point_lights.push_back(green_light);
+        // renderer.point_lights.push_back(blue_light);
+        // if (flashlight_on)
+        // {
+        // renderer.spot_lights.push_back(flashlight);
+        // }
         // renderer.terrains.push_back(terrain);
-        renderer.waters.push_back(water);
-        renderer.flush(current_time, delta_time);
+        // renderer.waters.push_back(water);
+        renderer.flush(&scene, current_time, delta_time);
 
         if (edit_mode)
         {
@@ -538,46 +561,6 @@ int main(int argc, char *argv[])
 
         platform.end_render();
     }
-
-    delete world;
-    delete solver;
-    delete overlapping_pair_cache;
-    delete dispatcher;
-    delete collision_configuration;
-
-    delete camera;
-
-    delete skybox;
-
-    delete model;
-    delete object;
-
-    delete animated_model;
-    delete animated_object;
-
-    delete animated_model2;
-    delete animated_object2;
-
-    delete sun;
-
-    delete red_light;
-    delete yellow_light;
-    delete green_light;
-    delete blue_light;
-
-    delete flashlight;
-
-    delete water;
-
-    delete terrain;
-
-    delete ambient_source;
-    delete bounce_source;
-    delete shoot_source;
-
-    delete ambient_sound;
-    delete bounce_sound;
-    delete shoot_sound;
 
     return 0;
 }
