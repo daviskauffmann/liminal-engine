@@ -19,6 +19,6 @@ namespace liminal
         ALCcontext *context;
         glm::vec3 position;
     };
-} // namespace liminal
+}
 
 #endif

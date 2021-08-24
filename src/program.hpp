@@ -48,6 +48,6 @@ namespace liminal
 
         GLint get_location(const std::string &name) const;
     };
-} // namespace liminal
+}
 
 #endif

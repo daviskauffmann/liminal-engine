@@ -29,6 +29,6 @@ namespace liminal
 
         void draw(liminal::program *program) const;
     };
-} // namespace liminal
+}
 
 #endif

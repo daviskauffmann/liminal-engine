@@ -4,6 +4,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+#include "components/mesh_renderer.hpp"
+#include "components/transform.hpp"
+
 // TODO: framebuffer helper class
 // should store info about width/height
 // when binding the framebuffer, automatically set viewport to those values
@@ -1040,7 +1043,7 @@ void liminal::renderer::setup_samplers()
     screen_program->unbind();
 }
 
-void liminal::renderer::flush(liminal::scene *scene, unsigned int current_time, float delta_time)
+void liminal::renderer::render(entt::registry &registry, unsigned int current_time, float delta_time)
 {
     if (!camera)
     {
@@ -1048,34 +1051,12 @@ void liminal::renderer::flush(liminal::scene *scene, unsigned int current_time, 
         return;
     }
 
-    // update animations
-    // for (auto &object : objects)
-    // {
-    //     if (object->model->has_animations())
-    //     {
-    //         object->model->update_bone_transformations(current_time);
-    //     }
-    // }
-
     // render everything
     render_shadows();
-    render_objects(scene, hdr_fbo_id, render_width, render_height);
+    render_objects(registry, hdr_fbo_id, render_width, render_height);
     render_waters(current_time);
     render_sprites();
     render_screen();
-
-    // reset render state
-    wireframe = false;
-    greyscale = false;
-    camera = nullptr;
-    skybox = nullptr;
-    // objects.clear();
-    // directional_lights.clear();
-    // point_lights.clear();
-    // spot_lights.clear();
-    // waters.clear();
-    // terrains.clear();
-    // sprites.clear();
 }
 
 void liminal::renderer::render_shadows()
@@ -1282,7 +1263,7 @@ void liminal::renderer::render_shadows()
     // }
 }
 
-void liminal::renderer::render_objects(liminal::scene *scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
+void liminal::renderer::render_objects(entt::registry &registry, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
 {
     // camera
     glm::mat4 camera_projection = camera->calc_projection((float)width / (float)height);
@@ -1298,26 +1279,9 @@ void liminal::renderer::render_objects(liminal::scene *scene, GLuint fbo_id, GLs
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for (uint16_t id = 0; id < MAX_ENTITIES; id++)
+        auto view = registry.view<liminal::transform, liminal::mesh_renderer>();
+        for (auto [entity, transform, mesh_renderer] : view.each())
         {
-            liminal::entity entity = scene->entities[id];
-            if (entity.id == -1)
-            {
-                continue;
-            }
-
-            liminal::mesh_renderer mesh_renderer = scene->mesh_renderers[id];
-            if (mesh_renderer.id == -1)
-            {
-                continue;
-            }
-
-            liminal::transform transform = scene->transforms[id];
-            if (transform.id == -1)
-            {
-                continue;
-            }
-
             glm::mat4 model_matrix = transform.get_model_matrix();
             if (mesh_renderer.model->has_animations())
             {

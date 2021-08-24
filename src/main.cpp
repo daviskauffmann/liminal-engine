@@ -1,19 +1,20 @@
 #include <bullet/btBulletDynamicsCommon.h>
 #include <cxxopts.hpp>
+#include <entt/entt.hpp>
 #include <iostream>
 #include <imgui.h>
 #include <SDL2/SDL.h>
 #include <sol/sol.hpp>
 
+#include "components/mesh_renderer.hpp"
+#include "components/transform.hpp"
 #include "audio.hpp"
 #include "directional_light.hpp"
 #include "camera.hpp"
 #include "model.hpp"
-#include "object.hpp"
 #include "platform.hpp"
 #include "point_light.hpp"
 #include "renderer.hpp"
-#include "scene.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 #include "source.hpp"
@@ -77,6 +78,7 @@ int main(int argc, char *argv[])
         window_width, window_height,
         window_width, window_height);
     liminal::audio audio;
+    entt::registry registry;
 
     // get imgui reference
     ImGuiIO &io = ImGui::GetIO();
@@ -101,61 +103,33 @@ int main(int argc, char *argv[])
 
     // load assets
     // TODO: asset management
-    liminal::skybox *skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
     liminal::model *backpack_model = new liminal::model("assets/models/backpack/backpack.obj");
     liminal::model *boblamp_model = new liminal::model("assets/models/boblampclean/boblampclean.md5mesh", true);
     liminal::model *dude_model = new liminal::model("assets/models/dude/model.dae", true);
+    liminal::skybox *skybox = renderer.skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    liminal::sound *ambient_sound = new liminal::sound("assets/audio/ambient.wav");
+    liminal::sound *bounce_sound = new liminal::sound("assets/audio/bounce.wav");
+    liminal::sound *shoot_sound = new liminal::sound("assets/audio/shoot.wav");
 
-    liminal::camera *camera = new liminal::camera(
+    liminal::camera *camera = renderer.camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
         -90.0f,
         0.0f,
         45.0f);
 
-    liminal::scene scene;
-    for (uint16_t id = 0; id < MAX_ENTITIES; id++)
-    {
-        scene.entities[id].id = -1;
-        scene.transforms[id].id = -1;
-        scene.mesh_renderers[id].id = -1;
-    }
 
-    liminal::entity *backpack_entity = &scene.entities[0];
-    backpack_entity->id = 0;
-    scene.transforms[backpack_entity->id].id = backpack_entity->id;
-    scene.transforms[backpack_entity->id].parent = nullptr;
-    scene.transforms[backpack_entity->id].position = glm::vec3(0.0f, 0.0f, 0.0f);
-    scene.transforms[backpack_entity->id].rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-    scene.transforms[backpack_entity->id].scale = glm::vec3(1.0f, 1.0f, 1.0f);
-    scene.mesh_renderers[backpack_entity->id].id = backpack_entity->id;
-    scene.mesh_renderers[backpack_entity->id].model = backpack_model;
+    auto backpack_entity = registry.create();
+    registry.emplace<liminal::transform>(backpack_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::mesh_renderer>(backpack_entity, backpack_model);
 
-    // liminal::object *backpack = new liminal::object(
-    //     backpack_model,
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(1.0f, 1.0f, 1.0f),
-    //     1.0f);
-    // world->addRigidBody(backpack->rigidbody);
+    auto boblamp_entity = registry.create();
+    registry.emplace<liminal::transform>(boblamp_entity, nullptr, glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
+    registry.emplace<liminal::mesh_renderer>(boblamp_entity, boblamp_model);
 
-    // liminal::object *boblamp = new liminal::object(
-    //     boblamp_model,
-    //     glm::vec3(5.0f, 0.0f, 0.0f),
-    //     glm::vec3(0.0f, -1.57f, 0.0f),
-    //     glm::vec3(0.05f, 0.05f, 0.05f),
-    //     1.0f);
-    // boblamp_model->set_animation(0);
-    // world->addRigidBody(boblamp->rigidbody);
-
-    // liminal::object *dude = new liminal::object(
-    //     dude_model,
-    //     glm::vec3(-5.0f, 0.0f, 0.0f),
-    //     glm::vec3(0.0f, -1.57f, 0.0f),
-    //     glm::vec3(1.0f, 1.0f, 1.0f),
-    //     1.0f);
-    // dude_model->set_animation(0);
-    // world->addRigidBody(dude->rigidbody);
+    auto dude_entity = registry.create();
+    registry.emplace<liminal::transform>(dude_entity, nullptr, glm::vec3(-5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::mesh_renderer>(dude_entity, dude_model);
 
     // const float sun_intensity = 10.0f;
     // liminal::directional_light *sun = new liminal::directional_light(
@@ -201,10 +175,6 @@ int main(int argc, char *argv[])
     //     10.0f);
     // world->addRigidBody(terrain->rigidbody);
 
-    liminal::sound *ambient_sound = new liminal::sound("assets/audio/ambient.wav");
-    liminal::sound *bounce_sound = new liminal::sound("assets/audio/bounce.wav");
-    liminal::sound *shoot_sound = new liminal::sound("assets/audio/shoot.wav");
-
     liminal::source *ambient_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
     ambient_source->set_loop(true);
     ambient_source->set_gain(0.25f);
@@ -215,24 +185,27 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
-    bool wireframe = false;
     bool edit_mode = false;
-    bool lock_cursor = true;
     bool flashlight_on = true;
     bool flashlight_follow = true;
+
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     bool quit = false;
     while (!quit)
     {
+        // calculate time between frames
         unsigned int previous_time = current_time;
         current_time = SDL_GetTicks();
         float delta_time = ((current_time - previous_time) / 1000.0f) * time_scale;
 
+        // gather input
         int num_keys;
         const unsigned char *keys = SDL_GetKeyboardState(&num_keys);
         int mouse_x, mouse_y;
         unsigned int mouse = SDL_GetMouseState(&mouse_x, &mouse_y);
 
+        // process events
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -271,7 +244,7 @@ int main(int argc, char *argv[])
                     {
                     case SDLK_TAB:
                     {
-                        lock_cursor = !lock_cursor;
+                        SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
                     }
                     break;
                     case SDLK_RETURN:
@@ -393,8 +366,6 @@ int main(int argc, char *argv[])
             }
         }
 
-        SDL_SetRelativeMouseMode((SDL_bool)lock_cursor);
-
         glm::vec3 camera_front = camera->calc_front();
         glm::vec3 camera_right = camera->calc_right();
 
@@ -492,34 +463,32 @@ int main(int argc, char *argv[])
             }
         }
 
+        // update physics
         world->stepSimulation(delta_time);
 
+        // update animations
+        auto view = registry.view<liminal::mesh_renderer>();
+        for (auto [entity, mesh_renderer] : view.each())
+        {
+            if (mesh_renderer.model->has_animations())
+            {
+                mesh_renderer.model->update_bone_transformations(0, current_time);
+            }
+        }
+
+        // setup window for rendering
         platform.begin_render();
 
-        renderer.wireframe = wireframe;
-        renderer.camera = camera;
-        renderer.skybox = skybox;
-        // renderer.objects.push_back(backpack);
-        // renderer.objects.push_back(boblamp);
-        // renderer.objects.push_back(dude);
-        // renderer.directional_lights.push_back(sun);
-        // renderer.point_lights.push_back(red_light);
-        // renderer.point_lights.push_back(yellow_light);
-        // renderer.point_lights.push_back(green_light);
-        // renderer.point_lights.push_back(blue_light);
-        // if (flashlight_on)
-        // {
-        // renderer.spot_lights.push_back(flashlight);
-        // }
-        // renderer.terrains.push_back(terrain);
-        // renderer.waters.push_back(water);
-        renderer.flush(&scene, current_time, delta_time);
+        // main rendering
+        renderer.render(registry, current_time, delta_time);
 
+        // DEBUG: render demo window
         if (edit_mode)
         {
             ImGui::ShowDemoWindow();
         }
 
+        // render console
         if (console_open)
         {
             ImGui::Begin("Console", &console_open);
@@ -540,8 +509,13 @@ int main(int argc, char *argv[])
                 }
                 else if (strcmp(command, "wireframe") == 0)
                 {
-                    wireframe = !wireframe;
-                    messages.push_back("Wireframe " + wireframe ? "on" : "off");
+                    renderer.wireframe = !renderer.wireframe;
+                    messages.push_back("Wireframe " + renderer.wireframe ? "on" : "off");
+                }
+                else if (strcmp(command, "greyscale") == 0)
+                {
+                    renderer.greyscale = !renderer.greyscale;
+                    messages.push_back("Wireframe " + renderer.wireframe ? "on" : "off");
                 }
                 else
                 {
@@ -559,6 +533,7 @@ int main(int argc, char *argv[])
             ImGui::End();
         }
 
+        // done rendering
         platform.end_render();
     }
 

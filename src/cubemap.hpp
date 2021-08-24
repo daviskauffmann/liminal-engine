@@ -14,6 +14,6 @@ namespace liminal
         cubemap(std::vector<std::string> filenames);
         ~cubemap();
     };
-} // namespace liminal
+}
 
 #endif

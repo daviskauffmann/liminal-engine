@@ -1,7 +1,7 @@
 PKGS = assimp bullet glew lua openal sdl2 sdl2_image sdl2_mixer
 
 CXX = g++
-CXXFLAGS = -ggdb -Iextern/imgui -Iextern/imgui/backends -Iextern/stb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`
+CXXFLAGS = -ggdb -Iextern/entt/single_include -Iextern/imgui -Iextern/imgui/backends -Iextern/stb -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-type-limits `pkg-config --cflags $(PKGS)`
 CPPFLAGS =
 LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
 LDLIBS = -lopengl32
@@ -17,7 +17,6 @@ SRC = \
 	src/main.cpp \
 	src/mesh.cpp \
 	src/model.cpp \
-	src/object.cpp \
 	src/platform.cpp \
 	src/point_light.cpp \
 	src/program.cpp \

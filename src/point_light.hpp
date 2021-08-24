@@ -30,6 +30,6 @@ namespace liminal
 
         void update_transformation_matrices();
     };
-} // namespace liminal
+}
 
 #endif

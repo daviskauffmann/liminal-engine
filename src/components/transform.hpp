@@ -4,11 +4,9 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
-#include "../component.hpp"
-
 namespace liminal
 {
-    struct transform : public component
+    struct transform
     {
         transform *parent;
         glm::vec3 position;

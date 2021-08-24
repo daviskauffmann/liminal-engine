@@ -19,6 +19,6 @@ namespace liminal
 		GLuint size;
 		GLuint texture_size;
 	};
-} // namespace liminal
+}
 
 #endif

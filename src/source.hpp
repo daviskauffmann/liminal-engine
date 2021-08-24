@@ -27,6 +27,6 @@ namespace liminal
         ALuint source_id;
         mutable glm::vec3 position;
     };
-} // namespace liminal
+}
 
 #endif

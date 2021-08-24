@@ -30,7 +30,6 @@ liminal::model::model(const std::string &filename, bool flip_uvs)
 
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
     num_bones = 0;
-    animation_index = 0;
 
     process_node_meshes(scene->mRootNode, scene);
 }
@@ -53,25 +52,17 @@ bool liminal::model::has_animations() const
     return scene->HasAnimations();
 }
 
-void liminal::model::set_animation(unsigned int index)
-{
-    if (index >= 0 && index < scene->mNumAnimations)
-    {
-        animation_index = index;
-    }
-}
-
-void liminal::model::update_bone_transformations(unsigned int current_time)
+void liminal::model::update_bone_transformations(unsigned int animation_index, unsigned int current_time)
 {
     bone_transformations.clear();
 
-    if (scene->mNumAnimations > 0)
+    if (scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
         float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
         float time_in_ticks = ticks_per_second * (current_time / 1000.0f);
         float animation_time = fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
-        process_node_animations(animation_time, scene->mRootNode, glm::identity<glm::mat4>());
+        process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
 
         bone_transformations.resize(num_bones);
         for (unsigned int i = 0; i < num_bones; i++)
@@ -226,31 +217,34 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
     return new liminal::mesh(vertices, indices, textures);
 }
 
-void liminal::model::process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
+void liminal::model::process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
 {
     std::string node_name(node->mName.data);
     glm::mat4 node_transformation = mat4_cast(node->mTransformation);
- 
-    const aiAnimation *scene_animation = scene->mAnimations[animation_index];
-    const aiNodeAnim *node_animation = find_node_animation(scene_animation, node_name);
-    if (node_animation)
+
+    if (scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        aiVector3D interpolated_position;
-        calc_interpolated_position(interpolated_position, animation_time, node_animation);
-        glm::vec3 position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
-        glm::mat4 position = glm::translate(glm::mat4(1.0f), position_vector);
+        const aiAnimation *scene_animation = scene->mAnimations[animation_index];
+        const aiNodeAnim *node_animation = find_node_animation(scene_animation, node_name);
+        if (node_animation)
+        {
+            aiVector3D interpolated_position;
+            calc_interpolated_position(interpolated_position, animation_time, node_animation);
+            glm::vec3 position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
+            glm::mat4 position = glm::translate(glm::mat4(1.0f), position_vector);
 
-        aiQuaternion interpolated_rotation;
-        calc_interpolated_rotation(interpolated_rotation, animation_time, node_animation);
-        glm::quat rotation_vector = quat_cast(interpolated_rotation);
-        glm::mat4 rotation = glm::toMat4(rotation_vector);
+            aiQuaternion interpolated_rotation;
+            calc_interpolated_rotation(interpolated_rotation, animation_time, node_animation);
+            glm::quat rotation_vector = quat_cast(interpolated_rotation);
+            glm::mat4 rotation = glm::toMat4(rotation_vector);
 
-        aiVector3D interpolated_scale;
-        calc_interpolated_scale(interpolated_scale, animation_time, node_animation);
-        glm::vec3 scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
-        glm::mat4 scale = glm::scale(glm::mat4(1.0f), scale_vector);
+            aiVector3D interpolated_scale;
+            calc_interpolated_scale(interpolated_scale, animation_time, node_animation);
+            glm::vec3 scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
+            glm::mat4 scale = glm::scale(glm::mat4(1.0f), scale_vector);
 
-        node_transformation = position * rotation * scale;
+            node_transformation = position * rotation * scale;
+        }
     }
 
     glm::mat4 global_transformation = parent_transformation * node_transformation;
@@ -263,7 +257,7 @@ void liminal::model::process_node_animations(float animation_time, const aiNode 
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        process_node_animations(animation_time, node->mChildren[i], global_transformation);
+        process_node_animations(animation_index, animation_time, node->mChildren[i], global_transformation);
     }
 }
 

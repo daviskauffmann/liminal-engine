@@ -31,6 +31,6 @@ namespace liminal
 
         float get_height(SDL_Surface *surface, int x, int z) const;
     };
-} // namespace liminal
+}
 
 #endif

@@ -31,7 +31,7 @@ namespace liminal
         bool has_animations() const;
         unsigned int num_animations() const;
         void set_animation(unsigned int index);
-        void update_bone_transformations(unsigned int current_time);
+        void update_bone_transformations(unsigned int animation_index, unsigned int current_time);
 
         void draw_meshes(liminal::program *program) const;
 
@@ -46,14 +46,13 @@ namespace liminal
         unsigned int num_bones;
         std::vector<bone> bones;
         std::unordered_map<std::string, unsigned int> bone_indices;
-        unsigned int animation_index;
 
         std::unordered_map<std::string, liminal::texture *> loaded_textures;
 
         void process_node_meshes(const aiNode *node, const aiScene *scene);
         liminal::mesh *create_mesh(const aiMesh *mesh, const aiScene *scene);
 
-        void process_node_animations(float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
+        void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string node_name);
         void calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
         unsigned int find_position_index(float animation_time, const aiNodeAnim *node_animation);
@@ -62,6 +61,6 @@ namespace liminal
         void calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
         unsigned int find_scale_index(float animation_time, const aiNodeAnim *node_animation);
     };
-} // namespace liminal
+}
 
 #endif

@@ -20,6 +20,6 @@ namespace liminal
 
         void add_bone_data(unsigned int id, float weight);
     };
-} // namespace liminal
+}
 
 #endif

@@ -32,6 +32,6 @@ namespace liminal
 
         void update_transformation_matrix(glm::vec3 center);
     };
-} // namespace liminal
+}
 
 #endif

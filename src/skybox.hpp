@@ -17,6 +17,6 @@ namespace liminal
 
         void set_cubemap(const std::string &filename);
     };
-} // namespace liminal
+}
 
 #endif

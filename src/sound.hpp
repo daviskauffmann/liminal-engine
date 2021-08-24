@@ -13,6 +13,6 @@ namespace liminal
         sound(const std::string &filename);
         ~sound();
     };
-} // namespace liminal
+}
 
 #endif

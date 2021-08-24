@@ -15,6 +15,6 @@ namespace liminal
 
         void bind(unsigned int index) const;
     };
-} // namespace liminal
+}
 
 #endif

@@ -26,6 +26,6 @@ namespace liminal
 
         glm::mat4 calc_model() const;
     };
-} // namespace liminal
+}
 
 #endif

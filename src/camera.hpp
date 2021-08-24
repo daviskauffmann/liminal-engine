@@ -29,6 +29,6 @@ namespace liminal
         glm::mat4 calc_projection(float aspect) const;
         glm::mat4 calc_view() const;
     };
-} // namespace liminal
+}
 
 #endif
