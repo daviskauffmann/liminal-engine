@@ -7,6 +7,7 @@ LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
 LDLIBS = -lopengl32
 
 SRC = \
+	src/components/audio_source.cpp \
 	src/components/directional_light.cpp \
 	src/components/point_light.cpp \
 	src/components/spot_light.cpp \
@@ -14,7 +15,6 @@ SRC = \
 	src/components/terrain.cpp \
 	src/components/transform.cpp \
 	src/components/water.cpp \
-	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
 	src/cubemap.cpp \
@@ -27,7 +27,6 @@ SRC = \
 	src/renderer.cpp \
 	src/skybox.cpp \
 	src/sound.cpp \
-	src/source.cpp \
 	src/stb_image.cpp \
 	src/stb_include.cpp \
 	src/texture.cpp \

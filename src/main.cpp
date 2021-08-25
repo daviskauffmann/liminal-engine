@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <sol/sol.hpp>
 
+#include "components/audio_source.hpp"
 #include "components/directional_light.hpp"
 #include "components/mesh_renderer.hpp"
 #include "components/point_light.hpp"
@@ -20,8 +21,6 @@
 #include "renderer.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
-#include "source.hpp"
-#include "sprite.hpp"
 
 #define VERSION "v0.0.1"
 
@@ -109,40 +108,55 @@ int main(int argc, char *argv[])
     renderer.camera = &camera;
     // renderer.skybox = &skybox;
 
+    // init game scripts
     sol::state lua;
-    lua.open_libraries(sol::lib::base);
-    lua.set_function("AddEntity", [&registry]() -> entt::entity
-                     { return registry.create(); });
-    lua.set_function("AddTransform", [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> liminal::transform
-                     { return registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz)); });
-    // lua.set_function("UpdateTransform");
-    lua.set_function("AddMeshRenderer", [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> liminal::mesh_renderer
-                     {
-                         auto model = new liminal::model(filename, flip_uvs);
-                         return registry.emplace<liminal::mesh_renderer>(entity, model);
-                     });
+    lua.open_libraries(sol::lib::base, sol::lib::math);
     lua.script_file("assets/scripts/game.lua");
+
+    lua["AddEntity"] = [&registry]() -> entt::entity
+    {
+        return registry.create();
+    };
+    lua["AddTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
+    {
+        registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
+    };
+    lua["UpdateTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
+    {
+        auto &transform = registry.get<liminal::transform>(entity);
+        transform.position = glm::vec3(x, y, z);
+        transform.rotation = glm::vec3(rx, ry, rz);
+        transform.scale = glm::vec3(sx, sy, sz);
+    };
+    lua["AddMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
+    {
+        auto model = new liminal::model(filename, flip_uvs);
+        registry.emplace<liminal::mesh_renderer>(entity, model);
+    };
+    lua["UpdateMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
+    {
+        auto &mesh_renderer = registry.get<liminal::mesh_renderer>(entity);
+        auto model = new liminal::model(filename, flip_uvs);
+        mesh_renderer.model = model;
+    };
+    lua["AddPointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
+    {
+        registry.emplace<liminal::point_light>(entity, glm::vec3(r, g, b), 512);
+    };
+    lua["UpdatePointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
+    {
+        auto &point_light = registry.get<liminal::point_light>(entity);
+        point_light.color = glm::vec3(r, g, b);
+    };
+
     sol::function game_init = lua["Init"];
     sol::function game_update = lua["Update"];
+
     game_init();
 
     const float sun_intensity = 10.0f;
     auto sun = registry.create();
     registry.emplace<liminal::directional_light>(sun, glm::vec3(0.352286f, -0.547564f, -0.758992f), glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity, 4096);
-
-    const float light_intensity = 10.0f;
-    auto red_light = registry.create();
-    registry.emplace<liminal::transform>(red_light, nullptr, glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::point_light>(red_light, glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity, 512);
-    auto yellow_light = registry.create();
-    registry.emplace<liminal::transform>(yellow_light, nullptr, glm::vec3(-2.0f, 0.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::point_light>(yellow_light, glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity, 512);
-    auto green_light = registry.create();
-    registry.emplace<liminal::transform>(green_light, nullptr, glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::point_light>(green_light, glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity, 512);
-    auto blue_light = registry.create();
-    registry.emplace<liminal::transform>(blue_light, nullptr, glm::vec3(-2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::point_light>(blue_light, glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity, 512);
 
     const float flashlight_intensity = 20.0f;
     auto flashlight = registry.create();
@@ -155,12 +169,20 @@ int main(int argc, char *argv[])
     // auto terrain = registry.create();
     // registry.emplace<liminal::terrain>(terrain, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 10.0f);
 
-    liminal::source *ambient_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
-    ambient_source->set_loop(true);
-    ambient_source->set_gain(0.25f);
-    // ambient_source->play(ambient_sound);
-    liminal::source *bounce_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
-    liminal::source *shoot_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
+    auto ambience = registry.create();
+    registry.emplace<liminal::transform>(ambience);
+    registry.emplace<liminal::audio_source>(ambience);
+    registry.get<liminal::audio_source>(ambience).set_loop(true);
+    registry.get<liminal::audio_source>(ambience).set_gain(0.25f);
+    // registry.get<liminal::audio_source>(ambience).play(ambient_sound);
+
+    auto bounce = registry.create();
+    registry.emplace<liminal::transform>(bounce);
+    registry.emplace<liminal::audio_source>(bounce);
+
+    auto weapon = registry.create();
+    registry.emplace<liminal::transform>(weapon);
+    registry.emplace<liminal::audio_source>(weapon);
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;
@@ -277,6 +299,10 @@ int main(int argc, char *argv[])
                     break;
                     case SDLK_r:
                     {
+                        // TODO: work out hot reloading game code
+                        // lua.script_file("assets/scripts/game.lua");
+                        // game_update = lua["Update"];
+
                         renderer.reload_programs();
                     }
                     break;
@@ -397,23 +423,6 @@ int main(int argc, char *argv[])
         // camera.pitch = -glm::dot(camera_front, velocity);
         camera.roll = glm::dot(camera_right, velocity);
 
-        static float angle = 0.0f;
-        const float pi = 3.14159f;
-        const float distance = 6.0f;
-        angle += 0.5f * delta_time;
-        if (angle > 2 * pi)
-        {
-            angle = 0;
-        }
-        registry.get<liminal::transform>(red_light).position.x = distance * sinf(angle);
-        registry.get<liminal::transform>(red_light).position.z = distance * cosf(angle);
-        registry.get<liminal::transform>(yellow_light).position.x = distance * sinf(angle + pi / 2);
-        registry.get<liminal::transform>(yellow_light).position.z = distance * cosf(angle + pi / 2);
-        registry.get<liminal::transform>(green_light).position.x = distance * sinf(angle + pi);
-        registry.get<liminal::transform>(green_light).position.z = distance * cosf(angle + pi);
-        registry.get<liminal::transform>(blue_light).position.x = distance * sinf(angle + 3 * pi / 2);
-        registry.get<liminal::transform>(blue_light).position.z = distance * cosf(angle + 3 * pi / 2);
-
         if (flashlight_follow)
         {
             registry.get<liminal::transform>(flashlight).position = camera.position;
@@ -424,24 +433,24 @@ int main(int argc, char *argv[])
         }
 
         audio.set_listener(camera.position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
-        ambient_source->set_position(camera.position);
-        shoot_source->set_position(camera.position);
+        registry.get<liminal::audio_source>(ambience).set_position(camera.position);
+        registry.get<liminal::audio_source>(weapon).set_position(camera.position);
 
         if (!io.WantCaptureMouse)
         {
             if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
-                if (!shoot_source->is_playing())
+                if (!registry.get<liminal::audio_source>(weapon).is_playing())
                 {
-                    shoot_source->play(&shoot_sound);
+                    registry.get<liminal::audio_source>(weapon).play(shoot_sound);
                 }
             }
 
             if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
             {
-                if (!bounce_source->is_playing())
+                if (!registry.get<liminal::audio_source>(bounce).is_playing())
                 {
-                    bounce_source->play(&bounce_sound);
+                    registry.get<liminal::audio_source>(bounce).play(bounce_sound);
                 }
             }
         }

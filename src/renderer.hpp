@@ -10,8 +10,6 @@
 #include "model.hpp"
 #include "program.hpp"
 #include "skybox.hpp"
-#include "source.hpp"
-#include "sprite.hpp"
 #include "texture.hpp"
 
 namespace liminal
