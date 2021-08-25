@@ -6,7 +6,7 @@
 #include <glm/matrix.hpp>
 #include <SDL2/SDL.h>
 
-#include "mesh.hpp"
+#include "../mesh.hpp"
 
 namespace liminal
 {
@@ -20,7 +20,7 @@ namespace liminal
         terrain(const std::string &heightmap_filename, glm::vec3 position, float size, float height_scale);
         ~terrain();
 
-        glm::mat4 calc_model() const;
+        glm::mat4 get_model_matrix() const;
 
     private:
         float height_scale;

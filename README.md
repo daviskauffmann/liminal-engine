@@ -20,6 +20,7 @@ Make sure the following are present on your system:
 
 These dependencies are included as submodules:
 
+- EnTT
 - Dear ImGui
 - stb
 

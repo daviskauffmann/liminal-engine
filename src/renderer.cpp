@@ -4,8 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+#include "components/directional_light.hpp"
 #include "components/mesh_renderer.hpp"
+#include "components/point_light.hpp"
+#include "components/spot_light.hpp"
+#include "components/terrain.hpp"
 #include "components/transform.hpp"
+#include "components/water.hpp"
 
 // TODO: framebuffer helper class
 // should store info about width/height
@@ -1052,215 +1057,214 @@ void liminal::renderer::render(entt::registry &registry, unsigned int current_ti
     }
 
     // render everything
-    render_shadows();
+    render_shadows(registry);
     render_objects(registry, hdr_fbo_id, render_width, render_height);
-    render_waters(current_time);
+    render_waters(registry, current_time);
     render_sprites();
     render_screen();
 }
 
-void liminal::renderer::render_shadows()
+void liminal::renderer::render_shadows(entt::registry &registry)
 {
-    // for (auto &directional_light : directional_lights)
-    // {
-    //     directional_light->update_transformation_matrix(camera->position);
+    for (auto [entity, directional_light] : registry.view<liminal::directional_light>().each())
+    {
+        directional_light.update_transformation_matrix(camera->position);
 
-    //     for (unsigned int i = 0; i < NUM_CASCADES; i++)
-    //     {
-    //         glBindFramebuffer(GL_FRAMEBUFFER, directional_light->depth_map_fbo_id);
-    //         {
-    //             glViewport(0, 0, directional_light->depth_map_size, directional_light->depth_map_size);
-    //             glEnable(GL_CULL_FACE);
+        for (unsigned int i = 0; i < NUM_CASCADES; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, directional_light.depth_map_fbo_id);
+            {
+                glViewport(0, 0, directional_light.depth_map_size, directional_light.depth_map_size);
+                glEnable(GL_CULL_FACE);
 
-    //             glFramebufferTexture2D(
-    //                 GL_FRAMEBUFFER,
-    //                 GL_DEPTH_ATTACHMENT,
-    //                 GL_TEXTURE_2D,
-    //                 directional_light->depth_map_texture_ids[i],
-    //                 0);
+                glFramebufferTexture2D(
+                    GL_FRAMEBUFFER,
+                    GL_DEPTH_ATTACHMENT,
+                    GL_TEXTURE_2D,
+                    directional_light.depth_map_texture_ids[i],
+                    0);
 
-    //             glClear(GL_DEPTH_BUFFER_BIT);
+                glClear(GL_DEPTH_BUFFER_BIT);
 
-    //             for (auto &object : objects)
-    //             {
-    //                 glm::mat4 object_model = object->calc_model();
-    //                 if (object->model->has_animations())
-    //                 {
-    //                     depth_skinned_mesh_program->bind();
-    //                     {
-    //                         depth_skinned_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
-    //                         depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
+                for (auto [entity, transform, mesh_renderer] : registry.view<liminal::transform, liminal::mesh_renderer>().each())
+                {
+                    glm::mat4 model_matrix = transform.get_model_matrix();
+                    if (mesh_renderer.model->has_animations())
+                    {
+                        depth_skinned_mesh_program->bind();
+                        {
+                            depth_skinned_mesh_program->set_mat4("mvp", directional_light.transformation_matrix * model_matrix);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
 
-    //                         object->model->draw_meshes(depth_skinned_mesh_program);
-    //                     }
-    //                     depth_skinned_mesh_program->unbind();
-    //                 }
-    //                 else
-    //                 {
-    //                     depth_mesh_program->bind();
-    //                     {
-    //                         depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * object_model);
+                            mesh_renderer.model->draw_meshes(depth_skinned_mesh_program);
+                        }
+                        depth_skinned_mesh_program->unbind();
+                    }
+                    else
+                    {
+                        depth_mesh_program->bind();
+                        {
+                            depth_mesh_program->set_mat4("mvp", directional_light.transformation_matrix * model_matrix);
 
-    //                         object->model->draw_meshes(depth_mesh_program);
-    //                     }
-    //                     depth_mesh_program->unbind();
-    //                 }
-    //             }
+                            mesh_renderer.model->draw_meshes(depth_mesh_program);
+                        }
+                        depth_mesh_program->unbind();
+                    }
+                }
 
-    //             depth_mesh_program->bind();
-    //             {
+                depth_mesh_program->bind();
+                {
+                    for (auto [entity, terrain] : registry.view<liminal::terrain>().each())
+                    {
+                        glm::mat4 model_matrix = terrain.get_model_matrix();
 
-    //                 for (auto &terrain : terrains)
-    //                 {
-    //                     glm::mat4 terrain_model = terrain->calc_model();
+                        depth_mesh_program->set_mat4("mvp", directional_light.transformation_matrix * model_matrix);
 
-    //                     depth_mesh_program->set_mat4("mvp", directional_light->transformation_matrix * terrain_model);
+                        terrain.mesh->draw(depth_mesh_program);
+                    }
+                }
+                depth_mesh_program->unbind();
+            }
 
-    //                     terrain->mesh->draw(depth_mesh_program);
-    //                 }
-    //             }
-    //             depth_mesh_program->unbind();
-    //         }
+            glDisable(GL_CULL_FACE);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
-    //         glDisable(GL_CULL_FACE);
-    //     }
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+    for (auto [entity, point_light, transform] : registry.view<liminal::point_light, liminal::transform>().each())
+    {
+        point_light.update_transformation_matrices(transform.position);
 
-    // for (auto &point_light : point_lights)
-    // {
-    //     point_light->update_transformation_matrices();
+        glBindFramebuffer(GL_FRAMEBUFFER, point_light.depth_cubemap_fbo_id);
+        {
+            glViewport(0, 0, point_light.depth_cube_size, point_light.depth_cube_size);
+            glEnable(GL_CULL_FACE);
 
-    //     glBindFramebuffer(GL_FRAMEBUFFER, point_light->depth_cubemap_fbo_id);
-    //     {
-    //         glViewport(0, 0, point_light->depth_cube_size, point_light->depth_cube_size);
-    //         glEnable(GL_CULL_FACE);
+            glClear(GL_DEPTH_BUFFER_BIT);
 
-    //         glClear(GL_DEPTH_BUFFER_BIT);
+            for (auto [entity2, transform2, mesh_renderer2] : registry.view<liminal::transform, liminal::mesh_renderer>().each())
+            {
+                glm::mat4 model_matrix = transform2.get_model_matrix();
+                if (mesh_renderer2.model->has_animations())
+                {
+                    depth_cube_skinned_mesh_program->bind();
+                    {
+                        depth_cube_skinned_mesh_program->set_mat4("model", model_matrix);
+                        depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer2.model->bone_transformations);
 
-    //         for (auto &object : objects)
-    //         {
-    //             glm::mat4 object_model = object->calc_model();
-    //             if (object->model->has_animations())
-    //             {
-    //                 depth_cube_skinned_mesh_program->bind();
-    //                 {
-    //                     depth_cube_skinned_mesh_program->set_mat4("model", object_model);
-    //                     depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
+                        for (unsigned int i = 0; i < 6; i++)
+                        {
+                            depth_cube_skinned_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light.transformation_matrices[i]);
+                        }
 
-    //                     for (unsigned int i = 0; i < 6; i++)
-    //                     {
-    //                         depth_cube_skinned_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
-    //                     }
+                        depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light::far_plane);
+                        depth_cube_skinned_mesh_program->set_vec3("light.position", transform.position);
 
-    //                     depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light::far_plane);
-    //                     depth_cube_skinned_mesh_program->set_vec3("light.position", point_light->position);
+                        mesh_renderer2.model->draw_meshes(depth_cube_skinned_mesh_program);
+                    }
+                    depth_cube_skinned_mesh_program->unbind();
+                }
+                else
+                {
+                    depth_cube_mesh_program->bind();
+                    {
+                        depth_cube_mesh_program->set_mat4("model", model_matrix);
 
-    //                     object->model->draw_meshes(depth_cube_skinned_mesh_program);
-    //                 }
-    //                 depth_cube_skinned_mesh_program->unbind();
-    //             }
-    //             else
-    //             {
-    //                 depth_cube_mesh_program->bind();
-    //                 {
-    //                     depth_cube_mesh_program->set_mat4("model", object_model);
+                        for (unsigned int i = 0; i < 6; i++)
+                        {
+                            depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light.transformation_matrices[i]);
+                        }
 
-    //                     for (unsigned int i = 0; i < 6; i++)
-    //                     {
-    //                         depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
-    //                     }
+                        depth_cube_mesh_program->set_float("light.far_plane", point_light::far_plane);
+                        depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
-    //                     depth_cube_mesh_program->set_float("light.far_plane", point_light::far_plane);
-    //                     depth_cube_mesh_program->set_vec3("light.position", point_light->position);
+                        mesh_renderer2.model->draw_meshes(depth_cube_mesh_program);
+                    }
+                    depth_cube_mesh_program->unbind();
+                }
+            }
 
-    //                     object->model->draw_meshes(depth_cube_mesh_program);
-    //                 }
-    //                 depth_cube_mesh_program->unbind();
-    //             }
-    //         }
+            depth_cube_mesh_program->bind();
+            {
+                for (unsigned int i = 0; i < 6; i++)
+                {
+                    depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light.transformation_matrices[i]);
+                }
 
-    //         depth_cube_mesh_program->bind();
-    //         {
-    //             for (unsigned int i = 0; i < 6; i++)
-    //             {
-    //                 depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(i) + "]", point_light->transformation_matrices[i]);
-    //             }
+                depth_cube_mesh_program->set_float("light.far_plane", point_light::far_plane);
+                depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
-    //             depth_cube_mesh_program->set_float("light.far_plane", point_light::far_plane);
-    //             depth_cube_mesh_program->set_vec3("light.position", point_light->position);
+                for (auto [entity, terrain] : registry.view<liminal::terrain>().each())
+                {
+                    glm::mat4 model_matrix = terrain.get_model_matrix();
 
-    //             for (auto &terrain : terrains)
-    //             {
-    //                 glm::mat4 terrain_model = terrain->calc_model();
+                    depth_cube_mesh_program->set_mat4("model", model_matrix);
 
-    //                 depth_cube_mesh_program->set_mat4("model", terrain_model);
+                    terrain.mesh->draw(depth_cube_mesh_program);
+                }
+            }
+            depth_cube_mesh_program->unbind();
 
-    //                 terrain->mesh->draw(depth_cube_mesh_program);
-    //             }
-    //         }
-    //         depth_cube_mesh_program->unbind();
+            glDisable(GL_CULL_FACE);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
-    //         glDisable(GL_CULL_FACE);
-    //     }
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+    for (auto [entity, spot_light, transform] : registry.view<liminal::spot_light, liminal::transform>().each())
+    {
+        spot_light.update_transformation_matrix(transform.position, transform.rotation);
 
-    // for (auto &spot_light : spot_lights)
-    // {
-    //     spot_light->update_transformation_matrix();
+        glBindFramebuffer(GL_FRAMEBUFFER, spot_light.depth_map_fbo_id);
+        {
+            glViewport(0, 0, spot_light.depth_map_size, spot_light.depth_map_size);
+            glEnable(GL_CULL_FACE);
 
-    //     glBindFramebuffer(GL_FRAMEBUFFER, spot_light->depth_map_fbo_id);
-    //     {
-    //         glViewport(0, 0, spot_light->depth_map_size, spot_light->depth_map_size);
-    //         glEnable(GL_CULL_FACE);
+            glClear(GL_DEPTH_BUFFER_BIT);
 
-    //         glClear(GL_DEPTH_BUFFER_BIT);
+            for (auto [entity2, transform2, mesh_renderer2] : registry.view<liminal::transform, liminal::mesh_renderer>().each())
+            {
+                glm::mat4 model_matrix = transform2.get_model_matrix();
+                if (mesh_renderer2.model->has_animations())
+                {
+                    depth_skinned_mesh_program->bind();
+                    {
+                        depth_skinned_mesh_program->set_mat4("mvp", spot_light.transformation_matrix * model_matrix);
+                        depth_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer2.model->bone_transformations);
 
-    //         for (auto &object : objects)
-    //         {
-    //             glm::mat4 object_model = object->calc_model();
-    //             if (object->model->has_animations())
-    //             {
-    //                 depth_skinned_mesh_program->bind();
-    //                 {
-    //                     depth_skinned_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
-    //                     depth_skinned_mesh_program->set_mat4_vector("bone_transformations", object->model->bone_transformations);
+                        mesh_renderer2.model->draw_meshes(depth_skinned_mesh_program);
+                    }
+                    depth_skinned_mesh_program->unbind();
+                }
+                else
+                {
+                    depth_mesh_program->bind();
+                    {
+                        depth_mesh_program->set_mat4("mvp", spot_light.transformation_matrix * model_matrix);
 
-    //                     object->model->draw_meshes(depth_skinned_mesh_program);
-    //                 }
-    //                 depth_skinned_mesh_program->unbind();
-    //             }
-    //             else
-    //             {
-    //                 depth_mesh_program->bind();
-    //                 {
-    //                     depth_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * object_model);
+                        mesh_renderer2.model->draw_meshes(depth_mesh_program);
+                    }
+                    depth_mesh_program->unbind();
+                }
+            }
 
-    //                     object->model->draw_meshes(depth_mesh_program);
-    //                 }
-    //                 depth_mesh_program->unbind();
-    //             }
-    //         }
+            // depth_mesh_program->bind();
+            // {
 
-    //         depth_mesh_program->bind();
-    //         {
+            //     for (auto &terrain : terrains)
+            //     {
+            //         glm::mat4 terrain_model = terrain->calc_model();
 
-    //             for (auto &terrain : terrains)
-    //             {
-    //                 glm::mat4 terrain_model = terrain->calc_model();
+            //         depth_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * terrain_model);
 
-    //                 depth_mesh_program->set_mat4("mvp", spot_light->transformation_matrix * terrain_model);
+            //         terrain->mesh->draw(depth_mesh_program);
+            //     }
+            // }
+            // depth_mesh_program->unbind();
 
-    //                 terrain->mesh->draw(depth_mesh_program);
-    //             }
-    //         }
-    //         depth_mesh_program->unbind();
-
-    //         glDisable(GL_CULL_FACE);
-    //     }
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+            glDisable(GL_CULL_FACE);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 }
 
 void liminal::renderer::render_objects(entt::registry &registry, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
@@ -1279,8 +1283,7 @@ void liminal::renderer::render_objects(entt::registry &registry, GLuint fbo_id, 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        auto view = registry.view<liminal::transform, liminal::mesh_renderer>();
-        for (auto [entity, transform, mesh_renderer] : view.each())
+        for (auto [entity, transform, mesh_renderer] : registry.view<liminal::transform, liminal::mesh_renderer>().each())
         {
             glm::mat4 model_matrix = transform.get_model_matrix();
             if (mesh_renderer.model->has_animations())
@@ -1310,22 +1313,22 @@ void liminal::renderer::render_objects(entt::registry &registry, GLuint fbo_id, 
             }
         }
 
-        // geometry_terrain_program->bind();
-        // {
-        //     geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
+        geometry_terrain_program->bind();
+        {
+            geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
 
-        //     for (auto &terrain : terrains)
-        //     {
-        //         glm::mat4 terrain_model = terrain->calc_model();
+            for (auto [entity, terrain] : registry.view<liminal::terrain>().each())
+            {
+                glm::mat4 model_matrix = terrain.get_model_matrix();
 
-        //         geometry_terrain_program->set_mat4("mvp", camera_projection * camera_view * terrain_model);
-        //         geometry_terrain_program->set_mat4("model", terrain_model);
-        //         geometry_terrain_program->set_float("tiling", terrain->size);
+                geometry_terrain_program->set_mat4("mvp", camera_projection * camera_view * model_matrix);
+                geometry_terrain_program->set_mat4("model", model_matrix);
+                geometry_terrain_program->set_float("tiling", terrain.size);
 
-        //         terrain->mesh->draw(geometry_terrain_program);
-        //     }
-        // }
-        // geometry_terrain_program->unbind();
+                terrain.mesh->draw(geometry_terrain_program);
+            }
+        }
+        geometry_terrain_program->unbind();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDisable(GL_CULL_FACE);
@@ -1389,140 +1392,131 @@ void liminal::renderer::render_objects(entt::registry &registry, GLuint fbo_id, 
             glDepthMask(GL_FALSE);
             glDepthFunc(GL_EQUAL);
 
-            // if (directional_lights.size() > 0)
-            // {
-            //     deferred_directional_program->bind();
-            //     {
-            //         deferred_directional_program->set_vec3("camera.position", camera->position);
+            deferred_directional_program->bind();
+            {
+                deferred_directional_program->set_vec3("camera.position", camera->position);
 
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-            //         glActiveTexture(GL_TEXTURE2);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-            //         glActiveTexture(GL_TEXTURE3);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
-            //         for (auto &directional_light : directional_lights)
-            //         {
-            //             deferred_directional_program->set_vec3("light.direction", directional_light->direction);
-            //             deferred_directional_program->set_vec3("light.color", directional_light->color);
-            //             deferred_directional_program->set_mat4("light.transformation_matrix", directional_light->transformation_matrix);
+                for (auto [entity, directional_light] : registry.view<liminal::directional_light>().each())
+                {
+                    deferred_directional_program->set_vec3("light.direction", directional_light.direction);
+                    deferred_directional_program->set_vec3("light.color", directional_light.color);
+                    deferred_directional_program->set_mat4("light.transformation_matrix", directional_light.transformation_matrix);
 
-            //             glActiveTexture(GL_TEXTURE4);
-            //             glBindTexture(GL_TEXTURE_2D, directional_light->depth_map_texture_ids[0]);
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids[0]);
 
-            //             glBindVertexArray(screen_vao_id);
-            //             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
-            //             glBindVertexArray(0);
+                    glBindVertexArray(screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
+                    glBindVertexArray(0);
 
-            //             glActiveTexture(GL_TEXTURE4);
-            //             glBindTexture(GL_TEXTURE_2D, 0);
-            //         }
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
 
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE2);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE3);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //     }
-            //     deferred_directional_program->unbind();
-            // }
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+            deferred_directional_program->unbind();
 
-            // if (point_lights.size() > 0)
-            // {
-            //     deferred_point_program->bind();
-            //     {
-            //         deferred_point_program->set_vec3("camera.position", camera->position);
-            //         deferred_point_program->set_float("light.far_plane", point_light::far_plane);
+            deferred_point_program->bind();
+            {
+                deferred_point_program->set_vec3("camera.position", camera->position);
+                deferred_point_program->set_float("light.far_plane", point_light::far_plane);
 
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-            //         glActiveTexture(GL_TEXTURE2);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-            //         glActiveTexture(GL_TEXTURE3);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
-            //         for (auto &point_light : point_lights)
-            //         {
-            //             deferred_point_program->set_vec3("light.position", point_light->position);
-            //             deferred_point_program->set_vec3("light.color", point_light->color);
+                for (auto [entity, point_light, transform] : registry.view<liminal::point_light, liminal::transform>().each())
+                {
+                    deferred_point_program->set_vec3("light.position", transform.position);
+                    deferred_point_program->set_vec3("light.color", point_light.color);
 
-            //             glActiveTexture(GL_TEXTURE4);
-            //             glBindTexture(GL_TEXTURE_CUBE_MAP, point_light->depth_cubemap_texture_id);
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, point_light.depth_cubemap_texture_id);
 
-            //             glBindVertexArray(screen_vao_id);
-            //             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
-            //             glBindVertexArray(0);
+                    glBindVertexArray(screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
+                    glBindVertexArray(0);
 
-            //             glActiveTexture(GL_TEXTURE4);
-            //             glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-            //         }
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+                }
 
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE2);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE3);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //     }
-            //     deferred_point_program->unbind();
-            // }
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+            deferred_point_program->unbind();
 
-            // if (spot_lights.size() > 0)
-            // {
-            //     deferred_spot_program->bind();
-            //     {
-            //         deferred_spot_program->set_vec3("camera.position", camera->position);
+            deferred_spot_program->bind();
+            {
+                deferred_spot_program->set_vec3("camera.position", camera->position);
 
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-            //         glActiveTexture(GL_TEXTURE2);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-            //         glActiveTexture(GL_TEXTURE3);
-            //         glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
-            //         for (auto &spot_light : spot_lights)
-            //         {
-            //             deferred_spot_program->set_vec3("light.position", spot_light->position);
-            //             deferred_spot_program->set_vec3("light.direction", spot_light->direction);
-            //             deferred_spot_program->set_vec3("light.color", spot_light->color);
-            //             deferred_spot_program->set_float("light.inner_cutoff", spot_light->inner_cutoff);
-            //             deferred_spot_program->set_float("light.outer_cutoff", spot_light->outer_cutoff);
-            //             deferred_spot_program->set_mat4("light.transformation_matrix", spot_light->transformation_matrix);
+                for (auto [entity, spot_light, transform] : registry.view<liminal::spot_light, liminal::transform>().each())
+                {
+                    deferred_spot_program->set_vec3("light.position", transform.position);
+                    deferred_spot_program->set_vec3("light.direction", transform.rotation);
+                    deferred_spot_program->set_vec3("light.color", spot_light.color);
+                    deferred_spot_program->set_float("light.inner_cutoff", spot_light.inner_cutoff);
+                    deferred_spot_program->set_float("light.outer_cutoff", spot_light.outer_cutoff);
+                    deferred_spot_program->set_mat4("light.transformation_matrix", spot_light.transformation_matrix);
 
-            //             glActiveTexture(GL_TEXTURE4);
-            //             glBindTexture(GL_TEXTURE_2D, spot_light->depth_map_texture_id);
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, spot_light.depth_map_texture_id);
 
-            //             glBindVertexArray(screen_vao_id);
-            //             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
-            //             glBindVertexArray(0);
+                    glBindVertexArray(screen_vao_id);
+                    glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
+                    glBindVertexArray(0);
 
-            //             glActiveTexture(GL_TEXTURE4);
-            //             glBindTexture(GL_TEXTURE_2D, 0);
-            //         }
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
 
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE2);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //         glActiveTexture(GL_TEXTURE3);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //     }
-            //     deferred_spot_program->unbind();
-            // }
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+            deferred_spot_program->unbind();
 
             glDisable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ZERO);
@@ -1575,128 +1569,129 @@ void liminal::renderer::render_objects(entt::registry &registry, GLuint fbo_id, 
             glDepthFunc(GL_LESS);
         }
 
-        // // DEBUG: draw point lights as a sphere
-        // {
-        //     glEnable(GL_CLIP_DISTANCE0);
+        // DEBUG: draw point lights as a sphere
+        {
+            glEnable(GL_CLIP_DISTANCE0);
 
-        //     for (auto &point_light : point_lights)
-        //     {
-        //         color_program->bind();
-        //         {
-        //             glm::mat4 model(1.0f);
-        //             model = glm::translate(model, point_light->position);
-        //             model = glm::scale(model, {0.25f, 0.25f, 0.25f});
+            for (auto [entity, point_light, transform] : registry.view<liminal::point_light, liminal::transform>().each())
+            {
+                color_program->bind();
+                {
+                    glm::mat4 model(1.0f);
+                    model = glm::translate(model, transform.position);
+                    model = glm::scale(model, {0.25f, 0.25f, 0.25f});
 
-        //             color_program->set_mat4("mvp", camera_projection * camera_view * model);
-        //             color_program->set_mat4("model", model);
-        //             color_program->set_vec4("clipping_plane", clipping_plane);
-        //             color_program->set_vec3("color", point_light->color);
+                    color_program->set_mat4("mvp", camera_projection * camera_view * model);
+                    color_program->set_mat4("model", model);
+                    color_program->set_vec4("clipping_plane", clipping_plane);
+                    color_program->set_vec3("color", point_light.color);
 
-        //             DEBUG_sphere_mesh->draw(color_program);
-        //         }
-        //         color_program->unbind();
-        //     }
+                    DEBUG_sphere_mesh->draw(color_program);
+                }
+                color_program->unbind();
+            }
 
-        //     glDisable(GL_CLIP_DISTANCE0);
-        // }
+            glDisable(GL_CLIP_DISTANCE0);
+        }
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::render_waters(unsigned int current_time)
+void liminal::renderer::render_waters(entt::registry &registry, unsigned int current_time)
 {
-    // for (auto &water : waters)
-    // {
-    //     // reflection
-    //     glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water->position.y};
-    //     if (camera->position.y < water->position.y) // flip reflection clipping plane if under the water
-    //     {
-    //         reflection_clipping_plane *= -1;
-    //     }
-    //     float previous_camera_y = camera->position.y;
-    //     float previous_camera_pitch = camera->pitch;
-    //     float previous_camera_roll = camera->roll;
-    //     camera->position.y -= 2 * (camera->position.y - water->position.y);
-    //     camera->pitch = -camera->pitch;
-    //     camera->roll = -camera->roll;
-    //     render_objects(water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
-    //     camera->position.y = previous_camera_y;
-    //     camera->pitch = previous_camera_pitch;
-    //     camera->roll = previous_camera_roll;
+    for (auto [entity, water] : registry.view<liminal::water>().each())
+    {
+        // reflection
+        glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water.position.y};
+        if (camera->position.y < water.position.y) // flip reflection clipping plane if under the water
+        {
+            reflection_clipping_plane *= -1;
+        }
+        float previous_camera_y = camera->position.y;
+        float previous_camera_pitch = camera->pitch;
+        float previous_camera_roll = camera->roll;
+        camera->position.y -= 2 * (camera->position.y - water.position.y);
+        camera->pitch = -camera->pitch;
+        camera->roll = -camera->roll;
+        render_objects(registry, water_reflection_fbo_id, reflection_width, reflection_height, reflection_clipping_plane);
+        camera->position.y = previous_camera_y;
+        camera->pitch = previous_camera_pitch;
+        camera->roll = previous_camera_roll;
 
-    //     // refraction
-    //     glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, water->position.y};
-    //     if (camera->position.y < water->position.y) // flip refraction clipping plane if under the water
-    //     {
-    //         refraction_clipping_plane *= -1;
-    //     }
-    //     render_objects(water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
+        // refraction
+        glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, water.position.y};
+        if (camera->position.y < water.position.y) // flip refraction clipping plane if under the water
+        {
+            refraction_clipping_plane *= -1;
+        }
+        render_objects(registry, water_refraction_fbo_id, refraction_width, refraction_height, refraction_clipping_plane);
 
-    //     // draw water meshes
-    //     glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
-    //     {
-    //         glViewport(0, 0, render_width, render_height);
-    //         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-    //         glEnable(GL_BLEND);
-    //         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // draw water meshes
+        glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
+        {
+            glViewport(0, 0, render_width, render_height);
+            glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    //         water_program->bind();
-    //         {
-    //             glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
-    //             glm::mat4 camera_view = camera->calc_view();
+            water_program->bind();
+            {
+                glm::mat4 camera_projection = camera->calc_projection((float)render_width / (float)render_height);
+                glm::mat4 camera_view = camera->calc_view();
 
-    //             glm::mat4 water_model = water->calc_model();
+                glm::mat4 model_matrix = water.get_model_matrix();
 
-    //             water_program->set_mat4("mvp", camera_projection * camera_view * water_model);
-    //             water_program->set_mat4("model", water_model);
-    //             water_program->set_float("tiling", water->size / 10);
-    //             water_program->set_float("camera.near_plane", camera::near_plane);
-    //             water_program->set_float("camera.far_plane", camera::far_plane);
-    //             water_program->set_vec3("camera.position", camera->position);
-    //             if (directional_lights.size() > 0)
-    //             {
-    //                 // TODO: specular reflections for all lights
-    //                 water_program->set_vec3("light.direction", directional_lights[0]->direction);
-    //                 water_program->set_vec3("light.color", directional_lights[0]->color);
-    //             }
-    //             water_program->set_unsigned_int("current_time", current_time);
+                water_program->set_mat4("mvp", camera_projection * camera_view * model_matrix);
+                water_program->set_mat4("model", model_matrix);
+                water_program->set_float("tiling", water.size / 10);
+                water_program->set_float("camera.near_plane", camera::near_plane);
+                water_program->set_float("camera.far_plane", camera::far_plane);
+                water_program->set_vec3("camera.position", camera->position);
+                auto first_directional_light = registry.view<liminal::directional_light>().front();
+                if (first_directional_light != entt::null)
+                {
+                    // TODO: specular reflections for all lights
+                    water_program->set_vec3("light.direction", registry.get<directional_light>(first_directional_light).direction);
+                    water_program->set_vec3("light.color", registry.get<directional_light>(first_directional_light).color);
+                }
+                water_program->set_unsigned_int("current_time", current_time);
 
-    //             glActiveTexture(GL_TEXTURE0);
-    //             glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
-    //             glActiveTexture(GL_TEXTURE1);
-    //             glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
-    //             glActiveTexture(GL_TEXTURE2);
-    //             glBindTexture(GL_TEXTURE_2D, water_refraction_depth_texture_id);
-    //             glActiveTexture(GL_TEXTURE3);
-    //             glBindTexture(GL_TEXTURE_2D, water_dudv_texture ? water_dudv_texture->texture_id : 0);
-    //             glActiveTexture(GL_TEXTURE4);
-    //             glBindTexture(GL_TEXTURE_2D, water_normal_texture ? water_normal_texture->texture_id : 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, water_refraction_depth_texture_id);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, water_dudv_texture ? water_dudv_texture->texture_id : 0);
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_2D, water_normal_texture ? water_normal_texture->texture_id : 0);
 
-    //             glBindVertexArray(water_vao_id);
-    //             glDrawArrays(GL_TRIANGLES, 0, water_vertices_size);
-    //             glBindVertexArray(0);
+                glBindVertexArray(water_vao_id);
+                glDrawArrays(GL_TRIANGLES, 0, water_vertices_size);
+                glBindVertexArray(0);
 
-    //             glActiveTexture(GL_TEXTURE0);
-    //             glBindTexture(GL_TEXTURE_2D, 0);
-    //             glActiveTexture(GL_TEXTURE1);
-    //             glBindTexture(GL_TEXTURE_2D, 0);
-    //             glActiveTexture(GL_TEXTURE2);
-    //             glBindTexture(GL_TEXTURE_2D, 0);
-    //             glActiveTexture(GL_TEXTURE3);
-    //             glBindTexture(GL_TEXTURE_2D, 0);
-    //             glActiveTexture(GL_TEXTURE4);
-    //             glBindTexture(GL_TEXTURE_2D, 0);
-    //         }
-    //         water_program->unbind();
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+            water_program->unbind();
 
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //         glDisable(GL_BLEND);
-    //         glBlendFunc(GL_ONE, GL_ZERO);
-    //     }
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glDisable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ZERO);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 }
 
 void liminal::renderer::render_sprites()

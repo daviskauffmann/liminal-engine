@@ -6,7 +6,7 @@
 #include <iostream>
 #include <SDL2/SDL_image.h>
 
-#include "texture.hpp"
+#include "../texture.hpp"
 
 // TODO: read from heightmap image file
 
@@ -127,10 +127,12 @@ liminal::terrain::~terrain()
     delete mesh;
 }
 
-glm::mat4 liminal::terrain::calc_model() const
+glm::mat4 liminal::terrain::get_model_matrix() const
 {
     glm::mat4 model = glm::identity<glm::mat4>();
+
     model = glm::translate(model, position);
+
     return model;
 }
 

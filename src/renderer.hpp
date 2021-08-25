@@ -6,19 +6,13 @@
 
 #include "camera.hpp"
 #include "cubemap.hpp"
-#include "directional_light.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
-#include "point_light.hpp"
 #include "program.hpp"
 #include "skybox.hpp"
-#include "sound.hpp"
 #include "source.hpp"
-#include "spot_light.hpp"
 #include "sprite.hpp"
-#include "terrain.hpp"
 #include "texture.hpp"
-#include "water.hpp"
 
 namespace liminal
 {
@@ -119,9 +113,9 @@ namespace liminal
 
         void setup_samplers();
 
-        void render_shadows();
+        void render_shadows(entt::registry &registry);
         void render_objects(entt::registry &registry, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
-        void render_waters(unsigned int current_time);
+        void render_waters(entt::registry &registry, unsigned int current_time);
         void render_sprites();
         void render_screen();
     };

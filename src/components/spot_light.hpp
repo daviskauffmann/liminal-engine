@@ -12,8 +12,6 @@ namespace liminal
         static float near_plane;
         static float far_plane;
 
-        glm::vec3 position;
-        glm::vec3 direction;
         glm::vec3 color;
         float inner_cutoff;
         float outer_cutoff;
@@ -23,8 +21,6 @@ namespace liminal
         glm::mat4 transformation_matrix;
 
         spot_light(
-            glm::vec3 position,
-            glm::vec3 direction,
             glm::vec3 color,
             float inner_cutoff,
             float outer_cutoff,
@@ -33,7 +29,7 @@ namespace liminal
 
         void set_depth_map_size(GLsizei depth_map_size);
 
-        void update_transformation_matrix();
+        void update_transformation_matrix(const glm::vec3 &position, const glm::vec3 &rotation);
     };
 }
 

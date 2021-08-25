@@ -7,31 +7,31 @@ LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
 LDLIBS = -lopengl32
 
 SRC = \
+	src/components/directional_light.cpp \
+	src/components/point_light.cpp \
+	src/components/spot_light.cpp \
+	src/components/sprite.cpp \
+	src/components/terrain.cpp \
 	src/components/transform.cpp \
+	src/components/water.cpp \
 	src/atlas.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
 	src/cubemap.cpp \
-	src/directional_light.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
 	src/model.cpp \
 	src/platform.cpp \
-	src/point_light.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
 	src/skybox.cpp \
 	src/sound.cpp \
 	src/source.cpp \
-	src/spot_light.cpp \
-	src/sprite.cpp \
 	src/stb_image.cpp \
 	src/stb_include.cpp \
-	src/terrain.cpp \
 	src/texture.cpp \
-	src/vertex.cpp \
-	src/water.cpp
+	src/vertex.cpp
 TARGET = bin/liminal
 
 .PHONY: all

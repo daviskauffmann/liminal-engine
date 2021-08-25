@@ -7,11 +7,9 @@ float liminal::point_light::near_plane = 1.0f;
 float liminal::point_light::far_plane = 25.0f;
 
 liminal::point_light::point_light(
-    glm::vec3 position,
     glm::vec3 color,
     GLsizei depth_cube_size)
-    : position(position),
-      color(color)
+    : color(color)
 {
     this->depth_cubemap_fbo_id = 0;
     this->depth_cubemap_texture_id = 0;
@@ -78,7 +76,7 @@ void liminal::point_light::set_depth_cube_size(GLsizei depth_cube_size)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::point_light::update_transformation_matrices()
+void liminal::point_light::update_transformation_matrices(const glm::vec3 &position)
 {
     glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane);
 

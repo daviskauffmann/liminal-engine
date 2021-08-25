@@ -13,7 +13,6 @@ namespace liminal
         static float near_plane;
         static float far_plane;
 
-        glm::vec3 position;
         glm::vec3 color;
         GLsizei depth_cube_size;
         GLuint depth_cubemap_fbo_id;
@@ -21,14 +20,13 @@ namespace liminal
         std::vector<glm::mat4> transformation_matrices;
 
         point_light(
-            glm::vec3 position,
             glm::vec3 color,
             GLsizei depth_cube_size);
         ~point_light();
 
         void set_depth_cube_size(GLsizei depth_cube_size);
 
-        void update_transformation_matrices();
+        void update_transformation_matrices(const glm::vec3 &position);
     };
 }
 

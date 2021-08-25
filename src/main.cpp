@@ -6,22 +6,22 @@
 #include <SDL2/SDL.h>
 #include <sol/sol.hpp>
 
+#include "components/directional_light.hpp"
 #include "components/mesh_renderer.hpp"
+#include "components/point_light.hpp"
+#include "components/spot_light.hpp"
+#include "components/terrain.hpp"
 #include "components/transform.hpp"
+#include "components/water.hpp"
 #include "audio.hpp"
-#include "directional_light.hpp"
 #include "camera.hpp"
 #include "model.hpp"
 #include "platform.hpp"
-#include "point_light.hpp"
 #include "renderer.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 #include "source.hpp"
-#include "spot_light.hpp"
 #include "sprite.hpp"
-#include "terrain.hpp"
-#include "water.hpp"
 
 #define VERSION "v0.0.1"
 
@@ -92,88 +92,68 @@ int main(int argc, char *argv[])
 
     world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
 
-    // lua test
-    sol::state lua;
-    lua.open_libraries(sol::lib::base);
-    lua.set_function("PrintHelloWorld", []() -> void
-                     { std::cout << "Hello, World!" << std::endl; });
-    lua.set_function("GetRandomNumber", [](int mod) -> int
-                     { return 4 + mod; });
-    lua.script_file("assets/scripts/test.lua");
-
     // load assets
     // TODO: asset management
-    liminal::model *backpack_model = new liminal::model("assets/models/backpack/backpack.obj");
-    liminal::model *boblamp_model = new liminal::model("assets/models/boblampclean/boblampclean.md5mesh", true);
-    liminal::model *dude_model = new liminal::model("assets/models/dude/model.dae", true);
-    liminal::skybox *skybox = renderer.skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
-    liminal::sound *ambient_sound = new liminal::sound("assets/audio/ambient.wav");
-    liminal::sound *bounce_sound = new liminal::sound("assets/audio/bounce.wav");
-    liminal::sound *shoot_sound = new liminal::sound("assets/audio/shoot.wav");
+    // liminal::skybox skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
+    liminal::sound ambient_sound("assets/audio/ambient.wav");
+    liminal::sound bounce_sound("assets/audio/bounce.wav");
+    liminal::sound shoot_sound("assets/audio/shoot.wav");
 
-    liminal::camera *camera = renderer.camera = new liminal::camera(
+    liminal::camera camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
         -90.0f,
         0.0f,
         45.0f);
 
+    renderer.camera = &camera;
+    // renderer.skybox = &skybox;
 
-    auto backpack_entity = registry.create();
-    registry.emplace<liminal::transform>(backpack_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::mesh_renderer>(backpack_entity, backpack_model);
+    sol::state lua;
+    lua.open_libraries(sol::lib::base);
+    lua.set_function("AddEntity", [&registry]() -> entt::entity
+                     { return registry.create(); });
+    lua.set_function("AddTransform", [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> liminal::transform
+                     { return registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz)); });
+    // lua.set_function("UpdateTransform");
+    lua.set_function("AddMeshRenderer", [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> liminal::mesh_renderer
+                     {
+                         auto model = new liminal::model(filename, flip_uvs);
+                         return registry.emplace<liminal::mesh_renderer>(entity, model);
+                     });
+    lua.script_file("assets/scripts/game.lua");
+    sol::function game_init = lua["Init"];
+    sol::function game_update = lua["Update"];
+    game_init();
 
-    auto boblamp_entity = registry.create();
-    registry.emplace<liminal::transform>(boblamp_entity, nullptr, glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
-    registry.emplace<liminal::mesh_renderer>(boblamp_entity, boblamp_model);
+    const float sun_intensity = 10.0f;
+    auto sun = registry.create();
+    registry.emplace<liminal::directional_light>(sun, glm::vec3(0.352286f, -0.547564f, -0.758992f), glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity, 4096);
 
-    auto dude_entity = registry.create();
-    registry.emplace<liminal::transform>(dude_entity, nullptr, glm::vec3(-5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::mesh_renderer>(dude_entity, dude_model);
+    const float light_intensity = 10.0f;
+    auto red_light = registry.create();
+    registry.emplace<liminal::transform>(red_light, nullptr, glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::point_light>(red_light, glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity, 512);
+    auto yellow_light = registry.create();
+    registry.emplace<liminal::transform>(yellow_light, nullptr, glm::vec3(-2.0f, 0.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::point_light>(yellow_light, glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity, 512);
+    auto green_light = registry.create();
+    registry.emplace<liminal::transform>(green_light, nullptr, glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::point_light>(green_light, glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity, 512);
+    auto blue_light = registry.create();
+    registry.emplace<liminal::transform>(blue_light, nullptr, glm::vec3(-2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::point_light>(blue_light, glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity, 512);
 
-    // const float sun_intensity = 10.0f;
-    // liminal::directional_light *sun = new liminal::directional_light(
-    //     glm::vec3(0.352286f, -0.547564f, -0.758992f),
-    //     glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity,
-    //     4096);
+    const float flashlight_intensity = 20.0f;
+    auto flashlight = registry.create();
+    registry.emplace<liminal::transform>(flashlight, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    registry.emplace<liminal::spot_light>(flashlight, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)), 1024);
 
-    // const float light_intensity = 10.0f;
-    // liminal::point_light *red_light = new liminal::point_light(
-    //     glm::vec3(2.0f, 0.0f, 2.0f),
-    //     glm::vec3(1.0f, 0.0f, 0.0f) * light_intensity,
-    //     512);
-    // liminal::point_light *yellow_light = new liminal::point_light(
-    //     glm::vec3(-2.0f, 0.0f, -2.0f),
-    //     glm::vec3(1.0f, 1.0f, 0.0f) * light_intensity,
-    //     512);
-    // liminal::point_light *green_light = new liminal::point_light(
-    //     glm::vec3(2.0f, 0.0f, -2.0f),
-    //     glm::vec3(0.0f, 1.0f, 0.0f) * light_intensity,
-    //     512);
-    // liminal::point_light *blue_light = new liminal::point_light(
-    //     glm::vec3(-2.0f, 0.0f, 2.0f),
-    //     glm::vec3(0.0f, 0.0f, 1.0f) * light_intensity,
-    //     512);
+    auto water = registry.create();
+    registry.emplace<liminal::water>(water, glm::vec3(0.0f, -2.0f, 0.0f), 100.0f);
 
-    // const float flashlight_intensity = 20.0f;
-    // liminal::spot_light *flashlight = new liminal::spot_light(
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity,
-    //     cosf(glm::radians(12.5f)),
-    //     cosf(glm::radians(15.0f)),
-    //     1024);
-
-    // liminal::water *water = new liminal::water(
-    //     glm::vec3(0.0f, -2.0f, 0.0f),
-    //     100.0f);
-
-    // liminal::terrain *terrain = new liminal::terrain(
-    //     "assets/images/heightmap.png",
-    //     glm::vec3(0.0f, 0.0f, 0.0f),
-    //     100.0f,
-    //     10.0f);
-    // world->addRigidBody(terrain->rigidbody);
+    // auto terrain = registry.create();
+    // registry.emplace<liminal::terrain>(terrain, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 10.0f);
 
     liminal::source *ambient_source = new liminal::source(glm::vec3(0.0f, 0.0f, 0.0f));
     ambient_source->set_loop(true);
@@ -330,15 +310,15 @@ int main(int argc, char *argv[])
                 {
                     if (SDL_GetRelativeMouseMode())
                     {
-                        camera->pitch -= event.motion.yrel * 0.1f;
-                        camera->yaw += event.motion.xrel * 0.1f;
-                        if (camera->pitch > 89.0f)
+                        camera.pitch -= event.motion.yrel * 0.1f;
+                        camera.yaw += event.motion.xrel * 0.1f;
+                        if (camera.pitch > 89.0f)
                         {
-                            camera->pitch = 89.0f;
+                            camera.pitch = 89.0f;
                         }
-                        if (camera->pitch < -89.0f)
+                        if (camera.pitch < -89.0f)
                         {
-                            camera->pitch = -89.0f;
+                            camera.pitch = -89.0f;
                         }
                     }
                 }
@@ -350,14 +330,14 @@ int main(int argc, char *argv[])
                 {
                     if (SDL_GetRelativeMouseMode())
                     {
-                        camera->fov -= event.wheel.y;
-                        if (camera->fov <= 1.0f)
+                        camera.fov -= event.wheel.y;
+                        if (camera.fov <= 1.0f)
                         {
-                            camera->fov = 1.0f;
+                            camera.fov = 1.0f;
                         }
-                        if (camera->fov >= 120.0f)
+                        if (camera.fov >= 120.0f)
                         {
-                            camera->fov = 120.0f;
+                            camera.fov = 120.0f;
                         }
                     }
                 }
@@ -366,8 +346,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        glm::vec3 camera_front = camera->calc_front();
-        glm::vec3 camera_right = camera->calc_right();
+        glm::vec3 camera_front = camera.calc_front();
+        glm::vec3 camera_right = camera.calc_right();
 
         static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
         glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
@@ -412,37 +392,40 @@ int main(int argc, char *argv[])
         }
         acceleration *= speed * (sprint ? 2.0f : 1.0f);
         acceleration -= velocity * drag;
-        camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
+        camera.position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera.position;
         velocity = acceleration * delta_time + velocity;
-        // camera->pitch = -glm::dot(camera_front, velocity);
-        camera->roll = glm::dot(camera_right, velocity);
+        // camera.pitch = -glm::dot(camera_front, velocity);
+        camera.roll = glm::dot(camera_right, velocity);
 
-        // static float angle = 0.0f;
-        // const float pi = 3.14159f;
-        // const float distance = 6.0f;
-        // angle += 0.5f * delta_time;
-        // if (angle > 2 * pi)
-        // {
-        //     angle = 0;
-        // }
-        // red_light->position.x = distance * sinf(angle);
-        // red_light->position.z = distance * cosf(angle);
-        // yellow_light->position.x = distance * sinf(angle + pi / 2);
-        // yellow_light->position.z = distance * cosf(angle + pi / 2);
-        // green_light->position.x = distance * sinf(angle + pi);
-        // green_light->position.z = distance * cosf(angle + pi);
-        // blue_light->position.x = distance * sinf(angle + 3 * pi / 2);
-        // blue_light->position.z = distance * cosf(angle + 3 * pi / 2);
+        static float angle = 0.0f;
+        const float pi = 3.14159f;
+        const float distance = 6.0f;
+        angle += 0.5f * delta_time;
+        if (angle > 2 * pi)
+        {
+            angle = 0;
+        }
+        registry.get<liminal::transform>(red_light).position.x = distance * sinf(angle);
+        registry.get<liminal::transform>(red_light).position.z = distance * cosf(angle);
+        registry.get<liminal::transform>(yellow_light).position.x = distance * sinf(angle + pi / 2);
+        registry.get<liminal::transform>(yellow_light).position.z = distance * cosf(angle + pi / 2);
+        registry.get<liminal::transform>(green_light).position.x = distance * sinf(angle + pi);
+        registry.get<liminal::transform>(green_light).position.z = distance * cosf(angle + pi);
+        registry.get<liminal::transform>(blue_light).position.x = distance * sinf(angle + 3 * pi / 2);
+        registry.get<liminal::transform>(blue_light).position.z = distance * cosf(angle + 3 * pi / 2);
 
-        // if (flashlight_follow)
-        // {
-        //     flashlight->position = camera->position;
-        //     flashlight->direction = glm::mix(flashlight->direction, camera_front, 30.0f * delta_time);
-        // }
+        if (flashlight_follow)
+        {
+            registry.get<liminal::transform>(flashlight).position = camera.position;
+            registry.get<liminal::transform>(flashlight).rotation = glm::mix(
+                registry.get<liminal::transform>(flashlight).rotation,
+                camera_front,
+                30.0f * delta_time);
+        }
 
-        audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
-        ambient_source->set_position(camera->position);
-        shoot_source->set_position(camera->position);
+        audio.set_listener(camera.position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+        ambient_source->set_position(camera.position);
+        shoot_source->set_position(camera.position);
 
         if (!io.WantCaptureMouse)
         {
@@ -450,7 +433,7 @@ int main(int argc, char *argv[])
             {
                 if (!shoot_source->is_playing())
                 {
-                    shoot_source->play(shoot_sound);
+                    shoot_source->play(&shoot_sound);
                 }
             }
 
@@ -458,10 +441,12 @@ int main(int argc, char *argv[])
             {
                 if (!bounce_source->is_playing())
                 {
-                    bounce_source->play(bounce_sound);
+                    bounce_source->play(&bounce_sound);
                 }
             }
         }
+
+        game_update(delta_time);
 
         // update physics
         world->stepSimulation(delta_time);
