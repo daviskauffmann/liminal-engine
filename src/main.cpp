@@ -93,26 +93,25 @@ int main(int argc, char *argv[])
 
     // load assets
     // TODO: asset management
-    // liminal::skybox skybox("assets/images/GCanyon_C_YumaPoint_8k.jpg");
     liminal::sound ambient_sound("assets/audio/ambient.wav");
     liminal::sound bounce_sound("assets/audio/bounce.wav");
     liminal::sound shoot_sound("assets/audio/shoot.wav");
 
-    liminal::camera camera(
+    auto camera = renderer.camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
         -90.0f,
         0.0f,
         45.0f);
 
-    renderer.camera = &camera;
-    // renderer.skybox = &skybox;
-
     // init game scripts
     sol::state lua;
     lua.open_libraries(sol::lib::base, sol::lib::math);
-    lua.script_file("assets/scripts/game.lua");
 
+    lua["SetSkybox"] = [&renderer](const std::string &filename) -> void
+    {
+        renderer.skybox = new liminal::skybox(filename);
+    };
     lua["AddEntity"] = [&registry]() -> entt::entity
     {
         return registry.create();
@@ -130,14 +129,12 @@ int main(int argc, char *argv[])
     };
     lua["AddMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
     {
-        auto model = new liminal::model(filename, flip_uvs);
-        registry.emplace<liminal::mesh_renderer>(entity, model);
+        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
     };
     lua["UpdateMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
     {
         auto &mesh_renderer = registry.get<liminal::mesh_renderer>(entity);
-        auto model = new liminal::model(filename, flip_uvs);
-        mesh_renderer.model = model;
+        mesh_renderer.model = new liminal::model(filename, flip_uvs);
     };
     lua["AddPointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
     {
@@ -149,6 +146,7 @@ int main(int argc, char *argv[])
         point_light.color = glm::vec3(r, g, b);
     };
 
+    lua.script_file("assets/scripts/game.lua");
     sol::function game_init = lua["Init"];
     sol::function game_update = lua["Update"];
 
@@ -300,8 +298,13 @@ int main(int argc, char *argv[])
                     case SDLK_r:
                     {
                         // TODO: work out hot reloading game code
+                        // registry.clear();
+
                         // lua.script_file("assets/scripts/game.lua");
+                        // game_init = lua["Init"];
                         // game_update = lua["Update"];
+
+                        // game_init();
 
                         renderer.reload_programs();
                     }
@@ -336,15 +339,15 @@ int main(int argc, char *argv[])
                 {
                     if (SDL_GetRelativeMouseMode())
                     {
-                        camera.pitch -= event.motion.yrel * 0.1f;
-                        camera.yaw += event.motion.xrel * 0.1f;
-                        if (camera.pitch > 89.0f)
+                        camera->pitch -= event.motion.yrel * 0.1f;
+                        camera->yaw += event.motion.xrel * 0.1f;
+                        if (camera->pitch > 89.0f)
                         {
-                            camera.pitch = 89.0f;
+                            camera->pitch = 89.0f;
                         }
-                        if (camera.pitch < -89.0f)
+                        if (camera->pitch < -89.0f)
                         {
-                            camera.pitch = -89.0f;
+                            camera->pitch = -89.0f;
                         }
                     }
                 }
@@ -356,14 +359,14 @@ int main(int argc, char *argv[])
                 {
                     if (SDL_GetRelativeMouseMode())
                     {
-                        camera.fov -= event.wheel.y;
-                        if (camera.fov <= 1.0f)
+                        camera->fov -= event.wheel.y;
+                        if (camera->fov <= 1.0f)
                         {
-                            camera.fov = 1.0f;
+                            camera->fov = 1.0f;
                         }
-                        if (camera.fov >= 120.0f)
+                        if (camera->fov >= 120.0f)
                         {
-                            camera.fov = 120.0f;
+                            camera->fov = 120.0f;
                         }
                     }
                 }
@@ -372,8 +375,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        glm::vec3 camera_front = camera.calc_front();
-        glm::vec3 camera_right = camera.calc_right();
+        glm::vec3 camera_front = camera->calc_front();
+        glm::vec3 camera_right = camera->calc_right();
 
         static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
         glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
@@ -418,23 +421,23 @@ int main(int argc, char *argv[])
         }
         acceleration *= speed * (sprint ? 2.0f : 1.0f);
         acceleration -= velocity * drag;
-        camera.position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera.position;
+        camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
         velocity = acceleration * delta_time + velocity;
-        // camera.pitch = -glm::dot(camera_front, velocity);
-        camera.roll = glm::dot(camera_right, velocity);
+        // camera->pitch = -glm::dot(camera_front, velocity);
+        camera->roll = glm::dot(camera_right, velocity);
 
         if (flashlight_follow)
         {
-            registry.get<liminal::transform>(flashlight).position = camera.position;
+            registry.get<liminal::transform>(flashlight).position = camera->position;
             registry.get<liminal::transform>(flashlight).rotation = glm::mix(
                 registry.get<liminal::transform>(flashlight).rotation,
                 camera_front,
                 30.0f * delta_time);
         }
 
-        audio.set_listener(camera.position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
-        registry.get<liminal::audio_source>(ambience).set_position(camera.position);
-        registry.get<liminal::audio_source>(weapon).set_position(camera.position);
+        audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+        registry.get<liminal::audio_source>(ambience).set_position(camera->position);
+        registry.get<liminal::audio_source>(weapon).set_position(camera->position);
 
         if (!io.WantCaptureMouse)
         {

@@ -6,10 +6,12 @@ local red_light
 local yellow_light
 local green_light
 local blue_light
-local light_distance = 6
+local light_distance = 5
 local light_angle = 0
 
 function Init()
+    SetSkybox("assets/images/GCanyon_C_YumaPoint_8k.jpg")
+
     backpack = AddEntity()
     AddTransform(backpack, 0, 0, 0, 0, 0, 0, 1, 1, 1)
     AddMeshRenderer(backpack, "assets/models/backpack/backpack.obj", false)
