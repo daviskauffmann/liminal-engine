@@ -7,3 +7,6 @@
 [submodule "extern/entt"]
 	path = extern/entt
 	url = https://github.com/skypjack/entt
+[submodule "extern/json"]
+	path = extern/json
+	url = https://github.com/nlohmann/json
