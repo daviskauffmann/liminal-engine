@@ -1,8 +1,10 @@
 #include <bullet/btBulletDynamicsCommon.h>
 #include <cxxopts.hpp>
 #include <entt/entt.hpp>
+#include <fstream>
 #include <iostream>
 #include <imgui.h>
+#include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
 #include <sol/sol.hpp>
 
@@ -27,6 +29,7 @@
 
 #define WINDOW_TITLE "Liminal Engine"
 
+// TODO: this function is kinda weirding me out
 void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer)
 {
     lua["SetSkybox"] = [&renderer](const std::string &filename) -> void
@@ -147,18 +150,61 @@ int main(int argc, char *argv[])
     liminal::sound bounce_sound("assets/audio/bounce.wav");
     liminal::sound shoot_sound("assets/audio/shoot.wav");
 
-    auto camera = renderer.camera = new liminal::camera(
-        glm::vec3(0.0f, 0.0f, 3.0f),
-        0.0f,
-        -90.0f,
-        0.0f,
-        45.0f);
+    // load scene
+    std::ifstream stream("assets/scenes/main.json");
+    nlohmann::json json;
+    stream >> json;
+    for (auto &[key, value] : json.items())
+    {
+        if (key == "skybox")
+        {
+            renderer.skybox = new liminal::skybox(json["skybox"]);
+        }
 
-    // TODO: instead of init script, read scene data from json file or something
-    sol::state lua;
-    lua.open_libraries(sol::lib::base, sol::lib::math);
-    lua_set_functions(lua, registry, renderer);
-    lua.script_file("assets/scripts/init.lua");
+        if (key == "entities")
+        {
+            for (auto &element : value)
+            {
+                auto entity = registry.create();
+
+                for (auto &[key, value] : element.items())
+                {
+                    if (key == "transform")
+                    {
+                        glm::vec3 position(
+                            value["position"]["x"],
+                            value["position"]["y"],
+                            value["position"]["z"]);
+                        glm::vec3 rotation(
+                            value["rotation"]["x"],
+                            value["rotation"]["y"],
+                            value["rotation"]["z"]);
+                        glm::vec3 scale(
+                            value["scale"]["x"],
+                            value["scale"]["y"],
+                            value["scale"]["z"]);
+                        registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale);
+                    }
+
+                    if (key == "mesh_renderer")
+                    {
+                        std::string filename(value["filename"]);
+                        bool flip_uvs = value["flip_uvs"];
+                        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
+                    }
+
+                    if (key == "script")
+                    {
+                        sol::state *lua = new sol::state();
+                        lua->open_libraries(sol::lib::base, sol::lib::math);
+                        lua_set_functions(*lua, registry, renderer);
+                        lua->script_file(value["filename"]);
+                        registry.emplace<liminal::script>(entity, lua);
+                    }
+                }
+            }
+        }
+    }
 
     const float sun_intensity = 10.0f;
     auto sun = registry.create();
@@ -189,6 +235,13 @@ int main(int argc, char *argv[])
     auto weapon = registry.create();
     registry.emplace<liminal::transform>(weapon);
     registry.emplace<liminal::audio_source>(weapon);
+
+    auto camera = renderer.camera = new liminal::camera(
+        glm::vec3(0.0f, 0.0f, 3.0f),
+        0.0f,
+        -90.0f,
+        0.0f,
+        45.0f);
 
     unsigned int current_time = 0;
     float time_scale = 1.0f;
