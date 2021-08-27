@@ -10,6 +10,7 @@ SRC = \
 	src/components/audio_source.cpp \
 	src/components/directional_light.cpp \
 	src/components/point_light.cpp \
+	src/components/script.cpp \
 	src/components/spot_light.cpp \
 	src/components/sprite.cpp \
 	src/components/terrain.cpp \

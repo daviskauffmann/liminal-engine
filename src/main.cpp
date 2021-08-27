@@ -10,6 +10,7 @@
 #include "components/directional_light.hpp"
 #include "components/mesh_renderer.hpp"
 #include "components/point_light.hpp"
+#include "components/script.hpp"
 #include "components/spot_light.hpp"
 #include "components/terrain.hpp"
 #include "components/transform.hpp"
@@ -25,6 +26,55 @@
 #define VERSION "v0.0.1"
 
 #define WINDOW_TITLE "Liminal Engine"
+
+void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer)
+{
+    lua["SetSkybox"] = [&renderer](const std::string &filename) -> void
+    {
+        renderer.skybox = new liminal::skybox(filename);
+    };
+    lua["AddEntity"] = [&registry]() -> entt::entity
+    {
+        return registry.create();
+    };
+    lua["AddTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
+    {
+        registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
+    };
+    lua["UpdateTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
+    {
+        auto &transform = registry.get<liminal::transform>(entity);
+        transform.position = glm::vec3(x, y, z);
+        transform.rotation = glm::vec3(rx, ry, rz);
+        transform.scale = glm::vec3(sx, sy, sz);
+    };
+    lua["AddMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
+    {
+        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
+    };
+    lua["UpdateMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
+    {
+        auto &mesh_renderer = registry.get<liminal::mesh_renderer>(entity);
+        mesh_renderer.model = new liminal::model(filename, flip_uvs);
+    };
+    lua["AddPointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
+    {
+        registry.emplace<liminal::point_light>(entity, glm::vec3(r, g, b), 512);
+    };
+    lua["UpdatePointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
+    {
+        auto &point_light = registry.get<liminal::point_light>(entity);
+        point_light.color = glm::vec3(r, g, b);
+    };
+    lua["AddScript"] = [&registry, &renderer](entt::entity entity, const std::string &filename) -> void
+    {
+        sol::state *lua = new sol::state();
+        lua->open_libraries(sol::lib::base, sol::lib::math);
+        lua_set_functions(*lua, registry, renderer);
+        lua->script_file(filename);
+        registry.emplace<liminal::script>(entity, lua);
+    };
+}
 
 int main(int argc, char *argv[])
 {
@@ -104,53 +154,11 @@ int main(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    // init game scripts
+    // TODO: instead of init script, read scene data from json file or something
     sol::state lua;
     lua.open_libraries(sol::lib::base, sol::lib::math);
-
-    lua["SetSkybox"] = [&renderer](const std::string &filename) -> void
-    {
-        renderer.skybox = new liminal::skybox(filename);
-    };
-    lua["AddEntity"] = [&registry]() -> entt::entity
-    {
-        return registry.create();
-    };
-    lua["AddTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
-    {
-        registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
-    };
-    lua["UpdateTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
-    {
-        auto &transform = registry.get<liminal::transform>(entity);
-        transform.position = glm::vec3(x, y, z);
-        transform.rotation = glm::vec3(rx, ry, rz);
-        transform.scale = glm::vec3(sx, sy, sz);
-    };
-    lua["AddMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
-    {
-        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
-    };
-    lua["UpdateMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
-    {
-        auto &mesh_renderer = registry.get<liminal::mesh_renderer>(entity);
-        mesh_renderer.model = new liminal::model(filename, flip_uvs);
-    };
-    lua["AddPointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
-    {
-        registry.emplace<liminal::point_light>(entity, glm::vec3(r, g, b), 512);
-    };
-    lua["UpdatePointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
-    {
-        auto &point_light = registry.get<liminal::point_light>(entity);
-        point_light.color = glm::vec3(r, g, b);
-    };
-
-    lua.script_file("assets/scripts/game.lua");
-    sol::function game_init = lua["Init"];
-    sol::function game_update = lua["Update"];
-
-    game_init();
+    lua_set_functions(lua, registry, renderer);
+    lua.script_file("assets/scripts/init.lua");
 
     const float sun_intensity = 10.0f;
     auto sun = registry.create();
@@ -297,15 +305,6 @@ int main(int argc, char *argv[])
                     break;
                     case SDLK_r:
                     {
-                        // TODO: work out hot reloading game code
-                        // registry.clear();
-
-                        // lua.script_file("assets/scripts/game.lua");
-                        // game_init = lua["Init"];
-                        // game_update = lua["Update"];
-
-                        // game_init();
-
                         renderer.reload_programs();
                     }
                     break;
@@ -458,14 +457,17 @@ int main(int argc, char *argv[])
             }
         }
 
-        game_update(delta_time);
+        // update scripts
+        for (auto [entity, script] : registry.view<liminal::script>().each())
+        {
+            script.update(delta_time);
+        }
 
         // update physics
         world->stepSimulation(delta_time);
 
         // update animations
-        auto view = registry.view<liminal::mesh_renderer>();
-        for (auto [entity, mesh_renderer] : view.each())
+        for (auto [entity, mesh_renderer] : registry.view<liminal::mesh_renderer>().each())
         {
             if (mesh_renderer.model->has_animations())
             {

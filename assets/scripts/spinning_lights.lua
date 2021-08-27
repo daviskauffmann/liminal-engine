@@ -1,7 +1,3 @@
-local backpack
-local bob
-local dude
-
 local red_light
 local yellow_light
 local green_light
@@ -10,20 +6,6 @@ local light_distance = 5
 local light_angle = 0
 
 function Init()
-    SetSkybox("assets/images/GCanyon_C_YumaPoint_8k.jpg")
-
-    backpack = AddEntity()
-    AddTransform(backpack, 0, 0, 0, 0, 0, 0, 1, 1, 1)
-    AddMeshRenderer(backpack, "assets/models/backpack/backpack.obj", false)
-
-    bob = AddEntity()
-    AddTransform(bob, 5, 0, 0, 0, 0, 0, 0.05, 0.05, 0.05)
-    AddMeshRenderer(bob, "assets/models/boblampclean/boblampclean.md5mesh", true)
-
-    dude = AddEntity()
-    AddTransform(dude, -5, 0, 0, 0, 0, 0, 1, 1, 1)
-    AddMeshRenderer(dude, "assets/models/dude/model.dae", true)
-
     red_light = AddEntity()
     AddTransform(red_light, light_distance, 0, light_distance, 0, 0, 0, 1, 1, 1)
     AddPointLight(red_light, 10, 0, 0)

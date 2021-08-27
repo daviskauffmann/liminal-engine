@@ -1,0 +1,79 @@
+{
+    "skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
+    "entities": [
+        {
+            "transform": {
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            },
+            "mesh_renderer": {
+                "filename": "assets/models/backpack/backpack.obj",
+                "flip_uvs": false
+            }
+        },
+        {
+            "transform": {
+                "position": {
+                    "x": 5,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 0.05,
+                    "y": 0.05,
+                    "z": 0.05
+                }
+            },
+            "mesh_renderer": {
+                "filename": "assets/models/boblampclean/boblampclean.md5mesh",
+                "flip_uvs": true
+            }
+        },
+        {
+            "transform": {
+                "position": {
+                    "x": -5,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            },
+            "mesh_renderer": {
+                "filename": "assets/models/dude/model.dae",
+                "flip_uvs": true
+            }
+        },
+        {
+            "script": {
+                "filename": "assets/scripts/spinning_lights.lua"
+            }
+        }
+    ]
+}
