@@ -29,8 +29,18 @@
 
 #define WINDOW_TITLE "Liminal Engine"
 
-// TODO: this function is kinda weirding me out
-void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer)
+void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer, entt::entity entity);
+
+sol::state *create_lua_state(const std::string &filename, entt::registry &registry, liminal::renderer &renderer, entt::entity entity)
+{
+    sol::state *lua = new sol::state();
+    lua->open_libraries(sol::lib::base, sol::lib::math);
+    lua_set_functions(*lua, registry, renderer, entity);
+    lua->script_file(filename);
+    return lua;
+}
+
+void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer, entt::entity entity)
 {
     lua["SetSkybox"] = [&renderer](const std::string &filename) -> void
     {
@@ -39,6 +49,10 @@ void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::rende
     lua["AddEntity"] = [&registry]() -> entt::entity
     {
         return registry.create();
+    };
+    lua["GetEntity"] = [entity]() -> entt::entity
+    {
+        return entity;
     };
     lua["AddTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
@@ -71,12 +85,86 @@ void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::rende
     };
     lua["AddScript"] = [&registry, &renderer](entt::entity entity, const std::string &filename) -> void
     {
-        sol::state *lua = new sol::state();
-        lua->open_libraries(sol::lib::base, sol::lib::math);
-        lua_set_functions(*lua, registry, renderer);
-        lua->script_file(filename);
+        sol::state *lua = create_lua_state(filename, registry, renderer, entity);
         registry.emplace<liminal::script>(entity, lua);
     };
+}
+
+void load_scene_from_file(liminal::renderer &renderer, entt::registry &registry)
+{
+    std::ifstream stream("assets/scenes/main.json");
+    nlohmann::json json;
+    stream >> json;
+    for (auto &[key, value] : json.items())
+    {
+        if (key == "skybox")
+        {
+            renderer.skybox = new liminal::skybox(json["skybox"]);
+        }
+
+        if (key == "entities")
+        {
+            for (auto &element : value)
+            {
+                auto entity = registry.create();
+
+                for (auto &[key, value] : element.items())
+                {
+                    if (key == "directional_light")
+                    {
+                        glm::vec3 direction(
+                            value["direction"]["x"],
+                            value["direction"]["y"],
+                            value["direction"]["z"]);
+                        glm::vec3 color(
+                            value["color"]["r"],
+                            value["color"]["g"],
+                            value["color"]["b"]);
+                        registry.emplace<liminal::directional_light>(entity, direction, color, 4096);
+                    }
+
+                    if (key == "transform")
+                    {
+                        glm::vec3 position(
+                            value["position"]["x"],
+                            value["position"]["y"],
+                            value["position"]["z"]);
+                        glm::vec3 rotation(
+                            value["rotation"]["x"],
+                            value["rotation"]["y"],
+                            value["rotation"]["z"]);
+                        glm::vec3 scale(
+                            value["scale"]["x"],
+                            value["scale"]["y"],
+                            value["scale"]["z"]);
+                        registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale);
+                    }
+
+                    if (key == "mesh_renderer")
+                    {
+                        std::string filename(value["filename"]);
+                        bool flip_uvs = value["flip_uvs"];
+                        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
+                    }
+
+                    if (key == "script")
+                    {
+                        sol::state *lua = create_lua_state(value["filename"], registry, renderer, entity);
+                        registry.emplace<liminal::script>(entity, lua);
+                    }
+
+                    if (key == "water")
+                    {
+                        glm::vec3 position(
+                            value["position"]["x"],
+                            value["position"]["y"],
+                            value["position"]["z"]);
+                        registry.emplace<liminal::water>(entity, position, value["size"]);
+                    }
+                }
+            }
+        }
+    }
 }
 
 int main(int argc, char *argv[])
@@ -151,90 +239,32 @@ int main(int argc, char *argv[])
     liminal::sound shoot_sound("assets/audio/shoot.wav");
 
     // load scene
-    std::ifstream stream("assets/scenes/main.json");
-    nlohmann::json json;
-    stream >> json;
-    for (auto &[key, value] : json.items())
-    {
-        if (key == "skybox")
-        {
-            renderer.skybox = new liminal::skybox(json["skybox"]);
-        }
-
-        if (key == "entities")
-        {
-            for (auto &element : value)
-            {
-                auto entity = registry.create();
-
-                for (auto &[key, value] : element.items())
-                {
-                    if (key == "transform")
-                    {
-                        glm::vec3 position(
-                            value["position"]["x"],
-                            value["position"]["y"],
-                            value["position"]["z"]);
-                        glm::vec3 rotation(
-                            value["rotation"]["x"],
-                            value["rotation"]["y"],
-                            value["rotation"]["z"]);
-                        glm::vec3 scale(
-                            value["scale"]["x"],
-                            value["scale"]["y"],
-                            value["scale"]["z"]);
-                        registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale);
-                    }
-
-                    if (key == "mesh_renderer")
-                    {
-                        std::string filename(value["filename"]);
-                        bool flip_uvs = value["flip_uvs"];
-                        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
-                    }
-
-                    if (key == "script")
-                    {
-                        sol::state *lua = new sol::state();
-                        lua->open_libraries(sol::lib::base, sol::lib::math);
-                        lua_set_functions(*lua, registry, renderer);
-                        lua->script_file(value["filename"]);
-                        registry.emplace<liminal::script>(entity, lua);
-                    }
-                }
-            }
-        }
-    }
-
-    const float sun_intensity = 10.0f;
-    auto sun = registry.create();
-    registry.emplace<liminal::directional_light>(sun, glm::vec3(0.352286f, -0.547564f, -0.758992f), glm::vec3(1.0f, 1.0f, 1.0f) * sun_intensity, 4096);
+    load_scene_from_file(renderer, registry);
 
     const float flashlight_intensity = 20.0f;
     auto flashlight = registry.create();
     registry.emplace<liminal::transform>(flashlight, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     registry.emplace<liminal::spot_light>(flashlight, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)), 1024);
+    sol::state *lua = create_lua_state("assets/scripts/flashlight.lua", registry, renderer, flashlight);
+    registry.emplace<liminal::script>(flashlight, lua);
 
-    auto water = registry.create();
-    registry.emplace<liminal::water>(water, glm::vec3(0.0f, -2.0f, 0.0f), 100.0f);
+    auto terrain = registry.create();
+    registry.emplace<liminal::terrain>(terrain, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
 
-    // auto terrain = registry.create();
-    // registry.emplace<liminal::terrain>(terrain, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 10.0f);
+    // auto ambience = registry.create();
+    // registry.emplace<liminal::transform>(ambience);
+    // registry.emplace<liminal::audio_source>(ambience);
+    // registry.get<liminal::audio_source>(ambience).set_loop(true);
+    // registry.get<liminal::audio_source>(ambience).set_gain(0.25f);
+    // // registry.get<liminal::audio_source>(ambience).play(ambient_sound);
 
-    auto ambience = registry.create();
-    registry.emplace<liminal::transform>(ambience);
-    registry.emplace<liminal::audio_source>(ambience);
-    registry.get<liminal::audio_source>(ambience).set_loop(true);
-    registry.get<liminal::audio_source>(ambience).set_gain(0.25f);
-    // registry.get<liminal::audio_source>(ambience).play(ambient_sound);
+    // auto bounce = registry.create();
+    // registry.emplace<liminal::transform>(bounce);
+    // registry.emplace<liminal::audio_source>(bounce);
 
-    auto bounce = registry.create();
-    registry.emplace<liminal::transform>(bounce);
-    registry.emplace<liminal::audio_source>(bounce);
-
-    auto weapon = registry.create();
-    registry.emplace<liminal::transform>(weapon);
-    registry.emplace<liminal::audio_source>(weapon);
+    // auto weapon = registry.create();
+    // registry.emplace<liminal::transform>(weapon);
+    // registry.emplace<liminal::audio_source>(weapon);
 
     auto camera = renderer.camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
@@ -246,9 +276,8 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
-    bool edit_mode = false;
-    bool flashlight_on = true;
-    bool flashlight_follow = true;
+    bool play_mode = false;
+    bool play_mode_init = false;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -343,17 +372,18 @@ int main(int argc, char *argv[])
                     break;
                     case SDLK_e:
                     {
-                        edit_mode = !edit_mode;
-                    }
-                    break;
-                    case SDLK_f:
-                    {
-                        flashlight_on = !flashlight_on;
-                    }
-                    break;
-                    case SDLK_g:
-                    {
-                        flashlight_follow = !flashlight_follow;
+                        if (play_mode)
+                        {
+                            registry.clear();
+                            load_scene_from_file(renderer, registry);
+
+                            play_mode = false;
+                        }
+                        else
+                        {
+                            play_mode = true;
+                            play_mode_init = true;
+                        }
                     }
                     break;
                     case SDLK_r:
@@ -478,53 +508,60 @@ int main(int argc, char *argv[])
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
-        if (flashlight_follow)
-        {
-            registry.get<liminal::transform>(flashlight).position = camera->position;
-            registry.get<liminal::transform>(flashlight).rotation = glm::mix(
-                registry.get<liminal::transform>(flashlight).rotation,
-                camera_front,
-                30.0f * delta_time);
-        }
+        registry.get<liminal::transform>(flashlight).position = camera->position;
+        registry.get<liminal::transform>(flashlight).rotation = glm::mix(
+            registry.get<liminal::transform>(flashlight).rotation,
+            camera_front,
+            30.0f * delta_time);
 
-        audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
-        registry.get<liminal::audio_source>(ambience).set_position(camera->position);
-        registry.get<liminal::audio_source>(weapon).set_position(camera->position);
+        // audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+        // registry.get<liminal::audio_source>(ambience).set_position(camera->position);
+        // registry.get<liminal::audio_source>(weapon).set_position(camera->position);
 
-        if (!io.WantCaptureMouse)
+        // if (!io.WantCaptureMouse)
+        // {
+        //     if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+        //     {
+        //         if (!registry.get<liminal::audio_source>(weapon).is_playing())
+        //         {
+        //             registry.get<liminal::audio_source>(weapon).play(shoot_sound);
+        //         }
+        //     }
+
+        //     if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
+        //     {
+        //         if (!registry.get<liminal::audio_source>(bounce).is_playing())
+        //         {
+        //             registry.get<liminal::audio_source>(bounce).play(bounce_sound);
+        //         }
+        //     }
+        // }
+
+        if (play_mode)
         {
-            if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+            // update scripts
+            for (auto [entity, script] : registry.view<liminal::script>().each())
             {
-                if (!registry.get<liminal::audio_source>(weapon).is_playing())
+                if (play_mode_init)
                 {
-                    registry.get<liminal::audio_source>(weapon).play(shoot_sound);
+                    script.init();
+
+                    play_mode_init = false;
                 }
+
+                script.update(delta_time);
             }
 
-            if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
+            // update physics
+            world->stepSimulation(delta_time);
+
+            // update animations
+            for (auto [entity, mesh_renderer] : registry.view<liminal::mesh_renderer>().each())
             {
-                if (!registry.get<liminal::audio_source>(bounce).is_playing())
+                if (mesh_renderer.model->has_animations())
                 {
-                    registry.get<liminal::audio_source>(bounce).play(bounce_sound);
+                    mesh_renderer.model->update_bone_transformations(0, current_time);
                 }
-            }
-        }
-
-        // update scripts
-        for (auto [entity, script] : registry.view<liminal::script>().each())
-        {
-            script.update(delta_time);
-        }
-
-        // update physics
-        world->stepSimulation(delta_time);
-
-        // update animations
-        for (auto [entity, mesh_renderer] : registry.view<liminal::mesh_renderer>().each())
-        {
-            if (mesh_renderer.model->has_animations())
-            {
-                mesh_renderer.model->update_bone_transformations(0, current_time);
             }
         }
 
@@ -534,15 +571,12 @@ int main(int argc, char *argv[])
         // main rendering
         renderer.render(registry, current_time, delta_time);
 
-        // DEBUG: render demo window
-        if (edit_mode)
-        {
-            ImGui::ShowDemoWindow();
-        }
-
         // render console
         if (console_open)
         {
+            // DEBUG: render demo window
+            ImGui::ShowDemoWindow();
+
             ImGui::Begin("Console", &console_open);
 
             static std::vector<std::string> messages;

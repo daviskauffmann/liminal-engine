@@ -15,33 +15,33 @@
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(const std::string &heightmap_filename, glm::vec3 position, float size, float height_scale)
+liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float size, float height_scale)
     : position(position), size(size), height_scale(height_scale)
 {
-    SDL_Surface *heightmap_surface = IMG_Load(heightmap_filename.c_str());
-    if (!heightmap_surface)
+    SDL_Surface *surface = IMG_Load(filename.c_str());
+    if (!surface)
     {
         std::cerr << "Error: Failed to load terrain heightmap texture: " << IMG_GetError() << std::endl;
         return;
     }
 
     std::vector<liminal::vertex> vertices;
-    for (int z = 0; z < heightmap_surface->h; z++)
+    for (int z = 0; z < surface->h; z++)
     {
-        for (int x = 0; x < heightmap_surface->w; x++)
+        for (int x = 0; x < surface->w; x++)
         {
             liminal::vertex vertex;
             vertex.position = glm::vec3(
-                -(float)x / ((float)heightmap_surface->w - 1) * size,
-                get_height(heightmap_surface, x, z),
-                -(float)z / ((float)heightmap_surface->h - 1) * size);
+                -(float)x / ((float)surface->w - 1) * size,
+                get_height(surface, x, z),
+                -(float)z / ((float)surface->h - 1) * size);
             vertex.normal = glm::normalize(glm::vec3(
-                get_height(heightmap_surface, x + 1, z) - get_height(heightmap_surface, x - 1, z),
+                get_height(surface, x + 1, z) - get_height(surface, x - 1, z),
                 2.0f,
-                get_height(heightmap_surface, x, z + 1) - get_height(heightmap_surface, x, z - 1)));
+                get_height(surface, x, z + 1) - get_height(surface, x, z - 1)));
             vertex.uv = glm::vec2(
-                (float)x / ((float)heightmap_surface->w - 1),
-                (float)z / ((float)heightmap_surface->h - 1));
+                (float)x / ((float)surface->w - 1),
+                (float)z / ((float)surface->h - 1));
             vertices.push_back(vertex);
 
             heightfield.push_back(vertex.position.x);
@@ -51,13 +51,13 @@ liminal::terrain::terrain(const std::string &heightmap_filename, glm::vec3 posit
     }
 
     std::vector<unsigned int> indices;
-    for (int z = 0; z < heightmap_surface->h - 1; z++)
+    for (int z = 0; z < surface->h - 1; z++)
     {
-        for (int x = 0; x < heightmap_surface->w - 1; x++)
+        for (int x = 0; x < surface->w - 1; x++)
         {
-            unsigned int top_left = (z * heightmap_surface->h) + x;
+            unsigned int top_left = (z * surface->h) + x;
             unsigned int top_right = top_left + 1;
-            unsigned int bottom_left = ((z + 1) * heightmap_surface->h) + x;
+            unsigned int bottom_left = ((z + 1) * surface->h) + x;
             unsigned int bottom_right = bottom_left + 1;
             indices.push_back(top_left);
             indices.push_back(bottom_left);
@@ -68,7 +68,7 @@ liminal::terrain::terrain(const std::string &heightmap_filename, glm::vec3 posit
         }
     }
 
-    SDL_FreeSurface(heightmap_surface);
+    SDL_FreeSurface(surface);
 
     std::vector<std::vector<liminal::texture *>> textures;
     for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))

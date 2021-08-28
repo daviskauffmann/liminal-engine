@@ -11,6 +11,7 @@ namespace liminal
         script(sol::state *lua);
         ~script();
 
+        void init();
         void update(float delta_time);
 
     private:
