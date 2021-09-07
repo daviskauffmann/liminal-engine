@@ -25,10 +25,7 @@ liminal::directional_light::directional_light(
 liminal::directional_light::~directional_light()
 {
     glDeleteFramebuffers(1, &depth_map_fbo_id);
-    for (unsigned int i = 0; i < NUM_CASCADES; i++)
-    {
-        glDeleteTextures(1, &depth_map_texture_ids[i]);
-    }
+    glDeleteTextures(NUM_CASCADES, depth_map_texture_ids);
 }
 
 void liminal::directional_light::set_depth_map_size(GLsizei depth_map_size)
@@ -36,10 +33,7 @@ void liminal::directional_light::set_depth_map_size(GLsizei depth_map_size)
     this->depth_map_size = depth_map_size;
 
     glDeleteFramebuffers(1, &depth_map_fbo_id);
-    for (unsigned int i = 0; i < NUM_CASCADES; i++)
-    {
-        glDeleteTextures(1, &depth_map_texture_ids[i]);
-    }
+    glDeleteTextures(NUM_CASCADES, depth_map_texture_ids);
 
     glGenFramebuffers(1, &depth_map_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo_id);

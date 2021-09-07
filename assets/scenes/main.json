@@ -1,5 +1,5 @@
 {
-    "_skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
+    "skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
     "entities": [
         {
             "directional_light": {
@@ -41,7 +41,8 @@
                     "x": 1,
                     "y": 1,
                     "z": 1
-                }
+                },
+                "mass": 0.0
             },
             "mesh_renderer": {
                 "filename": "assets/models/backpack/backpack.obj",
@@ -64,7 +65,8 @@
                     "x": 0.05,
                     "y": 0.05,
                     "z": 0.05
-                }
+                },
+                "mass": 1.0
             },
             "mesh_renderer": {
                 "filename": "assets/models/boblampclean/boblampclean.md5mesh",
@@ -87,7 +89,8 @@
                     "x": 1,
                     "y": 1,
                     "z": 1
-                }
+                },
+                "mass": 1.0
             },
             "mesh_renderer": {
                 "filename": "assets/models/dude/model.dae",

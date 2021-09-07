@@ -7,22 +7,22 @@ local light_angle = 0
 
 function Init()
     red_light = AddEntity()
-    AddTransform(red_light, light_distance, 0, light_distance, 0, 0, 0, 1, 1, 1)
+    AddTransform(red_light, light_distance, 0, light_distance, 0, 0, 0, 1, 1, 1, 0)
     AddPointLight(red_light, 10, 0, 0)
 
     yellow_light = AddEntity()
     AddTransform(yellow_light, -light_distance, 0, -light_distance, 0, 0, 0, 1,
-                 1, 1)
+                 1, 1, 0)
     AddPointLight(yellow_light, 10, 10, 0)
 
     green_light = AddEntity()
     AddTransform(green_light, light_distance, 0, -light_distance, 0, 0, 0, 1, 1,
-                 1)
+                 1, 0)
     AddPointLight(green_light, 0, 10, 0)
 
     blue_light = AddEntity()
     AddTransform(blue_light, -light_distance, 0, light_distance, 0, 0, 0, 1, 1,
-                 1)
+                 1, 0)
     AddPointLight(blue_light, 0, 0, 10)
 end
 

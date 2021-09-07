@@ -7,11 +7,11 @@ out struct Vertex
 	vec3 position;
 } vertex;
 
-uniform mat4 mvp;
+uniform mat4 mvp_matrix;
 
 void main()
 {
     vertex.position = position;
 
-    gl_Position = (mvp * vec4(position, 1.0)).xyww;
+    gl_Position = (mvp_matrix * vec4(position, 1.0)).xyww;
 }

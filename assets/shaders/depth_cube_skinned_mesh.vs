@@ -6,7 +6,7 @@ layout (location = 0) in vec3 position;
 layout (location = 5) in uint bone_ids[NUM_BONES_PER_VERTEX];
 layout (location = 6) in float bone_weights[NUM_BONES_PER_VERTEX];
 
-uniform mat4 model;
+uniform mat4 model_matrix;
 
 uniform mat4 bone_transformations[MAX_BONE_TRANSFORMATIONS];
 
@@ -18,5 +18,5 @@ void main()
         bone_transformation += bone_transformations[bone_ids[i]] * bone_weights[i];
     }
 
-    gl_Position = model * bone_transformation * vec4(position, 1.0);
+    gl_Position = model_matrix * bone_transformation * vec4(position, 1.0);
 }

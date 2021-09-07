@@ -17,11 +17,11 @@ out struct Vertex
     vec2 uv;
 } vertex;
 
-uniform mat4 mvp;
+uniform mat4 mvp_matrix;
 
 uniform mat4 bone_transformations[MAX_BONE_TRANSFORMATIONS];
 
-uniform mat4 model;
+uniform mat4 model_matrix;
 uniform vec4 clipping_plane;
 
 uniform float tiling = 1.0;
@@ -34,10 +34,10 @@ void main()
         bone_transformation += bone_transformations[bone_ids[i]] * bone_weights[i];
     }
 
-    vertex.position = (model * bone_transformation * vec4(position, 1.0)).xyz;
-    vertex.normal = (model * bone_transformation * vec4(normal, 0.0)).xyz;
+    vertex.position = (model_matrix * bone_transformation * vec4(position, 1.0)).xyz;
+    vertex.normal = (model_matrix * bone_transformation * vec4(normal, 0.0)).xyz;
     vertex.uv = uv * tiling;
 
-    gl_Position = mvp * bone_transformation * vec4(position, 1.0);
+    gl_Position = mvp_matrix * bone_transformation * vec4(position, 1.0);
 	gl_ClipDistance[0] = dot(vec4(vertex.position, 1.0), clipping_plane);
 }

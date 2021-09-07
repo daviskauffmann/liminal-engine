@@ -1,171 +1,29 @@
 #include <bullet/btBulletDynamicsCommon.h>
 #include <cxxopts.hpp>
-#include <entt/entt.hpp>
-#include <fstream>
 #include <iostream>
 #include <imgui.h>
-#include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
-#include <sol/sol.hpp>
+#include <string>
 
 #include "components/audio_source.hpp"
-#include "components/directional_light.hpp"
 #include "components/mesh_renderer.hpp"
-#include "components/point_light.hpp"
 #include "components/script.hpp"
 #include "components/spot_light.hpp"
 #include "components/terrain.hpp"
 #include "components/transform.hpp"
-#include "components/water.hpp"
 #include "audio.hpp"
 #include "camera.hpp"
+#include "engine.hpp"
 #include "model.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
+#include "scene.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 
-#define VERSION "v0.0.1"
-
-#define WINDOW_TITLE "Liminal Engine"
-
-void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer, entt::entity entity);
-
-sol::state *create_lua_state(const std::string &filename, entt::registry &registry, liminal::renderer &renderer, entt::entity entity)
-{
-    sol::state *lua = new sol::state();
-    lua->open_libraries(sol::lib::base, sol::lib::math);
-    lua_set_functions(*lua, registry, renderer, entity);
-    lua->script_file(filename);
-    return lua;
-}
-
-void lua_set_functions(sol::state &lua, entt::registry &registry, liminal::renderer &renderer, entt::entity entity)
-{
-    lua["SetSkybox"] = [&renderer](const std::string &filename) -> void
-    {
-        renderer.skybox = new liminal::skybox(filename);
-    };
-    lua["AddEntity"] = [&registry]() -> entt::entity
-    {
-        return registry.create();
-    };
-    lua["GetEntity"] = [entity]() -> entt::entity
-    {
-        return entity;
-    };
-    lua["AddTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
-    {
-        registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
-    };
-    lua["UpdateTransform"] = [&registry](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
-    {
-        auto &transform = registry.get<liminal::transform>(entity);
-        transform.position = glm::vec3(x, y, z);
-        transform.rotation = glm::vec3(rx, ry, rz);
-        transform.scale = glm::vec3(sx, sy, sz);
-    };
-    lua["AddMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
-    {
-        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
-    };
-    lua["UpdateMeshRenderer"] = [&registry](entt::entity entity, const std::string &filename, bool flip_uvs) -> void
-    {
-        auto &mesh_renderer = registry.get<liminal::mesh_renderer>(entity);
-        mesh_renderer.model = new liminal::model(filename, flip_uvs);
-    };
-    lua["AddPointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
-    {
-        registry.emplace<liminal::point_light>(entity, glm::vec3(r, g, b), 512);
-    };
-    lua["UpdatePointLight"] = [&registry](entt::entity entity, float r, float g, float b) -> void
-    {
-        auto &point_light = registry.get<liminal::point_light>(entity);
-        point_light.color = glm::vec3(r, g, b);
-    };
-    lua["AddScript"] = [&registry, &renderer](entt::entity entity, const std::string &filename) -> void
-    {
-        sol::state *lua = create_lua_state(filename, registry, renderer, entity);
-        registry.emplace<liminal::script>(entity, lua);
-    };
-}
-
-void load_scene_from_file(liminal::renderer &renderer, entt::registry &registry)
-{
-    std::ifstream stream("assets/scenes/main.json");
-    nlohmann::json json;
-    stream >> json;
-    for (auto &[key, value] : json.items())
-    {
-        if (key == "skybox")
-        {
-            renderer.skybox = new liminal::skybox(json["skybox"]);
-        }
-
-        if (key == "entities")
-        {
-            for (auto &element : value)
-            {
-                auto entity = registry.create();
-
-                for (auto &[key, value] : element.items())
-                {
-                    if (key == "directional_light")
-                    {
-                        glm::vec3 direction(
-                            value["direction"]["x"],
-                            value["direction"]["y"],
-                            value["direction"]["z"]);
-                        glm::vec3 color(
-                            value["color"]["r"],
-                            value["color"]["g"],
-                            value["color"]["b"]);
-                        registry.emplace<liminal::directional_light>(entity, direction, color, 4096);
-                    }
-
-                    if (key == "transform")
-                    {
-                        glm::vec3 position(
-                            value["position"]["x"],
-                            value["position"]["y"],
-                            value["position"]["z"]);
-                        glm::vec3 rotation(
-                            value["rotation"]["x"],
-                            value["rotation"]["y"],
-                            value["rotation"]["z"]);
-                        glm::vec3 scale(
-                            value["scale"]["x"],
-                            value["scale"]["y"],
-                            value["scale"]["z"]);
-                        registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale);
-                    }
-
-                    if (key == "mesh_renderer")
-                    {
-                        std::string filename(value["filename"]);
-                        bool flip_uvs = value["flip_uvs"];
-                        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
-                    }
-
-                    if (key == "script")
-                    {
-                        sol::state *lua = create_lua_state(value["filename"], registry, renderer, entity);
-                        registry.emplace<liminal::script>(entity, lua);
-                    }
-
-                    if (key == "water")
-                    {
-                        glm::vec3 position(
-                            value["position"]["x"],
-                            value["position"]["y"],
-                            value["position"]["z"]);
-                        registry.emplace<liminal::water>(entity, position, value["size"]);
-                    }
-                }
-            }
-        }
-    }
-}
+constexpr const char *exe_name = "liminal";
+constexpr const char *version_string = "v0.0.1";
+constexpr const char *window_title = "Liminal Engine";
 
 int main(int argc, char *argv[])
 {
@@ -176,7 +34,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        cxxopts::Options options("liminal");
+        cxxopts::Options options(exe_name);
 
         cxxopts::OptionAdder option_adder = options.add_options();
         option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
@@ -199,7 +57,7 @@ int main(int argc, char *argv[])
 
         if (result.count("version"))
         {
-            std::cout << VERSION << std::endl;
+            std::cout << version_string << std::endl;
             return 0;
         }
 
@@ -211,26 +69,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // init subsystems
-    liminal::platform platform(WINDOW_TITLE, window_width, window_height);
-    liminal::renderer renderer(
-        window_width, window_height, render_scale,
-        window_width, window_height,
-        window_width, window_height);
-    liminal::audio audio;
-    entt::registry registry;
+    // init engine
+    auto engine = new liminal::engine(std::string(window_title), window_width, window_height, render_scale);
 
     // get imgui reference
     ImGuiIO &io = ImGui::GetIO();
-
-    // init physics
-    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
-    btCollisionDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
-    btBroadphaseInterface *overlapping_pair_cache = new btDbvtBroadphase();
-    btSequentialImpulseConstraintSolver *solver = new btSequentialImpulseConstraintSolver();
-    btDiscreteDynamicsWorld *world = new btDiscreteDynamicsWorld(dispatcher, overlapping_pair_cache, solver, collision_configuration);
-
-    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
 
     // load assets
     // TODO: asset management
@@ -238,35 +81,35 @@ int main(int argc, char *argv[])
     liminal::sound bounce_sound("assets/audio/bounce.wav");
     liminal::sound shoot_sound("assets/audio/shoot.wav");
 
-    // load scene
-    load_scene_from_file(renderer, registry);
+    // create scene
+    const std::string &scene_filename = "assets/scenes/main.json";
+    auto scene = new liminal::scene(scene_filename, engine);
 
     const float flashlight_intensity = 20.0f;
-    auto flashlight = registry.create();
-    registry.emplace<liminal::transform>(flashlight, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    registry.emplace<liminal::spot_light>(flashlight, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)), 1024);
-    sol::state *lua = create_lua_state("assets/scripts/flashlight.lua", registry, renderer, flashlight);
-    registry.emplace<liminal::script>(flashlight, lua);
+    auto flashlight_entity = scene->registry.create();
+    scene->registry.emplace<liminal::transform>(flashlight_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+    scene->registry.emplace<liminal::spot_light>(flashlight_entity, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)), 1024);
 
-    auto terrain = registry.create();
-    registry.emplace<liminal::terrain>(terrain, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
+    auto terrain_entity = scene->registry.create();
+    auto terrain = scene->registry.emplace<liminal::terrain>(terrain_entity, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
+    scene->world->addRigidBody(terrain.rigidbody);
 
-    // auto ambience = registry.create();
-    // registry.emplace<liminal::transform>(ambience);
-    // registry.emplace<liminal::audio_source>(ambience);
-    // registry.get<liminal::audio_source>(ambience).set_loop(true);
-    // registry.get<liminal::audio_source>(ambience).set_gain(0.25f);
-    // // registry.get<liminal::audio_source>(ambience).play(ambient_sound);
+    auto ambience_entity = scene->registry.create();
+    scene->registry.emplace<liminal::transform>(ambience_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+    scene->registry.emplace<liminal::audio_source>(ambience_entity);
+    scene->registry.get<liminal::audio_source>(ambience_entity).set_loop(true);
+    scene->registry.get<liminal::audio_source>(ambience_entity).set_gain(0.25f);
+    // scene->registry.get<liminal::audio_source>(ambience_entity).play(ambient_sound);
 
-    // auto bounce = registry.create();
-    // registry.emplace<liminal::transform>(bounce);
-    // registry.emplace<liminal::audio_source>(bounce);
+    auto bounce_entity = scene->registry.create();
+    scene->registry.emplace<liminal::transform>(bounce_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+    scene->registry.emplace<liminal::audio_source>(bounce_entity);
 
-    // auto weapon = registry.create();
-    // registry.emplace<liminal::transform>(weapon);
-    // registry.emplace<liminal::audio_source>(weapon);
+    auto weapon_entity = scene->registry.create();
+    scene->registry.emplace<liminal::transform>(weapon_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+    scene->registry.emplace<liminal::audio_source>(weapon_entity);
 
-    auto camera = renderer.camera = new liminal::camera(
+    auto camera = engine->renderer->camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
         -90.0f,
@@ -276,8 +119,8 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
-    bool play_mode = false;
-    bool play_mode_init = false;
+    bool play_mode = true;
+    bool play_mode_init = true;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -299,7 +142,7 @@ int main(int argc, char *argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            platform.process_event(&event);
+            engine->platform->process_event(&event);
 
             switch (event.type)
             {
@@ -316,10 +159,10 @@ int main(int argc, char *argv[])
                 {
                     window_width = event.window.data1;
                     window_height = event.window.data2;
-                    platform.set_window_size(window_width, window_height);
-                    renderer.set_screen_size(window_width, window_height, render_scale);
-                    renderer.set_reflection_size(window_width, window_height);
-                    renderer.set_refraction_size(window_width, window_height);
+                    engine->platform->set_window_size(window_width, window_height);
+                    engine->renderer->set_screen_size(window_width, window_height, render_scale);
+                    engine->renderer->set_reflection_size(window_width, window_height);
+                    engine->renderer->set_refraction_size(window_width, window_height);
                     std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
                 }
                 break;
@@ -341,7 +184,7 @@ int main(int argc, char *argv[])
                     {
                         if (keys[SDL_SCANCODE_LALT])
                         {
-                            platform.toggle_fullscreen();
+                            engine->platform->toggle_fullscreen();
                         }
                     }
                     break;
@@ -351,7 +194,7 @@ int main(int argc, char *argv[])
                         {
                             render_scale -= 0.1f;
                         }
-                        renderer.set_screen_size(window_width, window_height, render_scale);
+                        engine->renderer->set_screen_size(window_width, window_height, render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     break;
@@ -361,7 +204,7 @@ int main(int argc, char *argv[])
                         {
                             render_scale += 0.1f;
                         }
-                        renderer.set_screen_size(window_width, window_height, render_scale);
+                        engine->renderer->set_screen_size(window_width, window_height, render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     break;
@@ -372,23 +215,23 @@ int main(int argc, char *argv[])
                     break;
                     case SDLK_e:
                     {
-                        if (play_mode)
-                        {
-                            registry.clear();
-                            load_scene_from_file(renderer, registry);
+                        // if (play_mode)
+                        // {
+                        //     delete scene;
+                        //     scene = new liminal::scene(scene_filename);
 
-                            play_mode = false;
-                        }
-                        else
-                        {
-                            play_mode = true;
-                            play_mode_init = true;
-                        }
+                        //     play_mode = false;
+                        // }
+                        // else
+                        // {
+                        //     play_mode = true;
+                        //     play_mode_init = true;
+                        // }
                     }
                     break;
                     case SDLK_r:
                     {
-                        renderer.reload_programs();
+                        engine->renderer->reload_programs();
                     }
                     break;
                     case SDLK_t:
@@ -508,39 +351,42 @@ int main(int argc, char *argv[])
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
-        registry.get<liminal::transform>(flashlight).position = camera->position;
-        registry.get<liminal::transform>(flashlight).rotation = glm::mix(
-            registry.get<liminal::transform>(flashlight).rotation,
-            camera_front,
-            30.0f * delta_time);
-
-        // audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
-        // registry.get<liminal::audio_source>(ambience).set_position(camera->position);
-        // registry.get<liminal::audio_source>(weapon).set_position(camera->position);
-
-        // if (!io.WantCaptureMouse)
-        // {
-        //     if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
-        //     {
-        //         if (!registry.get<liminal::audio_source>(weapon).is_playing())
-        //         {
-        //             registry.get<liminal::audio_source>(weapon).play(shoot_sound);
-        //         }
-        //     }
-
-        //     if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
-        //     {
-        //         if (!registry.get<liminal::audio_source>(bounce).is_playing())
-        //         {
-        //             registry.get<liminal::audio_source>(bounce).play(bounce_sound);
-        //         }
-        //     }
-        // }
-
         if (play_mode)
         {
+            // TODO: this block should be script driven
+            {
+                scene->registry.get<liminal::transform>(flashlight_entity).position = camera->position;
+                scene->registry.get<liminal::transform>(flashlight_entity).rotation = glm::mix(
+                    scene->registry.get<liminal::transform>(flashlight_entity).rotation,
+                    camera_front,
+                    30.0f * delta_time);
+
+                engine->audio->set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+                scene->registry.get<liminal::audio_source>(ambience_entity).set_position(camera->position);
+                scene->registry.get<liminal::audio_source>(weapon_entity).set_position(camera->position);
+
+                if (!io.WantCaptureMouse)
+                {
+                    if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        if (!scene->registry.get<liminal::audio_source>(weapon_entity).is_playing())
+                        {
+                            scene->registry.get<liminal::audio_source>(weapon_entity).play(shoot_sound);
+                        }
+                    }
+
+                    if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
+                    {
+                        if (!scene->registry.get<liminal::audio_source>(bounce_entity).is_playing())
+                        {
+                            scene->registry.get<liminal::audio_source>(bounce_entity).play(bounce_sound);
+                        }
+                    }
+                }
+            }
+
             // update scripts
-            for (auto [entity, script] : registry.view<liminal::script>().each())
+            for (auto [entity, script] : scene->registry.view<liminal::script>().each())
             {
                 if (play_mode_init)
                 {
@@ -553,10 +399,10 @@ int main(int argc, char *argv[])
             }
 
             // update physics
-            world->stepSimulation(delta_time);
+            scene->world->stepSimulation(delta_time);
 
             // update animations
-            for (auto [entity, mesh_renderer] : registry.view<liminal::mesh_renderer>().each())
+            for (auto [entity, mesh_renderer] : scene->registry.view<liminal::mesh_renderer>().each())
             {
                 if (mesh_renderer.model->has_animations())
                 {
@@ -566,10 +412,10 @@ int main(int argc, char *argv[])
         }
 
         // setup window for rendering
-        platform.begin_render();
+        engine->platform->begin_render();
 
         // main rendering
-        renderer.render(registry, current_time, delta_time);
+        engine->renderer->render(*scene, current_time, delta_time);
 
         // render console
         if (console_open)
@@ -595,13 +441,13 @@ int main(int argc, char *argv[])
                 }
                 else if (strcmp(command, "wireframe") == 0)
                 {
-                    renderer.wireframe = !renderer.wireframe;
-                    messages.push_back("Wireframe " + renderer.wireframe ? "on" : "off");
+                    engine->renderer->wireframe = !engine->renderer->wireframe;
+                    messages.push_back("Wireframe " + engine->renderer->wireframe ? "on" : "off");
                 }
                 else if (strcmp(command, "greyscale") == 0)
                 {
-                    renderer.greyscale = !renderer.greyscale;
-                    messages.push_back("Wireframe " + renderer.wireframe ? "on" : "off");
+                    engine->renderer->greyscale = !engine->renderer->greyscale;
+                    messages.push_back("Wireframe " + engine->renderer->wireframe ? "on" : "off");
                 }
                 else
                 {
@@ -620,8 +466,11 @@ int main(int argc, char *argv[])
         }
 
         // done rendering
-        platform.end_render();
+        engine->platform->end_render();
     }
+
+    delete scene;
+    delete engine;
 
     return 0;
 }

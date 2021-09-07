@@ -19,6 +19,7 @@ SRC = \
 	src/audio.cpp \
 	src/camera.cpp \
 	src/cubemap.cpp \
+	src/engine.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
@@ -26,6 +27,7 @@ SRC = \
 	src/platform.cpp \
 	src/program.cpp \
 	src/renderer.cpp \
+	src/scene.cpp \
 	src/skybox.cpp \
 	src/sound.cpp \
 	src/stb_image.cpp \

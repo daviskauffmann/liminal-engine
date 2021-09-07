@@ -16,7 +16,9 @@
 // this will probably be a different class
 
 liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float size, float height_scale)
-    : position(position), size(size), height_scale(height_scale)
+    : position(position),
+      size(size),
+      height_scale(height_scale)
 {
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
@@ -113,18 +115,16 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
     transform.setIdentity();
     transform.setOrigin(btVector3(position.x, position.y, position.z));
 
-    motion_state = new btDefaultMotionState(transform);
+    btDefaultMotionState *motion_state = new btDefaultMotionState(transform);
 
-    collision_shape = new btHeightfieldTerrainShape(size, size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
+    btCollisionShape *collision_shape = new btHeightfieldTerrainShape(size, size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
+
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0.0f, motion_state, collision_shape));
 }
 
 liminal::terrain::~terrain()
 {
-    delete motion_state;
-    delete collision_shape;
-
-    delete mesh;
+    // delete mesh;
 }
 
 glm::mat4 liminal::terrain::get_model_matrix() const

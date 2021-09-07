@@ -2,13 +2,14 @@
 #define PLATFORM_HPP
 
 #include <SDL2/SDL.h>
+#include <string>
 
 namespace liminal
 {
     class platform
     {
     public:
-        platform(const char *title, int width, int height);
+        platform(const std::string &window_title, int window_width, int window_height);
         ~platform();
 
         void set_window_size(int width, int height);

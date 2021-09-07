@@ -20,7 +20,7 @@ namespace liminal
         glm::mat4 transformation;
     };
 
-    struct model
+    class model
     {
     public:
         std::vector<glm::mat4> bone_transformations;

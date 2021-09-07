@@ -2,7 +2,6 @@ local flashlight
 
 function Init()
     flashlight = GetEntity()
-    print(flashlight)
 end
 
 function Update(delta_time)

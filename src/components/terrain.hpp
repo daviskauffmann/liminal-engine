@@ -10,8 +10,9 @@
 
 namespace liminal
 {
-    struct terrain
+    class terrain
     {
+    public:
         glm::vec3 position;
         float size;
         liminal::mesh *mesh;

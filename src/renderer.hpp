@@ -9,6 +9,7 @@
 #include "mesh.hpp"
 #include "model.hpp"
 #include "program.hpp"
+#include "scene.hpp"
 #include "skybox.hpp"
 #include "texture.hpp"
 
@@ -34,7 +35,7 @@ namespace liminal
 
         void reload_programs();
 
-        void render(entt::registry &registry, unsigned int current_time, float delta_time);
+        void render(liminal::scene &scene, unsigned int current_time, float delta_time);
 
     private:
         GLsizei display_width;
@@ -111,11 +112,11 @@ namespace liminal
 
         void setup_samplers();
 
-        void render_shadows(entt::registry &registry);
-        void render_objects(entt::registry &registry, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
-        void render_waters(entt::registry &registry, unsigned int current_time);
-        void render_sprites();
-        void render_screen();
+        void render_shadows(liminal::scene &scene);
+        void render_objects(liminal::scene &scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_waters(liminal::scene &scene, unsigned int current_time);
+        void render_sprites(liminal::scene &scene);
+        void render_screen(liminal::scene &scene);
     };
 }
 

@@ -10,7 +10,7 @@
 #include <SDL2/SDL_image.h>
 #include <sol/sol.hpp>
 
-liminal::platform::platform(const char *title, int width, int height)
+liminal::platform::platform(const std::string &window_title, int window_width, int window_height)
 {
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
     {
@@ -33,11 +33,11 @@ liminal::platform::platform(const char *title, int width, int height)
     }
 
     window = SDL_CreateWindow(
-        title,
+        window_title.c_str(),
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        width,
-        height,
+        window_width,
+        window_height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window)
     {
