@@ -6,14 +6,16 @@
 
 namespace liminal
 {
-    struct texture
+    class texture
     {
-        GLuint texture_id;
-
+    public:
         texture(const std::string &filename, bool srgb = false);
         ~texture();
 
         void bind(unsigned int index) const;
+
+    private:
+        GLuint texture_id;
     };
 }
 

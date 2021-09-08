@@ -14,15 +14,21 @@
 #include "components/water.hpp"
 #include "audio.hpp"
 #include "camera.hpp"
-#include "engine.hpp"
 #include "model.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
 
-void load_scene(const std::string &filename, liminal::engine *engine, liminal::scene *scene)
+liminal::scene::scene(const std::string &filename)
 {
+    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
+    btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
+    btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
+    btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
+    world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
+    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
+
     std::ifstream stream(filename);
     nlohmann::json json;
     stream >> json;
@@ -30,14 +36,14 @@ void load_scene(const std::string &filename, liminal::engine *engine, liminal::s
     {
         if (key == "skybox")
         {
-            engine->renderer->skybox = new liminal::skybox(json["skybox"]);
+            skybox = new liminal::skybox(json["skybox"]);
         }
 
         if (key == "entities")
         {
             for (auto &element : value)
             {
-                auto entity = scene->registry.create();
+                auto entity = registry.create();
 
                 for (auto &[key, value] : element.items())
                 {
@@ -51,7 +57,7 @@ void load_scene(const std::string &filename, liminal::engine *engine, liminal::s
                             value["color"]["r"],
                             value["color"]["g"],
                             value["color"]["b"]);
-                        scene->registry.emplace<liminal::directional_light>(entity, direction, color, 4096);
+                        registry.emplace<liminal::directional_light>(entity, direction, color, 4096);
                     }
 
                     if (key == "transform")
@@ -69,11 +75,11 @@ void load_scene(const std::string &filename, liminal::engine *engine, liminal::s
                             value["scale"]["y"],
                             value["scale"]["z"]);
                         float mass = value["mass"];
-                        auto transform = scene->registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale, mass);
+                        auto transform = registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale, mass);
 
                         if (mass > 0.0f)
                         {
-                            scene->world->addRigidBody(transform.rigidbody);
+                            world->addRigidBody(transform.rigidbody);
                         }
                     }
 
@@ -81,12 +87,12 @@ void load_scene(const std::string &filename, liminal::engine *engine, liminal::s
                     {
                         std::string filename(value["filename"]);
                         bool flip_uvs = value["flip_uvs"];
-                        scene->registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
+                        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
                     }
 
                     if (key == "script")
                     {
-                        scene->registry.emplace<liminal::script>(entity, value["filename"], entity);
+                        registry.emplace<liminal::script>(entity, value["filename"], this, entity);
                     }
 
                     if (key == "water")
@@ -95,24 +101,12 @@ void load_scene(const std::string &filename, liminal::engine *engine, liminal::s
                             value["position"]["x"],
                             value["position"]["y"],
                             value["position"]["z"]);
-                        scene->registry.emplace<liminal::water>(entity, position, value["size"]);
+                        registry.emplace<liminal::water>(entity, position, value["size"]);
                     }
                 }
             }
         }
     }
-}
-
-liminal::scene::scene(const std::string &filename, liminal::engine *engine)
-{
-    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
-    btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
-    btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
-    btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
-    world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
-    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
-
-    load_scene(filename, engine, this);
 }
 
 liminal::scene::~scene()

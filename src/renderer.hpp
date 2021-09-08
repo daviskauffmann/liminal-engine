@@ -4,13 +4,11 @@
 #include <entt/entt.hpp>
 #include <GL/glew.h>
 
-#include "camera.hpp"
 #include "cubemap.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 #include "program.hpp"
 #include "scene.hpp"
-#include "skybox.hpp"
 #include "texture.hpp"
 
 namespace liminal
@@ -20,8 +18,6 @@ namespace liminal
     public:
         bool wireframe;
         bool greyscale;
-        liminal::camera *camera;
-        liminal::skybox *skybox;
 
         renderer(
             GLsizei display_width, GLsizei display_height, float render_scale,

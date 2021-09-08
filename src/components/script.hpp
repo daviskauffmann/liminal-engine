@@ -5,11 +5,13 @@
 #include <string>
 #include <sol/sol.hpp>
 
+#include "../scene.hpp"
+
 namespace liminal
 {
     struct script
     {
-        script(const std::string &filename, entt::entity entity);
+        script(const std::string &filename, liminal::scene *scene, entt::entity entity);
         ~script();
 
         void init();

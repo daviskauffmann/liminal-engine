@@ -9,17 +9,19 @@
 #include "components/mesh_renderer.hpp"
 #include "components/script.hpp"
 #include "components/spot_light.hpp"
+#include "components/sprite.hpp"
 #include "components/terrain.hpp"
 #include "components/transform.hpp"
+#include "assets.hpp"
 #include "audio.hpp"
 #include "camera.hpp"
-#include "engine.hpp"
 #include "model.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
 #include "scene.hpp"
 #include "skybox.hpp"
 #include "sound.hpp"
+#include "texture.hpp"
 
 constexpr const char *exe_name = "liminal";
 constexpr const char *version_string = "v0.0.1";
@@ -69,8 +71,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // init engine
-    auto engine = new liminal::engine(std::string(window_title), window_width, window_height, render_scale);
+    // init subsystems
+    liminal::platform platform(window_title, window_width, window_height);
+    liminal::renderer renderer(
+        window_width, window_height, render_scale,
+        window_width, window_height,
+        window_width, window_height);
+    liminal::audio audio;
+    liminal::assets assets;
 
     // get imgui reference
     ImGuiIO &io = ImGui::GetIO();
@@ -80,10 +88,11 @@ int main(int argc, char *argv[])
     liminal::sound ambient_sound("assets/audio/ambient.wav");
     liminal::sound bounce_sound("assets/audio/bounce.wav");
     liminal::sound shoot_sound("assets/audio/shoot.wav");
+    liminal::texture grass_texture("assets/images/grass_sprite.png");
 
     // create scene
     const std::string &scene_filename = "assets/scenes/main.json";
-    auto scene = new liminal::scene(scene_filename, engine);
+    auto scene = new liminal::scene(scene_filename);
 
     const float flashlight_intensity = 20.0f;
     auto flashlight_entity = scene->registry.create();
@@ -109,10 +118,13 @@ int main(int argc, char *argv[])
     scene->registry.emplace<liminal::transform>(weapon_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
     scene->registry.emplace<liminal::audio_source>(weapon_entity);
 
-    auto camera = engine->renderer->camera = new liminal::camera(
+    auto ui_entity = scene->registry.create();
+    // scene->registry.emplace<liminal::sprite>(ui_entity, &grass_texture, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec2(1.0f, 1.0f));
+
+    auto camera = scene->camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
-        -90.0f,
+        0.0f,
         0.0f,
         45.0f);
 
@@ -142,7 +154,7 @@ int main(int argc, char *argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            engine->platform->process_event(&event);
+            platform.process_event(&event);
 
             switch (event.type)
             {
@@ -159,10 +171,10 @@ int main(int argc, char *argv[])
                 {
                     window_width = event.window.data1;
                     window_height = event.window.data2;
-                    engine->platform->set_window_size(window_width, window_height);
-                    engine->renderer->set_screen_size(window_width, window_height, render_scale);
-                    engine->renderer->set_reflection_size(window_width, window_height);
-                    engine->renderer->set_refraction_size(window_width, window_height);
+                    platform.set_window_size(window_width, window_height);
+                    renderer.set_screen_size(window_width, window_height, render_scale);
+                    renderer.set_reflection_size(window_width, window_height);
+                    renderer.set_refraction_size(window_width, window_height);
                     std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
                 }
                 break;
@@ -184,7 +196,7 @@ int main(int argc, char *argv[])
                     {
                         if (keys[SDL_SCANCODE_LALT])
                         {
-                            engine->platform->toggle_fullscreen();
+                            platform.toggle_fullscreen();
                         }
                     }
                     break;
@@ -194,7 +206,7 @@ int main(int argc, char *argv[])
                         {
                             render_scale -= 0.1f;
                         }
-                        engine->renderer->set_screen_size(window_width, window_height, render_scale);
+                        renderer.set_screen_size(window_width, window_height, render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     break;
@@ -204,7 +216,7 @@ int main(int argc, char *argv[])
                         {
                             render_scale += 0.1f;
                         }
-                        engine->renderer->set_screen_size(window_width, window_height, render_scale);
+                        renderer.set_screen_size(window_width, window_height, render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     break;
@@ -231,7 +243,7 @@ int main(int argc, char *argv[])
                     break;
                     case SDLK_r:
                     {
-                        engine->renderer->reload_programs();
+                        renderer.reload_programs();
                     }
                     break;
                     case SDLK_t:
@@ -361,7 +373,7 @@ int main(int argc, char *argv[])
                     camera_front,
                     30.0f * delta_time);
 
-                engine->audio->set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+                audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
                 scene->registry.get<liminal::audio_source>(ambience_entity).set_position(camera->position);
                 scene->registry.get<liminal::audio_source>(weapon_entity).set_position(camera->position);
 
@@ -412,10 +424,10 @@ int main(int argc, char *argv[])
         }
 
         // setup window for rendering
-        engine->platform->begin_render();
+        platform.begin_render();
 
         // main rendering
-        engine->renderer->render(*scene, current_time, delta_time);
+        renderer.render(*scene, current_time, delta_time);
 
         // render console
         if (console_open)
@@ -441,13 +453,13 @@ int main(int argc, char *argv[])
                 }
                 else if (strcmp(command, "wireframe") == 0)
                 {
-                    engine->renderer->wireframe = !engine->renderer->wireframe;
-                    messages.push_back("Wireframe " + engine->renderer->wireframe ? "on" : "off");
+                    renderer.wireframe = !renderer.wireframe;
+                    messages.push_back("Wireframe " + renderer.wireframe ? "on" : "off");
                 }
                 else if (strcmp(command, "greyscale") == 0)
                 {
-                    engine->renderer->greyscale = !engine->renderer->greyscale;
-                    messages.push_back("Wireframe " + engine->renderer->wireframe ? "on" : "off");
+                    renderer.greyscale = !renderer.greyscale;
+                    messages.push_back("Greyscale " + renderer.greyscale ? "on" : "off");
                 }
                 else
                 {
@@ -466,11 +478,10 @@ int main(int argc, char *argv[])
         }
 
         // done rendering
-        engine->platform->end_render();
+        platform.end_render();
     }
 
     delete scene;
-    delete engine;
 
     return 0;
 }

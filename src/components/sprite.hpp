@@ -24,7 +24,7 @@ namespace liminal
             float rotation,
             glm::vec2 scale);
 
-        glm::mat4 calc_model() const;
+        glm::mat4 get_model_matrix() const;
     };
 }
 

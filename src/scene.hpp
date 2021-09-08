@@ -5,17 +5,20 @@
 #include <entt/entt.hpp>
 #include <string>
 
+#include "camera.hpp"
+#include "skybox.hpp"
+
 namespace liminal
 {
-    class engine;
-
     class scene
     {
     public:
         entt::registry registry;
         btDiscreteDynamicsWorld *world;
+        liminal::camera *camera;
+        liminal::skybox *skybox;
 
-        scene(const std::string &filename, liminal::engine *engine);
+        scene(const std::string &filename);
         ~scene();
     };
 }

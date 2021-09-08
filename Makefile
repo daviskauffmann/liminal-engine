@@ -16,10 +16,10 @@ SRC = \
 	src/components/terrain.cpp \
 	src/components/transform.cpp \
 	src/components/water.cpp \
+	src/assets.cpp \
 	src/audio.cpp \
 	src/camera.cpp \
 	src/cubemap.cpp \
-	src/engine.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
 	src/mesh.cpp \
