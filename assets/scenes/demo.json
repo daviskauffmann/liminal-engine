@@ -26,6 +26,9 @@
             }
         },
         {
+            "terrain": {}
+        },
+        {
             "transform": {
                 "position": {
                     "x": 0,

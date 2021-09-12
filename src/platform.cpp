@@ -111,6 +111,11 @@ void liminal::platform::toggle_fullscreen()
     }
 }
 
+void liminal::platform::toggle_vsync()
+{
+    SDL_GL_SetSwapInterval(!SDL_GL_GetSwapInterval());
+}
+
 void liminal::platform::process_event(SDL_Event *event)
 {
     ImGui_ImplSDL2_ProcessEvent(event);

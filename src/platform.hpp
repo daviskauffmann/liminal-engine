@@ -14,6 +14,7 @@ namespace liminal
 
         void set_window_size(int width, int height);
         void toggle_fullscreen();
+        void toggle_vsync();
 
         void process_event(SDL_Event *event);
 

@@ -22,6 +22,10 @@
 
 liminal::scene::scene(const std::string &filename)
 {
+    camera = nullptr;
+    skybox = nullptr;
+
+    // setup physics world
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
     btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
@@ -29,6 +33,7 @@ liminal::scene::scene(const std::string &filename)
     world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
     world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
 
+    // load scene from file
     std::ifstream stream(filename);
     nlohmann::json json;
     stream >> json;
@@ -103,9 +108,21 @@ liminal::scene::scene(const std::string &filename)
                             value["position"]["z"]);
                         registry.emplace<liminal::water>(entity, position, value["size"]);
                     }
+
+                    if (key == "terrain")
+                    {
+                        auto terrain = registry.emplace<liminal::terrain>(entity, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
+                        world->addRigidBody(terrain.rigidbody);
+                    }
                 }
             }
         }
+    }
+
+    // run init scripts
+    for (auto [entity, script] : registry.view<liminal::script>().each())
+    {
+        script.init();
     }
 }
 

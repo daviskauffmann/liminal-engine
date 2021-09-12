@@ -3,9 +3,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
-float liminal::directional_light::shadow_map_size = 10.0f;
-float liminal::directional_light::near_plane = 1.0f;
-float liminal::directional_light::far_plane = 7.5f;
+float liminal::directional_light::shadow_map_size = 100.0f;
+float liminal::directional_light::near_plane = -100.0f;
+float liminal::directional_light::far_plane = 100.0f;
 
 liminal::directional_light::directional_light(
     glm::vec3 direction,

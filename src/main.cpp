@@ -91,17 +91,15 @@ int main(int argc, char *argv[])
     liminal::texture grass_texture("assets/images/grass_sprite.png");
 
     // create scene
-    const std::string &scene_filename = "assets/scenes/main.json";
+    // TODO: non-hardcoded way to determine first scene to load
+    const std::string &scene_filename = "assets/scenes/demo.json";
     auto scene = new liminal::scene(scene_filename);
 
+    // TODO: these entities should come from the JSON file
     const float flashlight_intensity = 20.0f;
     auto flashlight_entity = scene->registry.create();
     scene->registry.emplace<liminal::transform>(flashlight_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
     scene->registry.emplace<liminal::spot_light>(flashlight_entity, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)), 1024);
-
-    auto terrain_entity = scene->registry.create();
-    auto terrain = scene->registry.emplace<liminal::terrain>(terrain_entity, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
-    scene->world->addRigidBody(terrain.rigidbody);
 
     auto ambience_entity = scene->registry.create();
     scene->registry.emplace<liminal::transform>(ambience_entity, nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
@@ -119,8 +117,9 @@ int main(int argc, char *argv[])
     scene->registry.emplace<liminal::audio_source>(weapon_entity);
 
     auto ui_entity = scene->registry.create();
-    // scene->registry.emplace<liminal::sprite>(ui_entity, &grass_texture, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec2(1.0f, 1.0f));
+    // scene->registry.emplace<liminal::sprite>(ui_entity, &grass_texture, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec2(1.0f, 1.0f));}
 
+    // TODO: camera should be an entity as well
     auto camera = scene->camera = new liminal::camera(
         glm::vec3(0.0f, 0.0f, 3.0f),
         0.0f,
@@ -131,8 +130,11 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
-    bool play_mode = true;
-    bool play_mode_init = true;
+    bool edit_mode = true;
+
+    // TODO: script driven
+    bool flashlight_on = true;
+    bool flashlight_follow = true;
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -227,18 +229,17 @@ int main(int argc, char *argv[])
                     break;
                     case SDLK_e:
                     {
-                        // if (play_mode)
-                        // {
-                        //     delete scene;
-                        //     scene = new liminal::scene(scene_filename);
-
-                        //     play_mode = false;
-                        // }
-                        // else
-                        // {
-                        //     play_mode = true;
-                        //     play_mode_init = true;
-                        // }
+                        edit_mode = !edit_mode;
+                    }
+                    break;
+                    case SDLK_f:
+                    {
+                        flashlight_on = !flashlight_on;
+                    }
+                    break;
+                    case SDLK_g:
+                    {
+                        flashlight_follow = !flashlight_follow;
                     }
                     break;
                     case SDLK_r:
@@ -363,63 +364,64 @@ int main(int argc, char *argv[])
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
-        if (play_mode)
+        // TODO: this block should be script driven
         {
-            // TODO: this block should be script driven
+            if (flashlight_follow)
             {
                 scene->registry.get<liminal::transform>(flashlight_entity).position = camera->position;
                 scene->registry.get<liminal::transform>(flashlight_entity).rotation = glm::mix(
                     scene->registry.get<liminal::transform>(flashlight_entity).rotation,
                     camera_front,
                     30.0f * delta_time);
+            }
+            if (flashlight_on)
+            {
+                scene->registry.get<liminal::spot_light>(flashlight_entity).color = glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity;
+            }
+            else
+            {
+                scene->registry.get<liminal::spot_light>(flashlight_entity).color = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
 
-                audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
-                scene->registry.get<liminal::audio_source>(ambience_entity).set_position(camera->position);
-                scene->registry.get<liminal::audio_source>(weapon_entity).set_position(camera->position);
+            audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+            scene->registry.get<liminal::audio_source>(ambience_entity).set_position(camera->position);
+            scene->registry.get<liminal::audio_source>(weapon_entity).set_position(camera->position);
 
-                if (!io.WantCaptureMouse)
+            if (!io.WantCaptureMouse)
+            {
+                if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
                 {
-                    if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    if (!scene->registry.get<liminal::audio_source>(weapon_entity).is_playing())
                     {
-                        if (!scene->registry.get<liminal::audio_source>(weapon_entity).is_playing())
-                        {
-                            scene->registry.get<liminal::audio_source>(weapon_entity).play(shoot_sound);
-                        }
+                        scene->registry.get<liminal::audio_source>(weapon_entity).play(shoot_sound);
                     }
+                }
 
-                    if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
+                if (mouse & SDL_BUTTON(SDL_BUTTON_RIGHT))
+                {
+                    if (!scene->registry.get<liminal::audio_source>(bounce_entity).is_playing())
                     {
-                        if (!scene->registry.get<liminal::audio_source>(bounce_entity).is_playing())
-                        {
-                            scene->registry.get<liminal::audio_source>(bounce_entity).play(bounce_sound);
-                        }
+                        scene->registry.get<liminal::audio_source>(bounce_entity).play(bounce_sound);
                     }
                 }
             }
+        }
 
-            // update scripts
-            for (auto [entity, script] : scene->registry.view<liminal::script>().each())
+        // update scripts
+        for (auto [entity, script] : scene->registry.view<liminal::script>().each())
+        {
+            script.update(delta_time);
+        }
+
+        // update physics
+        scene->world->stepSimulation(delta_time);
+
+        // update animations
+        for (auto [entity, mesh_renderer] : scene->registry.view<liminal::mesh_renderer>().each())
+        {
+            if (mesh_renderer.model->has_animations())
             {
-                if (play_mode_init)
-                {
-                    script.init();
-
-                    play_mode_init = false;
-                }
-
-                script.update(delta_time);
-            }
-
-            // update physics
-            scene->world->stepSimulation(delta_time);
-
-            // update animations
-            for (auto [entity, mesh_renderer] : scene->registry.view<liminal::mesh_renderer>().each())
-            {
-                if (mesh_renderer.model->has_animations())
-                {
-                    mesh_renderer.model->update_bone_transformations(0, current_time);
-                }
+                mesh_renderer.model->update_bone_transformations(0, current_time);
             }
         }
 
@@ -429,12 +431,14 @@ int main(int argc, char *argv[])
         // main rendering
         renderer.render(*scene, current_time, delta_time);
 
+        if (edit_mode)
+        {
+            ImGui::ShowDemoWindow();
+        }
+
         // render console
         if (console_open)
         {
-            // DEBUG: render demo window
-            ImGui::ShowDemoWindow();
-
             ImGui::Begin("Console", &console_open);
 
             static std::vector<std::string> messages;
@@ -460,6 +464,11 @@ int main(int argc, char *argv[])
                 {
                     renderer.greyscale = !renderer.greyscale;
                     messages.push_back("Greyscale " + renderer.greyscale ? "on" : "off");
+                }
+                else if (strcmp(command, "reload") == 0)
+                {
+                    delete scene;
+                    scene = new liminal::scene(scene_filename);
                 }
                 else
                 {
