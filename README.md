@@ -22,6 +22,7 @@ These dependencies are included as submodules:
 
 - EnTT
 - Dear ImGui
+- JSON
 - stb
 
 ### Download

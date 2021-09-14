@@ -4,7 +4,6 @@
 #include <entt/entt.hpp>
 #include <GL/glew.h>
 
-#include "cubemap.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 #include "program.hpp"
