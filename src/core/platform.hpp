@@ -1,6 +1,7 @@
 #ifndef PLATFORM_HPP
 #define PLATFORM_HPP
 
+#include <AL/alc.h>
 #include <SDL2/SDL.h>
 #include <string>
 
@@ -23,7 +24,9 @@ namespace liminal
 
     private:
         SDL_Window *window;
-        SDL_GLContext context;
+        SDL_GLContext sdl_gl_context;
+        ALCdevice *al_device;
+        ALCcontext *al_context;
     };
 }
 

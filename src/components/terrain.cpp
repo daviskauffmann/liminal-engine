@@ -6,7 +6,7 @@
 #include <iostream>
 #include <SDL2/SDL_image.h>
 
-#include "../texture.hpp"
+#include "../graphics/texture.hpp"
 
 // TODO: read from heightmap image file
 

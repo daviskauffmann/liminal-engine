@@ -7,6 +7,7 @@ LDFLAGS = `pkg-config --libs $(PKGS)` -mconsole
 LDLIBS = -lopengl32
 
 SRC = \
+	src/audio/sound.cpp \
 	src/components/audio_source.cpp \
 	src/components/directional_light.cpp \
 	src/components/point_light.cpp \
@@ -16,24 +17,22 @@ SRC = \
 	src/components/terrain.cpp \
 	src/components/transform.cpp \
 	src/components/water.cpp \
-	src/assets.cpp \
-	src/audio.cpp \
-	src/camera.cpp \
-	src/cubemap.cpp \
+	src/core/assets.cpp \
+	src/core/platform.cpp \
+	src/core/scene.cpp \
+	src/graphics/camera.cpp \
+	src/graphics/cubemap.cpp \
+	src/graphics/mesh.cpp \
+	src/graphics/model.cpp \
+	src/graphics/program.cpp \
+	src/graphics/renderer.cpp \
+	src/graphics/skybox.cpp \
+	src/graphics/texture.cpp \
+	src/graphics/vertex.cpp \
 	src/imgui.cpp \
 	src/main.cpp \
-	src/mesh.cpp \
-	src/model.cpp \
-	src/platform.cpp \
-	src/program.cpp \
-	src/renderer.cpp \
-	src/scene.cpp \
-	src/skybox.cpp \
-	src/sound.cpp \
 	src/stb_image.cpp \
-	src/stb_include.cpp \
-	src/texture.cpp \
-	src/vertex.cpp
+	src/stb_include.cpp
 TARGET = bin/liminal
 
 .PHONY: all

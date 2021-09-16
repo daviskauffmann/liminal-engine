@@ -1,5 +1,6 @@
 #include "platform.hpp"
 
+#include <AL/al.h>
 #include <GL/glew.h>
 #include <iostream>
 #include <imgui.h>
@@ -12,6 +13,7 @@
 
 liminal::platform::platform(const std::string &window_title, int window_width, int window_height)
 {
+    // init SDL
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
     {
         std::cerr << "Error: Failed to initialize SDL: " << SDL_GetError() << std::endl;
@@ -32,6 +34,7 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
         return;
     }
 
+    // create window
     window = SDL_CreateWindow(
         window_title.c_str(),
         SDL_WINDOWPOS_CENTERED,
@@ -45,17 +48,19 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
         return;
     }
 
+    // create OpenGL context
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetSwapInterval(0);
-    context = SDL_GL_CreateContext(window);
-    if (!context)
+    sdl_gl_context = SDL_GL_CreateContext(window);
+    if (!sdl_gl_context)
     {
         std::cerr << "Error: Failed to create OpenGL context: " << SDL_GetError() << std::endl;
         return;
     }
 
+    // init GLEW
     GLenum error = glewInit();
     if (error != GLEW_OK)
     {
@@ -63,17 +68,39 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
         return;
     }
 
-    ImGui::CreateContext();
-    ImGui_ImplSDL2_InitForOpenGL(window, context);
-    ImGui_ImplOpenGL3_Init("#version 460");
-    ImGuiIO &io = ImGui::GetIO();
-    io.IniFilename = "assets/imgui.ini";
+    // init OpenAL
+    al_device = alcOpenDevice(nullptr);
+    if (!al_device)
+    {
+        std::cerr << "Error: Failed to open device" << std::endl;
+        return;
+    }
+
+    al_context = alcCreateContext(al_device, nullptr);
+    if (!al_context)
+    {
+        std::cerr << "Error: Failed to create context" << std::endl;
+        return;
+    }
+
+    if (!alcMakeContextCurrent(al_context))
+    {
+        std::cerr << "Error: Failed to make context current" << std::endl;
+        return;
+    }
 
     if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
     {
         std::cerr << "Error: Failed to initialize the mixer API: " << Mix_GetError() << std::endl;
         return;
     }
+
+    // init ImGui
+    ImGui::CreateContext();
+    ImGui_ImplSDL2_InitForOpenGL(window, sdl_gl_context);
+    ImGui_ImplOpenGL3_Init("#version 460");
+    ImGuiIO &io = ImGui::GetIO();
+    io.IniFilename = "assets/imgui.ini";
 }
 
 liminal::platform::~platform()
@@ -82,10 +109,14 @@ liminal::platform::~platform()
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
+    alcMakeContextCurrent(nullptr);
+    alcDestroyContext(al_context);
+    alcCloseDevice(al_device);
+
     Mix_CloseAudio();
 
     SDL_DestroyWindow(window);
-    SDL_GL_DeleteContext(context);
+    SDL_GL_DeleteContext(sdl_gl_context);
 
     IMG_Quit();
     Mix_Quit();
@@ -123,7 +154,7 @@ void liminal::platform::process_event(SDL_Event *event)
 
 void liminal::platform::begin_render()
 {
-    SDL_GL_MakeCurrent(window, context);
+    SDL_GL_MakeCurrent(window, sdl_gl_context);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame(window);

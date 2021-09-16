@@ -1,10 +1,13 @@
+#include <AL/al.h>
 #include <bullet/btBulletDynamicsCommon.h>
 #include <cxxopts.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <imgui.h>
 #include <SDL2/SDL.h>
 #include <string>
 
+#include "audio/sound.hpp"
 #include "components/audio_source.hpp"
 #include "components/mesh_renderer.hpp"
 #include "components/script.hpp"
@@ -12,16 +15,14 @@
 #include "components/sprite.hpp"
 #include "components/terrain.hpp"
 #include "components/transform.hpp"
-#include "assets.hpp"
-#include "audio.hpp"
-#include "camera.hpp"
-#include "model.hpp"
-#include "platform.hpp"
-#include "renderer.hpp"
-#include "scene.hpp"
-#include "skybox.hpp"
-#include "sound.hpp"
-#include "texture.hpp"
+#include "core/assets.hpp"
+#include "core/platform.hpp"
+#include "core/scene.hpp"
+#include "graphics/camera.hpp"
+#include "graphics/model.hpp"
+#include "graphics/renderer.hpp"
+#include "graphics/skybox.hpp"
+#include "graphics/texture.hpp"
 
 constexpr const char *exe_name = "liminal";
 constexpr const char *version_string = "v0.0.1";
@@ -77,8 +78,6 @@ int main(int argc, char *argv[])
         window_width, window_height, render_scale,
         window_width, window_height,
         window_width, window_height);
-    liminal::audio audio;
-    liminal::assets assets;
 
     // get imgui reference
     ImGuiIO &io = ImGui::GetIO();
@@ -130,7 +129,7 @@ int main(int argc, char *argv[])
     unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
-    bool edit_mode = true;
+    bool edit_mode = false;
 
     // TODO: script driven
     bool flashlight_on = true;
@@ -383,7 +382,24 @@ int main(int argc, char *argv[])
                 scene->registry.get<liminal::spot_light>(flashlight_entity).color = glm::vec3(0.0f, 0.0f, 0.0f);
             }
 
-            audio.set_listener(camera->position, camera_front, glm::vec3(0.0f, 1.0f, 0.0f));
+            // TODO: this should be a component
+            // and restrict to only having one audio listener component active at any time
+            {
+                static glm::vec3 last_camera_position;
+
+                alListenerfv(AL_POSITION, glm::value_ptr(camera->position));
+
+                glm::vec3 velocity = last_camera_position - camera->position;
+                alListenerfv(AL_VELOCITY, glm::value_ptr(velocity));
+
+                float orientation[] = {
+                    camera_front.x, camera_front.y, camera_front.z,
+                    0.0f, 1.0f, 0.0f};
+                alListenerfv(AL_ORIENTATION, orientation);
+
+                last_camera_position = camera->position;
+            }
+
             scene->registry.get<liminal::audio_source>(ambience_entity).set_position(camera->position);
             scene->registry.get<liminal::audio_source>(weapon_entity).set_position(camera->position);
 

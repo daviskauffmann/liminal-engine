@@ -5,7 +5,7 @@
 #include <string>
 #include <sol/sol.hpp>
 
-#include "../scene.hpp"
+#include "../core/scene.hpp"
 
 namespace liminal
 {

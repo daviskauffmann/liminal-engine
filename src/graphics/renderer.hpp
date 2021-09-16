@@ -4,10 +4,10 @@
 #include <entt/entt.hpp>
 #include <GL/glew.h>
 
+#include "../core/scene.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 #include "program.hpp"
-#include "scene.hpp"
 #include "texture.hpp"
 
 namespace liminal

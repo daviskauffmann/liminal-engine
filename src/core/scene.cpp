@@ -3,22 +3,20 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-#include "components/audio_source.hpp"
-#include "components/directional_light.hpp"
-#include "components/mesh_renderer.hpp"
-#include "components/point_light.hpp"
-#include "components/script.hpp"
-#include "components/spot_light.hpp"
-#include "components/terrain.hpp"
-#include "components/transform.hpp"
-#include "components/water.hpp"
-#include "audio.hpp"
-#include "camera.hpp"
-#include "model.hpp"
-#include "platform.hpp"
-#include "renderer.hpp"
-#include "skybox.hpp"
-#include "sound.hpp"
+#include "../audio/sound.hpp"
+#include "../components/audio_source.hpp"
+#include "../components/directional_light.hpp"
+#include "../components/mesh_renderer.hpp"
+#include "../components/point_light.hpp"
+#include "../components/script.hpp"
+#include "../components/spot_light.hpp"
+#include "../components/terrain.hpp"
+#include "../components/transform.hpp"
+#include "../components/water.hpp"
+#include "../core/platform.hpp"
+#include "../graphics/camera.hpp"
+#include "../graphics/model.hpp"
+#include "../graphics/skybox.hpp"
 
 liminal::scene::scene(const std::string &filename)
 {

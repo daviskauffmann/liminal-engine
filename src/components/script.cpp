@@ -1,7 +1,7 @@
 #include "script.hpp"
 
-#include "../model.hpp"
-#include "../skybox.hpp"
+#include "../graphics/model.hpp"
+#include "../graphics/skybox.hpp"
 #include "mesh_renderer.hpp"
 #include "point_light.hpp"
 #include "script.hpp"

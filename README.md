@@ -72,7 +72,7 @@ make clean
 - Physics (WIP)
 - LUA scripting (WIP)
 - Animation (WIP)
-- Entity-component-system using EnTT (WIP)
+- Entity-component-system using EnTT
 
 ### Upcoming
 

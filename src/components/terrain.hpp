@@ -6,7 +6,7 @@
 #include <glm/matrix.hpp>
 #include <SDL2/SDL.h>
 
-#include "../mesh.hpp"
+#include "../graphics/mesh.hpp"
 
 namespace liminal
 {

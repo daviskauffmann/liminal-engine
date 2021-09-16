@@ -3,7 +3,7 @@
 
 #include <glm/vec3.hpp>
 
-#include "../sound.hpp"
+#include "../audio/sound.hpp"
 
 namespace liminal
 {

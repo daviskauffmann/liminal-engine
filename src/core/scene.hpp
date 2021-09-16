@@ -5,8 +5,8 @@
 #include <entt/entt.hpp>
 #include <string>
 
-#include "camera.hpp"
-#include "skybox.hpp"
+#include "../graphics/camera.hpp"
+#include "../graphics/skybox.hpp"
 
 namespace liminal
 {

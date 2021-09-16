@@ -5,14 +5,14 @@
 #include <imgui.h>
 #include <iostream>
 
-#include "components/directional_light.hpp"
-#include "components/mesh_renderer.hpp"
-#include "components/point_light.hpp"
-#include "components/spot_light.hpp"
-#include "components/sprite.hpp"
-#include "components/terrain.hpp"
-#include "components/transform.hpp"
-#include "components/water.hpp"
+#include "../components/directional_light.hpp"
+#include "../components/mesh_renderer.hpp"
+#include "../components/point_light.hpp"
+#include "../components/spot_light.hpp"
+#include "../components/sprite.hpp"
+#include "../components/terrain.hpp"
+#include "../components/transform.hpp"
+#include "../components/water.hpp"
 
 // TODO: framebuffer helper class
 // should store info about width/height
