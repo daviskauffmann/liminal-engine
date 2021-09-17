@@ -1,7 +1,5 @@
 .vscode
 
-bin
-obj
-dep
+build
 
 imgui.ini

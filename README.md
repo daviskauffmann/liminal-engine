@@ -36,19 +36,10 @@ git submodule update --init
 ### Build
 
 ```sh
+mkdir build
+cd build
+cmake ..
 make
-```
-
-### Build & Run
-
-```sh
-make run
-```
-
-### Cleanup
-
-```sh
-make clean
 ```
 
 ## Features
