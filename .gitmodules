@@ -1,15 +1,15 @@
-[submodule "extern/stb"]
-	path = extern/stb
-	url = https://github.com/nothings/stb.git
-[submodule "extern/imgui"]
-	path = extern/imgui
-	url = https://github.com/ocornut/imgui.git
 [submodule "extern/entt"]
 	path = extern/entt
 	url = https://github.com/skypjack/entt
+[submodule "extern/imgui"]
+	path = extern/imgui
+	url = https://github.com/ocornut/imgui.git
 [submodule "extern/json"]
 	path = extern/json
 	url = https://github.com/nlohmann/json
 [submodule "extern/sdl2-cmake-modules"]
 	path = extern/sdl2-cmake-modules
 	url = https://github.com/aminosbh/sdl2-cmake-modules
+[submodule "extern/stb"]
+	path = extern/stb
+	url = https://github.com/nothings/stb.git
