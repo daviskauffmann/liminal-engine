@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21.2)
+cmake_minimum_required(VERSION 3.0.0)
 project(liminal)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -50,8 +50,6 @@ target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
 
 find_package(GLEW REQUIRED)
 target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${GLEW_INCLUDE_DIR})
-# target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARY})
 
 find_package(GLM REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${GLM_INCLUDE_DIRS})
