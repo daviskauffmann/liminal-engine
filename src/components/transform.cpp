@@ -2,8 +2,15 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-liminal::transform::transform(liminal::transform *parent, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float mass)
-    : parent(parent),
+liminal::transform::transform(
+    const char *name,
+    liminal::transform *parent,
+    glm::vec3 position,
+    glm::vec3 rotation,
+    glm::vec3 scale,
+    float mass)
+    : name(name),
+      parent(parent),
       position(position),
       rotation(rotation),
       scale(scale),

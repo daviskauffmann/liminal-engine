@@ -3,12 +3,19 @@
 
 #include <entt/entt.hpp>
 #include <GL/glew.h>
+#include <glm/matrix.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 #include "../core/scene.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 #include "program.hpp"
 #include "texture.hpp"
+
+#define NUM_DIRECTIONAL_LIGHT_SHADOWS 10
+#define NUM_POINT_LIGHT_SHADOWS 4
+#define NUM_SPOT_LIGHT_SHADOWS 10
 
 namespace liminal
 {
@@ -20,13 +27,19 @@ namespace liminal
 
         renderer(
             GLsizei display_width, GLsizei display_height, float render_scale,
-            GLsizei reflection_width, GLsizei reflection_height,
-            GLsizei refraction_width, GLsizei refraction_height);
+            GLsizei directional_light_depth_map_size,
+            GLsizei point_light_depth_cubemap_size,
+            GLsizei spot_light_depth_map_size,
+            GLsizei water_reflection_width, GLsizei water_reflection_height,
+            GLsizei water_refraction_width, GLsizei water_refraction_height);
         ~renderer();
 
         void set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale);
-        void set_reflection_size(GLsizei reflection_width, GLsizei reflection_height);
-        void set_refraction_size(GLsizei refraction_width, GLsizei refraction_height);
+        void set_directional_light_depth_map_size(GLsizei directional_light_depth_map_size);
+        void set_point_light_depth_cubemap_size(GLsizei point_light_depth_cubemap_size);
+        void set_spot_light_depth_map_size(GLsizei spot_light_depth_map_size);
+        void set_reflection_size(GLsizei water_reflection_width, GLsizei water_reflection_height);
+        void set_refraction_size(GLsizei water_refraction_width, GLsizei water_refraction_height);
 
         void reload_programs();
 
@@ -37,10 +50,6 @@ namespace liminal
         GLsizei display_height;
         GLsizei render_width;
         GLsizei render_height;
-        GLsizei reflection_width;
-        GLsizei reflection_height;
-        GLsizei refraction_width;
-        GLsizei refraction_height;
 
         GLuint geometry_fbo_id;
         GLuint geometry_position_texture_id;
@@ -53,10 +62,29 @@ namespace liminal
         GLuint hdr_texture_ids[2];
         GLuint hdr_rbo_id;
 
+        GLsizei directional_light_depth_map_size;
+        GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS];
+        GLuint directional_light_depth_map_texture_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS];
+        glm::mat4 directional_light_transformation_matrices[NUM_DIRECTIONAL_LIGHT_SHADOWS];
+
+        GLsizei point_light_depth_cubemap_size;
+        GLuint point_light_depth_cubemap_fbo_ids[NUM_POINT_LIGHT_SHADOWS];
+        GLuint point_light_depth_cubemap_texture_ids[NUM_POINT_LIGHT_SHADOWS];
+        std::vector<glm::mat4> point_light_transformation_matrices[NUM_POINT_LIGHT_SHADOWS];
+
+        GLsizei spot_light_depth_map_size;
+        GLuint spot_light_depth_map_fbo_ids[NUM_SPOT_LIGHT_SHADOWS];
+        GLuint spot_light_depth_map_texture_ids[NUM_SPOT_LIGHT_SHADOWS];
+        glm::mat4 spot_light_transformation_matrices[NUM_SPOT_LIGHT_SHADOWS];
+
+        GLsizei water_reflection_width;
+        GLsizei water_reflection_height;
         GLuint water_reflection_fbo_id;
         GLuint water_reflection_color_texture_id;
         GLuint water_reflection_rbo_id;
 
+        GLsizei water_refraction_width;
+        GLsizei water_refraction_height;
         GLuint water_refraction_fbo_id;
         GLuint water_refraction_color_texture_id;
         GLuint water_refraction_depth_texture_id;

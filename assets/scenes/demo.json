@@ -2,12 +2,26 @@
     "skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
     "entities": [
         {
-            "directional_light": {
-                "direction": {
+            "transform": {
+                "name": "Sun",
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
                     "x": 0.352286,
                     "y": -0.547564,
                     "z": -0.758992
                 },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                },
+                "mass": 0.0
+            },
+            "directional_light": {
                 "color": {
                     "r": 10,
                     "g": 10,
@@ -30,6 +44,7 @@
         },
         {
             "transform": {
+                "name": "Backpack",
                 "position": {
                     "x": 0,
                     "y": 0,
@@ -54,6 +69,7 @@
         },
         {
             "transform": {
+                "name": "Bob",
                 "position": {
                     "x": 5,
                     "y": 0,
@@ -78,6 +94,7 @@
         },
         {
             "transform": {
+                "name": "Dude",
                 "position": {
                     "x": -5,
                     "y": 0,

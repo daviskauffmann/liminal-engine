@@ -28,7 +28,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["AddTransform"] = [scene](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz, float mass) -> void
     {
-        auto transform = scene->registry.emplace<liminal::transform>(entity, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz), mass);
+        auto transform = scene->registry.emplace<liminal::transform>(entity, "NAME", nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz), mass);
 
         if (mass > 0.0f)
         {
@@ -53,7 +53,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["AddPointLight"] = [scene](entt::entity entity, float r, float g, float b) -> void
     {
-        scene->registry.emplace<liminal::point_light>(entity, glm::vec3(r, g, b), 512);
+        scene->registry.emplace<liminal::point_light>(entity, glm::vec3(r, g, b));
     };
     (*lua)["UpdatePointLight"] = [scene](entt::entity entity, float r, float g, float b) -> void
     {

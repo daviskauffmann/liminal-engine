@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <string>
 
 #include "../audio/sound.hpp"
 #include "../components/audio_source.hpp"
@@ -52,15 +53,11 @@ liminal::scene::scene(const std::string &filename)
                 {
                     if (key == "directional_light")
                     {
-                        glm::vec3 direction(
-                            value["direction"]["x"],
-                            value["direction"]["y"],
-                            value["direction"]["z"]);
                         glm::vec3 color(
                             value["color"]["r"],
                             value["color"]["g"],
                             value["color"]["b"]);
-                        registry.emplace<liminal::directional_light>(entity, direction, color, 4096);
+                        registry.emplace<liminal::directional_light>(entity, color);
                     }
 
                     if (key == "transform")
@@ -78,7 +75,7 @@ liminal::scene::scene(const std::string &filename)
                             value["scale"]["y"],
                             value["scale"]["z"]);
                         float mass = value["mass"];
-                        auto transform = registry.emplace<liminal::transform>(entity, nullptr, position, rotation, scale, mass);
+                        auto transform = registry.emplace<liminal::transform>(entity, std::string(value["name"]).c_str(), nullptr, position, rotation, scale, mass);
 
                         if (mass > 0.0f)
                         {

@@ -9,6 +9,7 @@ namespace liminal
 {
     struct transform
     {
+        const char *name;
         liminal::transform *parent;
         glm::vec3 position;
         glm::vec3 rotation;
@@ -16,7 +17,13 @@ namespace liminal
         float mass;
         btRigidBody *rigidbody;
 
-        transform(liminal::transform *parent, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, float mass);
+        transform(
+            const char *name,
+            liminal::transform *parent,
+            glm::vec3 position,
+            glm::vec3 rotation,
+            glm::vec3 scale,
+            float mass);
 
         glm::mat4 get_model_matrix() const;
     };
