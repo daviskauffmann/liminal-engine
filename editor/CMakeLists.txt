@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.0.0)
+project(editor)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(${PROJECT_NAME}
+    src/editor.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ../extern/imgui
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        engine
+)
