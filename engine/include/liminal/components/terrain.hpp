@@ -4,9 +4,8 @@
 #include <bullet/btBulletDynamicsCommon.h>
 #include <glm/vec3.hpp>
 #include <glm/matrix.hpp>
+#include <liminal/graphics/mesh.hpp>
 #include <SDL2/SDL.h>
-
-#include "graphics/mesh.hpp"
 
 namespace liminal
 {

@@ -1,4 +1,4 @@
-#include "audio/sound.hpp"
+#include <liminal/audio/sound.hpp>
 
 #include <iostream>
 #include <SDL2/SDL_mixer.h>

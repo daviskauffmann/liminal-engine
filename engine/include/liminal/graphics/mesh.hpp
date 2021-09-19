@@ -4,11 +4,10 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <GL/glew.h>
+#include <liminal/graphics/texture.hpp>
+#include <liminal/graphics/program.hpp>
+#include <liminal/graphics/vertex.hpp>
 #include <vector>
-
-#include "graphics/texture.hpp"
-#include "graphics/program.hpp"
-#include "graphics/vertex.hpp"
 
 namespace liminal
 {

@@ -16,8 +16,9 @@ find_package(SDL2_image REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 
 add_library(${PROJECT_NAME}
+    src/audio/audio.cpp
     src/audio/sound.cpp
-    src/components/audio_source.cpp
+    src/audio/source.cpp
     src/components/directional_light.cpp
     src/components/point_light.cpp
     src/components/script.cpp
@@ -61,14 +62,15 @@ target_include_directories(${PROJECT_NAME}
         ../extern/stb
 )
 
-target_link_libraries(${PROJECT_NAME} 
-    ${ASSIMP_LIBRARIES}
-    ${BULLET_LIBRARIES}
-    GLEW::GLEW
-    ${LUA_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    ${OPENAL_LIBRARY}
-    ${SDL2_LIBRARIES}
-    ${SDL2_IMAGE_LIBRARIES}
-    ${SDL2_MIXER_LIBRARIES}
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        ${ASSIMP_LIBRARIES}
+        ${BULLET_LIBRARIES}
+        GLEW::GLEW
+        ${LUA_LIBRARIES}
+        ${OPENGL_LIBRARIES}
+        ${OPENAL_LIBRARY}
+        ${SDL2_LIBRARIES}
+        ${SDL2_IMAGE_LIBRARIES}
+        ${SDL2_MIXER_LIBRARIES}
 )

@@ -1,7 +1,7 @@
 #ifndef MESH_RENDERER_HPP
 #define MESH_RENDERER_HPP
 
-#include "graphics/model.hpp"
+#include <liminal/graphics/model.hpp>
 
 namespace liminal
 {

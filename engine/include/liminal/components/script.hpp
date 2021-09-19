@@ -2,10 +2,9 @@
 #define SCRIPT_HPP
 
 #include <entt/entt.hpp>
+#include <liminal/core/scene.hpp>
 #include <string>
 #include <sol/sol.hpp>
-
-#include "core/scene.hpp"
 
 namespace liminal
 {

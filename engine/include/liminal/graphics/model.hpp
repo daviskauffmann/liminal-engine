@@ -4,13 +4,12 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <glm/matrix.hpp>
+#include <liminal/graphics/mesh.hpp>
+#include <liminal/graphics/program.hpp>
+#include <liminal/graphics/texture.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "graphics/mesh.hpp"
-#include "graphics/program.hpp"
-#include "graphics/texture.hpp"
 
 namespace liminal
 {

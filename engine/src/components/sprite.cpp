@@ -1,4 +1,4 @@
-#include "components/sprite.hpp"
+#include <liminal/components/sprite.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 

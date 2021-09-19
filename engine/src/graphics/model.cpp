@@ -1,4 +1,4 @@
-#include "graphics/model.hpp"
+#include <liminal/graphics/model.hpp>
 
 #include <assimp/postprocess.h>
 #include <glm/gtc/matrix_transform.hpp>

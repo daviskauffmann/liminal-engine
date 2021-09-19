@@ -1,29 +1,25 @@
-#include "core/scene.hpp"
+#include <liminal/core/scene.hpp>
 
 #include <fstream>
+#include <liminal/audio/sound.hpp>
+#include <liminal/components/audio_source.hpp>
+#include <liminal/components/directional_light.hpp>
+#include <liminal/components/mesh_renderer.hpp>
+#include <liminal/components/point_light.hpp>
+#include <liminal/components/script.hpp>
+#include <liminal/components/spot_light.hpp>
+#include <liminal/components/terrain.hpp>
+#include <liminal/components/transform.hpp>
+#include <liminal/components/water.hpp>
+#include <liminal/core/platform.hpp>
+#include <liminal/graphics/camera.hpp>
+#include <liminal/graphics/model.hpp>
+#include <liminal/graphics/skybox.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
 
-#include "audio/sound.hpp"
-#include "components/audio_source.hpp"
-#include "components/directional_light.hpp"
-#include "components/mesh_renderer.hpp"
-#include "components/point_light.hpp"
-#include "components/script.hpp"
-#include "components/spot_light.hpp"
-#include "components/terrain.hpp"
-#include "components/transform.hpp"
-#include "components/water.hpp"
-#include "core/platform.hpp"
-#include "graphics/camera.hpp"
-#include "graphics/model.hpp"
-#include "graphics/skybox.hpp"
-
 liminal::scene::scene(const std::string &filename)
 {
-    camera = nullptr;
-    skybox = nullptr;
-
     // setup physics world
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
@@ -40,7 +36,7 @@ liminal::scene::scene(const std::string &filename)
     {
         if (key == "skybox")
         {
-            skybox = new liminal::skybox(json["skybox"]);
+            // skybox = new liminal::skybox(json["skybox"]);
         }
 
         if (key == "entities")

@@ -1,12 +1,11 @@
-#include "components/terrain.hpp"
+#include <liminal/components/terrain.hpp>
 
 #include <assimp/scene.h>
 #include <bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <liminal/graphics/texture.hpp>
 #include <SDL2/SDL_image.h>
-
-#include "graphics/texture.hpp"
 
 // TODO: read from heightmap image file
 

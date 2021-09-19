@@ -1,4 +1,4 @@
-#include "graphics/vertex.hpp"
+#include <liminal/graphics/vertex.hpp>
 
 #include <iostream>
 

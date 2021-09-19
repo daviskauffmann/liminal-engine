@@ -4,8 +4,7 @@
 #include <glm/matrix.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-
-#include "graphics/texture.hpp"
+#include <liminal/graphics/texture.hpp>
 
 namespace liminal
 {

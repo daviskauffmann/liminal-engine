@@ -1,4 +1,4 @@
-#include "graphics/cubemap.hpp"
+#include <liminal/graphics/cubemap.hpp>
 
 #include <iostream>
 #include <SDL2/SDL.h>

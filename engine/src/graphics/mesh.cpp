@@ -1,4 +1,4 @@
-#include "graphics/mesh.hpp"
+#include <liminal/graphics/mesh.hpp>
 
 #include <assimp/scene.h>
 

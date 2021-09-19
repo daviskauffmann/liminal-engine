@@ -1,4 +1,4 @@
-#include "graphics/program.hpp"
+#include <liminal/graphics/program.hpp>
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>

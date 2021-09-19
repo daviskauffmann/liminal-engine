@@ -1,4 +1,4 @@
-#include "components/spot_light.hpp"
+#include <liminal/components/spot_light.hpp>
 
 liminal::spot_light::spot_light(
     glm::vec3 color,

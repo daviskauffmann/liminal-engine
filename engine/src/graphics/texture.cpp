@@ -1,4 +1,4 @@
-#include "graphics/texture.hpp"
+#include <liminal/graphics/texture.hpp>
 
 #include <iostream>
 #include <SDL2/SDL.h>

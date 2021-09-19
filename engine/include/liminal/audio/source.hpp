@@ -2,16 +2,15 @@
 #define SOURCE_HPP
 
 #include <glm/vec3.hpp>
-
-#include "audio/sound.hpp"
+#include <liminal/audio/sound.hpp>
 
 namespace liminal
 {
-    class audio_source
+    class source
     {
     public:
-        audio_source();
-        ~audio_source();
+        source();
+        ~source();
 
         void set_loop(bool loop) const;
         void set_gain(float gain) const;

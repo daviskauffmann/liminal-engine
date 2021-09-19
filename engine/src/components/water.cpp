@@ -1,4 +1,4 @@
-#include "components/water.hpp"
+#include <liminal/components/water.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 

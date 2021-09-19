@@ -1,12 +1,11 @@
-#include "graphics/skybox.hpp"
+#include <liminal/graphics/skybox.hpp>
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <liminal/graphics/program.hpp>
 #include <stb_image.h>
 #include <vector>
-
-#include "graphics/program.hpp"
 
 constexpr GLsizei environment_size = 4096;
 constexpr GLsizei irradiance_size = 32;

@@ -1,11 +1,10 @@
-#include "components/script.hpp"
+#include <liminal/components/script.hpp>
 
-#include "components/mesh_renderer.hpp"
-#include "components/point_light.hpp"
-#include "components/script.hpp"
-#include "components/transform.hpp"
-#include "graphics/model.hpp"
-#include "graphics/skybox.hpp"
+#include <liminal/components/mesh_renderer.hpp>
+#include <liminal/components/point_light.hpp>
+#include <liminal/components/transform.hpp>
+#include <liminal/graphics/model.hpp>
+#include <liminal/graphics/skybox.hpp>
 
 liminal::script::script(const std::string &filename, liminal::scene *scene, entt::entity entity)
     : entity(entity)
@@ -16,7 +15,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
 
     (*lua)["SetSkybox"] = [scene](const std::string &filename) -> void
     {
-        scene->skybox = new liminal::skybox(filename);
+        // scene->skybox = new liminal::skybox(filename);
     };
     (*lua)["AddEntity"] = [scene]() -> entt::entity
     {

@@ -1,11 +1,11 @@
-#include "core/platform.hpp"
+#include <liminal/core/platform.hpp>
 
 #include <AL/al.h>
 #include <GL/glew.h>
-#include <iostream>
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
+#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_image.h>
