@@ -21,6 +21,11 @@
 
 // TODO: print more specific errors when framebuffers fail
 
+// TODO: create low level renderer API?
+// this renderer would become the high level API, which would make use of the llapi
+// but the llapi would be exposed to engine users in case they want to write their own shaders and rendering pipeline
+// both APIs would probably have to not be interopable with each other
+
 constexpr float directional_light_shadow_map_size = 10.0f;
 constexpr float directional_light_near_plane = -10.0f;
 constexpr float directional_light_far_plane = 10.0f;
