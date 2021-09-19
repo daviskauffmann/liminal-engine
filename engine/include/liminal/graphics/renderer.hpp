@@ -14,9 +14,9 @@
 #include <liminal/graphics/skybox.hpp>
 #include <liminal/graphics/texture.hpp>
 
-#define NUM_DIRECTIONAL_LIGHT_SHADOWS 10
+#define NUM_DIRECTIONAL_LIGHT_SHADOWS 1
 #define NUM_POINT_LIGHT_SHADOWS 4
-#define NUM_SPOT_LIGHT_SHADOWS 10
+#define NUM_SPOT_LIGHT_SHADOWS 1
 
 namespace liminal
 {

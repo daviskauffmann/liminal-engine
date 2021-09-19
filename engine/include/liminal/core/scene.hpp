@@ -15,6 +15,8 @@ namespace liminal
 
         scene(const std::string &filename);
         ~scene();
+
+        void update(unsigned int current_time, float delta_time);
     };
 }
 

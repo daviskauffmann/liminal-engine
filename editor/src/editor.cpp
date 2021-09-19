@@ -92,7 +92,6 @@ public:
         glm::vec3 camera_front = camera->calc_front();
         glm::vec3 camera_right = camera->calc_right();
 
-        // flying camera movement
         static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
         glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
         const float speed = 50.0f;
@@ -141,7 +140,6 @@ public:
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
-        // mouselook
         if (!io.WantCaptureMouse)
         {
             if (SDL_GetRelativeMouseMode())
@@ -170,12 +168,11 @@ public:
             }
         }
 
-        // update camera entity
-        // TODO: camera itself should be a component and its transform would be changed directly, making this step unnecessary
+        // TODO: camera itself should be a component attached to the camera_entity
+        // and its transform would be changed directly, making this step unnecessary
         scene->registry.get<liminal::transform>(camera_entity).position = camera->position;
         scene->registry.get<liminal::transform>(camera_entity).rotation = camera->calc_front();
 
-        // update flashlight
         if (liminal::input::key_down(liminal::KEYCODE_F))
         {
             flashlight_on = !flashlight_on;
@@ -202,7 +199,6 @@ public:
                 30.0f * delta_time);
         }
 
-        // update audio sources
         scene->registry.get<liminal::transform>(ambience_entity).position = camera->position;
         scene->registry.get<liminal::transform>(weapon_entity).position = camera->position;
 
@@ -225,40 +221,7 @@ public:
             }
         }
 
-        // update physics
-        scene->world->stepSimulation(delta_time);
-
-        // update scripts
-        for (auto [entity, script] : scene->registry.view<liminal::script>().each())
-        {
-            script.update(delta_time);
-        }
-
-        // update animations
-        for (auto [entity, mesh_renderer] : scene->registry.view<liminal::mesh_renderer>().each())
-        {
-            if (mesh_renderer.model->has_animations())
-            {
-                mesh_renderer.model->update_bone_transformations(0, current_time);
-            }
-        }
-
-        // update audio listener positions
-        for (auto [entity, audio_listener, transform] : scene->registry.view<liminal::audio_listener, liminal::transform>().each())
-        {
-            liminal::engine::get_instance().audio->set_listener_position(
-                transform.position,
-                audio_listener.last_position - transform.position,
-                transform.rotation,
-                glm::vec3(0.0f, 1.0f, 0.0f));
-            audio_listener.last_position = transform.position;
-        }
-
-        // update audio source positions
-        for (auto [entity, audio_source, transform] : scene->registry.view<liminal::audio_source, liminal::transform>().each())
-        {
-            audio_source.source->set_position(transform.position);
-        }
+        scene->update(current_time, delta_time);
 
         // ImGui::Begin("Scene Hierarchy");
 

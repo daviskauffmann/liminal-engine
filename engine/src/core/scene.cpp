@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <liminal/audio/sound.hpp>
+#include <liminal/components/audio_listener.hpp>
 #include <liminal/components/audio_source.hpp>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
@@ -11,6 +12,7 @@
 #include <liminal/components/terrain.hpp>
 #include <liminal/components/transform.hpp>
 #include <liminal/components/water.hpp>
+#include <liminal/core/engine.hpp>
 #include <liminal/core/platform.hpp>
 #include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/model.hpp>
@@ -122,4 +124,42 @@ liminal::scene::~scene()
     registry.clear();
 
     delete world;
+}
+
+void liminal::scene::update(unsigned int current_time, float delta_time)
+{
+    // update physics
+    world->stepSimulation(delta_time);
+
+    // update scripts
+    for (auto [entity, script] : registry.view<liminal::script>().each())
+    {
+        script.update(delta_time);
+    }
+
+    // update animations
+    for (auto [entity, mesh_renderer] : registry.view<liminal::mesh_renderer>().each())
+    {
+        if (mesh_renderer.model->has_animations())
+        {
+            mesh_renderer.model->update_bone_transformations(0, current_time);
+        }
+    }
+
+    // update audio listener positions
+    for (auto [entity, audio_listener, transform] : registry.view<liminal::audio_listener, liminal::transform>().each())
+    {
+        liminal::engine::get_instance().audio->set_listener_position(
+            transform.position,
+            audio_listener.last_position - transform.position,
+            transform.rotation,
+            glm::vec3(0.0f, 1.0f, 0.0f));
+        audio_listener.last_position = transform.position;
+    }
+
+    // update audio source positions
+    for (auto [entity, audio_source, transform] : registry.view<liminal::audio_source, liminal::transform>().each())
+    {
+        audio_source.source->set_position(transform.position);
+    }
 }

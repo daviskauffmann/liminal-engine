@@ -935,7 +935,7 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei spot_light_depth_m
 
     glGenFramebuffers(NUM_SPOT_LIGHT_SHADOWS, spot_light_depth_map_fbo_ids);
     glGenTextures(NUM_SPOT_LIGHT_SHADOWS, spot_light_depth_map_texture_ids);
-    for (int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
+    for (int i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids[i]);
         {
@@ -1285,7 +1285,7 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
     int i = 0;
     for (auto [entity, directional_light, transform] : scene.registry.view<liminal::directional_light, liminal::transform>().each())
     {
-        if (i > NUM_DIRECTIONAL_LIGHT_SHADOWS)
+        if (i >= NUM_DIRECTIONAL_LIGHT_SHADOWS)
         {
             break;
         }
@@ -1366,7 +1366,7 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
     i = 0;
     for (auto [entity, point_light, transform] : scene.registry.view<liminal::point_light, liminal::transform>().each())
     {
-        if (i > NUM_POINT_LIGHT_SHADOWS)
+        if (i >= NUM_POINT_LIGHT_SHADOWS)
         {
             break;
         }
@@ -1466,7 +1466,7 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
     i = 0;
     for (auto [entity, spot_light, transform] : scene.registry.view<liminal::spot_light, liminal::transform>().each())
     {
-        if (i > NUM_SPOT_LIGHT_SHADOWS)
+        if (i >= NUM_SPOT_LIGHT_SHADOWS)
         {
             break;
         }
@@ -1677,17 +1677,12 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
                 int i = 0;
                 for (auto [entity, directional_light, transform] : scene.registry.view<liminal::directional_light, liminal::transform>().each())
                 {
-                    if (i > NUM_DIRECTIONAL_LIGHT_SHADOWS)
-                    {
-                        break;
-                    }
-
                     deferred_directional_program->set_vec3("light.direction", transform.rotation);
                     deferred_directional_program->set_vec3("light.color", directional_light.color);
-                    deferred_directional_program->set_mat4("light.transformation_matrix", directional_light_transformation_matrices[i]);
+                    deferred_directional_program->set_mat4("light.transformation_matrix", i < NUM_DIRECTIONAL_LIGHT_SHADOWS ? directional_light_transformation_matrices[i] : glm::identity<glm::mat4>());
 
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, directional_light_depth_map_texture_ids[i]);
+                    glBindTexture(GL_TEXTURE_2D, i < NUM_DIRECTIONAL_LIGHT_SHADOWS ? directional_light_depth_map_texture_ids[i] : 0);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -1727,16 +1722,11 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
                 int i = 0;
                 for (auto [entity, point_light, transform] : scene.registry.view<liminal::point_light, liminal::transform>().each())
                 {
-                    if (i > NUM_POINT_LIGHT_SHADOWS)
-                    {
-                        break;
-                    }
-
                     deferred_point_program->set_vec3("light.position", transform.position);
                     deferred_point_program->set_vec3("light.color", point_light.color);
 
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, point_light_depth_cubemap_texture_ids[i]);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, i < NUM_POINT_LIGHT_SHADOWS ? point_light_depth_cubemap_texture_ids[i] : 0);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -1775,20 +1765,15 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
                 int i = 0;
                 for (auto [entity, spot_light, transform] : scene.registry.view<liminal::spot_light, liminal::transform>().each())
                 {
-                    if (i > NUM_SPOT_LIGHT_SHADOWS)
-                    {
-                        break;
-                    }
-
                     deferred_spot_program->set_vec3("light.position", transform.position);
                     deferred_spot_program->set_vec3("light.direction", transform.rotation);
                     deferred_spot_program->set_vec3("light.color", spot_light.color);
                     deferred_spot_program->set_float("light.inner_cutoff", spot_light.inner_cutoff);
                     deferred_spot_program->set_float("light.outer_cutoff", spot_light.outer_cutoff);
-                    deferred_spot_program->set_mat4("light.transformation_matrix", spot_light_transformation_matrices[i]);
+                    deferred_spot_program->set_mat4("light.transformation_matrix", i < NUM_SPOT_LIGHT_SHADOWS ? spot_light_transformation_matrices[i] : glm::identity<glm::mat4>());
 
                     glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, spot_light_depth_map_texture_ids[i]);
+                    glBindTexture(GL_TEXTURE_2D, i < NUM_SPOT_LIGHT_SHADOWS ? spot_light_depth_map_texture_ids[i] : 0);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
