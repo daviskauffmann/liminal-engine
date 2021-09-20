@@ -16,13 +16,6 @@ namespace liminal
         float rotation;
         glm::vec2 scale;
 
-        sprite(
-            liminal::texture *texture,
-            glm::vec3 color,
-            glm::vec2 position,
-            float rotation,
-            glm::vec2 scale);
-
         glm::mat4 get_model_matrix() const;
     };
 }

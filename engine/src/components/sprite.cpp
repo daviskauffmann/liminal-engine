@@ -2,20 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-liminal::sprite::sprite(
-    liminal::texture *texture,
-    glm::vec3 color,
-    glm::vec2 position,
-    float rotation,
-    glm::vec2 scale)
-    : texture(texture),
-      color(color),
-      position(position),
-      rotation(rotation),
-      scale(scale)
-{
-}
-
 glm::mat4 liminal::sprite::get_model_matrix() const
 {
     glm::mat4 model = glm::identity<glm::mat4>();

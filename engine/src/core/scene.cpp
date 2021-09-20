@@ -6,6 +6,7 @@
 #include <liminal/components/audio_source.hpp>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
+#include <liminal/components/physical.hpp>
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/script.hpp>
 #include <liminal/components/spot_light.hpp>
@@ -22,14 +23,6 @@
 
 liminal::scene::scene(const std::string &filename)
 {
-    // setup physics world
-    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
-    btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
-    btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
-    btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
-    world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
-    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
-
     // load scene from file
     std::ifstream stream(filename);
     nlohmann::json json;
@@ -72,13 +65,13 @@ liminal::scene::scene(const std::string &filename)
                             value["scale"]["x"],
                             value["scale"]["y"],
                             value["scale"]["z"]);
-                        float mass = value["mass"];
-                        auto transform = registry.emplace<liminal::transform>(entity, std::string(value["name"]).c_str(), nullptr, position, rotation, scale, mass);
+                        auto transform = registry.emplace<liminal::transform>(entity, std::string(value["name"]).c_str(), nullptr, position, rotation, scale);
+                    }
 
-                        if (mass > 0.0f)
-                        {
-                            world->addRigidBody(transform.rigidbody);
-                        }
+                    if (key == "physical")
+                    {
+                        auto physical = registry.emplace<liminal::physical>(entity, value["mass"]);
+                        engine::get_instance().physics->world->addRigidBody(physical.rigidbody);
                     }
 
                     if (key == "mesh_renderer")
@@ -105,7 +98,7 @@ liminal::scene::scene(const std::string &filename)
                     if (key == "terrain")
                     {
                         auto terrain = registry.emplace<liminal::terrain>(entity, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
-                        world->addRigidBody(terrain.rigidbody);
+                        engine::get_instance().physics->world->addRigidBody(terrain.rigidbody);
                     }
                 }
             }
@@ -121,16 +114,30 @@ liminal::scene::scene(const std::string &filename)
 
 liminal::scene::~scene()
 {
-    registry.clear();
+    for (auto [entity, script] : registry.view<liminal::script>().each())
+    {
+        delete script.lua;
+    }
 
-    delete world;
+    for (auto [entity, physical] : registry.view<liminal::physical>().each())
+    {
+        liminal::engine::get_instance().physics->world->removeRigidBody(physical.rigidbody);
+        delete physical.rigidbody;
+    }
+
+    for (auto [entity, terrain] : registry.view<liminal::terrain>().each())
+    {
+        delete terrain.mesh;
+
+        liminal::engine::get_instance().physics->world->removeRigidBody(terrain.rigidbody);
+        delete terrain.rigidbody;
+    }
+
+    registry.clear();
 }
 
 void liminal::scene::update(unsigned int current_time, float delta_time)
 {
-    // update physics
-    world->stepSimulation(delta_time);
-
     // update scripts
     for (auto [entity, script] : registry.view<liminal::script>().each())
     {

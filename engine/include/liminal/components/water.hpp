@@ -11,8 +11,6 @@ namespace liminal
         glm::vec3 position; // TODO: maybe just use transform component for water
         float size;
 
-        water(glm::vec3 position, float size);
-
         glm::mat4 get_model_matrix() const;
     };
 }

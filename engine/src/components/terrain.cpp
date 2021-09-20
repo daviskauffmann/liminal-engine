@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <liminal/graphics/texture.hpp>
+#include <liminal/core/engine.hpp>
 #include <SDL2/SDL_image.h>
 
 // TODO: read from heightmap image file
@@ -119,11 +120,6 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
     btCollisionShape *collision_shape = new btHeightfieldTerrainShape(size, size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
 
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0.0f, motion_state, collision_shape));
-}
-
-liminal::terrain::~terrain()
-{
-    // delete mesh;
 }
 
 glm::mat4 liminal::terrain::get_model_matrix() const

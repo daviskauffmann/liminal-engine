@@ -1,4 +1,3 @@
-#include <bullet/btBulletDynamicsCommon.h>
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 #include <imgui.h>
@@ -53,27 +52,27 @@ public:
 
         // TODO: camera should be a component maybe
         camera_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(camera_entity, "Camera", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+        scene->registry.emplace<liminal::transform>(camera_entity, "Camera", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         scene->registry.emplace<liminal::audio_listener>(camera_entity, glm::vec3(0.0f, 0.0f, 0.0f));
 
         // TODO: these entities should come from the JSON file
         flashlight_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(flashlight_entity, "Flashlight", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+        scene->registry.emplace<liminal::transform>(flashlight_entity, "Flashlight", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         scene->registry.emplace<liminal::spot_light>(flashlight_entity, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)));
 
         ambience_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(ambience_entity, "Ambience", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+        scene->registry.emplace<liminal::transform>(ambience_entity, "Ambience", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         scene->registry.emplace<liminal::audio_source>(ambience_entity, new liminal::source());
         scene->registry.get<liminal::audio_source>(ambience_entity).source->set_loop(true);
         scene->registry.get<liminal::audio_source>(ambience_entity).source->set_gain(0.25f);
         // scene->registry.get<liminal::audio_source>(ambience_entity).play(ambient_sound);
 
         bounce_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(bounce_entity, "Bounce sound", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+        scene->registry.emplace<liminal::transform>(bounce_entity, "Bounce sound", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         scene->registry.emplace<liminal::audio_source>(bounce_entity, new liminal::source());
 
         weapon_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(weapon_entity, "Weapon", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.0f);
+        scene->registry.emplace<liminal::transform>(weapon_entity, "Weapon", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         scene->registry.emplace<liminal::audio_source>(weapon_entity, new liminal::source());
 
         ui_entity = scene->registry.create();
@@ -220,8 +219,6 @@ public:
                 }
             }
         }
-
-        scene->update(current_time, delta_time);
 
         // ImGui::Begin("Scene Hierarchy");
 

@@ -10,11 +10,6 @@ namespace liminal
         glm::vec3 color;
         float inner_cutoff;
         float outer_cutoff;
-
-        spot_light(
-            glm::vec3 color,
-            float inner_cutoff,
-            float outer_cutoff);
     };
 }
 

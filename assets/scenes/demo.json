@@ -18,8 +18,7 @@
                     "x": 1,
                     "y": 1,
                     "z": 1
-                },
-                "mass": 0.0
+                }
             },
             "directional_light": {
                 "color": {
@@ -59,8 +58,7 @@
                     "x": 1,
                     "y": 1,
                     "z": 1
-                },
-                "mass": 0.0
+                }
             },
             "mesh_renderer": {
                 "filename": "assets/models/backpack/backpack.obj",
@@ -84,7 +82,9 @@
                     "x": 0.05,
                     "y": 0.05,
                     "z": 0.05
-                },
+                }
+            },
+            "physical": {
                 "mass": 1.0
             },
             "mesh_renderer": {
@@ -109,7 +109,9 @@
                     "x": 1,
                     "y": 1,
                     "z": 1
-                },
+                }
+            },
+            "physical": {
                 "mass": 1.0
             },
             "mesh_renderer": {

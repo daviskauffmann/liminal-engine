@@ -10,15 +10,13 @@ namespace liminal
 {
     struct script
     {
+        entt::entity entity;
+        sol::state *lua;
+
         script(const std::string &filename, liminal::scene *scene, entt::entity entity);
-        ~script();
 
         void init();
         void update(float delta_time);
-
-    private:
-        entt::entity entity;
-        sol::state *lua;
     };
 }
 

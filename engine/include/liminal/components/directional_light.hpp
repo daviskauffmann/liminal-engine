@@ -8,8 +8,6 @@ namespace liminal
     struct directional_light
     {
         glm::vec3 color;
-
-        directional_light(glm::vec3 color);
     };
 }
 

@@ -19,16 +19,15 @@ add_library(${PROJECT_NAME}
     src/audio/audio.cpp
     src/audio/sound.cpp
     src/audio/source.cpp
-    src/components/directional_light.cpp
-    src/components/point_light.cpp
+    src/components/physical.cpp
     src/components/script.cpp
-    src/components/spot_light.cpp
     src/components/sprite.cpp
     src/components/terrain.cpp
     src/components/transform.cpp
     src/components/water.cpp
     src/core/assets.cpp
     src/core/engine.cpp
+    src/core/physics.cpp
     src/core/platform.cpp
     src/core/scene.cpp
     src/graphics/camera.cpp

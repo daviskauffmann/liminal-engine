@@ -3,6 +3,7 @@
 #include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/transform.hpp>
+#include <liminal/core/engine.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 
@@ -25,14 +26,9 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     {
         return entity;
     };
-    (*lua)["AddTransform"] = [scene](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz, float mass) -> void
+    (*lua)["AddTransform"] = [scene](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
-        auto transform = scene->registry.emplace<liminal::transform>(entity, "NAME", nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz), mass);
-
-        if (mass > 0.0f)
-        {
-            scene->world->addRigidBody(transform.rigidbody);
-        }
+        auto transform = scene->registry.emplace<liminal::transform>(entity, "NAME", nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
     };
     (*lua)["UpdateTransform"] = [scene](entt::entity entity, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
@@ -63,11 +59,6 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     {
         scene->registry.emplace<liminal::script>(entity, filename, scene, entity);
     };
-}
-
-liminal::script::~script()
-{
-    delete lua;
 }
 
 void liminal::script::init()

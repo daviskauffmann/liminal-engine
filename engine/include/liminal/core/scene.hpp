@@ -1,8 +1,7 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-#include <bullet/btBulletDynamicsCommon.h>
-#include <entt/entt.hpp>
+#include <entt/entt.hpp> // TODO: might be able to remove this include if a proper API is provided by the class; that way the client app doesnt need to have an entt dependency
 #include <string>
 
 namespace liminal
@@ -11,7 +10,6 @@ namespace liminal
     {
     public:
         entt::registry registry;
-        btDiscreteDynamicsWorld *world;
 
         scene(const std::string &filename);
         ~scene();

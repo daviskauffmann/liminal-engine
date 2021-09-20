@@ -34,6 +34,7 @@ liminal::engine::~engine()
     delete platform;
     delete renderer;
     delete audio;
+    delete physics;
 }
 
 void liminal::engine::run(int argc, char *argv[])
@@ -88,6 +89,7 @@ void liminal::engine::run(int argc, char *argv[])
         window_width, window_height,
         window_width, window_height);
     audio = new liminal::audio();
+    physics = new liminal::physics();
 
     // get imgui reference
     ImGuiIO &io = ImGui::GetIO();
@@ -268,6 +270,12 @@ void liminal::engine::run(int argc, char *argv[])
 
         // update client app
         app->update(current_time, delta_time);
+
+        // update scene
+        scene->update(current_time, delta_time);
+
+        // update physics
+        physics->update(*scene, delta_time);
 
         // render everything
         // TODO: allow rendering to a texture instead of the screen and exposing/returning the texture to the app

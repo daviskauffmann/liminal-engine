@@ -8,9 +8,6 @@ namespace liminal
     struct point_light
     {
         glm::vec3 color;
-
-        point_light(
-            glm::vec3 color);
     };
 }
 

@@ -2,7 +2,9 @@
 #define APP_HPP
 
 #include <liminal/core/scene.hpp>
-#include <liminal/graphics/renderer.hpp>
+
+// TODO: app shouldn't own a scene like this
+// probably just wanna make the physics world and entt registry just part of the engine and accessible globally through some handy api
 
 namespace liminal
 {

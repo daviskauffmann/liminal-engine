@@ -2,6 +2,7 @@
 #define ENGINE_HPP
 
 #include <liminal/audio/audio.hpp>
+#include <liminal/core/physics.hpp>
 #include <liminal/core/platform.hpp>
 #include <liminal/graphics/renderer.hpp>
 
@@ -15,6 +16,7 @@ namespace liminal
         liminal::platform *platform;
         liminal::renderer *renderer;
         liminal::audio *audio;
+        liminal::physics *physics;
 
         ~engine();
 
