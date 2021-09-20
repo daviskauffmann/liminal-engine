@@ -31,7 +31,7 @@ liminal::scene::scene(const std::string &filename)
     {
         if (key == "skybox")
         {
-            // skybox = new liminal::skybox(json["skybox"]);
+            liminal::engine::get_instance().renderer->skybox = new liminal::skybox(json["skybox"]);
         }
 
         if (key == "entities")
