@@ -6,6 +6,7 @@
 #include <liminal/core/engine.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
+#include <sol/sol.hpp>
 
 liminal::script::script(const std::string &filename, liminal::scene *scene, entt::entity entity)
     : entity(entity)

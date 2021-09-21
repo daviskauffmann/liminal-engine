@@ -17,8 +17,7 @@ namespace liminal
     public:
         liminal::camera *camera;
         liminal::skybox *skybox;
-        btDiscreteDynamicsWorld *world; // TODO: make private
-        entt::registry registry;        // TODO: make private
+        entt::registry registry; // TODO: make private
 
         scene(const std::string &filename);
         ~scene();
@@ -28,6 +27,8 @@ namespace liminal
         void update(unsigned int current_time, float delta_time);
 
     private:
+        btDiscreteDynamicsWorld *world;
+
         friend class entity;
     };
 }

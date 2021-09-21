@@ -1,7 +1,7 @@
 #ifndef PHYSICAL_HPP
 #define PHYSICAL_HPP
 
-#include <bullet/btBulletDynamicsCommon.h>
+class btRigidBody;
 
 namespace liminal
 {

@@ -4,7 +4,11 @@
 #include <entt/entt.hpp>
 #include <liminal/core/scene.hpp>
 #include <string>
-#include <sol/sol.hpp>
+
+namespace sol
+{
+    class state;
+}
 
 namespace liminal
 {

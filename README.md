@@ -10,19 +10,20 @@ Make sure the following are present on your system:
 - Bullet
 - cxxopts
 - GLEW
-- GLM
 - Lua
 - OpenAL
 - SDL2
 - SDL2_image
 - SDL2_mixer
-- sol2
 
 These dependencies are included as submodules:
 
 - EnTT
+- GLM
 - Dear ImGui
 - JSON
+- SDL2 CMake modules
+- sol2
 - stb
 
 ### Download

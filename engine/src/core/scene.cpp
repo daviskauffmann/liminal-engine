@@ -21,6 +21,7 @@
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <nlohmann/json.hpp>
+#include <sol/sol.hpp>
 #include <string>
 
 liminal::scene::scene(const std::string &filename)

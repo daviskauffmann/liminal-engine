@@ -7,7 +7,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/extern/sdl2-cmak
 find_package(assimp REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(GLM REQUIRED)
 find_package(Lua REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
@@ -49,14 +48,15 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${ASSIMP_INCLUDE_DIRS}
         ${BULLET_INCLUDE_DIRS}
-        ${GLM_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
         ${SDL2_IMAGE_INCLUDE_DIRS}
         ${SDL2_MIXER_INCLUDE_DIRS}
         ../extern/entt/single_include
+        ../extern/glm
         ../extern/imgui
         ../extern/imgui/backends
         ../extern/json/single_include
+        ../extern/sol2/single/include
         ../extern/stb
 )
 

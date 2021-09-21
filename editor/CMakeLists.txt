@@ -9,8 +9,8 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${GLM_INCLUDE_DIRS}
         ../extern/entt/single_include
+        ../extern/glm
         ../extern/imgui
 )
 
