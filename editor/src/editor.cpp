@@ -1,4 +1,3 @@
-#include <entt/entt.hpp>
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <iostream>
@@ -12,6 +11,8 @@
 #include <liminal/components/script.hpp>
 #include <liminal/components/spot_light.hpp>
 #include <liminal/core/app.hpp>
+#include <liminal/core/entity.hpp>
+#include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/texture.hpp>
 #include <liminal/input/input.hpp>
 
@@ -20,24 +21,24 @@
 class editor : public liminal::app
 {
 public:
-    entt::entity camera_entity;
+    liminal::entity camera_entity;
 
     const float flashlight_intensity = 20.0f;
-    entt::entity flashlight_entity;
+    liminal::entity flashlight_entity;
     bool flashlight_follow = true;
     bool flashlight_on = true;
 
     liminal::sound *ambient_sound;
-    entt::entity ambience_entity;
+    liminal::entity ambience_entity;
 
     liminal::sound *bounce_sound;
-    entt::entity bounce_entity;
+    liminal::entity bounce_entity;
 
     liminal::sound *shoot_sound;
-    entt::entity weapon_entity;
+    liminal::entity weapon_entity;
 
     liminal::texture *grass_texture;
-    entt::entity ui_entity;
+    liminal::entity ui_entity;
 
     editor()
     {
@@ -51,32 +52,32 @@ public:
         scene = new liminal::scene("assets/scenes/demo.json");
 
         // TODO: camera should be a component maybe
-        camera_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(camera_entity, "Camera", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        scene->registry.emplace<liminal::audio_listener>(camera_entity, glm::vec3(0.0f, 0.0f, 0.0f));
+        camera_entity = scene->create_entity();
+        camera_entity.add_component<liminal::transform>("Camera", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        camera_entity.add_component<liminal::audio_listener>();
 
         // TODO: these entities should come from the JSON file
-        flashlight_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(flashlight_entity, "Flashlight", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        scene->registry.emplace<liminal::spot_light>(flashlight_entity, glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)));
+        flashlight_entity = scene->create_entity();
+        flashlight_entity.add_component<liminal::transform>("Flashlight", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        flashlight_entity.add_component<liminal::spot_light>(glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)));
 
-        ambience_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(ambience_entity, "Ambience", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        scene->registry.emplace<liminal::audio_source>(ambience_entity, new liminal::source());
-        scene->registry.get<liminal::audio_source>(ambience_entity).source->set_loop(true);
-        scene->registry.get<liminal::audio_source>(ambience_entity).source->set_gain(0.25f);
-        // scene->registry.get<liminal::audio_source>(ambience_entity).play(ambient_sound);
+        ambience_entity = scene->create_entity();
+        ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        ambience_entity.add_component<liminal::audio_source>(new liminal::source());
+        ambience_entity.get_component<liminal::audio_source>().source->set_loop(true);
+        ambience_entity.get_component<liminal::audio_source>().source->set_gain(0.25f);
+        // ambience_entity.get_component<liminal::audio_source>().play(ambient_sound);
 
-        bounce_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(bounce_entity, "Bounce sound", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        scene->registry.emplace<liminal::audio_source>(bounce_entity, new liminal::source());
+        bounce_entity = scene->create_entity();
+        bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        bounce_entity.add_component<liminal::audio_source>(new liminal::source());
 
-        weapon_entity = scene->registry.create();
-        scene->registry.emplace<liminal::transform>(weapon_entity, "Weapon", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        scene->registry.emplace<liminal::audio_source>(weapon_entity, new liminal::source());
+        weapon_entity = scene->create_entity();
+        weapon_entity.add_component<liminal::transform>("Weapon", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        weapon_entity.add_component<liminal::audio_source>(new liminal::source());
 
-        ui_entity = scene->registry.create();
-        // scene->registry.emplace<liminal::sprite>(ui_entity, &grass_texture, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec2(1.0f, 1.0f));}
+        ui_entity = scene->create_entity();
+        // ui_entity.add_component<liminal::sprite>(&grass_texture, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec2(1.0f, 1.0f));}
     }
 
     ~editor()
@@ -87,7 +88,7 @@ public:
     {
         ImGuiIO &io = ImGui::GetIO();
 
-        auto camera = liminal::engine::get_instance().renderer->camera;
+        auto camera = scene->camera;
         glm::vec3 camera_front = camera->calc_front();
         glm::vec3 camera_right = camera->calc_right();
 
@@ -169,8 +170,8 @@ public:
 
         // TODO: camera itself should be a component attached to the camera_entity
         // and its transform would be changed directly, making this step unnecessary
-        scene->registry.get<liminal::transform>(camera_entity).position = camera->position;
-        scene->registry.get<liminal::transform>(camera_entity).rotation = camera->calc_front();
+        camera_entity.get_component<liminal::transform>().position = camera->position;
+        camera_entity.get_component<liminal::transform>().rotation = camera->calc_front();
 
         if (liminal::input::key_down(liminal::KEYCODE_F))
         {
@@ -183,39 +184,39 @@ public:
 
         if (flashlight_on)
         {
-            scene->registry.get<liminal::spot_light>(flashlight_entity).color = glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity;
+            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity;
         }
         else
         {
-            scene->registry.get<liminal::spot_light>(flashlight_entity).color = glm::vec3(0.0f, 0.0f, 0.0f);
+            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(0.0f, 0.0f, 0.0f);
         }
         if (flashlight_follow)
         {
-            scene->registry.get<liminal::transform>(flashlight_entity).position = camera->position;
-            scene->registry.get<liminal::transform>(flashlight_entity).rotation = glm::mix(
-                scene->registry.get<liminal::transform>(flashlight_entity).rotation,
+            flashlight_entity.get_component<liminal::transform>().position = camera->position;
+            flashlight_entity.get_component<liminal::transform>().rotation = glm::mix(
+                flashlight_entity.get_component<liminal::transform>().rotation,
                 camera_front,
                 30.0f * delta_time);
         }
 
-        scene->registry.get<liminal::transform>(ambience_entity).position = camera->position;
-        scene->registry.get<liminal::transform>(weapon_entity).position = camera->position;
+        ambience_entity.get_component<liminal::transform>().position = camera->position;
+        weapon_entity.get_component<liminal::transform>().position = camera->position;
 
         if (!io.WantCaptureMouse)
         {
             if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
             {
-                if (!scene->registry.get<liminal::audio_source>(weapon_entity).source->is_playing())
+                if (!weapon_entity.get_component<liminal::audio_source>().source->is_playing())
                 {
-                    scene->registry.get<liminal::audio_source>(weapon_entity).source->play(*shoot_sound);
+                    weapon_entity.get_component<liminal::audio_source>().source->play(*shoot_sound);
                 }
             }
 
             if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_RIGHT))
             {
-                if (!scene->registry.get<liminal::audio_source>(bounce_entity).source->is_playing())
+                if (!bounce_entity.get_component<liminal::audio_source>().source->is_playing())
                 {
-                    scene->registry.get<liminal::audio_source>(bounce_entity).source->play(*bounce_sound);
+                    bounce_entity.get_component<liminal::audio_source>().source->play(*bounce_sound);
                 }
             }
         }

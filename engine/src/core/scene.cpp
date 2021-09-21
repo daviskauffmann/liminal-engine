@@ -1,5 +1,6 @@
 #include <liminal/core/scene.hpp>
 
+#include <bullet/btBulletDynamicsCommon.h>
 #include <fstream>
 #include <liminal/audio/sound.hpp>
 #include <liminal/components/audio_listener.hpp>
@@ -14,6 +15,7 @@
 #include <liminal/components/transform.hpp>
 #include <liminal/components/water.hpp>
 #include <liminal/core/engine.hpp>
+#include <liminal/core/entity.hpp>
 #include <liminal/core/platform.hpp>
 #include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/model.hpp>
@@ -23,6 +25,17 @@
 
 liminal::scene::scene(const std::string &filename)
 {
+    camera = nullptr;
+    skybox = nullptr;
+
+    // create physics world
+    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
+    btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
+    btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
+    btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
+    world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
+    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
+
     // load scene from file
     std::ifstream stream(filename);
     nlohmann::json json;
@@ -31,7 +44,7 @@ liminal::scene::scene(const std::string &filename)
     {
         if (key == "skybox")
         {
-            liminal::engine::get_instance().renderer->skybox = new liminal::skybox(json["skybox"]);
+            skybox = new liminal::skybox(json["skybox"]);
         }
 
         if (key == "entities")
@@ -71,7 +84,7 @@ liminal::scene::scene(const std::string &filename)
                     if (key == "physical")
                     {
                         auto physical = registry.emplace<liminal::physical>(entity, value["mass"]);
-                        engine::get_instance().physics->world->addRigidBody(physical.rigidbody);
+                        world->addRigidBody(physical.rigidbody);
                     }
 
                     if (key == "mesh_renderer")
@@ -98,7 +111,7 @@ liminal::scene::scene(const std::string &filename)
                     if (key == "terrain")
                     {
                         auto terrain = registry.emplace<liminal::terrain>(entity, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
-                        engine::get_instance().physics->world->addRigidBody(terrain.rigidbody);
+                        world->addRigidBody(terrain.rigidbody);
                     }
                 }
             }
@@ -121,7 +134,7 @@ liminal::scene::~scene()
 
     for (auto [entity, physical] : registry.view<liminal::physical>().each())
     {
-        liminal::engine::get_instance().physics->world->removeRigidBody(physical.rigidbody);
+        world->removeRigidBody(physical.rigidbody);
         delete physical.rigidbody;
     }
 
@@ -129,11 +142,18 @@ liminal::scene::~scene()
     {
         delete terrain.mesh;
 
-        liminal::engine::get_instance().physics->world->removeRigidBody(terrain.rigidbody);
+        world->removeRigidBody(terrain.rigidbody);
         delete terrain.rigidbody;
     }
 
     registry.clear();
+
+    delete world;
+}
+
+liminal::entity liminal::scene::create_entity()
+{
+    return liminal::entity(registry.create(), this);
 }
 
 void liminal::scene::update(unsigned int current_time, float delta_time)
@@ -156,17 +176,41 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     // update audio listener positions
     for (auto [entity, audio_listener, transform] : registry.view<liminal::audio_listener, liminal::transform>().each())
     {
-        liminal::engine::get_instance().audio->set_listener_position(
-            transform.position,
-            audio_listener.last_position - transform.position,
-            transform.rotation,
-            glm::vec3(0.0f, 1.0f, 0.0f));
-        audio_listener.last_position = transform.position;
+        audio_listener.set_position(transform.position, transform.rotation);
     }
 
     // update audio source positions
     for (auto [entity, audio_source, transform] : registry.view<liminal::audio_source, liminal::transform>().each())
     {
         audio_source.source->set_position(transform.position);
+    }
+
+    // update world transforms in case the transform component changed
+    // TODO: remove this, should just have a function that sets up the initial state of rigidbodies and then lets bullet be in charge
+    // this would make it so that you can't move rigidbodies around in the editor (unless physics is turned off), but maybe this is okay
+    for (auto [entity, physical, transform] : registry.view<liminal::physical, liminal::transform>().each())
+    {
+        btTransform world_transform;
+        world_transform.setIdentity();
+        world_transform.setOrigin(btVector3(transform.position.x, transform.position.y, transform.position.z));
+        world_transform.setRotation(btQuaternion(transform.rotation.y, transform.rotation.x, transform.rotation.z));
+
+        physical.rigidbody->setWorldTransform(world_transform);
+    }
+
+    // update physics world
+    world->stepSimulation(delta_time);
+
+    // update transforms
+    for (auto [entity, physical, transform] : registry.view<liminal::physical, liminal::transform>().each())
+    {
+        btTransform world_transform = physical.rigidbody->getWorldTransform();
+
+        transform.position = {
+            world_transform.getOrigin().x(),
+            world_transform.getOrigin().y(),
+            world_transform.getOrigin().z()};
+
+        world_transform.getRotation().getEulerZYX(transform.rotation.z, transform.rotation.y, transform.rotation.x);
     }
 }

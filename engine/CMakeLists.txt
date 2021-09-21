@@ -16,9 +16,9 @@ find_package(SDL2_image REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 
 add_library(${PROJECT_NAME}
-    src/audio/audio.cpp
     src/audio/sound.cpp
     src/audio/source.cpp
+    src/components/audio_listener.cpp
     src/components/physical.cpp
     src/components/script.cpp
     src/components/sprite.cpp
@@ -27,7 +27,6 @@ add_library(${PROJECT_NAME}
     src/components/water.cpp
     src/core/assets.cpp
     src/core/engine.cpp
-    src/core/physics.cpp
     src/core/platform.cpp
     src/core/scene.cpp
     src/graphics/camera.cpp

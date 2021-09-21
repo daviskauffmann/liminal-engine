@@ -7,11 +7,9 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <liminal/core/scene.hpp>
-#include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/mesh.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/program.hpp>
-#include <liminal/graphics/skybox.hpp>
 #include <liminal/graphics/texture.hpp>
 
 #define NUM_DIRECTIONAL_LIGHT_SHADOWS 1
@@ -23,8 +21,6 @@ namespace liminal
     class renderer
     {
     public:
-        liminal::camera *camera;
-        liminal::skybox *skybox;
         bool wireframe;
         bool greyscale;
 
