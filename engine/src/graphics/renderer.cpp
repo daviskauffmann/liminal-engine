@@ -1,5 +1,6 @@
 #include <liminal/graphics/renderer.hpp>
 
+#include <entt/entt.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
@@ -13,6 +14,8 @@
 #include <liminal/graphics/skybox.hpp>
 #include <imgui.h>
 #include <iostream>
+
+// TODO: create a proper rendering API rather than reading from the entt registry directly
 
 // TODO: framebuffer helper class
 // should store info about width/height
@@ -60,6 +63,8 @@ liminal::renderer::renderer(
     geometry_albedo_texture_id = 0;
     geometry_material_texture_id = 0;
     geometry_rbo_id = 0;
+    final_fbo_id = 0;
+    final_texture_id = 0;
     set_screen_size(display_width, display_height, render_scale);
 
     for (int i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
@@ -387,9 +392,9 @@ liminal::renderer::renderer(
     gaussian_program = new liminal::program(
         "assets/shaders/gaussian.vs",
         "assets/shaders/gaussian.fs");
-    screen_program = new liminal::program(
-        "assets/shaders/screen.vs",
-        "assets/shaders/screen.fs");
+    postprocess_program = new liminal::program(
+        "assets/shaders/postprocess.vs",
+        "assets/shaders/postprocess.fs");
 
     setup_samplers();
 
@@ -469,6 +474,9 @@ liminal::renderer::~renderer()
     glDeleteTextures(2, hdr_texture_ids);
     glDeleteRenderbuffers(1, &hdr_rbo_id);
 
+    glDeleteFramebuffers(1, &final_fbo_id);
+    glDeleteTextures(1, &final_texture_id);
+
     glDeleteFramebuffers(NUM_DIRECTIONAL_LIGHT_SHADOWS, directional_light_depth_map_fbo_ids);
     glDeleteTextures(NUM_DIRECTIONAL_LIGHT_SHADOWS, directional_light_depth_map_texture_ids);
 
@@ -519,7 +527,7 @@ liminal::renderer::~renderer()
     delete water_program;
     delete sprite_program;
     delete gaussian_program;
-    delete screen_program;
+    delete postprocess_program;
 
     delete water_dudv_texture;
     delete water_normal_texture;
@@ -544,6 +552,9 @@ void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_h
     glDeleteFramebuffers(1, &hdr_fbo_id);
     glDeleteTextures(2, hdr_texture_ids);
     glDeleteRenderbuffers(1, &hdr_rbo_id);
+
+    glDeleteFramebuffers(1, &final_fbo_id);
+    glDeleteTextures(1, &final_texture_id);
 
     glDeleteFramebuffers(2, bloom_fbo_ids);
     glDeleteTextures(2, bloom_texture_ids);
@@ -818,6 +829,51 @@ void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_h
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
+    // setup final fbo
+    glGenFramebuffers(1, &final_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, final_fbo_id);
+    {
+        {
+            glGenTextures(1, &final_texture_id);
+            glBindTexture(GL_TEXTURE_2D, final_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_RGBA16F,
+                    display_width,
+                    display_height,
+                    0,
+                    GL_RGBA,
+                    GL_FLOAT,
+                    nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D,
+                final_texture_id,
+                0);
+        }
+
+        {
+            GLenum final_color_attachments[] = {
+                GL_COLOR_ATTACHMENT0};
+            glDrawBuffers(sizeof(final_color_attachments) / sizeof(GLenum), final_color_attachments);
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cerr << "Error: Failed to create final framebuffer" << std::endl;
+            return;
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void liminal::renderer::set_directional_light_depth_map_size(GLsizei directional_light_depth_map_size)
@@ -1151,7 +1207,7 @@ void liminal::renderer::reload_programs()
     water_program->reload();
     sprite_program->reload();
     gaussian_program->reload();
-    screen_program->reload();
+    postprocess_program->reload();
 
     setup_samplers();
 }
@@ -1261,12 +1317,12 @@ void liminal::renderer::setup_samplers()
     }
     gaussian_program->unbind();
 
-    screen_program->bind();
+    postprocess_program->bind();
     {
-        screen_program->set_int("hdr_map", 0);
-        screen_program->set_int("bloom_map", 1);
+        postprocess_program->set_int("hdr_map", 0);
+        postprocess_program->set_int("bloom_map", 1);
     }
-    screen_program->unbind();
+    postprocess_program->unbind();
 }
 
 void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time)
@@ -2059,15 +2115,16 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     }
 
     // final pass
+    glBindFramebuffer(GL_FRAMEBUFFER, scene.draw_to_texture ? final_fbo_id : 0);
     {
         glViewport(0, 0, display_width, display_height);
         glDisable(GL_DEPTH_TEST);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        screen_program->bind();
+        postprocess_program->bind();
         {
-            screen_program->set_unsigned_int("greyscale", greyscale);
+            postprocess_program->set_unsigned_int("greyscale", greyscale);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[0]);
@@ -2083,9 +2140,15 @@ void liminal::renderer::render_screen(liminal::scene &scene)
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
-        screen_program->unbind();
+        postprocess_program->unbind();
 
         glEnable(GL_DEPTH_TEST);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    if (scene.draw_to_texture)
+    {
+        scene.texture_id = (void *)(long long)final_texture_id;
     }
 
     // DEBUG: draw fbos

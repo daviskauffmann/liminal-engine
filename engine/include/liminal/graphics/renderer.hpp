@@ -1,7 +1,6 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
-#include <entt/entt.hpp>
 #include <GL/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
@@ -60,6 +59,9 @@ namespace liminal
         GLuint hdr_fbo_id;
         GLuint hdr_texture_ids[2];
         GLuint hdr_rbo_id;
+
+        GLuint final_fbo_id;
+        GLuint final_texture_id;
 
         GLsizei directional_light_depth_map_size;
         GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS];
@@ -125,7 +127,7 @@ namespace liminal
         liminal::program *water_program;
         liminal::program *sprite_program;
         liminal::program *gaussian_program;
-        liminal::program *screen_program;
+        liminal::program *postprocess_program;
 
         liminal::texture *water_dudv_texture;
         liminal::texture *water_normal_texture;

@@ -98,10 +98,13 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
 
     // init ImGui
     ImGui::CreateContext();
+
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
+    io.IniFilename = "assets/imgui.ini";
+
     ImGui_ImplSDL2_InitForOpenGL(window, sdl_gl_context);
     ImGui_ImplOpenGL3_Init("#version 460");
-    ImGuiIO &io = ImGui::GetIO();
-    io.IniFilename = "assets/imgui.ini";
 }
 
 liminal::platform::~platform()
@@ -164,6 +167,14 @@ void liminal::platform::end_frame()
 {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+
+        SDL_GL_MakeCurrent(window, sdl_gl_context);
+    }
 
     SDL_GL_SwapWindow(window);
 }
