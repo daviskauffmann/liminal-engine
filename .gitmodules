@@ -10,9 +10,6 @@
 [submodule "extern/json"]
 	path = extern/json
 	url = https://github.com/nlohmann/json
-[submodule "extern/sdl2-cmake-modules"]
-	path = extern/sdl2-cmake-modules
-	url = https://github.com/aminosbh/sdl2-cmake-modules
 [submodule "extern/stb"]
 	path = extern/stb
 	url = https://github.com/nothings/stb.git
