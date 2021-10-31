@@ -25,7 +25,6 @@ These dependencies are included as submodules:
 - GLM
 - Dear ImGui
 - JSON
-- SDL2 CMake modules
 - sol2
 - stb
 
