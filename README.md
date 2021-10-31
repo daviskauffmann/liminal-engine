@@ -2,19 +2,22 @@
 
 ## Getting Started
 
-### Dependencies
+### Download
 
-Make sure the following are present on your system:
+```sh
+git clone https://github.com/daviskauffmann/liminal-engine.git
+cd liminal-engine
+git submodule update --init
+```
 
-- Assimp
-- Bullet
-- cxxopts
-- GLEW
-- Lua
-- OpenAL
-- SDL2
-- SDL2_image
-- SDL2_mixer
+### Install Dependencies
+
+Install [CMake](https://cmake.org/).
+Install [vcpkg](https://vcpkg.io/).
+
+```sh
+vcpkg install assimp bullet3 cxxopts glew lua openal-soft sdl2 sdl2-image sdl2-mixer
+```
 
 These dependencies are included as submodules:
 
@@ -26,21 +29,12 @@ These dependencies are included as submodules:
 - sol2
 - stb
 
-### Download
-
-```sh
-git clone https://github.com/daviskauffmann/liminal-engine.git
-cd liminal-engine
-git submodule update --init
-```
-
 ### Build
 
 ```sh
 mkdir build
 cd build
 cmake ..
-make
 ```
 
 ## Features

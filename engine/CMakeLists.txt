@@ -1,18 +1,18 @@
-cmake_minimum_required(VERSION 3.0.0)
+﻿cmake_minimum_required(VERSION 3.0.0)
 project(engine)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/extern/sdl2-cmake-modules")
 
 find_package(assimp REQUIRED)
-find_package(Bullet REQUIRED)
+find_package(cxxopts CONFIG REQUIRED)
+find_package(Bullet CONFIG REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Lua REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(OpenAL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_mixer REQUIRED)
+find_package(OpenAL CONFIG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2-image CONFIG REQUIRED)
+find_package(SDL2-mixer CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/audio/sound.cpp
@@ -46,11 +46,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
-        ${ASSIMP_INCLUDE_DIRS}
-        ${BULLET_INCLUDE_DIRS}
-        ${SDL2_INCLUDE_DIRS}
-        ${SDL2_IMAGE_INCLUDE_DIRS}
-        ${SDL2_MIXER_INCLUDE_DIRS}
+        ${LUA_INCLUDE_DIR}
         ../extern/entt/single_include
         ../extern/glm
         ../extern/imgui
@@ -62,13 +58,12 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        ${ASSIMP_LIBRARIES}
-        ${BULLET_LIBRARIES}
+        assimp::assimp
+        BulletSoftBody BulletDynamics BulletCollision Bullet3Common LinearMath
         GLEW::GLEW
         ${LUA_LIBRARIES}
-        ${OPENGL_LIBRARIES}
-        ${OPENAL_LIBRARY}
-        ${SDL2_LIBRARIES}
-        ${SDL2_IMAGE_LIBRARIES}
-        ${SDL2_MIXER_LIBRARIES}
+        OpenAL::OpenAL
+        SDL2::SDL2 SDL2::SDL2main
+        SDL2::SDL2_image
+        SDL2::SDL2_mixer
 )

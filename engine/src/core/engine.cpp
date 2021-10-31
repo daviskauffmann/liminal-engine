@@ -106,7 +106,7 @@ void liminal::engine::run(int argc, char *argv[])
     float time_scale = 1.0f;
     bool console_open = false;
 
-    // SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     std::fill(liminal::input::keys.begin(), liminal::input::keys.end(), false);
     std::fill(liminal::input::last_keys.begin(), liminal::input::last_keys.end(), false);

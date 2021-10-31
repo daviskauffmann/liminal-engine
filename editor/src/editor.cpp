@@ -141,33 +141,33 @@ public:
         // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
-        // if (!io.WantCaptureMouse)
-        // {
-        if (SDL_GetRelativeMouseMode())
+        if (!io.WantCaptureMouse)
         {
-            const float sensitivity = 0.1f;
-            camera->pitch -= liminal::input::mouse_dy * sensitivity;
-            camera->yaw += liminal::input::mouse_dx * sensitivity;
-            if (camera->pitch > 89.0f)
+            if (SDL_GetRelativeMouseMode())
             {
-                camera->pitch = 89.0f;
-            }
-            if (camera->pitch < -89.0f)
-            {
-                camera->pitch = -89.0f;
-            }
+                const float sensitivity = 0.1f;
+                camera->pitch -= liminal::input::mouse_dy * sensitivity;
+                camera->yaw += liminal::input::mouse_dx * sensitivity;
+                if (camera->pitch > 89.0f)
+                {
+                    camera->pitch = 89.0f;
+                }
+                if (camera->pitch < -89.0f)
+                {
+                    camera->pitch = -89.0f;
+                }
 
-            camera->fov -= liminal::input::mouse_wheel_y;
-            if (camera->fov <= 1.0f)
-            {
-                camera->fov = 1.0f;
-            }
-            if (camera->fov >= 120.0f)
-            {
-                camera->fov = 120.0f;
+                camera->fov -= liminal::input::mouse_wheel_y;
+                if (camera->fov <= 1.0f)
+                {
+                    camera->fov = 1.0f;
+                }
+                if (camera->fov >= 120.0f)
+                {
+                    camera->fov = 120.0f;
+                }
             }
         }
-        // }
 
         // TODO: camera itself should be a component attached to the camera_entity
         // and its transform would be changed directly, making this step unnecessary
@@ -203,58 +203,58 @@ public:
         ambience_entity.get_component<liminal::transform>().position = camera->position;
         weapon_entity.get_component<liminal::transform>().position = camera->position;
 
-        // if (!io.WantCaptureMouse)
+        if (!io.WantCaptureMouse)
+        {
+            if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
+            {
+                if (!weapon_entity.get_component<liminal::audio_source>().source->is_playing())
+                {
+                    weapon_entity.get_component<liminal::audio_source>().source->play(*shoot_sound);
+                }
+            }
+
+            if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_RIGHT))
+            {
+                if (!bounce_entity.get_component<liminal::audio_source>().source->is_playing())
+                {
+                    bounce_entity.get_component<liminal::audio_source>().source->play(*bounce_sound);
+                }
+            }
+        }
+
+        // static bool dockspace_open = true;
+        // ImGui::Begin("Dockspace Demo", &dockspace_open, ImGuiWindowFlags_NoBackground);
         // {
-        if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
-        {
-            if (!weapon_entity.get_component<liminal::audio_source>().source->is_playing())
-            {
-                weapon_entity.get_component<liminal::audio_source>().source->play(*shoot_sound);
-            }
-        }
+        //     ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
-        if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_RIGHT))
-        {
-            if (!bounce_entity.get_component<liminal::audio_source>().source->is_playing())
-            {
-                bounce_entity.get_component<liminal::audio_source>().source->play(*bounce_sound);
-            }
-        }
+        //     if (ImGui::BeginMenuBar())
+        //     {
+        //         if (ImGui::MenuItem("Exit"))
+        //         {
+        //             // TODO: exit
+        //         }
+        //     }
+        //     ImGui::EndMenuBar();
+
+        //     if (scene->draw_to_texture)
+        //     {
+        //         if (ImGui::Begin("Scene"))
+        //         {
+        //             ImGui::Image(scene->texture_id, ImGui::GetWindowSize(), ImVec2{0, 1}, ImVec2{1, 0});
+        //         }
+        //         ImGui::End();
+        //     }
+
+        //     if (ImGui::Begin("Scene Hierarchy"))
+        //     {
+        //         for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
+        //         {
+        //             ImGui::Text("%s", transform.name);
+        //         }
+        //     }
+        //     ImGui::End();
         // }
-
-        static bool dockspace_open = true;
-        ImGui::Begin("Dockspace Demo", &dockspace_open, ImGuiWindowFlags_NoBackground);
-        {
-            ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-
-            // if (ImGui::BeginMenuBar())
-            // {
-            //     if (ImGui::MenuItem("Exit"))
-            //     {
-            //         // TODO: exit
-            //     }
-            // }
-            // ImGui::EndMenuBar();
-
-            if (scene->draw_to_texture)
-            {
-                if (ImGui::Begin("Scene"))
-                {
-                    ImGui::Image(scene->texture_id, ImGui::GetWindowSize(), ImVec2{0, 1}, ImVec2{1, 0});
-                }
-                ImGui::End();
-            }
-
-            if (ImGui::Begin("Scene Hierarchy"))
-            {
-                for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
-                {
-                    ImGui::Text("%s", transform.name);
-                }
-            }
-            ImGui::End();
-        }
-        ImGui::End();
+        // ImGui::End();
     }
 };
 
