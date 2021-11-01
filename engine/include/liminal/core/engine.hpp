@@ -1,11 +1,11 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
-#include <liminal/core/platform.hpp>
-#include <liminal/graphics/renderer.hpp>
-
 namespace liminal
 {
+    class platform;
+    class renderer;
+
     class engine
     {
     public:

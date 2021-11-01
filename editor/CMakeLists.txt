@@ -3,8 +3,8 @@ project(editor)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Bullet CONFIG REQUIRED)
-find_package(OpenAL CONFIG REQUIRED)
+find_package(assimp REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     src/editor.cpp
@@ -20,6 +20,6 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         engine
-        BulletSoftBody BulletDynamics BulletCollision Bullet3Common LinearMath
-        OpenAL::OpenAL
+        assimp::assimp
+        SDL2::SDL2 SDL2::SDL2main
 )

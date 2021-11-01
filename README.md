@@ -12,12 +12,17 @@ git submodule update --init
 
 ### Install Dependencies
 
-Install [CMake](https://cmake.org/).
-Install [vcpkg](https://vcpkg.io/).
+Install the following using the package manager of your choice:
 
-```sh
-vcpkg install assimp bullet3 cxxopts glew lua openal-soft sdl2 sdl2-image sdl2-mixer
-```
+- Assimp
+- Bullet3
+- cxxopts
+- GLEW
+- Lua
+- OpenAL Soft
+- SDL2
+- SDL2-immage
+- SDL2-mixer
 
 These dependencies are included as submodules:
 

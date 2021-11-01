@@ -15,6 +15,7 @@
 #include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/texture.hpp>
 #include <liminal/input/input.hpp>
+#include <SDL2/SDL.h>
 
 // TODO: this will be an editor eventually, currently its more like a demo level
 
@@ -83,6 +84,10 @@ public:
 
     ~editor()
     {
+        delete ambient_sound;
+        delete bounce_sound;
+        delete shoot_sound;
+        delete grass_texture;
     }
 
     void update(unsigned int current_time, float delta_time) override

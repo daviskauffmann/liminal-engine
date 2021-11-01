@@ -1,5 +1,6 @@
 #include <liminal/audio/source.hpp>
 
+#include <AL/al.h>
 #include <glm/gtc/type_ptr.hpp>
 
 liminal::source::source()

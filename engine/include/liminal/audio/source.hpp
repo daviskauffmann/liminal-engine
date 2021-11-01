@@ -23,7 +23,7 @@ namespace liminal
         void stop() const;
 
     private:
-        ALuint source_id;
+        unsigned int source_id;
         mutable glm::vec3 last_position;
     };
 }

@@ -147,6 +147,11 @@ liminal::scene::~scene()
         delete terrain.rigidbody;
     }
 
+    for (auto [entity, audio_source] : registry.view<liminal::audio_source>().each())
+    {
+        delete audio_source.source;
+    }
+
     registry.clear();
 
     delete world;
