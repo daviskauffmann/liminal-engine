@@ -1,5 +1,5 @@
-#ifndef PLATFORM_HPP
-#define PLATFORM_HPP
+#ifndef LIMINAL_CORE_PLATFORM_HPP
+#define LIMINAL_CORE_PLATFORM_HPP
 
 #include <AL/alc.h>
 #include <SDL2/SDL.h>

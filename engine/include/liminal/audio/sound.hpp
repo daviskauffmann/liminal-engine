@@ -1,5 +1,5 @@
-#ifndef SOUND_HPP
-#define SOUND_HPP
+#ifndef LIMINAL_AUDIO_SOUND_HPP
+#define LIMINAL_AUDIO_SOUND_HPP
 
 #include <string>
 

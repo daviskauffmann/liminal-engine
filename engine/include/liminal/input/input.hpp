@@ -1,5 +1,5 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#ifndef LIMINAL_INPUT_INPUT_HPP
+#define LIMINAL_INPUT_INPUT_HPP
 
 #include <array>
 

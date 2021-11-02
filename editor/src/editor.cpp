@@ -1,20 +1,7 @@
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <iostream>
-#include <liminal/main.hpp>
-#include <liminal/audio/sound.hpp>
-#include <liminal/audio/source.hpp>
-#include <liminal/components/audio_listener.hpp>
-#include <liminal/components/audio_source.hpp>
-#include <liminal/components/mesh_renderer.hpp>
-#include <liminal/components/transform.hpp>
-#include <liminal/components/script.hpp>
-#include <liminal/components/spot_light.hpp>
-#include <liminal/core/app.hpp>
-#include <liminal/core/entity.hpp>
-#include <liminal/graphics/camera.hpp>
-#include <liminal/graphics/texture.hpp>
-#include <liminal/input/input.hpp>
+#include <liminal/liminal.hpp>
 #include <SDL2/SDL.h>
 
 // TODO: this will be an editor eventually, currently its more like a demo level

@@ -1,5 +1,5 @@
-#ifndef ENGINE_HPP
-#define ENGINE_HPP
+#ifndef LIMINAL_CORE_ENGINE_HPP
+#define LIMINAL_CORE_ENGINE_HPP
 
 namespace liminal
 {

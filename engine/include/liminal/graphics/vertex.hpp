@@ -1,5 +1,5 @@
-#ifndef VERTEX_HPP
-#define VERTEX_HPP
+#ifndef LIMINAL_GRAPHICS_VERTEX_HPP
+#define LIMINAL_GRAPHICS_VERTEX_HPP
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

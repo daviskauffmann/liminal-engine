@@ -1,5 +1,5 @@
-#ifndef ASSETS_HPP
-#define ASSETS_HPP
+#ifndef LIMINAL_CORE_ASSETS_HPP
+#define LIMINAL_CORE_ASSETS_HPP
 
 #include <string>
 #include <unordered_map>

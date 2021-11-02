@@ -102,11 +102,7 @@ liminal::scene::scene(const std::string &filename)
 
                     if (key == "water")
                     {
-                        glm::vec3 position(
-                            value["position"]["x"],
-                            value["position"]["y"],
-                            value["position"]["z"]);
-                        registry.emplace<liminal::water>(entity, position, value["size"]);
+                        registry.emplace<liminal::water>(entity, value["tiling"]);
                     }
 
                     if (key == "terrain")

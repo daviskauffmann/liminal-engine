@@ -1,5 +1,5 @@
-#ifndef SCRIPT_HPP
-#define SCRIPT_HPP
+#ifndef LIMINAL_COMPONENTS_SCRIPT_HPP
+#define LIMINAL_COMPONENTS_SCRIPT_HPP
 
 #include <entt/entt.hpp>
 #include <liminal/core/scene.hpp>

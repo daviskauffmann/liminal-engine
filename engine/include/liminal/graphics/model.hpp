@@ -1,5 +1,5 @@
-#ifndef MODEL_HPP
-#define MODEL_HPP
+#ifndef LIMINAL_GRAPHICS_MODEL_HPP
+#define LIMINAL_GRAPHICS_MODEL_HPP
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

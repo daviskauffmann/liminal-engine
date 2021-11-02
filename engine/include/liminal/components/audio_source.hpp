@@ -1,5 +1,5 @@
-#ifndef AUDIO_SOURCE_HPP
-#define AUDIO_SOURCE_HPP
+#ifndef LIMINAL_COMPONENTS_AUDIO_SOURCE_HPP
+#define LIMINAL_COMPONENTS_AUDIO_SOURCE_HPP
 
 #include <liminal/audio/source.hpp>
 

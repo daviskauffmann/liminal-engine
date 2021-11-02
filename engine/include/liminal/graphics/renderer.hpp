@@ -1,5 +1,5 @@
-#ifndef RENDERER_HPP
-#define RENDERER_HPP
+#ifndef LIMINAL_GRAPHICS_RENDERER_HPP
+#define LIMINAL_GRAPHICS_RENDERER_HPP
 
 #include <GL/glew.h>
 #include <glm/matrix.hpp>

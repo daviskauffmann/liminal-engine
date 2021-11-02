@@ -1,5 +1,5 @@
-#ifndef PROGRAM_HPP
-#define PROGRAM_HPP
+#ifndef LIMINAL_GRAPHICS_PROGRAM_HPP
+#define LIMINAL_GRAPHICS_PROGRAM_HPP
 
 #include <glm/glm.hpp>
 #include <GL/glew.h>

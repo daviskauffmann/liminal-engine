@@ -1,5 +1,5 @@
-#ifndef MESH_RENDERER_HPP
-#define MESH_RENDERER_HPP
+#ifndef LIMINAL_COMPONENTS_MESH_RENDERER_HPP
+#define LIMINAL_COMPONENTS_MESH_RENDERER_HPP
 
 #include <liminal/graphics/model.hpp>
 

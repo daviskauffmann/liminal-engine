@@ -1,5 +1,5 @@
-#ifndef MESH_HPP
-#define MESH_HPP
+#ifndef LIMINAL_GRAPHICS_MESH_HPP
+#define LIMINAL_GRAPHICS_MESH_HPP
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

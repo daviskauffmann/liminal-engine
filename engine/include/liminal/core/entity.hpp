@@ -1,5 +1,5 @@
-#ifndef ENTITY_HPP
-#define ENTITY_HPP
+#ifndef LIMINAL_CORE_ENTITY_HPP
+#define LIMINAL_CORE_ENTITY_HPP
 
 #include <entt/entt.hpp>
 #include <liminal/core/scene.hpp>

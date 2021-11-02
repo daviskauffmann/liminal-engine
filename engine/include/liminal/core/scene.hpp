@@ -1,5 +1,5 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
+#ifndef LIMINAL_CORE_SCENE_HPP
+#define LIMINAL_CORE_SCENE_HPP
 
 #include <entt/entt.hpp> // TODO: remove this include by providing a proper API, that way the client app doesnt need to have an entt dependency
 #include <imgui.h>

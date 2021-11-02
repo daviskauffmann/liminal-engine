@@ -1,5 +1,5 @@
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
+#ifndef LIMINAL_GRAPHICS_TEXTURE_HPP
+#define LIMINAL_GRAPHICS_TEXTURE_HPP
 
 #include <GL/glew.h>
 #include <string>

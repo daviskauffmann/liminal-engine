@@ -1,5 +1,5 @@
-#ifndef SPRITE_HPP
-#define SPRITE_HPP
+#ifndef LIMINAL_COMPONENTS_SPRITE_HPP
+#define LIMINAL_COMPONENTS_SPRITE_HPP
 
 #include <glm/matrix.hpp>
 #include <glm/vec2.hpp>

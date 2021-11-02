@@ -1,5 +1,5 @@
-#ifndef APP_HPP
-#define APP_HPP
+#ifndef LIMINAL_CORE_APP_HPP
+#define LIMINAL_CORE_APP_HPP
 
 #include <liminal/core/scene.hpp>
 

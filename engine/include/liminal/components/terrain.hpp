@@ -1,5 +1,5 @@
-#ifndef TERRAIN_HPP
-#define TERRAIN_HPP
+#ifndef LIMINAL_COMPONENTS_TERRAIN_HPP
+#define LIMINAL_COMPONENTS_TERRAIN_HPP
 
 #include <bullet/btBulletDynamicsCommon.h>
 #include <glm/vec3.hpp>

@@ -1,5 +1,5 @@
-#ifndef TRANSFORM_HPP
-#define TRANSFORM_HPP
+#ifndef LIMINAL_COMPONENTS_TRANSFORM_HPP
+#define LIMINAL_COMPONENTS_TRANSFORM_HPP
 
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>

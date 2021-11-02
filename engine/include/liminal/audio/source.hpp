@@ -1,5 +1,5 @@
-#ifndef SOURCE_HPP
-#define SOURCE_HPP
+#ifndef LIMINAL_AUDIO_SOURCE_HPP
+#define LIMINAL_AUDIO_SOURCE_HPP
 
 #include <glm/vec3.hpp>
 #include <liminal/audio/sound.hpp>

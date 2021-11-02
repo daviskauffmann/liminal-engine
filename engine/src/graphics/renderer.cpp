@@ -1940,18 +1940,18 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
 
 void liminal::renderer::render_waters(liminal::scene &scene, unsigned int current_time)
 {
-    for (auto [entity, water] : scene.registry.view<liminal::water>().each())
+    for (auto [entity, transform, water] : scene.registry.view<liminal::transform, liminal::water>().each())
     {
         // reflection
-        glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -water.position.y};
-        if (scene.camera->position.y < water.position.y) // flip reflection clipping plane if under the water
+        glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -transform.position.y};
+        if (scene.camera->position.y < transform.position.y) // flip reflection clipping plane if under the water
         {
             reflection_clipping_plane *= -1;
         }
         float previous_camera_y = scene.camera->position.y;
         float previous_camera_pitch = scene.camera->pitch;
         float previous_camera_roll = scene.camera->roll;
-        scene.camera->position.y -= 2 * (scene.camera->position.y - water.position.y);
+        scene.camera->position.y -= 2 * (scene.camera->position.y - transform.position.y);
         scene.camera->pitch = -scene.camera->pitch;
         scene.camera->roll = -scene.camera->roll;
         render_objects(scene, water_reflection_fbo_id, water_reflection_width, water_reflection_height, reflection_clipping_plane);
@@ -1960,8 +1960,8 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
         scene.camera->roll = previous_camera_roll;
 
         // refraction
-        glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, water.position.y};
-        if (scene.camera->position.y < water.position.y) // flip refraction clipping plane if under the water
+        glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, transform.position.y};
+        if (scene.camera->position.y < transform.position.y) // flip refraction clipping plane if under the water
         {
             refraction_clipping_plane *= -1;
         }
@@ -1980,11 +1980,11 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
                 glm::mat4 camera_projection = scene.camera->calc_projection((float)render_width / (float)render_height);
                 glm::mat4 camera_view = scene.camera->calc_view();
 
-                glm::mat4 model_matrix = water.get_model_matrix();
+                glm::mat4 model_matrix = transform.get_model_matrix();
 
                 water_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 water_program->set_mat4("model_matrix", model_matrix);
-                water_program->set_float("tiling", water.size / 10);
+                water_program->set_float("tiling", water.tiling);
                 water_program->set_float("camera.near_plane", liminal::camera::near_plane);
                 water_program->set_float("camera.far_plane", liminal::camera::far_plane);
                 water_program->set_vec3("camera.position", scene.camera->position);
@@ -1992,8 +1992,8 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
                 if (first_directional_light != entt::null)
                 {
                     // TODO: specular reflections for all lights
-                    water_program->set_vec3("light.direction", scene.registry.get<transform>(first_directional_light).rotation);
-                    water_program->set_vec3("light.color", scene.registry.get<directional_light>(first_directional_light).color);
+                    water_program->set_vec3("light.direction", scene.registry.get<liminal::transform>(first_directional_light).rotation);
+                    water_program->set_vec3("light.color", scene.registry.get<liminal::directional_light>(first_directional_light).color);
                 }
                 water_program->set_unsigned_int("current_time", current_time);
 

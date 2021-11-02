@@ -29,13 +29,26 @@
             }
         },
         {
-            "water": {
+            "transform": {
+                "name": "Water",
                 "position": {
                     "x": 0,
                     "y": -2,
                     "z": 0
                 },
-                "size": 100
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 100,
+                    "y": 1,
+                    "z": 100
+                }
+            },
+            "water": {
+                "tiling": 10
             }
         },
         {
