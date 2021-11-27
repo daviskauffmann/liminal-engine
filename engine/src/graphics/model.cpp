@@ -60,7 +60,7 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
     {
         float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
         float time_in_ticks = ticks_per_second * (current_time / 1000.0f);
-        float animation_time = fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
+        float animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
 

@@ -9,8 +9,8 @@ class btDiscreteDynamicsWorld;
 
 namespace liminal
 {
-    class camera;
-    class skybox;
+    struct camera;
+    struct skybox;
     class entity;
 
     class scene

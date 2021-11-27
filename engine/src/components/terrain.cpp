@@ -117,7 +117,7 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
 
     btDefaultMotionState *motion_state = new btDefaultMotionState(transform);
 
-    btCollisionShape *collision_shape = new btHeightfieldTerrainShape(size, size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
+    btCollisionShape *collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
 
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0.0f, motion_state, collision_shape));
 }
@@ -150,7 +150,7 @@ float liminal::terrain::get_height(SDL_Surface *surface, int x, int z) const
         } color;
     } pixel = *(pixel_t *)((unsigned char *)surface->pixels + z * surface->pitch + x * surface->format->BytesPerPixel);
 
-    float height = (pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b);
+    float height = (float)((pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b));
     height -= 0xffffff / 2;
     height /= 0xffffff / 2;
     height *= height_scale;

@@ -40,7 +40,7 @@ void liminal::engine::run(int argc, char *argv[])
     // parse command line options
     int window_width;
     int window_height;
-    int render_scale;
+    float render_scale;
 
     try
     {

@@ -171,6 +171,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     {
         if (mesh_renderer.model->has_animations())
         {
+            // TODO: put current animation on the mesh_renderer component
             mesh_renderer.model->update_bone_transformations(0, current_time);
         }
     }
