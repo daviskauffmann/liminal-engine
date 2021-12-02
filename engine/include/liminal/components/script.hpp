@@ -1,8 +1,6 @@
 #ifndef LIMINAL_COMPONENTS_SCRIPT_HPP
 #define LIMINAL_COMPONENTS_SCRIPT_HPP
 
-#include <entt/entt.hpp>
-#include <liminal/core/scene.hpp>
 #include <string>
 
 namespace sol
@@ -12,12 +10,16 @@ namespace sol
 
 namespace liminal
 {
+    class scene;
+    class entity;
+
     struct script
     {
-        entt::entity entity;
+        liminal::scene *scene;
+        liminal::entity *entity;
         sol::state *lua;
 
-        script(const std::string &filename, liminal::scene *scene, entt::entity entity);
+        script(const std::string &filename, liminal::scene *scene, liminal::entity *entity);
 
         void init();
         void update(float delta_time);

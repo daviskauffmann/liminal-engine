@@ -24,102 +24,17 @@
 #include <sol/sol.hpp>
 #include <string>
 
-liminal::scene::scene(const std::string &filename)
+liminal::scene::scene()
 {
     camera = nullptr;
     skybox = nullptr;
 
-    // create physics world
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
     btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
     btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
     btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
     world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
     world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
-
-    // load scene from file
-    std::ifstream stream(filename);
-    nlohmann::json json;
-    stream >> json;
-    for (auto &[key, value] : json.items())
-    {
-        if (key == "skybox")
-        {
-            skybox = new liminal::skybox(json["skybox"]);
-        }
-
-        if (key == "entities")
-        {
-            for (auto &element : value)
-            {
-                auto entity = registry.create();
-
-                for (auto &[key, value] : element.items())
-                {
-                    if (key == "directional_light")
-                    {
-                        glm::vec3 color(
-                            value["color"]["r"],
-                            value["color"]["g"],
-                            value["color"]["b"]);
-                        registry.emplace<liminal::directional_light>(entity, color);
-                    }
-
-                    if (key == "transform")
-                    {
-                        glm::vec3 position(
-                            value["position"]["x"],
-                            value["position"]["y"],
-                            value["position"]["z"]);
-                        glm::vec3 rotation(
-                            value["rotation"]["x"],
-                            value["rotation"]["y"],
-                            value["rotation"]["z"]);
-                        glm::vec3 scale(
-                            value["scale"]["x"],
-                            value["scale"]["y"],
-                            value["scale"]["z"]);
-                        auto transform = registry.emplace<liminal::transform>(entity, std::string(value["name"]).c_str(), nullptr, position, rotation, scale);
-                    }
-
-                    if (key == "physical")
-                    {
-                        auto physical = registry.emplace<liminal::physical>(entity, value["mass"]);
-                        world->addRigidBody(physical.rigidbody);
-                    }
-
-                    if (key == "mesh_renderer")
-                    {
-                        std::string filename(value["filename"]);
-                        bool flip_uvs = value["flip_uvs"];
-                        registry.emplace<liminal::mesh_renderer>(entity, new liminal::model(filename, flip_uvs));
-                    }
-
-                    if (key == "script")
-                    {
-                        registry.emplace<liminal::script>(entity, value["filename"], this, entity);
-                    }
-
-                    if (key == "water")
-                    {
-                        registry.emplace<liminal::water>(entity, value["tiling"]);
-                    }
-
-                    if (key == "terrain")
-                    {
-                        auto terrain = registry.emplace<liminal::terrain>(entity, "assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
-                        world->addRigidBody(terrain.rigidbody);
-                    }
-                }
-            }
-        }
-    }
-
-    // run init scripts
-    for (auto [entity, script] : registry.view<liminal::script>().each())
-    {
-        script.init();
-    }
 }
 
 liminal::scene::~scene()
@@ -151,6 +66,93 @@ liminal::scene::~scene()
     registry.clear();
 
     delete world;
+}
+
+void liminal::scene::load(const std::string &filename)
+{
+    std::ifstream stream(filename);
+    nlohmann::json json;
+    stream >> json;
+
+    for (auto &[key, value] : json.items())
+    {
+        if (key == "skybox")
+        {
+            skybox = new liminal::skybox(json["skybox"]);
+        }
+
+        if (key == "entities")
+        {
+            for (auto &element : value)
+            {
+                auto entity = create_entity();
+
+                for (auto &[key, value] : element.items())
+                {
+                    if (key == "directional_light")
+                    {
+                        glm::vec3 color(
+                            value["color"]["r"],
+                            value["color"]["g"],
+                            value["color"]["b"]);
+                        entity.add_component<liminal::directional_light>(color);
+                    }
+
+                    if (key == "transform")
+                    {
+                        glm::vec3 position(
+                            value["position"]["x"],
+                            value["position"]["y"],
+                            value["position"]["z"]);
+                        glm::vec3 rotation(
+                            value["rotation"]["x"],
+                            value["rotation"]["y"],
+                            value["rotation"]["z"]);
+                        glm::vec3 scale(
+                            value["scale"]["x"],
+                            value["scale"]["y"],
+                            value["scale"]["z"]);
+                        entity.add_component<liminal::transform>(std::string(value["name"]).c_str(), nullptr, position, rotation, scale);
+                    }
+
+                    if (key == "physical")
+                    {
+                        auto physical = entity.add_component<liminal::physical>(value["mass"]);
+                        world->addRigidBody(physical.rigidbody);
+                    }
+
+                    if (key == "mesh_renderer")
+                    {
+                        std::string filename(value["filename"]);
+                        bool flip_uvs = value["flip_uvs"];
+                        // TODO: asset manager
+                        auto mesh_renderer = entity.add_component<liminal::mesh_renderer>(new liminal::model(filename, flip_uvs));
+                        mesh_renderer.model->update_bone_transformations(0, 0);
+                    }
+
+                    if (key == "script")
+                    {
+                        entity.add_component<liminal::script>(value["filename"], this, &entity);
+                    }
+
+                    if (key == "water")
+                    {
+                        entity.add_component<liminal::water>(value["tiling"]);
+                    }
+
+                    if (key == "terrain")
+                    {
+                        auto terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
+                        world->addRigidBody(terrain.rigidbody);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void liminal::scene::save(const std::string &filename)
+{
 }
 
 liminal::entity liminal::scene::create_entity()

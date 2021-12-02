@@ -106,8 +106,6 @@ void liminal::engine::run(int argc, char *argv[])
     float time_scale = 1.0f;
     bool console_open = false;
 
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-
     std::fill(liminal::input::keys.begin(), liminal::input::keys.end(), false);
     std::fill(liminal::input::last_keys.begin(), liminal::input::last_keys.end(), false);
 
@@ -266,9 +264,6 @@ void liminal::engine::run(int argc, char *argv[])
 
         // update client app
         app->update(current_time, delta_time);
-
-        // update scene
-        scene->update(current_time, delta_time);
 
         // render everything
         // TODO: allow rendering to a texture instead of the screen and exposing/returning the texture to the app

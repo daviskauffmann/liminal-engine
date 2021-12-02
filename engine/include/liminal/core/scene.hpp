@@ -26,15 +26,18 @@ namespace liminal
         bool draw_to_texture = false;
         void *texture_id = 0;
 
-        scene(const std::string &filename);
+        scene();
         ~scene();
+
+        void load(const std::string &filename);
+        void save(const std::string &filename);
 
         liminal::entity create_entity();
 
         void update(unsigned int current_time, float delta_time);
 
     private:
-        btDiscreteDynamicsWorld *world;
+        btDiscreteDynamicsWorld *world; // TODO: make private
 
         friend class entity;
     };
