@@ -7,18 +7,11 @@
 class editor : public liminal::app
 {
 public:
-    liminal::entity camera_entity;
-
     editor()
     {
         scene = new liminal::scene();
         scene->draw_to_texture = true;
         scene->load("assets/scenes/demo.json");
-
-        // TODO: camera should be a component maybe
-        camera_entity = scene->create_entity();
-        camera_entity.add_component<liminal::transform>("Camera", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        camera_entity.add_component<liminal::audio_listener>();
     }
 
     void update(unsigned int current_time, float delta_time) override
@@ -54,28 +47,34 @@ public:
 
         camera->position += camera_front * (float)liminal::input::mouse_wheel_y;
 
-        // TODO: camera itself should be a component attached to the camera_entity
-        // and its transform would be changed directly, making this step unnecessary
-        camera_entity.get_component<liminal::transform>().position = camera->position;
-        camera_entity.get_component<liminal::transform>().rotation = camera->calc_front();
-
         static bool dockspace_open = true;
         ImGui::Begin("Dockspace Demo", &dockspace_open, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_MenuBar);
         {
             ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
-            if (ImGui::BeginMenuBar())
-            {
-                if (ImGui::MenuItem("Exit"))
-                {
-                    // TODO: exit
-                }
-            }
-            ImGui::EndMenuBar();
+            // if (ImGui::BeginMenuBar())
+            // {
+            //     if (ImGui::BeginMenu("File"))
+            //     {
+            //         if (ImGui::MenuItem("Exit"))
+            //         {
+            //             // TODO: exit
+            //         }
+            //     }
+            //     ImGui::EndMenu();
+            // }
+            // ImGui::EndMenuBar();
 
-            if (ImGui::Begin("Scene"))
+            if (ImGui::Begin("Scene", nullptr))
             {
-                ImGui::Image(scene->texture_id, ImGui::GetWindowSize(), ImVec2{0, 1}, ImVec2{1, 0});
+                static ImVec2 region_size = ImGui::GetContentRegionAvail();
+                ImVec2 new_region_size = ImGui::GetContentRegionAvail();
+                if (new_region_size.x != region_size.x || new_region_size.y != region_size.y)
+                {
+                    liminal::engine::get_instance().renderer->set_screen_size((int)new_region_size.x, (int)new_region_size.y, 1.0f);
+                    region_size = new_region_size;
+                }
+                ImGui::Image(scene->texture_id, region_size, ImVec2{0, 1}, ImVec2{1, 0});
             }
             ImGui::End();
 

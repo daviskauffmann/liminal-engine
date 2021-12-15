@@ -22,14 +22,12 @@
 // when binding the framebuffer, automatically set viewport to those values
 // and when unbinding, reset the viewport to some default value (probably the display width/height)
 
-// TODO: render_scale other than 1 causes water reflection/refraction to break
-
 // TODO: print more specific errors when framebuffers fail
 
 // TODO: create low level renderer API?
 // this renderer would become the high level API, which would make use of the llapi
 // but the llapi would be exposed to engine users in case they want to write their own shaders and rendering pipeline
-// both APIs would probably have to not be interopable with each other
+// both APIs would probably not be interopable with each other
 
 constexpr float directional_light_shadow_map_size = 10.0f;
 constexpr float directional_light_near_plane = -10.0f;
@@ -1600,7 +1598,7 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
 void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
 {
     // camera
-    glm::mat4 camera_projection = scene.camera->calc_projection((float)width / (float)height);
+    glm::mat4 camera_projection = scene.camera->calc_projection((float)render_width / (float)render_height);
     glm::mat4 camera_view = scene.camera->calc_view();
 
     // draw to gbuffer

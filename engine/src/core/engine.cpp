@@ -102,7 +102,6 @@ void liminal::engine::run(int argc, char *argv[])
         0.0f,
         45.0f);
 
-    unsigned int current_time = 0;
     float time_scale = 1.0f;
     bool console_open = false;
 
@@ -116,6 +115,7 @@ void liminal::engine::run(int argc, char *argv[])
     while (!quit)
     {
         // calculate time between frames
+        static unsigned int current_time = 0;
         unsigned int previous_time = current_time;
         current_time = SDL_GetTicks();
         float delta_time = ((current_time - previous_time) / 1000.0f) * time_scale;
@@ -123,7 +123,7 @@ void liminal::engine::run(int argc, char *argv[])
         // gather input
         liminal::input::last_keys = liminal::input::keys;
         const unsigned char *keys = SDL_GetKeyboardState(nullptr);
-        for (int scancode = 0; scancode < liminal::NUM_KEYCODES; scancode++)
+        for (int scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
         {
             liminal::input::keys[scancode] = keys[scancode];
         }
@@ -162,85 +162,10 @@ void liminal::engine::run(int argc, char *argv[])
                     window_width = event.window.data1;
                     window_height = event.window.data2;
                     platform->set_window_size(window_width, window_height);
-                    renderer->set_screen_size(window_width, window_height, render_scale);
-                    renderer->set_reflection_size(window_width, window_height);
-                    renderer->set_refraction_size(window_width, window_height);
+                    app->resize(window_width, window_height);
                     std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
                 }
                 break;
-                }
-            }
-            break;
-            case SDL_KEYDOWN:
-            {
-                if (!io.WantCaptureKeyboard)
-                {
-                    switch (event.key.keysym.sym)
-                    {
-                    case SDLK_TAB:
-                    {
-                        SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
-                    }
-                    break;
-                    case SDLK_RETURN:
-                    {
-                        if (liminal::input::key(liminal::KEYCODE_LALT))
-                        {
-                            platform->toggle_fullscreen();
-                        }
-                    }
-                    break;
-                    case SDLK_MINUS:
-                    {
-                        if (render_scale > 0.2f)
-                        {
-                            render_scale -= 0.1f;
-                        }
-                        renderer->set_screen_size(window_width, window_height, render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
-                    }
-                    break;
-                    case SDLK_EQUALS:
-                    {
-                        if (render_scale < 1.0f)
-                        {
-                            render_scale += 0.1f;
-                        }
-                        renderer->set_screen_size(window_width, window_height, render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
-                    }
-                    break;
-                    case SDLK_BACKQUOTE:
-                    {
-                        console_open = !console_open;
-                    }
-                    break;
-                    case SDLK_r:
-                    {
-                        renderer->reload_programs();
-                    }
-                    break;
-                    case SDLK_t:
-                    {
-                        if (time_scale > 0.25f)
-                        {
-                            time_scale = 0.25f;
-                        }
-                        else
-                        {
-                            time_scale = 1.0f;
-                        }
-                    }
-                    break;
-                    case SDLK_F4:
-                    {
-                        if (liminal::input::key(liminal::KEYCODE_LALT))
-                        {
-                            quit = true;
-                        }
-                    }
-                    break;
-                    }
                 }
             }
             break;
@@ -259,6 +184,26 @@ void liminal::engine::run(int argc, char *argv[])
             }
         }
 
+        if (!io.WantCaptureKeyboard)
+        {
+            if (liminal::input::key_down(liminal::keycode::KEYCODE_RETURN) &&
+                liminal::input::key(liminal::keycode::KEYCODE_LALT))
+            {
+                platform->toggle_fullscreen();
+            }
+
+            if (liminal::input::key_down(liminal::keycode::KEYCODE_GRAVE))
+            {
+                console_open = !console_open;
+            }
+
+            if (liminal::input::key_down(liminal::keycode::KEYCODE_F4) &&
+                liminal::input::key(liminal::keycode::KEYCODE_LALT))
+            {
+                quit = true;
+            }
+        }
+
         // start of frame
         platform->begin_frame();
 
@@ -266,8 +211,6 @@ void liminal::engine::run(int argc, char *argv[])
         app->update(current_time, delta_time);
 
         // render everything
-        // TODO: allow rendering to a texture instead of the screen and exposing/returning the texture to the app
-        // the first main use case would be to put the texture in an imgui window in the editor
         renderer->render(*scene, current_time, delta_time);
 
         // render console
@@ -277,27 +220,61 @@ void liminal::engine::run(int argc, char *argv[])
 
             static std::vector<std::string> messages;
 
-            // TODO: command arguments
-            char command[256] = {};
-            if (ImGui::InputText("Input", command, sizeof(command), ImGuiInputTextFlags_EnterReturnsTrue))
+            char command_c_str[256] = {};
+            if (ImGui::InputText("Input", command_c_str, sizeof(command_c_str), ImGuiInputTextFlags_EnterReturnsTrue))
             {
-                if (strcmp(command, "help") == 0)
+                std::string command(command_c_str);
+
+                if (command == "help")
                 {
                     messages.push_back("TODO: help");
                 }
-                else if (strcmp(command, "quit") == 0)
+                else if (command == "quit")
                 {
                     quit = true;
                 }
-                else if (strcmp(command, "wireframe") == 0)
+                else if (command == "wireframe")
                 {
                     renderer->wireframe = !renderer->wireframe;
                     messages.push_back("Wireframe " + renderer->wireframe ? "on" : "off");
                 }
-                else if (strcmp(command, "greyscale") == 0)
+                else if (command == "greyscale")
                 {
                     renderer->greyscale = !renderer->greyscale;
                     messages.push_back("Greyscale " + renderer->greyscale ? "on" : "off");
+                }
+                else if (command == "reload")
+                {
+                    renderer->reload_programs();
+                }
+                else if (command == "render_scale_down") // TODO: console commands with arguments
+                {
+                    if (render_scale > 0.2f)
+                    {
+                        render_scale -= 0.1f;
+                    }
+                    renderer->set_screen_size(window_width, window_height, render_scale);
+                    std::cout << "Render scale changed to " << render_scale << std::endl;
+                }
+                else if (command == "render_scale_up")
+                {
+                    if (render_scale < 1.0f)
+                    {
+                        render_scale += 0.1f;
+                    }
+                    renderer->set_screen_size(window_width, window_height, render_scale);
+                    std::cout << "Render scale changed to " << render_scale << std::endl;
+                }
+                else if (command == "toggle_slomo")
+                {
+                    if (time_scale > 0.25f)
+                    {
+                        time_scale = 0.25f;
+                    }
+                    else
+                    {
+                        time_scale = 1.0f;
+                    }
                 }
                 else
                 {

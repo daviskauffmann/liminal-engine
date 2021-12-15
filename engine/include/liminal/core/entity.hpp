@@ -15,6 +15,11 @@ namespace liminal
               scene(scene) {}
         entity(const entity &other) = default;
 
+        entt::entity get_id()
+        {
+            return id;
+        }
+
         operator bool() const
         {
             return id != entt::null;

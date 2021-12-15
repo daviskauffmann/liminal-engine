@@ -13,11 +13,13 @@ namespace liminal
     public:
         liminal::scene *scene;
 
-        virtual ~app() {
+        virtual ~app()
+        {
             delete scene;
         }
 
         virtual void update(unsigned int current_time, float delta_time) {}
+        virtual void resize(int width, int height) {}
     };
 
     liminal::app *create_app(int argc, char *argv[]);

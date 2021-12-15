@@ -125,8 +125,7 @@ void liminal::scene::load(const std::string &filename)
                     {
                         std::string filename(value["filename"]);
                         bool flip_uvs = value["flip_uvs"];
-                        // TODO: asset manager
-                        auto mesh_renderer = entity.add_component<liminal::mesh_renderer>(new liminal::model(filename, flip_uvs));
+                        auto mesh_renderer = entity.add_component<liminal::mesh_renderer>(new liminal::model(filename, flip_uvs)); // TODO: asset manager
                         mesh_renderer.model->update_bone_transformations(0, 0);
                     }
 
@@ -157,7 +156,15 @@ void liminal::scene::save(const std::string &filename)
 
 liminal::entity liminal::scene::create_entity()
 {
-    return liminal::entity(registry.create(), this);
+    auto id = registry.create();
+    auto entity = liminal::entity(id, this);
+    entities[id] = entity;
+    return entity;
+}
+
+liminal::entity liminal::scene::get_entity(entt::entity id)
+{
+    return entities[id];
 }
 
 void liminal::scene::update(unsigned int current_time, float delta_time)

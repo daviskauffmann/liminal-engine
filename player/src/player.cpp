@@ -26,6 +26,8 @@ public:
     liminal::texture *grass_texture;
     liminal::entity ui_entity;
 
+    bool noclip = false;
+
     player()
     {
         SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -87,6 +89,11 @@ public:
     {
         ImGuiIO &io = ImGui::GetIO();
 
+        if (liminal::input::key_down(liminal::KEYCODE_TAB))
+        {
+            SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+        }
+
         auto camera = scene->camera;
         glm::vec3 camera_front = camera->calc_front();
         glm::vec3 camera_right = camera->calc_right();
@@ -96,35 +103,45 @@ public:
         const float speed = 50.0f;
         const float drag = 10.0f;
         bool sprint = false;
+        bool jumping = false;
         if (!io.WantCaptureKeyboard)
         {
-            if (liminal::input::key(liminal::KEYCODE_W))
+            if (liminal::input::key(liminal::keycode::KEYCODE_W))
             {
                 acceleration += camera_front;
             }
-            if (liminal::input::key(liminal::KEYCODE_A))
+            if (liminal::input::key(liminal::keycode::KEYCODE_A))
             {
                 acceleration -= camera_right;
             }
-            if (liminal::input::key(liminal::KEYCODE_S))
+            if (liminal::input::key(liminal::keycode::KEYCODE_S))
             {
                 acceleration -= camera_front;
             }
-            if (liminal::input::key(liminal::KEYCODE_D))
+            if (liminal::input::key(liminal::keycode::KEYCODE_D))
             {
                 acceleration += camera_right;
             }
-            if (liminal::input::key(liminal::KEYCODE_SPACE))
+            if (liminal::input::key(liminal::keycode::KEYCODE_SPACE) && noclip)
             {
                 acceleration.y = 1.0f;
             }
-            if (liminal::input::key(liminal::KEYCODE_LCTRL))
+            if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL) && noclip)
             {
                 acceleration.y = -1.0f;
             }
-            if (liminal::input::key(liminal::KEYCODE_LSHIFT))
+            if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
             {
                 sprint = true;
+            }
+            if (liminal::input::key_down(liminal::keycode::KEYCODE_SPACE) && !jumping && !noclip)
+            {
+                velocity.y = 10.0f;
+                jumping = true;
+            }
+            if (liminal::input::key_down(liminal::keycode::KEYCODE_V))
+            {
+                noclip = !noclip;
             }
         }
         float acceleration_length = glm::length(acceleration);
@@ -134,9 +151,17 @@ public:
         }
         acceleration *= speed * (sprint ? 2.0f : 1.0f);
         acceleration -= velocity * drag;
+        if (!noclip)
+        {
+            acceleration.y = -9.8f;
+        }
         camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
+        if (camera->position.y < 0 && !noclip)
+        {
+            camera->position.y = 0;
+            jumping = false;
+        }
         velocity = acceleration * delta_time + velocity;
-        // camera->pitch = -glm::dot(camera_front, velocity);
         camera->roll = glm::dot(camera_right, velocity);
 
         if (!io.WantCaptureMouse)
@@ -222,6 +247,11 @@ public:
 
         // update scene
         scene->update(current_time, delta_time);
+    }
+
+    void resize(int width, int height) override
+    {
+        liminal::engine::get_instance().renderer->set_screen_size(width, height, 1.0f);
     }
 };
 
