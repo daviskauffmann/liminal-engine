@@ -20,7 +20,7 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
         return;
     }
 
-    int img_flags = IMG_INIT_PNG;
+    int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
     if (IMG_Init(img_flags) != img_flags)
     {
         std::cerr << "Error: Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
