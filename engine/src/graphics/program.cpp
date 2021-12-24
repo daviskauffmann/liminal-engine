@@ -82,7 +82,7 @@ void liminal::program::set_mat4(const std::string &name, glm::mat4 mat4) const
 
 void liminal::program::set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const
 {
-    glUniformMatrix4fv(get_location(name), mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
+    glUniformMatrix4fv(get_location(name), (GLsizei)mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
 }
 
 GLuint liminal::program::create_program() const

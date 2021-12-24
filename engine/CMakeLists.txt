@@ -4,15 +4,20 @@ project(engine)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(assimp REQUIRED)
-find_package(cxxopts CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
+find_package(cxxopts CONFIG REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Lua REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2-image CONFIG REQUIRED)
 find_package(SDL2-mixer CONFIG REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+find_path(STB_INCLUDE_DIRS "stb.h")
 
 add_library(${PROJECT_NAME}
     src/imgui.cpp
@@ -46,23 +51,23 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
         ${LUA_INCLUDE_DIR}
-        ../extern/entt/single_include
-        ../extern/glm
         ../extern/imgui
         ../extern/imgui/backends
-        ../extern/json/single_include
-        ../extern/sol2/single/include
-        ../extern/stb
+        ${STB_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         assimp::assimp
         BulletSoftBody BulletDynamics BulletCollision Bullet3Common LinearMath
+        EnTT::EnTT
         GLEW::GLEW
+        glm::glm
         ${LUA_LIBRARIES}
+        nlohmann_json nlohmann_json::nlohmann_json
         OpenAL::OpenAL
         SDL2::SDL2 SDL2::SDL2main
         SDL2::SDL2_image
         SDL2::SDL2_mixer
+        sol2::sol2
 )

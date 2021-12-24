@@ -17,21 +17,21 @@ Install the following using the package manager of your choice:
 - Assimp
 - Bullet3
 - cxxopts
+- EnTT
 - GLEW
+- GLM
+- nlohmann-json
 - Lua
 - OpenAL Soft
 - SDL2
 - SDL2-immage
 - SDL2-mixer
+- sol2
+- stb
 
 These dependencies are included as submodules:
 
-- EnTT
-- GLM
 - Dear ImGui
-- JSON
-- sol2
-- stb
 
 ### Build
 
