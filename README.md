@@ -24,7 +24,7 @@ Install the following using the package manager of your choice:
 - Lua
 - OpenAL Soft
 - SDL2
-- SDL2-immage
+- SDL2-image [libjpeg-turbo]
 - SDL2-mixer
 - sol2
 - stb
