@@ -63,6 +63,7 @@ cmake ..
 - LUA scripting (WIP)
 - Animation (WIP)
 - Entity-component-system using EnTT
+- Real-time level editing (WIP)
 
 ### Upcoming
 
@@ -72,7 +73,6 @@ cmake ..
 - Fog and other atmospheric effects
 - Underwater effects
 - Anti-aliasing
-- Real-time level editing
 
 ## Screenshots
 

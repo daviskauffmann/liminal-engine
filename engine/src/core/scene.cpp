@@ -100,6 +100,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "transform")
                     {
+                        std::string name = std::string(value["name"]);
                         glm::vec3 position(
                             value["position"]["x"],
                             value["position"]["y"],
@@ -112,7 +113,7 @@ void liminal::scene::load(const std::string &filename)
                             value["scale"]["x"],
                             value["scale"]["y"],
                             value["scale"]["z"]);
-                        entity.add_component<liminal::transform>(std::string(value["name"]).c_str(), nullptr, position, rotation, scale);
+                        entity.add_component<liminal::transform>(name, nullptr, position, rotation, scale);
                     }
 
                     if (key == "physical")

@@ -82,7 +82,7 @@ public:
             {
                 for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
                 {
-                    ImGui::Text("%s", transform.name);
+                    ImGui::Text("%s", transform.name.c_str());
                 }
             }
             ImGui::End();

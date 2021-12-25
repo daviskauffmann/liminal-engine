@@ -3,12 +3,13 @@
 
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
+#include <string>
 
 namespace liminal
 {
     struct transform
     {
-        const char *name;
+        std::string name;
         liminal::transform *parent;
         glm::vec3 position;
         glm::vec3 rotation;
