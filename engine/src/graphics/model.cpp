@@ -140,9 +140,8 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
     {
         for (unsigned int i = 0; i < scene_mesh->mNumBones; i++)
         {
-            unsigned int bone_index = 0;
+            unsigned int bone_index;
             std::string bone_name(scene_mesh->mBones[i]->mName.data);
-
             if (bone_indices.find(bone_name) == bone_indices.end())
             {
                 bone_index = num_bones++;
@@ -150,6 +149,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
 
                 liminal::bone bone;
                 bone.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
+
                 bones.push_back(bone);
             }
             else
@@ -231,7 +231,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
             aiVector3D interpolated_position;
             calc_interpolated_position(interpolated_position, animation_time, node_animation);
             glm::vec3 position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
-            glm::mat4 position = glm::translate(glm::mat4(1), position_vector);
+            glm::mat4 position = glm::translate(glm::identity<glm::mat4>(), position_vector);
 
             aiQuaternion interpolated_rotation;
             calc_interpolated_rotation(interpolated_rotation, animation_time, node_animation);
@@ -241,7 +241,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
             aiVector3D interpolated_scale;
             calc_interpolated_scale(interpolated_scale, animation_time, node_animation);
             glm::vec3 scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
-            glm::mat4 scale = glm::scale(glm::mat4(1), scale_vector);
+            glm::mat4 scale = glm::scale(glm::identity<glm::mat4>(), scale_vector);
 
             node_transformation = position * rotation * scale;
         }
