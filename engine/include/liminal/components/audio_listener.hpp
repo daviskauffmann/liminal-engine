@@ -10,7 +10,7 @@ namespace liminal
         void set_position(glm::vec3 position, glm::vec3 rotation);
 
     private:
-        glm::vec3 last_position = glm::vec3(0.0f);
+        glm::vec3 last_position = glm::vec3(0);
     };
 }
 

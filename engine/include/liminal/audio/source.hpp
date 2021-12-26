@@ -1,6 +1,7 @@
 #ifndef LIMINAL_AUDIO_SOURCE_HPP
 #define LIMINAL_AUDIO_SOURCE_HPP
 
+#include <AL/al.h>
 #include <glm/vec3.hpp>
 #include <liminal/audio/sound.hpp>
 
@@ -23,7 +24,7 @@ namespace liminal
         void stop() const;
 
     private:
-        unsigned int source_id;
+        ALuint source_id;
         mutable glm::vec3 last_position;
     };
 }

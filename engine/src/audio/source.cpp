@@ -1,12 +1,11 @@
 #include <liminal/audio/source.hpp>
 
-#include <AL/al.h>
 #include <glm/gtc/type_ptr.hpp>
 
 liminal::source::source()
 {
     alGenSources(1, &source_id);
-    this->last_position = glm::vec3(0.0f);
+    this->last_position = glm::vec3(0);
 
     alSourcefv(source_id, AL_POSITION, glm::value_ptr(this->last_position));
 }

@@ -58,8 +58,8 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
 
     if (scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
-        float time_in_ticks = ticks_per_second * (current_time / 1000.0f);
+        float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.f;
+        float time_in_ticks = ticks_per_second * (current_time / 1000.f);
         float animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
@@ -128,7 +128,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
 
         for (unsigned int j = 0; j < NUM_BONES_PER_VERTEX; j++)
         {
-            vertex.bone_ids[j] = 0;
+            vertex.bone_ids[j] = NUM_BONES_PER_VERTEX;
             vertex.bone_weights[j] = 0;
         }
 
@@ -231,7 +231,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
             aiVector3D interpolated_position;
             calc_interpolated_position(interpolated_position, animation_time, node_animation);
             glm::vec3 position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
-            glm::mat4 position = glm::translate(glm::mat4(1.0f), position_vector);
+            glm::mat4 position = glm::translate(glm::mat4(1), position_vector);
 
             aiQuaternion interpolated_rotation;
             calc_interpolated_rotation(interpolated_rotation, animation_time, node_animation);
@@ -241,7 +241,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
             aiVector3D interpolated_scale;
             calc_interpolated_scale(interpolated_scale, animation_time, node_animation);
             glm::vec3 scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
-            glm::mat4 scale = glm::scale(glm::mat4(1.0f), scale_vector);
+            glm::mat4 scale = glm::scale(glm::mat4(1), scale_vector);
 
             node_transformation = position * rotation * scale;
         }

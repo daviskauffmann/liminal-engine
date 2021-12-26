@@ -29,15 +29,15 @@
 // but the llapi would be exposed to engine users in case they want to write their own shaders and rendering pipeline
 // both APIs would probably not be interopable with each other
 
-constexpr float directional_light_shadow_map_size = 10.0f;
-constexpr float directional_light_near_plane = -10.0f;
-constexpr float directional_light_far_plane = 10.0f;
+constexpr float directional_light_shadow_map_size = 10;
+constexpr float directional_light_near_plane = -10;
+constexpr float directional_light_far_plane = 10;
 
-constexpr float point_light_near_plane = 1.0f;
-constexpr float point_light_far_plane = 25.0f;
+constexpr float point_light_near_plane = 1;
+constexpr float point_light_far_plane = 25;
 
 constexpr float spot_light_near_plane = 0.1f;
-constexpr float spot_light_far_plane = 10.0f;
+constexpr float spot_light_far_plane = 10;
 
 liminal::renderer::renderer(
     GLsizei display_width, GLsizei display_height, float render_scale,
@@ -65,31 +65,31 @@ liminal::renderer::renderer(
     final_texture_id = 0;
     set_screen_size(display_width, display_height, render_scale);
 
-    for (int i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
     {
         directional_light_depth_map_fbo_ids[i] = 0;
     }
-    for (int i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
     {
         directional_light_depth_map_texture_ids[i] = 0;
     }
     set_directional_light_depth_map_size(directional_light_depth_map_size);
 
-    for (int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
     {
         point_light_depth_cubemap_fbo_ids[i] = 0;
     }
-    for (int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
     {
         point_light_depth_cubemap_texture_ids[i] = 0;
     }
     set_point_light_depth_cubemap_size(point_light_depth_cubemap_size);
 
-    for (int i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
     {
         spot_light_depth_map_fbo_ids[i] = 0;
     }
-    for (int i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
     {
         spot_light_depth_map_texture_ids[i] = 0;
     }
@@ -106,7 +106,7 @@ liminal::renderer::renderer(
     set_refraction_size(water_refraction_width, water_refraction_height);
 
     // init OpenGL state
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0, 0, 0, 0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -119,13 +119,13 @@ liminal::renderer::renderer(
     glBindVertexArray(water_vao_id);
     {
         std::vector<GLfloat> water_vertices =
-            {-1.0f, -1.0f,
-             -1.0f, +1.0f,
-             +1.0f, -1.0f,
+            {-1, -1,
+             -1, +1,
+             +1, -1,
 
-             +1.0f, -1.0f,
-             -1.0f, +1.0f,
-             +1.0f, +1.0f};
+             +1, -1,
+             -1, +1,
+             +1, +1};
         water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &water_vbo_id);
@@ -143,47 +143,47 @@ liminal::renderer::renderer(
     glBindVertexArray(skybox_vao_id);
     {
         std::vector<GLfloat> skybox_vertices =
-            {-1.0f, +1.0f, -1.0f,
-             -1.0f, -1.0f, -1.0f,
-             +1.0f, -1.0f, -1.0f,
-             +1.0f, -1.0f, -1.0f,
-             +1.0f, +1.0f, -1.0f,
-             -1.0f, +1.0f, -1.0f,
+            {-1, +1, -1,
+             -1, -1, -1,
+             +1, -1, -1,
+             +1, -1, -1,
+             +1, +1, -1,
+             -1, +1, -1,
 
-             -1.0f, -1.0f, +1.0f,
-             -1.0f, -1.0f, -1.0f,
-             -1.0f, +1.0f, -1.0f,
-             -1.0f, +1.0f, -1.0f,
-             -1.0f, +1.0f, +1.0f,
-             -1.0f, -1.0f, +1.0f,
+             -1, -1, +1,
+             -1, -1, -1,
+             -1, +1, -1,
+             -1, +1, -1,
+             -1, +1, +1,
+             -1, -1, +1,
 
-             +1.0f, -1.0f, -1.0f,
-             +1.0f, -1.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f,
-             +1.0f, +1.0f, -1.0f,
-             +1.0f, -1.0f, -1.0f,
+             +1, -1, -1,
+             +1, -1, +1,
+             +1, +1, +1,
+             +1, +1, +1,
+             +1, +1, -1,
+             +1, -1, -1,
 
-             -1.0f, -1.0f, +1.0f,
-             -1.0f, +1.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f,
-             +1.0f, -1.0f, +1.0f,
-             -1.0f, -1.0f, +1.0f,
+             -1, -1, +1,
+             -1, +1, +1,
+             +1, +1, +1,
+             +1, +1, +1,
+             +1, -1, +1,
+             -1, -1, +1,
 
-             -1.0f, +1.0f, -1.0f,
-             +1.0f, +1.0f, -1.0f,
-             +1.0f, +1.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f,
-             -1.0f, +1.0f, +1.0f,
-             -1.0f, +1.0f, -1.0f,
+             -1, +1, -1,
+             +1, +1, -1,
+             +1, +1, +1,
+             +1, +1, +1,
+             -1, +1, +1,
+             -1, +1, -1,
 
-             -1.0f, -1.0f, -1.0f,
-             -1.0f, -1.0f, +1.0f,
-             +1.0f, -1.0f, -1.0f,
-             +1.0f, -1.0f, -1.0f,
-             -1.0f, -1.0f, +1.0f,
-             +1.0f, -1.0f, +1.0f};
+             -1, -1, -1,
+             -1, -1, +1,
+             +1, -1, -1,
+             +1, -1, -1,
+             -1, -1, +1,
+             +1, -1, +1};
         skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &skybox_vbo_id);
@@ -201,13 +201,13 @@ liminal::renderer::renderer(
     glBindVertexArray(sprite_vao_id);
     {
         std::vector<GLfloat> sprite_vertices =
-            {+0.0f, +1.0f, +0.0f, +1.0f,
-             +1.0f, +0.0f, +1.0f, +0.0f,
-             +0.0f, +0.0f, +0.0f, +0.0f,
+            {+0, +1, +0, +1,
+             +1, +0, +1, +0,
+             +0, +0, +0, +0,
 
-             +0.0f, +1.0f, +0.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f, +1.0f,
-             +1.0f, +0.0f, +1.0f, +0.0f};
+             +0, +1, +0, +1,
+             +1, +1, +1, +1,
+             +1, +0, +1, +0};
         sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &sprite_vbo_id);
@@ -227,12 +227,12 @@ liminal::renderer::renderer(
     glBindVertexArray(screen_vao_id);
     {
         std::vector<GLfloat> screen_vertices =
-            {-1.0f, -1.0f, +0.0f, +0.0f,
-             -1.0f, +1.0f, +0.0f, +1.0f,
-             +1.0f, -1.0f, +1.0f, +0.0f,
-             +1.0f, -1.0f, +1.0f, +0.0f,
-             -1.0f, +1.0f, +0.0f, +1.0f,
-             +1.0f, +1.0f, +1.0f, +1.0f};
+            {-1, -1, +0, +0,
+             -1, +1, +0, +1,
+             +1, -1, +1, +0,
+             +1, -1, +1, +0,
+             -1, +1, +0, +1,
+             +1, +1, +1, +1};
         screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &screen_vbo_id);
@@ -404,18 +404,18 @@ liminal::renderer::renderer(
     // http://www.songho.ca/opengl/gl_sphere.html
     {
         std::vector<liminal::vertex> vertices;
-        int radius = 1;
-        int stack_count = 36;
-        int sector_count = 18;
-        float length_inv = 1.0f / radius;
+        float radius = 1;
+        size_t stack_count = 36;
+        size_t sector_count = 18;
+        float length_inv = 1 / radius;
         float sector_step = 2 * 3.14f / sector_count;
         float stack_step = 3.14f / stack_count;
-        for (int i = 0; i <= stack_count; i++)
+        for (size_t i = 0; i <= stack_count; i++)
         {
             float stack_angle = 3.14f / 2 - i * stack_step;
             float xy = radius * cosf(stack_angle);
             float z = radius * sinf(stack_angle);
-            for (int j = 0; j <= sector_count; j++)
+            for (size_t j = 0; j <= sector_count; j++)
             {
                 float sector_angle = j * sector_step;
                 liminal::vertex vertex;
@@ -432,11 +432,11 @@ liminal::renderer::renderer(
         }
 
         std::vector<unsigned int> indices;
-        for (int i = 0; i < stack_count; i++)
+        for (size_t i = 0; i < stack_count; i++)
         {
             int k1 = i * (sector_count + 1);
             int k2 = k1 + sector_count + 1;
-            for (int j = 0; j < sector_count; j++, k1++, k2++)
+            for (size_t j = 0; j < sector_count; j++, k1++, k2++)
             {
                 if (i != 0)
                 {
@@ -883,7 +883,7 @@ void liminal::renderer::set_directional_light_depth_map_size(GLsizei directional
 
     glGenFramebuffers(NUM_DIRECTIONAL_LIGHT_SHADOWS, directional_light_depth_map_fbo_ids);
     glGenTextures(NUM_DIRECTIONAL_LIGHT_SHADOWS, directional_light_depth_map_texture_ids);
-    for (int i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids[i]);
         {
@@ -906,7 +906,7 @@ void liminal::renderer::set_directional_light_depth_map_size(GLsizei directional
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                GLfloat border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+                GLfloat border_color[] = {1, 1, 1, 1};
                 glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
             }
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -937,7 +937,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei point_light_d
 
     glGenFramebuffers(NUM_POINT_LIGHT_SHADOWS, point_light_depth_cubemap_fbo_ids);
     glGenTextures(NUM_POINT_LIGHT_SHADOWS, point_light_depth_cubemap_texture_ids);
-    for (int i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids[i]);
         {
@@ -994,7 +994,7 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei spot_light_depth_m
 
     glGenFramebuffers(NUM_SPOT_LIGHT_SHADOWS, spot_light_depth_map_fbo_ids);
     glGenTextures(NUM_SPOT_LIGHT_SHADOWS, spot_light_depth_map_texture_ids);
-    for (int i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
+    for (size_t i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids[i]);
         {
@@ -1018,7 +1018,7 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei spot_light_depth_m
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                    GLfloat border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
+                    GLfloat border_color[] = {1, 1, 1, 1};
                     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
                 }
                 glBindTexture(GL_TEXTURE_2D, 0);
@@ -1359,7 +1359,7 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
         glm::mat4 view = glm::lookAt(
             scene.camera->position - transform.rotation,
             scene.camera->position,
-            glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::vec3(0, 1, 0));
         directional_light_transformation_matrices[i] = projection * view;
 
         glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids[i]);
@@ -1431,18 +1431,18 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
         }
 
         glm::mat4 projection = glm::perspective(
-            glm::radians(90.0f),
-            1.0f,
+            glm::radians(90.f),
+            1.f,
             point_light_near_plane,
             point_light_far_plane);
 
         point_light_transformation_matrices[i].clear();
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)));
+        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)));
+        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)));
+        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)));
+        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)));
+        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0)));
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids[i]);
         {
@@ -1531,13 +1531,13 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
         }
 
         glm::mat4 projection = glm::perspective(
-            glm::radians(90.0f),
-            1.0f,
+            glm::radians(90.f),
+            1.f,
             spot_light_near_plane,
             spot_light_far_plane);
         glm::vec3 front = glm::normalize(transform.rotation);
         glm::vec3 target = transform.position + front;
-        glm::vec3 up(0.0f, 1.0f, 0.0f);
+        glm::vec3 up(0, 1, 0);
         glm::mat4 view = glm::lookAt(transform.position, target, up);
         spot_light_transformation_matrices[i] = projection * view;
 
@@ -1883,9 +1883,9 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
             glDepthFunc(GL_LEQUAL);
 
             glm::mat4 camera_view_no_translate = camera_view;
-            camera_view_no_translate[3][0] = 0.0f;
-            camera_view_no_translate[3][1] = 0.0f;
-            camera_view_no_translate[3][2] = 0.0f;
+            camera_view_no_translate[3][0] = 0;
+            camera_view_no_translate[3][1] = 0;
+            camera_view_no_translate[3][2] = 0;
 
             skybox_program->bind();
             {
@@ -1914,7 +1914,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
             {
                 color_program->bind();
                 {
-                    glm::mat4 model_matrix(1.0f);
+                    glm::mat4 model_matrix(1);
                     model_matrix = glm::translate(model_matrix, transform.position);
                     model_matrix = glm::scale(model_matrix, {0.25f, 0.25f, 0.25f});
 
@@ -1941,10 +1941,10 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
     for (auto [entity, transform, water] : scene.registry.view<liminal::transform, liminal::water>().each())
     {
         // reflection
-        glm::vec4 reflection_clipping_plane = {0.0f, 1.0f, 0.0f, -transform.position.y};
+        glm::vec4 reflection_clipping_plane = {0, 1, 0, -transform.position.y};
         if (scene.camera->position.y < transform.position.y) // flip reflection clipping plane if under the water
         {
-            reflection_clipping_plane *= -1;
+            reflection_clipping_plane *= -1.f;
         }
         float previous_camera_y = scene.camera->position.y;
         float previous_camera_pitch = scene.camera->pitch;
@@ -1958,10 +1958,10 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
         scene.camera->roll = previous_camera_roll;
 
         // refraction
-        glm::vec4 refraction_clipping_plane = {0.0f, -1.0f, 0.0f, transform.position.y};
+        glm::vec4 refraction_clipping_plane = {0, -1, 0, transform.position.y};
         if (scene.camera->position.y < transform.position.y) // flip refraction clipping plane if under the water
         {
-            refraction_clipping_plane *= -1;
+            refraction_clipping_plane *= -1.f;
         }
         render_objects(scene, water_refraction_fbo_id, water_refraction_width, water_refraction_height, refraction_clipping_plane);
 
@@ -2053,7 +2053,7 @@ void liminal::renderer::render_sprites(liminal::scene &scene)
 
         sprite_program->bind();
         {
-            glm::mat4 projection_matrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
+            glm::mat4 projection_matrix = glm::ortho(-1, 1, -1, 1, 0, 100);
 
             for (auto [entity, sprite] : scene.registry.view<liminal::sprite>().each())
             {

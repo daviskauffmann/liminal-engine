@@ -39,7 +39,7 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
                 -(float)z / ((float)surface->h - 1) * size);
             vertex.normal = glm::normalize(glm::vec3(
                 get_height(surface, x + 1, z) - get_height(surface, x - 1, z),
-                2.0f,
+                2,
                 get_height(surface, x, z + 1) - get_height(surface, x, z - 1)));
             vertex.uv = glm::vec2(
                 (float)x / ((float)surface->w - 1),
@@ -119,7 +119,7 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
 
     btCollisionShape *collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
 
-    rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0.0f, motion_state, collision_shape));
+    rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape));
 }
 
 glm::mat4 liminal::terrain::get_model_matrix() const
@@ -135,7 +135,7 @@ float liminal::terrain::get_height(SDL_Surface *surface, int x, int z) const
 {
     if (x < 0 || x >= surface->w || z < 0 || z >= surface->h)
     {
-        return 0.0f;
+        return 0;
     }
 
     union pixel_t

@@ -9,7 +9,7 @@ class player : public liminal::app
 public:
     liminal::entity camera_entity;
 
-    const float flashlight_intensity = 20.0f;
+    const float flashlight_intensity = 20;
     liminal::entity flashlight_entity;
     bool flashlight_follow = true;
     bool flashlight_on = true;
@@ -50,31 +50,31 @@ public:
 
         // TODO: camera should be a component maybe
         camera_entity = scene->create_entity();
-        camera_entity.add_component<liminal::transform>("Camera", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        camera_entity.add_component<liminal::transform>("Camera", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
         camera_entity.add_component<liminal::audio_listener>();
 
         // TODO: these entities should come from the JSON file
         flashlight_entity = scene->create_entity();
-        flashlight_entity.add_component<liminal::transform>("Flashlight", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        flashlight_entity.add_component<liminal::spot_light>(glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.0f)));
+        flashlight_entity.add_component<liminal::transform>("Flashlight", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+        flashlight_entity.add_component<liminal::spot_light>(glm::vec3(1, 1, 1) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.f)));
 
         ambience_entity = scene->create_entity();
-        ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
         ambience_entity.add_component<liminal::audio_source>(new liminal::source());
         ambience_entity.get_component<liminal::audio_source>().source->set_loop(true);
         ambience_entity.get_component<liminal::audio_source>().source->set_gain(0.25f);
         // ambience_entity.get_component<liminal::audio_source>().play(ambient_sound);
 
         bounce_entity = scene->create_entity();
-        bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
         bounce_entity.add_component<liminal::audio_source>(new liminal::source());
 
         weapon_entity = scene->create_entity();
-        weapon_entity.add_component<liminal::transform>("Weapon", nullptr, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        weapon_entity.add_component<liminal::transform>("Weapon", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
         weapon_entity.add_component<liminal::audio_source>(new liminal::source());
 
         ui_entity = scene->create_entity();
-        // ui_entity.add_component<liminal::sprite>(&grass_texture, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec2(1.0f, 1.0f));}
+        // ui_entity.add_component<liminal::sprite>(&grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0, glm::vec2(1, 1));}
     }
 
     ~player()
@@ -98,10 +98,10 @@ public:
         glm::vec3 camera_front = camera->calc_front();
         glm::vec3 camera_right = camera->calc_right();
 
-        static glm::vec3 velocity(0.0f, 0.0f, 0.0f);
-        glm::vec3 acceleration(0.0f, 0.0f, 0.0f);
-        const float speed = 50.0f;
-        const float drag = 10.0f;
+        static glm::vec3 velocity(0, 0, 0);
+        glm::vec3 acceleration(0, 0, 0);
+        const float speed = 50;
+        const float drag = 10;
         bool sprint = false;
         bool jumping = false;
         if (!io.WantCaptureKeyboard)
@@ -124,11 +124,11 @@ public:
             }
             if (liminal::input::key(liminal::keycode::KEYCODE_SPACE) && noclip)
             {
-                acceleration.y = 1.0f;
+                acceleration.y = 1;
             }
             if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL) && noclip)
             {
-                acceleration.y = -1.0f;
+                acceleration.y = -1;
             }
             if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
             {
@@ -136,7 +136,7 @@ public:
             }
             if (liminal::input::key_down(liminal::keycode::KEYCODE_SPACE) && !jumping && !noclip)
             {
-                velocity.y = 10.0f;
+                velocity.y = 10;
                 jumping = true;
             }
             if (liminal::input::key_down(liminal::keycode::KEYCODE_V))
@@ -145,17 +145,17 @@ public:
             }
         }
         float acceleration_length = glm::length(acceleration);
-        if (acceleration_length > 1.0f)
+        if (acceleration_length > 1)
         {
             acceleration /= acceleration_length;
         }
-        acceleration *= speed * (sprint ? 2.0f : 1.0f);
+        acceleration *= speed * (sprint ? 2 : 1);
         acceleration -= velocity * drag;
         if (!noclip)
         {
             acceleration.y = -9.8f;
         }
-        camera->position = 0.5f * acceleration * powf(delta_time, 2.0f) + velocity * delta_time + camera->position;
+        camera->position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + camera->position;
         if (camera->position.y < 0 && !noclip)
         {
             camera->position.y = 0;
@@ -171,23 +171,23 @@ public:
                 const float sensitivity = 0.1f;
                 camera->pitch -= liminal::input::mouse_dy * sensitivity;
                 camera->yaw += liminal::input::mouse_dx * sensitivity;
-                if (camera->pitch > 89.0f)
+                if (camera->pitch > 89)
                 {
-                    camera->pitch = 89.0f;
+                    camera->pitch = 89;
                 }
-                if (camera->pitch < -89.0f)
+                if (camera->pitch < -89)
                 {
-                    camera->pitch = -89.0f;
+                    camera->pitch = -89;
                 }
 
                 camera->fov -= liminal::input::mouse_wheel_y;
-                if (camera->fov <= 1.0f)
+                if (camera->fov <= 1)
                 {
-                    camera->fov = 1.0f;
+                    camera->fov = 1;
                 }
-                if (camera->fov >= 120.0f)
+                if (camera->fov >= 120)
                 {
-                    camera->fov = 120.0f;
+                    camera->fov = 120;
                 }
             }
         }
@@ -208,11 +208,11 @@ public:
 
         if (flashlight_on)
         {
-            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(1.0f, 1.0f, 1.0f) * flashlight_intensity;
+            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(1, 1, 1) * flashlight_intensity;
         }
         else
         {
-            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(0.0f, 0.0f, 0.0f);
+            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(0, 0, 0);
         }
         if (flashlight_follow)
         {
@@ -220,7 +220,7 @@ public:
             flashlight_entity.get_component<liminal::transform>().rotation = glm::mix(
                 flashlight_entity.get_component<liminal::transform>().rotation,
                 camera_front,
-                30.0f * delta_time);
+                30 * delta_time);
         }
 
         ambience_entity.get_component<liminal::transform>().position = camera->position;
@@ -251,7 +251,7 @@ public:
 
     void resize(int width, int height) override
     {
-        liminal::engine::get_instance().renderer->set_screen_size(width, height, 1.0f);
+        liminal::engine::get_instance().renderer->set_screen_size(width, height, 1);
     }
 };
 

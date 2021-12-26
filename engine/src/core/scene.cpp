@@ -34,7 +34,7 @@ liminal::scene::scene()
     btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
     btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
     world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
-    world->setGravity(btVector3(0.0f, -9.8f, 0.0f));
+    world->setGravity(btVector3(0, -9.8f, 0));
 }
 
 liminal::scene::~scene()
@@ -142,7 +142,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "terrain")
                     {
-                        auto terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, 5.0f);
+                        auto terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0, 0, 0), 100.f, 5.f);
                         world->addRigidBody(terrain.rigidbody);
                     }
                 }

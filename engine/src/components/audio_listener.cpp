@@ -12,7 +12,7 @@ void liminal::audio_listener::set_position(glm::vec3 position, glm::vec3 rotatio
 
     float orientation[] = {
         rotation.x, rotation.y, rotation.z,
-        0.0f, 1.0f, 0.0f};
+        0, 1, 0};
     alListenerfv(AL_ORIENTATION, orientation);
 
     last_position = position;

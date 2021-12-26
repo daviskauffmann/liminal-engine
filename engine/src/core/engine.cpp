@@ -63,7 +63,7 @@ void liminal::engine::run(int argc, char *argv[])
             return;
         }
 
-        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
+        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.f);
 
         if (result.count("version"))
         {
@@ -96,13 +96,13 @@ void liminal::engine::run(int argc, char *argv[])
 
     // TODO: should camera be an entity?
     auto camera = scene->camera = new liminal::camera(
-        glm::vec3(0.0f, 0.0f, 3.0f),
-        0.0f,
-        0.0f,
-        0.0f,
-        45.0f);
+        glm::vec3(0, 0, 3),
+        0,
+        0,
+        0,
+        45);
 
-    float time_scale = 1.0f;
+    float time_scale = 1;
     bool console_open = false;
 
     std::fill(liminal::input::keys.begin(), liminal::input::keys.end(), false);
@@ -118,19 +118,19 @@ void liminal::engine::run(int argc, char *argv[])
         static unsigned int current_time = 0;
         unsigned int previous_time = current_time;
         current_time = SDL_GetTicks();
-        float delta_time = ((current_time - previous_time) / 1000.0f) * time_scale;
+        float delta_time = ((current_time - previous_time) / 1000.f) * time_scale;
 
         // gather input
         liminal::input::last_keys = liminal::input::keys;
         const unsigned char *keys = SDL_GetKeyboardState(nullptr);
-        for (int scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
+        for (size_t scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
         {
             liminal::input::keys[scancode] = keys[scancode];
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
         unsigned int mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
-        for (int button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
+        for (size_t button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
         {
             liminal::input::mouse_buttons[button] = mouse_buttons & SDL_BUTTON(button);
         }
@@ -258,7 +258,7 @@ void liminal::engine::run(int argc, char *argv[])
                 }
                 else if (command == "render_scale_up")
                 {
-                    if (render_scale < 1.0f)
+                    if (render_scale < 1)
                     {
                         render_scale += 0.1f;
                     }
@@ -273,7 +273,7 @@ void liminal::engine::run(int argc, char *argv[])
                     }
                     else
                     {
-                        time_scale = 1.0f;
+                        time_scale = 1;
                     }
                 }
                 else

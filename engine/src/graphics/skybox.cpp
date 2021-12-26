@@ -34,47 +34,47 @@ void liminal::skybox::set_cubemap(const std::string &filename)
 
     // setup capture mesh
     std::vector<float> capture_vertices =
-        {-1.0f, +1.0f, -1.0f,
-         -1.0f, -1.0f, -1.0f,
-         +1.0f, -1.0f, -1.0f,
-         +1.0f, -1.0f, -1.0f,
-         +1.0f, +1.0f, -1.0f,
-         -1.0f, +1.0f, -1.0f,
+        {-1, +1, -1,
+         -1, -1, -1,
+         +1, -1, -1,
+         +1, -1, -1,
+         +1, +1, -1,
+         -1, +1, -1,
 
-         -1.0f, -1.0f, +1.0f,
-         -1.0f, -1.0f, -1.0f,
-         -1.0f, +1.0f, -1.0f,
-         -1.0f, +1.0f, -1.0f,
-         -1.0f, +1.0f, +1.0f,
-         -1.0f, -1.0f, +1.0f,
+         -1, -1, +1,
+         -1, -1, -1,
+         -1, +1, -1,
+         -1, +1, -1,
+         -1, +1, +1,
+         -1, -1, +1,
 
-         +1.0f, -1.0f, -1.0f,
-         +1.0f, -1.0f, +1.0f,
-         +1.0f, +1.0f, +1.0f,
-         +1.0f, +1.0f, +1.0f,
-         +1.0f, +1.0f, -1.0f,
-         +1.0f, -1.0f, -1.0f,
+         +1, -1, -1,
+         +1, -1, +1,
+         +1, +1, +1,
+         +1, +1, +1,
+         +1, +1, -1,
+         +1, -1, -1,
 
-         -1.0f, -1.0f, +1.0f,
-         -1.0f, +1.0f, +1.0f,
-         +1.0f, +1.0f, +1.0f,
-         +1.0f, +1.0f, +1.0f,
-         +1.0f, -1.0f, +1.0f,
-         -1.0f, -1.0f, +1.0f,
+         -1, -1, +1,
+         -1, +1, +1,
+         +1, +1, +1,
+         +1, +1, +1,
+         +1, -1, +1,
+         -1, -1, +1,
 
-         -1.0f, +1.0f, -1.0f,
-         +1.0f, +1.0f, -1.0f,
-         +1.0f, +1.0f, +1.0f,
-         +1.0f, +1.0f, +1.0f,
-         -1.0f, +1.0f, +1.0f,
-         -1.0f, +1.0f, -1.0f,
+         -1, +1, -1,
+         +1, +1, -1,
+         +1, +1, +1,
+         +1, +1, +1,
+         -1, +1, +1,
+         -1, +1, -1,
 
-         -1.0f, -1.0f, -1.0f,
-         -1.0f, -1.0f, +1.0f,
-         +1.0f, -1.0f, -1.0f,
-         +1.0f, -1.0f, -1.0f,
-         -1.0f, -1.0f, +1.0f,
-         +1.0f, -1.0f, +1.0f};
+         -1, -1, -1,
+         -1, -1, +1,
+         +1, -1, -1,
+         +1, -1, -1,
+         -1, -1, +1,
+         +1, -1, +1};
     GLsizei capture_vertices_size = (GLsizei)(capture_vertices.size() * sizeof(float));
     GLuint capture_vao_id;
     GLuint capture_vbo_id;
@@ -93,14 +93,14 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glBindVertexArray(0);
 
     // setup capture matrices
-    glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 capture_projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
     glm::mat4 capture_mvps[] =
-        {capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-         capture_projection * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+        {capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
+         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
+         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
+         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
+         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
+         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))};
 
     // setup capture fbo
     GLuint capture_fbo_id;

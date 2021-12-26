@@ -1,6 +1,5 @@
 #include <liminal/audio/sound.hpp>
 
-#include <AL/al.h>
 #include <iostream>
 #include <SDL2/SDL_mixer.h>
 

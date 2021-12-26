@@ -21,13 +21,13 @@ liminal::mesh::mesh(
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_id);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, position));
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, normal));
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, uv));
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, tangent));
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bitangent));
-        glVertexAttribIPointer(5, 4, GL_INT, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bone_ids));
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bone_weights));
+        glVertexAttribPointer(0, sizeof(liminal::vertex::position) / sizeof(liminal::vertex::position[0]), GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, position));
+        glVertexAttribPointer(1, sizeof(liminal::vertex::normal) / sizeof(liminal::vertex::normal[0]), GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, normal));
+        glVertexAttribPointer(2, sizeof(liminal::vertex::uv) / sizeof(liminal::vertex::uv[0]), GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, uv));
+        glVertexAttribPointer(3, sizeof(liminal::vertex::tangent) / sizeof(liminal::vertex::tangent[0]), GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, tangent));
+        glVertexAttribPointer(4, sizeof(liminal::vertex::bitangent) / sizeof(liminal::vertex::bitangent[0]), GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bitangent));
+        glVertexAttribIPointer(5, sizeof(liminal::vertex::bone_ids) / sizeof(liminal::vertex::bone_ids[0]), GL_UNSIGNED_INT, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bone_ids));
+        glVertexAttribPointer(6, sizeof(liminal::vertex::bone_weights) / sizeof(liminal::vertex::bone_weights[0]), GL_FLOAT, GL_FALSE, sizeof(liminal::vertex), (void *)offsetof(liminal::vertex, bone_weights));
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);

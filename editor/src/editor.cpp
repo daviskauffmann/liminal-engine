@@ -30,19 +30,19 @@ public:
         {
             camera->yaw -= liminal::input::mouse_dx * sensitivity;
             camera->pitch += liminal::input::mouse_dy * sensitivity;
-            if (camera->pitch > 89.0f)
+            if (camera->pitch > 89)
             {
-                camera->pitch = 89.0f;
+                camera->pitch = 89;
             }
-            if (camera->pitch < -89.0f)
+            if (camera->pitch < -89)
             {
-                camera->pitch = -89.0f;
+                camera->pitch = -89;
             }
         }
         else if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
         {
             camera->position -= camera_right * (liminal::input::mouse_dx * sensitivity);
-            camera->position += glm::vec3(0.0f, 1.0f, 0.0f) * (liminal::input::mouse_dy * sensitivity);
+            camera->position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
         }
 
         camera->position += camera_front * (float)liminal::input::mouse_wheel_y;
@@ -50,7 +50,7 @@ public:
         static bool dockspace_open = true;
         ImGui::Begin("Dockspace Demo", &dockspace_open, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_MenuBar);
         {
-            ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+            ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
 
             // if (ImGui::BeginMenuBar())
             // {
@@ -71,7 +71,7 @@ public:
                 ImVec2 new_region_size = ImGui::GetContentRegionAvail();
                 if (new_region_size.x != region_size.x || new_region_size.y != region_size.y)
                 {
-                    liminal::engine::get_instance().renderer->set_screen_size((int)new_region_size.x, (int)new_region_size.y, 1.0f);
+                    liminal::engine::get_instance().renderer->set_screen_size((int)new_region_size.x, (int)new_region_size.y, 1);
                     region_size = new_region_size;
                 }
                 ImGui::Image(scene->texture_id, region_size, ImVec2{0, 1}, ImVec2{1, 0});

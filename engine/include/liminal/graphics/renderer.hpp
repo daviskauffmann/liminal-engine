@@ -137,7 +137,7 @@ namespace liminal
         void setup_samplers();
 
         void render_shadows(liminal::scene &scene);
-        void render_objects(liminal::scene &scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0.0f));
+        void render_objects(liminal::scene &scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0));
         void render_waters(liminal::scene &scene, unsigned int current_time);
         void render_sprites(liminal::scene &scene);
         void render_screen(liminal::scene &scene);

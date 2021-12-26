@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 float liminal::camera::near_plane = 0.1f;
-float liminal::camera::far_plane = 1000.0f;
+float liminal::camera::far_plane = 1000;
 
 liminal::camera::camera(glm::vec3 position, float pitch, float yaw, float roll, float fov)
     : position(position),
@@ -26,7 +26,7 @@ glm::vec3 liminal::camera::calc_front() const
 glm::vec3 liminal::camera::calc_right() const
 {
     glm::vec3 front = calc_front();
-    glm::vec3 right = glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 right = glm::cross(front, glm::vec3(0, 1, 0));
     return glm::normalize(right);
 }
 
@@ -43,7 +43,7 @@ glm::mat4 liminal::camera::calc_view() const
 
     glm::vec3 right = calc_right();
     glm::mat4 rotation = glm::rotate(glm::identity<glm::mat4>(), glm::radians(roll), front);
-    right = glm::vec3(rotation * glm::vec4(right, 1.0f));
+    right = glm::vec3(rotation * glm::vec4(right, 1));
 
     glm::vec3 up = glm::cross(right, front);
     up = glm::normalize(up);
