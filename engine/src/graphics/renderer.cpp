@@ -434,8 +434,8 @@ liminal::renderer::renderer(
         std::vector<unsigned int> indices;
         for (size_t i = 0; i < stack_count; i++)
         {
-            int k1 = i * (sector_count + 1);
-            int k2 = k1 + sector_count + 1;
+            unsigned int k1 = i * ((int)sector_count + 1);
+            unsigned int k2 = k1 + (int)sector_count + 1;
             for (size_t j = 0; j < sector_count; j++, k1++, k2++)
             {
                 if (i != 0)
