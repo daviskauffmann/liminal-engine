@@ -2,29 +2,31 @@
 
 #include <iostream>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <stb_image.h>
 
-liminal::texture::texture(const std::string &filename, bool srgb)
+liminal::texture::texture(const std::string &filename, bool srgb, bool filter)
 {
-    SDL_Surface *surface = IMG_Load(filename.c_str());
-    if (!surface)
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, num_components;
+    unsigned char *image = stbi_load(filename.c_str(), &width, &height, &num_components, 0);
+    if (!image)
     {
-        std::cerr << "Error: Failed to load texture: " << IMG_GetError() << std::endl;
+        std::cerr << "Error: Failed to load texture: " << stbi_failure_reason() << std::endl;
         return;
     }
 
     GLenum internal_format;
     GLenum format;
-    if (surface->format->BytesPerPixel == 1)
+    if (num_components == 1)
     {
         internal_format = format = GL_RED;
     }
-    else if (surface->format->BytesPerPixel == 3)
+    else if (num_components == 3)
     {
         internal_format = srgb ? GL_SRGB : GL_RGB;
         format = GL_RGB;
     }
-    else if (surface->format->BytesPerPixel == 4)
+    else if (num_components == 4)
     {
         internal_format = srgb ? GL_SRGB_ALPHA : GL_RGBA;
         format = GL_RGBA;
@@ -37,22 +39,21 @@ liminal::texture::texture(const std::string &filename, bool srgb)
             GL_TEXTURE_2D,
             0,
             internal_format,
-            surface->w,
-            surface->h,
+            width,
+            height,
             0,
             format,
             GL_UNSIGNED_BYTE,
-            surface->pixels);
+            image);
+
         glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.4f);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    SDL_FreeSurface(surface);
+    stbi_image_free(image);
 }
 
 liminal::texture::~texture()

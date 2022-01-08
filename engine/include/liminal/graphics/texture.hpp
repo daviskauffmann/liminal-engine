@@ -9,7 +9,7 @@ namespace liminal
     class texture
     {
     public:
-        texture(const std::string &filename, bool srgb = false);
+        texture(const std::string &filename, bool srgb = false, bool filter = true);
         ~texture();
 
         void bind(unsigned int index) const;

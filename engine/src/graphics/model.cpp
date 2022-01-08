@@ -34,6 +34,13 @@ liminal::model::model(const std::string &filename, bool flip_uvs)
     process_node_meshes(scene->mRootNode, scene);
 }
 
+liminal::model::model(liminal::mesh *mesh)
+{
+    scene = nullptr;
+
+    meshes.push_back(mesh);
+}
+
 liminal::model::~model()
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
@@ -49,7 +56,7 @@ liminal::model::~model()
 
 bool liminal::model::has_animations() const
 {
-    return scene->HasAnimations();
+    return scene ? scene->HasAnimations() : false;
 }
 
 void liminal::model::update_bone_transformations(unsigned int animation_index, unsigned int current_time)

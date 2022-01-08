@@ -75,7 +75,7 @@
             },
             "mesh_renderer": {
                 "filename": "assets/models/backpack/backpack.obj",
-                "flip_uvs": false
+                "flip_uvs": true
             }
         },
         {
@@ -102,7 +102,7 @@
             },
             "mesh_renderer": {
                 "filename": "assets/models/boblampclean/boblampclean.md5mesh",
-                "flip_uvs": true
+                "flip_uvs": false
             }
         },
         {
@@ -129,7 +129,7 @@
             },
             "mesh_renderer": {
                 "filename": "assets/models/dude/model.dae",
-                "flip_uvs": true
+                "flip_uvs": false
             }
         },
         {

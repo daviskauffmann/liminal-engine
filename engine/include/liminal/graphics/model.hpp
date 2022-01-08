@@ -25,6 +25,7 @@ namespace liminal
         std::vector<glm::mat4> bone_transformations;
 
         model(const std::string &filename, bool flip_uvs = false);
+        model(liminal::mesh *mesh);
         ~model();
 
         bool has_animations() const;
