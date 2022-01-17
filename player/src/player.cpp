@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <liminal/liminal.hpp>
+#include <liminal/main.hpp>
 #include <SDL2/SDL.h>
 
 class player : public liminal::app
@@ -251,7 +252,7 @@ public:
 
     void resize(int width, int height) override
     {
-        liminal::engine::get_instance().renderer->set_screen_size(width, height, 1);
+        liminal::engine::get_instance().renderer->set_target_size(width, height);
     }
 };
 

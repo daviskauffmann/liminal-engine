@@ -12,6 +12,17 @@ static inline glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w,
 static inline glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
+liminal::model::model()
+{
+}
+
+liminal::model::model(liminal::mesh *mesh)
+{
+    scene = nullptr;
+
+    meshes.push_back(mesh);
+}
+
 liminal::model::model(const std::string &filename, bool flip_uvs)
     : directory(filename.substr(0, filename.find_last_of('/')))
 {
@@ -32,13 +43,6 @@ liminal::model::model(const std::string &filename, bool flip_uvs)
     num_bones = 0;
 
     process_node_meshes(scene->mRootNode, scene);
-}
-
-liminal::model::model(liminal::mesh *mesh)
-{
-    scene = nullptr;
-
-    meshes.push_back(mesh);
 }
 
 liminal::model::~model()
@@ -82,8 +86,8 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
 void liminal::model::draw_meshes(liminal::program *program) const
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
-    {
         meshes[i]->draw(program);
+    {
     }
 }
 

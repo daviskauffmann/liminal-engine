@@ -247,22 +247,25 @@ void liminal::engine::run(int argc, char *argv[])
                 {
                     renderer->reload_programs();
                 }
-                else if (command == "render_scale_down") // TODO: console commands with arguments
+                else if (command == "render_scale 1") // TODO: console commands with arguments
                 {
-                    if (render_scale > 0.2f)
-                    {
-                        render_scale -= 0.1f;
-                    }
-                    renderer->set_screen_size(window_width, window_height, render_scale);
+                    render_scale = 1;
+
+                    renderer->set_render_scale(render_scale);
                     std::cout << "Render scale changed to " << render_scale << std::endl;
                 }
-                else if (command == "render_scale_up")
+                else if (command == "render_scale 0.5")
                 {
-                    if (render_scale < 1)
-                    {
-                        render_scale += 0.1f;
-                    }
-                    renderer->set_screen_size(window_width, window_height, render_scale);
+                    render_scale = 0.5f;
+
+                    renderer->set_render_scale(render_scale);
+                    std::cout << "Render scale changed to " << render_scale << std::endl;
+                }
+                else if (command == "render_scale 0.1")
+                {
+                    render_scale = 0.1f;
+
+                    renderer->set_render_scale(render_scale);
                     std::cout << "Render scale changed to " << render_scale << std::endl;
                 }
                 else if (command == "toggle_slomo")

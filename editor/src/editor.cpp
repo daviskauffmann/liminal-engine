@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <liminal/liminal.hpp>
+#include <liminal/main.hpp>
 #include <SDL2/SDL.h>
 
 class editor : public liminal::app
@@ -47,10 +48,9 @@ public:
 
         camera->position += camera_front * (float)liminal::input::mouse_wheel_y;
 
-        static bool dockspace_open = true;
-        ImGui::Begin("Dockspace Demo", &dockspace_open, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_MenuBar);
+        ImGui::Begin("Main", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_MenuBar);
         {
-            ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
+            ImGui::DockSpace(ImGui::GetID("Dockspace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
 
             // if (ImGui::BeginMenuBar())
             // {
@@ -71,7 +71,7 @@ public:
                 ImVec2 new_region_size = ImGui::GetContentRegionAvail();
                 if (new_region_size.x != region_size.x || new_region_size.y != region_size.y)
                 {
-                    liminal::engine::get_instance().renderer->set_screen_size((int)new_region_size.x, (int)new_region_size.y, 1);
+                    liminal::engine::get_instance().renderer->set_target_size((int)new_region_size.x, (int)new_region_size.y);
                     region_size = new_region_size;
                 }
                 ImGui::Image(scene->texture_id, region_size, ImVec2{0, 1}, ImVec2{1, 0});

@@ -1,4 +1,3 @@
-#include "main.hpp"
 #include "audio\sound.hpp"
 #include "audio\source.hpp"
 #include "components\audio_listener.hpp"

@@ -40,7 +40,7 @@ constexpr float spot_light_near_plane = 0.1f;
 constexpr float spot_light_far_plane = 10;
 
 liminal::renderer::renderer(
-    GLsizei display_width, GLsizei display_height, float render_scale,
+    GLsizei target_width, GLsizei target_height, float render_scale,
     GLsizei directional_light_depth_map_size,
     GLsizei point_light_depth_cubemap_size,
     GLsizei spot_light_depth_map_size,
@@ -51,6 +51,9 @@ liminal::renderer::renderer(
     greyscale = false;
 
     // setup fbos
+    this->target_width = target_width;
+    this->target_height = target_height;
+    this->render_scale = render_scale;
     hdr_fbo_id = 0;
     hdr_texture_ids[0] = 0;
     hdr_texture_ids[1] = 0;
@@ -63,7 +66,7 @@ liminal::renderer::renderer(
     geometry_rbo_id = 0;
     final_fbo_id = 0;
     final_texture_id = 0;
-    set_screen_size(display_width, display_height, render_scale);
+    calc_render_size();
 
     for (size_t i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
     {
@@ -434,7 +437,7 @@ liminal::renderer::renderer(
         std::vector<unsigned int> indices;
         for (size_t i = 0; i < stack_count; i++)
         {
-            unsigned int k1 = i * (unsigned int)(sector_count + 1);
+            unsigned int k1 = (unsigned int)(i * (sector_count + 1));
             unsigned int k2 = k1 + (unsigned int)(sector_count + 1);
             for (size_t j = 0; j < sector_count; j++, k1++, k2++)
             {
@@ -533,12 +536,25 @@ liminal::renderer::~renderer()
     delete DEBUG_sphere_mesh;
 }
 
-void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale)
+void liminal::renderer::set_target_size(GLsizei target_width, GLsizei target_height)
 {
-    this->display_width = display_width;
-    this->display_height = display_height;
-    render_width = (GLsizei)(display_width * render_scale);
-    render_height = (GLsizei)(display_height * render_scale);
+    this->target_width = target_width;
+    this->target_height = target_height;
+
+    calc_render_size();
+}
+
+void liminal::renderer::set_render_scale(float render_scale)
+{
+    this->render_scale = render_scale;
+
+    calc_render_size();
+}
+
+void liminal::renderer::calc_render_size()
+{
+    render_width = (GLsizei)(target_width * render_scale);
+    render_height = (GLsizei)(target_height * render_scale);
 
     glDeleteFramebuffers(1, &geometry_fbo_id);
     glDeleteTextures(1, &geometry_position_texture_id);
@@ -757,8 +773,8 @@ void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_h
                 glRenderbufferStorage(
                     GL_RENDERBUFFER,
                     GL_DEPTH_STENCIL,
-                    display_width,
-                    display_height);
+                    target_width,
+                    target_height);
             }
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -798,8 +814,8 @@ void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_h
                         GL_TEXTURE_2D,
                         0,
                         GL_RGBA16F,
-                        display_width / 8,
-                        display_height / 8,
+                        target_width / 8,
+                        target_height / 8,
                         0,
                         GL_RGBA,
                         GL_FLOAT,
@@ -840,8 +856,8 @@ void liminal::renderer::set_screen_size(GLsizei display_width, GLsizei display_h
                     GL_TEXTURE_2D,
                     0,
                     GL_RGBA16F,
-                    display_width,
-                    display_height,
+                    target_width,
+                    target_height,
                     0,
                     GL_RGBA,
                     GL_FLOAT,
@@ -2049,7 +2065,7 @@ void liminal::renderer::render_sprites(liminal::scene &scene)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
     {
-        glViewport(0, 0, display_width, display_height);
+        glViewport(0, 0, target_width, target_height);
 
         sprite_program->bind();
         {
@@ -2081,7 +2097,7 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     // apply gaussian blur to brightness map
     bool horizontal = true;
     {
-        glViewport(0, 0, display_width / 8, display_height / 8);
+        glViewport(0, 0, target_width / 8, target_height / 8);
 
         gaussian_program->bind();
         {
@@ -2115,7 +2131,7 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     // final pass
     glBindFramebuffer(GL_FRAMEBUFFER, scene.draw_to_texture ? final_fbo_id : 0);
     {
-        glViewport(0, 0, display_width, display_height);
+        glViewport(0, 0, target_width, target_height);
         glDisable(GL_DEPTH_TEST);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

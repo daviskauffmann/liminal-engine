@@ -24,7 +24,7 @@ namespace liminal
         bool greyscale;
 
         renderer(
-            GLsizei display_width, GLsizei display_height, float render_scale,
+            GLsizei target_width, GLsizei target_height, float render_scale,
             GLsizei directional_light_depth_map_size,
             GLsizei point_light_depth_cubemap_size,
             GLsizei spot_light_depth_map_size,
@@ -32,7 +32,9 @@ namespace liminal
             GLsizei water_refraction_width, GLsizei water_refraction_height);
         ~renderer();
 
-        void set_screen_size(GLsizei display_width, GLsizei display_height, float render_scale);
+        void set_target_size(GLsizei target_width, GLsizei target_height);
+        void set_render_scale(float render_scale);
+
         void set_directional_light_depth_map_size(GLsizei directional_light_depth_map_size);
         void set_point_light_depth_cubemap_size(GLsizei point_light_depth_cubemap_size);
         void set_spot_light_depth_map_size(GLsizei spot_light_depth_map_size);
@@ -44,8 +46,10 @@ namespace liminal
         void render(liminal::scene &scene, unsigned int current_time, float delta_time);
 
     private:
-        GLsizei display_width;
-        GLsizei display_height;
+        GLsizei target_width;
+        GLsizei target_height;
+        float render_scale;
+
         GLsizei render_width;
         GLsizei render_height;
 
@@ -133,6 +137,8 @@ namespace liminal
         liminal::texture *water_normal_texture;
 
         liminal::mesh *DEBUG_sphere_mesh;
+
+        void calc_render_size();
 
         void setup_samplers();
 
