@@ -5,6 +5,7 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <imgui.h>
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/mesh.hpp>
 #include <liminal/graphics/model.hpp>
@@ -22,6 +23,9 @@ namespace liminal
     public:
         bool wireframe;
         bool greyscale;
+
+        bool draw_to_imgui_texture;
+        ImTextureID imgui_texture_id;
 
         renderer(
             GLsizei target_width, GLsizei target_height, float render_scale,
@@ -43,6 +47,8 @@ namespace liminal
 
         void reload_programs();
 
+        int pick(int x, int y);
+
         void render(liminal::scene &scene, unsigned int current_time, float delta_time);
 
     private:
@@ -58,6 +64,7 @@ namespace liminal
         GLuint geometry_normal_texture_id;
         GLuint geometry_albedo_texture_id;
         GLuint geometry_material_texture_id;
+        GLuint geometry_id_texture_id;
         GLuint geometry_rbo_id;
 
         GLuint hdr_fbo_id;

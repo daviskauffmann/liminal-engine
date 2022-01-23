@@ -25,6 +25,7 @@ add_library(${PROJECT_NAME}
     src/stb_include.cpp
     src/audio/sound.cpp
     src/audio/source.cpp
+    src/components/audio_source.cpp
     src/components/audio_listener.cpp
     src/components/physical.cpp
     src/components/script.cpp

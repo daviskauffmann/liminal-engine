@@ -20,6 +20,7 @@ namespace liminal
         sol::state *lua;
 
         script(const std::string &filename, liminal::scene *scene, liminal::entity *entity);
+        ~script();
 
         void init();
         void update(float delta_time);

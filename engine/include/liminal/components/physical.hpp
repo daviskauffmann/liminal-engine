@@ -11,6 +11,7 @@ namespace liminal
         btRigidBody *rigidbody;
 
         physical(float mass);
+        ~physical();
     };
 }
 

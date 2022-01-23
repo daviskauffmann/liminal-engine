@@ -71,6 +71,11 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, limi
     };
 }
 
+liminal::script::~script()
+{
+    delete lua;
+}
+
 void liminal::script::init()
 {
     (*lua)["Init"]();

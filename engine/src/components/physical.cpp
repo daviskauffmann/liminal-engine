@@ -11,3 +11,8 @@ liminal::physical::physical(float mass) : mass(mass)
     collision_shape->calculateLocalInertia(mass, local_inertia);
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(mass, motion_state, collision_shape, local_inertia));
 }
+
+liminal::physical::~physical()
+{
+    delete rigidbody;
+}

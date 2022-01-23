@@ -11,8 +11,9 @@ public:
     editor()
     {
         scene = new liminal::scene();
-        scene->draw_to_texture = true;
         scene->load("assets/scenes/demo.json");
+
+        liminal::engine::get_instance().renderer->draw_to_imgui_texture = true;
     }
 
     void update(unsigned int current_time, float delta_time) override
@@ -74,7 +75,7 @@ public:
                     liminal::engine::get_instance().renderer->set_target_size((int)new_region_size.x, (int)new_region_size.y);
                     region_size = new_region_size;
                 }
-                ImGui::Image(scene->texture_id, region_size, ImVec2{0, 1}, ImVec2{1, 0});
+                ImGui::Image(liminal::engine::get_instance().renderer->imgui_texture_id, region_size, ImVec2{0, 1}, ImVec2{1, 0});
             }
             ImGui::End();
 

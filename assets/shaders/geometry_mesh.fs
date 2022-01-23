@@ -11,6 +11,7 @@ layout (location = 0) out vec3 position_map;
 layout (location = 1) out vec3 normal_map;
 layout (location = 2) out vec3 albedo_map;
 layout (location = 3) out vec4 material_map;
+layout (location = 4) out int id_map;
 
 uniform struct Material
 {
@@ -26,6 +27,8 @@ uniform struct Material
     bool has_height_map;
     sampler2D height_map;
 } material;
+
+uniform int id;
 
 vec3 calc_normal()
 {
@@ -53,4 +56,5 @@ void main()
     material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : 1.0;
     material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1.0;
     material_map.a = material.has_height_map ? texture(material.height_map, vertex.uv).r : 0.0;
+    id_map = id;
 }

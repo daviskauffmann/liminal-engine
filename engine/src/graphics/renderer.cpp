@@ -50,6 +50,8 @@ liminal::renderer::renderer(
     wireframe = false;
     greyscale = false;
 
+    draw_to_imgui_texture = false;
+
     // setup fbos
     this->target_width = target_width;
     this->target_height = target_height;
@@ -469,6 +471,7 @@ liminal::renderer::~renderer()
     glDeleteTextures(1, &geometry_normal_texture_id);
     glDeleteTextures(1, &geometry_albedo_texture_id);
     glDeleteTextures(1, &geometry_material_texture_id);
+    glDeleteTextures(1, &geometry_id_texture_id);
     glDeleteRenderbuffers(1, &geometry_rbo_id);
 
     glDeleteFramebuffers(1, &hdr_fbo_id);
@@ -561,6 +564,7 @@ void liminal::renderer::calc_render_size()
     glDeleteTextures(1, &geometry_normal_texture_id);
     glDeleteTextures(1, &geometry_albedo_texture_id);
     glDeleteTextures(1, &geometry_material_texture_id);
+    glDeleteTextures(1, &geometry_id_texture_id);
     glDeleteRenderbuffers(1, &geometry_rbo_id);
 
     glDeleteFramebuffers(1, &hdr_fbo_id);
@@ -695,6 +699,31 @@ void liminal::renderer::calc_render_size()
         }
 
         {
+            glGenTextures(1, &geometry_id_texture_id);
+            glBindTexture(GL_TEXTURE_2D, geometry_id_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_R32I,
+                    render_width,
+                    render_height,
+                    0,
+                    GL_RED_INTEGER,
+                    GL_INT,
+                    nullptr);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT4,
+                GL_TEXTURE_2D,
+                geometry_id_texture_id,
+                0);
+        }
+
+        {
             glGenRenderbuffers(1, &geometry_rbo_id);
             glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo_id);
             {
@@ -718,7 +747,8 @@ void liminal::renderer::calc_render_size()
                 GL_COLOR_ATTACHMENT0,
                 GL_COLOR_ATTACHMENT1,
                 GL_COLOR_ATTACHMENT2,
-                GL_COLOR_ATTACHMENT3};
+                GL_COLOR_ATTACHMENT3,
+                GL_COLOR_ATTACHMENT4};
             glDrawBuffers(sizeof(geometry_color_attachments) / sizeof(GLenum), geometry_color_attachments);
         }
 
@@ -1339,6 +1369,18 @@ void liminal::renderer::setup_samplers()
     postprocess_program->unbind();
 }
 
+int liminal::renderer::pick(int x, int y)
+{
+    int pixel;
+    glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
+    {
+        glReadBuffer(GL_COLOR_ATTACHMENT4);
+        glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return pixel;
+}
+
 void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time)
 {
     if (!scene.camera)
@@ -1638,6 +1680,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
                     geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
                     geometry_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                     geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
+                    geometry_skinned_mesh_program->set_int("id", (int)entity);
 
                     mesh_renderer.model->draw_meshes(geometry_skinned_mesh_program);
                 }
@@ -1650,6 +1693,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
                     geometry_mesh_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                     geometry_mesh_program->set_mat4("model_matrix", model_matrix);
                     geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
+                    geometry_mesh_program->set_int("id", (int)entity);
 
                     mesh_renderer.model->draw_meshes(geometry_mesh_program);
                 }
@@ -2129,7 +2173,7 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     }
 
     // final pass
-    glBindFramebuffer(GL_FRAMEBUFFER, scene.draw_to_texture ? final_fbo_id : 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, draw_to_imgui_texture ? final_fbo_id : 0);
     {
         glViewport(0, 0, target_width, target_height);
         glDisable(GL_DEPTH_TEST);
@@ -2160,9 +2204,9 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    if (scene.draw_to_texture)
+    if (draw_to_imgui_texture)
     {
-        scene.texture_id = (void *)(long long)final_texture_id;
+        imgui_texture_id = (ImTextureID)(long long)final_texture_id;
     }
 
     // DEBUG: draw fbos

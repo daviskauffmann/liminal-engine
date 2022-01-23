@@ -39,28 +39,14 @@ liminal::scene::scene()
 
 liminal::scene::~scene()
 {
-    for (auto [entity, script] : registry.view<liminal::script>().each())
-    {
-        delete script.lua;
-    }
-
     for (auto [entity, physical] : registry.view<liminal::physical>().each())
     {
         world->removeRigidBody(physical.rigidbody);
-        delete physical.rigidbody;
     }
 
     for (auto [entity, terrain] : registry.view<liminal::terrain>().each())
     {
-        delete terrain.mesh;
-
         world->removeRigidBody(terrain.rigidbody);
-        delete terrain.rigidbody;
-    }
-
-    for (auto [entity, audio_source] : registry.view<liminal::audio_source>().each())
-    {
-        delete audio_source.source;
     }
 
     registry.clear();
@@ -118,7 +104,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "physical")
                     {
-                        auto physical = entity.add_component<liminal::physical>(value["mass"]);
+                        auto &physical = entity.add_component<liminal::physical>(value["mass"]);
                         world->addRigidBody(physical.rigidbody);
                     }
 
@@ -126,7 +112,7 @@ void liminal::scene::load(const std::string &filename)
                     {
                         std::string filename(value["filename"]);
                         bool flip_uvs = value["flip_uvs"];
-                        auto mesh_renderer = entity.add_component<liminal::mesh_renderer>(new liminal::model(filename, flip_uvs)); // TODO: asset manager
+                        auto &mesh_renderer = entity.add_component<liminal::mesh_renderer>(new liminal::model(filename, flip_uvs)); // TODO: asset manager
                         mesh_renderer.model->update_bone_transformations(0, 0);
                     }
 
@@ -142,7 +128,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "terrain")
                     {
-                        auto terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0, 0, 0), 100.f, 5.f);
+                        auto &terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0, 0, 0), 100.f, 5.f);
                         world->addRigidBody(terrain.rigidbody);
                     }
                 }
@@ -181,7 +167,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     {
         if (mesh_renderer.model->has_animations())
         {
-            // TODO: put current animation on the mesh_renderer component
+            // TODO: put current animation_index on the mesh_renderer component
             mesh_renderer.model->update_bone_transformations(0, current_time);
         }
     }

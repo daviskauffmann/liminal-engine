@@ -61,18 +61,18 @@ public:
 
         ambience_entity = scene->create_entity();
         ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        ambience_entity.add_component<liminal::audio_source>(new liminal::source());
+        ambience_entity.add_component<liminal::audio_source>();
         ambience_entity.get_component<liminal::audio_source>().source->set_loop(true);
         ambience_entity.get_component<liminal::audio_source>().source->set_gain(0.25f);
         // ambience_entity.get_component<liminal::audio_source>().play(ambient_sound);
 
         bounce_entity = scene->create_entity();
         bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        bounce_entity.add_component<liminal::audio_source>(new liminal::source());
+        bounce_entity.add_component<liminal::audio_source>();
 
         weapon_entity = scene->create_entity();
         weapon_entity.add_component<liminal::transform>("Weapon", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        weapon_entity.add_component<liminal::audio_source>(new liminal::source());
+        weapon_entity.add_component<liminal::audio_source>();
 
         ui_entity = scene->create_entity();
         // ui_entity.add_component<liminal::sprite>(&grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0, glm::vec2(1, 1));}
@@ -80,6 +80,7 @@ public:
 
     ~player()
     {
+        // TODO: asset management, this is currently generating OpenAL errors for deleting in-use buffers
         delete ambient_sound;
         delete bounce_sound;
         delete shoot_sound;
@@ -231,6 +232,13 @@ public:
         {
             if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
             {
+                int x = liminal::input::mouse_x;
+                int y = 720 - liminal::input::mouse_y;
+
+                int pixel = liminal::engine::get_instance().renderer->pick(x, y);
+                std::cout << "(" << x << ", " << y << ")"
+                          << ": " << pixel << std::endl;
+
                 if (!weapon_entity.get_component<liminal::audio_source>().source->is_playing())
                 {
                     weapon_entity.get_component<liminal::audio_source>().source->play(*shoot_sound);

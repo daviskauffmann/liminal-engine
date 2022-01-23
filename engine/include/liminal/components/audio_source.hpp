@@ -8,6 +8,9 @@ namespace liminal
     struct audio_source
     {
         liminal::source *source;
+
+        audio_source();
+        ~audio_source();
     };
 }
 

@@ -122,6 +122,12 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape));
 }
 
+liminal::terrain::~terrain()
+{
+    delete mesh;
+    delete rigidbody;
+}
+
 glm::mat4 liminal::terrain::get_model_matrix() const
 {
     glm::mat4 model = glm::identity<glm::mat4>();

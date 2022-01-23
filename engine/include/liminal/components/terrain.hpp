@@ -18,6 +18,7 @@ namespace liminal
         btRigidBody *rigidbody;
 
         terrain(const std::string &filename, glm::vec3 position, float size, float height_scale);
+        ~terrain();
 
         glm::mat4 get_model_matrix() const;
 

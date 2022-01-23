@@ -11,6 +11,7 @@ layout (location = 0) out vec3 position_map;
 layout (location = 1) out vec3 normal_map;
 layout (location = 2) out vec3 albedo_map;
 layout (location = 3) out vec4 material_map;
+layout (location = 4) out int id_map;
 
 uniform struct Material
 {
@@ -50,4 +51,5 @@ void main()
     material_map.g = texture(materials[0].roughness_map, vertex.uv).r;
     material_map.b = texture(materials[0].occlusion_map, vertex.uv).r;
     material_map.a = texture(materials[0].height_map, vertex.uv).r;
+    id_map = -1;
 }

@@ -18,7 +18,7 @@ liminal::sound::sound(const std::string &filename)
         AL_FORMAT_MONO16,
         chunk->abuf,
         chunk->alen,
-        44100);
+        88200);
 
     Mix_FreeChunk(chunk);
 }
