@@ -8,6 +8,12 @@ find_package(glm CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
+    src/blocks/air_block.cpp
+    src/blocks/grass_block.cpp
+    src/blocks/stone_block.cpp
+    src/block.cpp
+    src/chunk.cpp
+    src/mesh_data.cpp
     src/minecraft.cpp
 )
 

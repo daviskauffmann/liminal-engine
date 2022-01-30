@@ -1,5 +1,5 @@
 {
-    "skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
+    "_skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
     "entities": [
         {
             "transform": {

@@ -1,17 +1,26 @@
 #ifndef MINECRAFT_CHUNK_HPP
 #define MINECRAFT_CHUNK_HPP
 
-#include <liminal.hpp>
+#include <liminal/liminal.hpp>
+#include <glm/glm.hpp>
 
-class block;
-
-class chunk
+namespace minecraft
 {
-public:
-    block *blocks[16][16][16];
+    class block;
 
-    block *get_block(int x, int y, int z);
-    liminal::mesh *render(liminal::texture *tiles_texture);
-};
+    class chunk
+    {
+    public:
+        static const size_t size = 16;
+
+        chunk();
+
+        minecraft::block *blocks[size][size][size];
+        glm::ivec3 position;
+
+        minecraft::block *get_block(int x, int y, int z);
+        liminal::mesh *render(liminal::texture *tiles_texture);
+    };
+}
 
 #endif

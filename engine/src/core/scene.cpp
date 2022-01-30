@@ -181,7 +181,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     // update audio source positions
     for (auto [entity, audio_source, transform] : registry.view<liminal::audio_source, liminal::transform>().each())
     {
-        audio_source.source->set_position(transform.position);
+        audio_source.set_position(transform.position);
     }
 
     // update world transforms in case the transform component changed

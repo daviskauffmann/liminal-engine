@@ -61,10 +61,10 @@ public:
 
         ambience_entity = scene->create_entity();
         ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        ambience_entity.add_component<liminal::audio_source>();
-        ambience_entity.get_component<liminal::audio_source>().source->set_loop(true);
-        ambience_entity.get_component<liminal::audio_source>().source->set_gain(0.25f);
-        // ambience_entity.get_component<liminal::audio_source>().play(ambient_sound);
+        auto &ambience_audio_source = ambience_entity.add_component<liminal::audio_source>();
+        ambience_audio_source.set_loop(true);
+        ambience_audio_source.set_gain(0.25f);
+        ambience_audio_source.play(*ambient_sound);
 
         bounce_entity = scene->create_entity();
         bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
@@ -239,17 +239,19 @@ public:
                 std::cout << "(" << x << ", " << y << ")"
                           << ": " << pixel << std::endl;
 
-                if (!weapon_entity.get_component<liminal::audio_source>().source->is_playing())
+                auto &weapon_audio_source = weapon_entity.get_component<liminal::audio_source>();
+                if (!weapon_audio_source.is_playing())
                 {
-                    weapon_entity.get_component<liminal::audio_source>().source->play(*shoot_sound);
+                    weapon_audio_source.play(*shoot_sound);
                 }
             }
 
             if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_RIGHT))
             {
-                if (!bounce_entity.get_component<liminal::audio_source>().source->is_playing())
+                auto &bounce_audio_source = bounce_entity.get_component<liminal::audio_source>();
+                if (!bounce_audio_source.is_playing())
                 {
-                    bounce_entity.get_component<liminal::audio_source>().source->play(*bounce_sound);
+                    bounce_audio_source.play(*bounce_sound);
                 }
             }
         }
