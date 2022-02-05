@@ -201,7 +201,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
                 std::string filename = directory + "/" + path.C_Str();
                 if (loaded_textures.find(filename) == loaded_textures.end())
                 {
-                    liminal::texture *texture = new liminal::texture(filename);
+                    liminal::texture *texture = new liminal::texture(filename); // TODO: asset manager
                     material_textures.push_back(texture);
                     loaded_textures[filename] = texture;
                 }

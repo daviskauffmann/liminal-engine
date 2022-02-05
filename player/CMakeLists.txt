@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(player)
+project(liminal_player)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -18,8 +18,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        engine
         EnTT::EnTT
         glm::glm
+        liminal-engine
         SDL2::SDL2 SDL2::SDL2main
 )

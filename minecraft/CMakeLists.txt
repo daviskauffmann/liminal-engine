@@ -24,8 +24,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        engine
         EnTT::EnTT
         glm::glm
+        liminal_engine
         SDL2::SDL2 SDL2::SDL2main
 )
