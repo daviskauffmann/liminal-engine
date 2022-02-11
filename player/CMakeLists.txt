@@ -20,6 +20,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         EnTT::EnTT
         glm::glm
-        liminal-engine
+        liminal_engine
         SDL2::SDL2 SDL2::SDL2main
 )
