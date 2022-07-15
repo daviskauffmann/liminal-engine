@@ -18,7 +18,7 @@ liminal::sound::sound(const std::string &filename)
         AL_FORMAT_MONO16,
         chunk->abuf,
         chunk->alen,
-        88200);
+        44100);
 
     Mix_FreeChunk(chunk);
 }
@@ -26,4 +26,9 @@ liminal::sound::sound(const std::string &filename)
 liminal::sound::~sound()
 {
     alDeleteBuffers(1, &buffer_id);
+}
+
+ALuint liminal::sound::get_buffer_id() const
+{
+    return buffer_id;
 }

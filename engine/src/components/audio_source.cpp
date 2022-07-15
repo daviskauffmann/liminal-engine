@@ -50,7 +50,7 @@ bool liminal::audio_source::is_playing() const
 
 void liminal::audio_source::play(const liminal::sound &sound) const
 {
-    alSourcei(source_id, AL_BUFFER, sound.buffer_id);
+    alSourcei(source_id, AL_BUFFER, sound.get_buffer_id());
     alSourcePlay(source_id);
 }
 

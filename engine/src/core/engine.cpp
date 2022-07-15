@@ -19,14 +19,11 @@ constexpr const char *exe_name = "liminal";
 constexpr const char *version_string = "v0.0.1";
 constexpr const char *window_title = "Liminal Engine";
 
-liminal::engine &liminal::engine::get_instance()
-{
-    static liminal::engine instance;
-    return instance;
-}
+liminal::engine *liminal::engine::instance = nullptr;
 
 liminal::engine::engine()
 {
+    instance = this;
 }
 
 liminal::engine::~engine()

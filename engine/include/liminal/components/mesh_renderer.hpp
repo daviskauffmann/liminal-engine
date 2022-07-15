@@ -5,8 +5,9 @@
 
 namespace liminal
 {
-    struct mesh_renderer
+    class mesh_renderer
     {
+    public:
         liminal::model *model;
     };
 }

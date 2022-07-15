@@ -5,8 +5,9 @@ class btRigidBody;
 
 namespace liminal
 {
-    struct physical
+    class physical
     {
+    public:
         float mass;
         btRigidBody *rigidbody;
 

@@ -7,7 +7,7 @@
 
 namespace liminal
 {
-    struct audio_source
+    class audio_source
     {
     public:
         audio_source();

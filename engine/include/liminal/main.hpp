@@ -5,7 +5,9 @@
 
 int main(int argc, char *argv[])
 {
-    liminal::engine::get_instance().run(argc, argv);
+    auto engine = new liminal::engine();
+    engine->run(argc, argv);
+    delete engine;
 
     return 0;
 }

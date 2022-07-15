@@ -5,8 +5,9 @@
 
 namespace liminal
 {
-    struct audio_listener
+    class audio_listener
     {
+    public:
         void set_position(glm::vec3 position, glm::vec3 rotation);
 
     private:

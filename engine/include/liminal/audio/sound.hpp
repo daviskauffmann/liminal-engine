@@ -6,12 +6,16 @@
 
 namespace liminal
 {
-    struct sound
+    class sound
     {
-        ALuint buffer_id;
-
+    public:
         sound(const std::string &filename);
         ~sound();
+
+        ALuint get_buffer_id() const;
+
+    private:
+        ALuint buffer_id;
     };
 }
 

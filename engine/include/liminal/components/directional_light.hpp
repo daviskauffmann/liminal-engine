@@ -5,8 +5,9 @@
 
 namespace liminal
 {
-    struct directional_light
+    class directional_light
     {
+    public:
         glm::vec3 color;
     };
 }

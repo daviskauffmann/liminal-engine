@@ -114,11 +114,8 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
     btTransform transform;
     transform.setIdentity();
     transform.setOrigin(btVector3(position.x, position.y, position.z));
-
     btDefaultMotionState *motion_state = new btDefaultMotionState(transform);
-
     btCollisionShape *collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
-
     rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape));
 }
 

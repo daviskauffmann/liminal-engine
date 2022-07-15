@@ -9,17 +9,15 @@ namespace liminal
     class engine
     {
     public:
-        static engine &get_instance();
+        static engine *instance;
 
         liminal::platform *platform;
         liminal::renderer *renderer;
 
+        engine();
         ~engine();
 
         void run(int argc, char *argv[]);
-
-    private:
-        engine();
     };
 }
 

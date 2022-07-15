@@ -235,7 +235,7 @@ public:
                 int x = liminal::input::mouse_x;
                 int y = 720 - liminal::input::mouse_y;
 
-                int pixel = liminal::engine::get_instance().renderer->pick(x, y);
+                int pixel = liminal::engine::instance->renderer->pick(x, y);
                 std::cout << "(" << x << ", " << y << ")"
                           << ": " << pixel << std::endl;
 
@@ -262,7 +262,7 @@ public:
 
     void resize(int width, int height) override
     {
-        liminal::engine::get_instance().renderer->set_target_size(width, height);
+        liminal::engine::instance->renderer->set_target_size(width, height);
     }
 };
 
