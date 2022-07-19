@@ -53,13 +53,13 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetSwapInterval(0);
-    sdl_gl_context = SDL_GL_CreateContext(window);
-    if (!sdl_gl_context)
+    context = SDL_GL_CreateContext(window);
+    if (!context)
     {
         std::cerr << "Error: Failed to create OpenGL context: " << SDL_GetError() << std::endl;
         return;
     }
-    SDL_GL_MakeCurrent(window, sdl_gl_context);
+    SDL_GL_MakeCurrent(window, context);
 
     // init GLEW
     GLenum error = glewInit();
@@ -103,7 +103,7 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
     io.ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
     io.IniFilename = "assets/imgui.ini";
 
-    ImGui_ImplSDL2_InitForOpenGL(window, sdl_gl_context);
+    ImGui_ImplSDL2_InitForOpenGL(window, context);
     ImGui_ImplOpenGL3_Init("#version 460");
 }
 
@@ -120,12 +120,17 @@ liminal::platform::~platform()
     Mix_CloseAudio();
 
     SDL_DestroyWindow(window);
-    SDL_GL_DeleteContext(sdl_gl_context);
+    SDL_GL_DeleteContext(context);
 
     IMG_Quit();
     Mix_Quit();
 
     SDL_Quit();
+}
+
+void liminal::platform::set_window_title(const std::string &title)
+{
+    SDL_SetWindowTitle(window, title.c_str());
 }
 
 void liminal::platform::set_window_size(int width, int height)
@@ -173,7 +178,7 @@ void liminal::platform::end_frame()
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
 
-        SDL_GL_MakeCurrent(window, sdl_gl_context);
+        SDL_GL_MakeCurrent(window, context);
     }
 
     SDL_GL_SwapWindow(window);

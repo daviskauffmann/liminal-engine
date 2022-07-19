@@ -32,6 +32,8 @@ namespace liminal
 
         void update(unsigned int current_time, float delta_time);
 
+        void reload_scripts();
+
     private:
         btDiscreteDynamicsWorld *world;
         std::unordered_map<entt::entity, liminal::entity> entities;

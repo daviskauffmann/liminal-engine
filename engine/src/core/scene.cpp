@@ -84,6 +84,15 @@ void liminal::scene::load(const std::string &filename)
                         entity.add_component<liminal::directional_light>(color);
                     }
 
+                    if (key == "spot_light")
+                    {
+                        glm::vec3 color(
+                            value["color"]["r"],
+                            value["color"]["g"],
+                            value["color"]["b"]);
+                        entity.add_component<liminal::spot_light>(color, value["inner_cutoff"], value["outer_cutoff"]);
+                    }
+
                     if (key == "transform")
                     {
                         std::string name = std::string(value["name"]);
@@ -118,7 +127,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "script")
                     {
-                        entity.add_component<liminal::script>(value["filename"], this, &entity);
+                        entity.add_component<liminal::script>(value["filename"], this, entity.get_id());
                     }
 
                     if (key == "water")
@@ -200,7 +209,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     // update physics world
     world->stepSimulation(delta_time);
 
-    // update transforms
+    // update transforms to respect physics simulation
     for (auto [entity, physical, transform] : registry.view<liminal::physical, liminal::transform>().each())
     {
         btTransform world_transform = physical.rigidbody->getWorldTransform();
@@ -211,5 +220,13 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
             world_transform.getOrigin().z()};
 
         world_transform.getRotation().getEulerZYX(transform.rotation.z, transform.rotation.y, transform.rotation.x);
+    }
+}
+
+void liminal::scene::reload_scripts()
+{
+    for (auto [entity, script] : registry.view<liminal::script>().each())
+    {
+        // TODO:
     }
 }

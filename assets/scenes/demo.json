@@ -1,5 +1,5 @@
 {
-    "skybox": "assets/images/GCanyon_C_YumaPoint_8k.jpg",
+    "skybox": "_assets/images/GCanyon_C_YumaPoint_8k.jpg",
     "entities": [
         {
             "transform": {
@@ -130,6 +130,38 @@
             "mesh_renderer": {
                 "filename": "assets/models/dude/model.dae",
                 "flip_uvs": false
+            }
+        },
+        {
+            "transform": {
+                "name": "Flashlight",
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            },
+            "spot_light": {
+                "color": {
+                    "r": 20,
+                    "g": 20,
+                    "b": 20
+                },
+                "inner_cutoff": 12.5,
+                "outer_cutoff": 15
+            },
+            "script": {
+                "filename": "assets/scripts/flashlight.lua"
             }
         },
         {

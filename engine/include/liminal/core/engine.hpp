@@ -18,6 +18,10 @@ namespace liminal
         ~engine();
 
         void run(int argc, char *argv[]);
+        void stop();
+
+    private:
+        bool running = false;
     };
 }
 

@@ -13,6 +13,7 @@ namespace liminal
         platform(const std::string &window_title, int window_width, int window_height);
         ~platform();
 
+        void set_window_title(const std::string &title);
         void set_window_size(int width, int height);
         void toggle_fullscreen();
         void toggle_vsync();
@@ -24,7 +25,7 @@ namespace liminal
 
     private:
         SDL_Window *window;
-        SDL_GLContext sdl_gl_context;
+        SDL_GLContext context;
         ALCdevice *al_device;
         ALCcontext *al_context;
     };

@@ -1887,8 +1887,8 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
                     deferred_spot_program->set_vec3("light.position", transform.position);
                     deferred_spot_program->set_vec3("light.direction", transform.rotation);
                     deferred_spot_program->set_vec3("light.color", spot_light.color);
-                    deferred_spot_program->set_float("light.inner_cutoff", spot_light.inner_cutoff);
-                    deferred_spot_program->set_float("light.outer_cutoff", spot_light.outer_cutoff);
+                    deferred_spot_program->set_float("light.inner_cutoff", glm::cos(glm::radians(spot_light.inner_cutoff)));
+                    deferred_spot_program->set_float("light.outer_cutoff", glm::cos(glm::radians(spot_light.outer_cutoff)));
                     deferred_spot_program->set_mat4("light.transformation_matrix", i < NUM_SPOT_LIGHT_SHADOWS ? spot_light_transformation_matrices[i] : glm::identity<glm::mat4>());
 
                     glActiveTexture(GL_TEXTURE4);

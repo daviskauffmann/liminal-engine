@@ -6,33 +6,103 @@
 #include <liminal/core/engine.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/core/scene.hpp>
+#include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
+#include <liminal/input/input.hpp>
 #include <sol/sol.hpp>
 
-liminal::script::script(const std::string &filename, liminal::scene *scene, liminal::entity *entity)
-    : entity(entity)
+liminal::script::script(const std::string &filename, liminal::scene *scene, entt::entity id)
 {
     lua = new sol::state;
     lua->open_libraries(sol::lib::base, sol::lib::math);
     lua->script_file(filename);
 
+    (*lua)["GetKeyDown"] = [](liminal::keycode keycode) -> bool
+    {
+        return liminal::input::key_down(keycode);
+    };
+    (*lua)["GetCameraX"] = [scene]() -> float
+    {
+        return scene->camera->position.x;
+    };
+    (*lua)["GetCameraY"] = [scene]() -> float
+    {
+        return scene->camera->position.y;
+    };
+    (*lua)["GetCameraZ"] = [scene]() -> float
+    {
+        return scene->camera->position.z;
+    };
+    (*lua)["GetCameraRotX"] = [scene]() -> float
+    {
+        return scene->camera->calc_front().x;
+    };
+    (*lua)["GetCameraRotY"] = [scene]() -> float
+    {
+        return scene->camera->calc_front().y;
+    };
+    (*lua)["GetCameraRotZ"] = [scene]() -> float
+    {
+        return scene->camera->calc_front().z;
+    };
     (*lua)["SetSkybox"] = [scene](const std::string &filename) -> void
     {
-        // scene->skybox = new liminal::skybox(filename);
+        if (scene->skybox)
+        {
+            delete scene->skybox;
+        }
+
+        scene->skybox = new liminal::skybox(filename);
     };
     (*lua)["AddEntity"] = [scene]() -> entt::entity
     {
         return scene->create_entity().get_id();
     };
-    (*lua)["GetEntity"] = [entity]() -> entt::entity
+    (*lua)["GetEntity"] = [id]() -> entt::entity
     {
-        return entity->get_id();
+        return id;
     };
     (*lua)["AddTransform"] = [scene](entt::entity id, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
         auto entity = scene->get_entity(id);
         auto transform = entity.add_component<liminal::transform>("NAME", nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
+    };
+    (*lua)["GetTransformX"] = [scene](entt::entity id) -> float
+    {
+        auto entity = scene->get_entity(id);
+        auto &transform = entity.get_component<liminal::transform>();
+        return transform.position.x;
+    };
+    (*lua)["GetTransformY"] = [scene](entt::entity id) -> float
+    {
+        auto entity = scene->get_entity(id);
+        auto &transform = entity.get_component<liminal::transform>();
+        return transform.position.y;
+    };
+    (*lua)["GetTransformZ"] = [scene](entt::entity id) -> float
+    {
+        auto entity = scene->get_entity(id);
+        auto &transform = entity.get_component<liminal::transform>();
+        return transform.position.z;
+    };
+    (*lua)["GetTransformRotX"] = [scene](entt::entity id) -> float
+    {
+        auto entity = scene->get_entity(id);
+        auto &transform = entity.get_component<liminal::transform>();
+        return transform.rotation.x;
+    };
+    (*lua)["GetTransformRotY"] = [scene](entt::entity id) -> float
+    {
+        auto entity = scene->get_entity(id);
+        auto &transform = entity.get_component<liminal::transform>();
+        return transform.rotation.y;
+    };
+    (*lua)["GetTransformRotZ"] = [scene](entt::entity id) -> float
+    {
+        auto entity = scene->get_entity(id);
+        auto &transform = entity.get_component<liminal::transform>();
+        return transform.rotation.z;
     };
     (*lua)["UpdateTransform"] = [scene](entt::entity id, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
@@ -67,7 +137,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, limi
     (*lua)["AddScript"] = [scene](entt::entity id, const std::string &filename) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::script>(filename, scene, &entity);
+        entity.add_component<liminal::script>(filename, scene, id);
     };
 }
 

@@ -23,7 +23,21 @@ namespace minecraft
             SDL_SetRelativeMouseMode(SDL_TRUE);
 
             scene = new liminal::scene();
-            scene->load("assets/scenes/minecraft.json");
+            scene->camera = new liminal::camera(
+                glm::vec3(0, 0, 3),
+                0,
+                0,
+                0,
+                45);
+            scene->skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_Env.hdr");
+            auto sun = scene->create_entity();
+            sun.add_component<liminal::transform>(
+                "Sun",
+                nullptr,
+                glm::vec3(0, 0, 0),
+                glm::vec3(0.352286, -0.547564, -0.758992),
+                glm::vec3(1, 1, 1));
+            sun.add_component<liminal::directional_light>(glm::vec3(1, 1, 1));
 
             tiles_texture = new liminal::texture("assets/images/tiles.png", false, false);
 

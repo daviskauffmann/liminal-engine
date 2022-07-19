@@ -11,7 +11,7 @@ namespace liminal
     class app
     {
     public:
-        liminal::scene *scene;
+        liminal::scene *scene = nullptr;
 
         virtual ~app()
         {

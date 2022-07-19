@@ -1,6 +1,7 @@
 #ifndef LIMINAL_COMPONENTS_SCRIPT_HPP
 #define LIMINAL_COMPONENTS_SCRIPT_HPP
 
+#include <entt/entt.hpp>
 #include <string>
 
 namespace sol
@@ -15,11 +16,9 @@ namespace liminal
 
     struct script
     {
-        liminal::scene *scene;
-        liminal::entity *entity;
         sol::state *lua;
 
-        script(const std::string &filename, liminal::scene *scene, liminal::entity *entity);
+        script(const std::string &filename, liminal::scene *scene, entt::entity id);
         ~script();
 
         void init();

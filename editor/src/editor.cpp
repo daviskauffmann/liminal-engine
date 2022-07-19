@@ -10,9 +10,7 @@ class editor : public liminal::app
 public:
     editor()
     {
-        scene = new liminal::scene();
-        scene->load("assets/scenes/demo.json");
-
+        load_scene();
         liminal::engine::instance->renderer->draw_to_imgui_texture = true;
     }
 
@@ -49,22 +47,131 @@ public:
 
         camera->position += camera_front * (float)liminal::input::mouse_wheel_y;
 
-        ImGui::Begin("Main", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_MenuBar);
+        if (liminal::input::key_down(liminal::keycode::KEYCODE_N))
         {
-            ImGui::DockSpace(ImGui::GetID("Dockspace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
+            if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+            {
+                new_scene();
+            }
+        }
 
-            // if (ImGui::BeginMenuBar())
-            // {
-            //     if (ImGui::BeginMenu("File"))
-            //     {
-            //         if (ImGui::MenuItem("Exit"))
-            //         {
-            //             // TODO: exit
-            //         }
-            //     }
-            //     ImGui::EndMenu();
-            // }
-            // ImGui::EndMenuBar();
+        if (liminal::input::key_down(liminal::keycode::KEYCODE_O))
+        {
+            if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+            {
+                load_scene();
+            }
+        }
+
+        if (liminal::input::key_down(liminal::keycode::KEYCODE_S))
+        {
+            if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+            {
+                if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+                {
+                    save_scene();
+                }
+                else
+                {
+                    save_scene();
+                }
+            }
+        }
+
+        if (liminal::input::key_down(liminal::keycode::KEYCODE_F5))
+        {
+            if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+            {
+                stop();
+            }
+            else
+            {
+                play();
+            }
+        }
+
+        if (playing)
+        {
+            scene->update(current_time, delta_time);
+        }
+
+        ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+        if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+        {
+            window_flags |= ImGuiWindowFlags_NoBackground;
+        }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        if (ImGui::Begin("DockSpace Demo", NULL, window_flags))
+        {
+            ImGui::PopStyleVar(3);
+
+            if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+            {
+                ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+                ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+            }
+
+            if (ImGui::BeginMenuBar())
+            {
+                if (ImGui::BeginMenu("File"))
+                {
+                    if (ImGui::MenuItem("New", "Ctrl+N"))
+                    {
+                        new_scene();
+                    }
+
+                    if (ImGui::MenuItem("Open...", "Ctrl+O"))
+                    {
+                        load_scene();
+                    }
+
+                    if (ImGui::MenuItem("Save", "Ctrl+S"))
+                    {
+                        save_scene();
+                    }
+
+                    if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                    {
+                        save_scene();
+                    }
+
+                    if (ImGui::MenuItem("Exit", "Alt+F4"))
+                    {
+                        liminal::engine::instance->stop();
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Run"))
+                {
+                    if (ImGui::MenuItem("Play", "F5"))
+                    {
+                        play();
+                    }
+
+                    if (ImGui::MenuItem("Stop", "Shift+F5"))
+                    {
+                        stop();
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                ImGui::EndMenuBar();
+            }
 
             if (ImGui::Begin("Scene", nullptr))
             {
@@ -83,12 +190,58 @@ public:
             {
                 for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
                 {
-                    ImGui::Text("%s", transform.name.c_str());
+                    ImGui::Text("%s (%d)", transform.name.c_str(), entity);
                 }
             }
             ImGui::End();
         }
         ImGui::End();
+    }
+
+private:
+    bool playing = false;
+
+    void new_scene()
+    {
+        if (scene)
+        {
+            delete scene;
+        }
+        scene = new liminal::scene();
+        scene->camera = new liminal::camera(
+            glm::vec3(0, 0, 3),
+            0,
+            0,
+            0,
+            45);
+    }
+
+    void load_scene()
+    {
+        new_scene();
+        scene->load("assets/scenes/demo.json");
+    }
+
+    void save_scene()
+    {
+        scene->save("assets/scenes/demo.json");
+    }
+
+    void play()
+    {
+        playing = true;
+
+        for (auto [entity, script] : scene->registry.view<liminal::script>().each())
+        {
+            script.init();
+        }
+    }
+
+    void stop()
+    {
+        playing = false;
+
+        load_scene();
     }
 };
 

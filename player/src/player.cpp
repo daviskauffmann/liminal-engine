@@ -10,11 +10,6 @@ class player : public liminal::app
 public:
     liminal::entity camera_entity;
 
-    const float flashlight_intensity = 20;
-    liminal::entity flashlight_entity;
-    bool flashlight_follow = true;
-    bool flashlight_on = true;
-
     liminal::sound *ambient_sound;
     liminal::entity ambience_entity;
 
@@ -41,6 +36,12 @@ public:
         grass_texture = new liminal::texture("assets/images/grass_sprite.png");
 
         scene = new liminal::scene();
+        scene->camera = new liminal::camera(
+            glm::vec3(0, 0, 3),
+            0,
+            0,
+            0,
+            45);
         scene->load("assets/scenes/demo.json");
 
         // run init scripts
@@ -55,10 +56,6 @@ public:
         camera_entity.add_component<liminal::audio_listener>();
 
         // TODO: these entities should come from the JSON file
-        flashlight_entity = scene->create_entity();
-        flashlight_entity.add_component<liminal::transform>("Flashlight", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        flashlight_entity.add_component<liminal::spot_light>(glm::vec3(1, 1, 1) * flashlight_intensity, cosf(glm::radians(12.5f)), cosf(glm::radians(15.f)));
-
         ambience_entity = scene->create_entity();
         ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
         auto &ambience_audio_source = ambience_entity.add_component<liminal::audio_source>();
@@ -198,32 +195,6 @@ public:
         // and its transform would be changed directly, making this step unnecessary
         camera_entity.get_component<liminal::transform>().position = camera->position;
         camera_entity.get_component<liminal::transform>().rotation = camera->calc_front();
-
-        if (liminal::input::key_down(liminal::KEYCODE_F))
-        {
-            flashlight_on = !flashlight_on;
-        }
-        if (liminal::input::key_down(liminal::KEYCODE_G))
-        {
-            flashlight_follow = !flashlight_follow;
-        }
-
-        if (flashlight_on)
-        {
-            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(1, 1, 1) * flashlight_intensity;
-        }
-        else
-        {
-            flashlight_entity.get_component<liminal::spot_light>().color = glm::vec3(0, 0, 0);
-        }
-        if (flashlight_follow)
-        {
-            flashlight_entity.get_component<liminal::transform>().position = camera->position;
-            flashlight_entity.get_component<liminal::transform>().rotation = glm::mix(
-                flashlight_entity.get_component<liminal::transform>().rotation,
-                camera_front,
-                30 * delta_time);
-        }
 
         ambience_entity.get_component<liminal::transform>().position = camera->position;
         weapon_entity.get_component<liminal::transform>().position = camera->position;
