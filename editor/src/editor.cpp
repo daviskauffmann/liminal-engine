@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
@@ -20,139 +21,8 @@ public:
     void update(unsigned int current_time, float delta_time) override
     {
         ImGuiIO &io = ImGui::GetIO();
-
         auto &transform = editor_entity.get_component<liminal::transform>();
         auto &camera = editor_entity.get_component<liminal::camera>();
-        glm::vec3 camera_front = camera.calc_front(transform);
-        glm::vec3 camera_right = camera.calc_right(transform);
-
-        if (playing)
-        {
-            // TODO: remove all this
-            // camera movement while in play mode should be controlled by scripts
-            static glm::vec3 velocity(0, 0, 0);
-            glm::vec3 acceleration(0, 0, 0);
-            const float speed = 50;
-            const float drag = 10;
-            bool sprint = false;
-            bool jumping = false;
-            if (!io.WantCaptureKeyboard)
-            {
-                if (liminal::input::key(liminal::keycode::KEYCODE_W))
-                {
-                    acceleration += camera_front;
-                }
-                if (liminal::input::key(liminal::keycode::KEYCODE_A))
-                {
-                    acceleration -= camera_right;
-                }
-                if (liminal::input::key(liminal::keycode::KEYCODE_S))
-                {
-                    acceleration -= camera_front;
-                }
-                if (liminal::input::key(liminal::keycode::KEYCODE_D))
-                {
-                    acceleration += camera_right;
-                }
-                if (liminal::input::key(liminal::keycode::KEYCODE_SPACE))
-                {
-                    acceleration.y = 1;
-                }
-                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
-                {
-                    acceleration.y = -1;
-                }
-                if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
-                {
-                    sprint = true;
-                }
-                if (liminal::input::key_down(liminal::keycode::KEYCODE_SPACE) && !jumping)
-                {
-                    velocity.y = 10;
-                    jumping = true;
-                }
-            }
-            float acceleration_length = glm::length(acceleration);
-            if (acceleration_length > 1)
-            {
-                acceleration /= acceleration_length;
-            }
-            acceleration *= speed * (sprint ? 2 : 1);
-            acceleration -= velocity * drag;
-            acceleration.y = -9.8f;
-            transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
-            if (transform.position.y < 0)
-            {
-                transform.position.y = 0;
-                jumping = false;
-            }
-            velocity = acceleration * delta_time + velocity;
-            transform.rotation.z = glm::dot(camera_right, velocity);
-
-            if (!io.WantCaptureMouse)
-            {
-                if (SDL_GetRelativeMouseMode())
-                {
-                    const float sensitivity = 0.1f;
-                    transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
-                    transform.rotation.y += liminal::input::mouse_dx * sensitivity;
-                    if (transform.rotation.x > 89)
-                    {
-                        transform.rotation.x = 89;
-                    }
-                    if (transform.rotation.x < -89)
-                    {
-                        transform.rotation.x = -89;
-                    }
-
-                    camera.fov -= liminal::input::mouse_wheel_y;
-                    if (camera.fov <= 1)
-                    {
-                        camera.fov = 1;
-                    }
-                    if (camera.fov >= 120)
-                    {
-                        camera.fov = 120;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (liminal::input::mouse_button_down(liminal::mouse_button::MOUSE_BUTTON_LEFT))
-            {
-                auto mouse_position = ImGui::GetMousePos();
-                // auto viewport_size = ImVec2(scene_region_bounds[1].x - scene_region_bounds[0].x, scene_region_bounds[1].y - scene_region_bounds[0].y);
-                auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
-                auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
-                if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
-                {
-                    selected_entity_id = liminal::engine::instance->renderer->pick((int)mouse_x, (int)mouse_y);
-                }
-            }
-
-            const float sensitivity = 0.1f;
-            if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
-            {
-                transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
-                transform.rotation.x += liminal::input::mouse_dy * sensitivity;
-                if (transform.rotation.x > 89)
-                {
-                    transform.rotation.x = 89;
-                }
-                if (transform.rotation.x < -89)
-                {
-                    transform.rotation.x = -89;
-                }
-            }
-            else if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
-            {
-                transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
-                transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
-            }
-
-            transform.position += camera_front * (float)liminal::input::mouse_wheel_y;
-        }
 
         if (liminal::input::key_down(liminal::keycode::KEYCODE_N))
         {
@@ -282,6 +152,46 @@ public:
 
             if (ImGui::Begin("Scene", nullptr))
             {
+                if (ImGui::IsWindowHovered())
+                {
+                    glm::vec3 camera_front = camera.calc_front(transform);
+                    glm::vec3 camera_right = camera.calc_right(transform);
+
+                    if (liminal::input::mouse_button_down(liminal::mouse_button::MOUSE_BUTTON_LEFT))
+                    {
+                        auto mouse_position = ImGui::GetMousePos();
+                        auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
+                        auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
+                        if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
+                        {
+                            selected_entity_id = liminal::engine::instance->renderer->pick((int)mouse_x, (int)mouse_y);
+                        }
+                    }
+
+                    const float sensitivity = 0.1f;
+                    if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
+                    {
+                        transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
+                        transform.rotation.x += liminal::input::mouse_dy * sensitivity;
+                        if (transform.rotation.x > 89)
+                        {
+                            transform.rotation.x = 89;
+                        }
+                        if (transform.rotation.x < -89)
+                        {
+                            transform.rotation.x = -89;
+                        }
+                    }
+
+                    if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
+                    {
+                        transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
+                        transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
+                    }
+
+                    transform.position += camera_front * (float)liminal::input::mouse_wheel_y;
+                }
+
                 scene_region_size = ImGui::GetContentRegionAvail();
                 static auto prev_scene_region_size = ImVec2(0, 0);
                 if (scene_region_size.x != prev_scene_region_size.x || scene_region_size.y != prev_scene_region_size.y)
@@ -353,7 +263,7 @@ public:
 
                 if (ImGui::BeginPopupContextWindow(0, 1, false))
                 {
-                    if (ImGui::MenuItem("Create Empty Entity"))
+                    if (ImGui::MenuItem("Create Entity"))
                     {
                         auto entity = scene->create_entity();
                         entity.add_component<liminal::transform>("New Entity", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
@@ -411,6 +321,35 @@ public:
                 }
             }
             ImGui::End();
+
+            if (ImGui::Begin("Assets"))
+            {
+                if (current_asset_directory.has_parent_path())
+                {
+                    if (ImGui::Button("../"))
+                    {
+                        current_asset_directory = current_asset_directory.parent_path();
+                    }
+                }
+
+                for (auto &directory_entry : std::filesystem::directory_iterator(current_asset_directory))
+                {
+                    auto path = directory_entry.path();
+                    auto filename = path.filename();
+                    auto filename_string = filename.string();
+                    if (ImGui::Button(filename_string.c_str()))
+                    {
+                        if (directory_entry.is_directory())
+                        {
+                            current_asset_directory /= filename;
+                        }
+                        else
+                        {
+                        }
+                    }
+                }
+            }
+            ImGui::End();
         }
         ImGui::End();
     }
@@ -427,6 +366,8 @@ private:
     ImVec2 scene_region_size;
 
     entt::entity selected_entity_id = entt::null;
+
+    std::filesystem::path current_asset_directory = "assets";
 
     void new_scene()
     {
