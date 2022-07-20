@@ -32,7 +32,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["AddEntity"] = [scene]() -> entt::entity
     {
-        return scene->create_entity().get_id();
+        return scene->create_entity();
     };
     (*lua)["GetEntity"] = [id]() -> entt::entity
     {

@@ -1,4 +1,5 @@
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 #include <iostream>
 #include <liminal/liminal.hpp>
@@ -8,6 +9,7 @@
 class editor : public liminal::app
 {
 public:
+    // TODO: perhaps editor camera should not exist within the ECS?
     liminal::entity editor_entity;
 
     editor()
@@ -280,8 +282,6 @@ public:
 
             if (ImGui::Begin("Scene", nullptr))
             {
-                auto viewport_offset = ImGui::GetCursorPos();
-
                 scene_region_size = ImGui::GetContentRegionAvail();
                 static auto prev_scene_region_size = ImVec2(0, 0);
                 if (scene_region_size.x != prev_scene_region_size.x || scene_region_size.y != prev_scene_region_size.y)
@@ -292,21 +292,74 @@ public:
 
                 ImGui::Image((ImTextureID)(long long)camera.render_texture_id, scene_region_size, ImVec2{0, 1}, ImVec2{1, 0});
 
-                auto window_size = ImGui::GetWindowSize();
-                auto min_bound = ImGui::GetWindowPos();
-                min_bound.x += viewport_offset.x;
-                min_bound.y += viewport_offset.y;
-                auto max_bound = ImVec2(min_bound.x + window_size.x, min_bound.y + window_size.y);
-                scene_region_bounds[0] = ImVec2(min_bound.x, min_bound.y);
-                scene_region_bounds[1] = ImVec2(max_bound.x, max_bound.y);
+                auto min_region = ImGui::GetWindowContentRegionMin();
+                auto max_region = ImGui::GetWindowContentRegionMax();
+                auto viewport_offset = ImGui::GetWindowPos();
+                scene_region_bounds[0] = ImVec2(min_region.x + viewport_offset.x, min_region.y + viewport_offset.y);
+                scene_region_bounds[1] = ImVec2(max_region.x + viewport_offset.x, max_region.y + viewport_offset.y);
             }
             ImGui::End();
 
             if (ImGui::Begin("Scene Hierarchy"))
             {
-                for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
+                for (auto [id, transform] : scene->registry.view<liminal::transform>().each())
                 {
-                    ImGui::Text("%s (%d)", transform.name.c_str(), entity);
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+                    if (id == selected_entity_id)
+                    {
+                        flags |= ImGuiTreeNodeFlags_Selected;
+                    }
+                    auto opened = ImGui::TreeNodeEx((void *)id, flags, transform.name.c_str());
+
+                    if (ImGui::IsItemClicked())
+                    {
+                        selected_entity_id = id;
+                    }
+
+                    auto deleted = false;
+                    if (ImGui::BeginPopupContextItem())
+                    {
+                        if (ImGui::MenuItem("Delete"))
+                        {
+                            deleted = true;
+                        }
+
+                        ImGui::EndPopup();
+                    }
+
+                    if (opened)
+                    {
+                        // TODO: recurse over children
+
+                        ImGui::TreePop();
+                    }
+
+                    if (deleted)
+                    {
+                        auto entity = scene->get_entity(id);
+                        scene->delete_entity(entity);
+
+                        if (id == selected_entity_id)
+                        {
+                            selected_entity_id = entt::null;
+                        }
+                    }
+                }
+
+                if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+                {
+                    selected_entity_id = entt::null;
+                }
+
+                if (ImGui::BeginPopupContextWindow(0, 1, false))
+                {
+                    if (ImGui::MenuItem("Create Empty Entity"))
+                    {
+                        auto entity = scene->create_entity();
+                        entity.add_component<liminal::transform>("New Entity", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+                    }
+
+                    ImGui::EndPopup();
                 }
             }
             ImGui::End();
@@ -316,9 +369,45 @@ public:
                 if (selected_entity_id != entt::null)
                 {
                     auto entity = scene->get_entity(selected_entity_id);
-                    auto transform = entity.get_component<liminal::transform>();
-                    ImGui::Text("ID: %d", (int)selected_entity_id);
-                    ImGui::Text("Name: %s", transform.name.c_str());
+
+                    if (entity.has_components<liminal::transform>())
+                    {
+                        if (ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
+                        {
+                            auto &transform = entity.get_component<liminal::transform>();
+
+                            char buffer[256];
+                            memset(buffer, 0, sizeof(buffer));
+                            memcpy(buffer, transform.name.c_str(), sizeof(buffer));
+                            if (ImGui::InputText("Name", buffer, sizeof(buffer)))
+                            {
+                                transform.name = std::string(buffer);
+                            }
+
+                            ImGui::DragFloat3("Position", glm::value_ptr(transform.position), .1f);
+                            ImGui::DragFloat3("Rotation", glm::value_ptr(transform.rotation), .1f);
+                            ImGui::DragFloat3("Scale", glm::value_ptr(transform.scale), .1f);
+
+                            ImGui::TreePop();
+                        }
+                    }
+
+                    if (ImGui::Button("Add Component"))
+                    {
+                        ImGui::OpenPopup("AddComponent");
+                    }
+
+                    if (ImGui::BeginPopup("AddComponent"))
+                    {
+                        if (ImGui::MenuItem("Mesh Renderer"))
+                        {
+                            entity.add_component<liminal::mesh_renderer>(new liminal::model("assets/models/backpack/backpack.obj", true)); // TODO: asset manager
+
+                            ImGui::CloseCurrentPopup();
+                        }
+
+                        ImGui::EndPopup();
+                    }
                 }
             }
             ImGui::End();
@@ -326,7 +415,10 @@ public:
         ImGui::End();
     }
 
-    void resize(int width, int height) override {}
+    void
+    resize(int width, int height) override
+    {
+    }
 
 private:
     bool playing = false;

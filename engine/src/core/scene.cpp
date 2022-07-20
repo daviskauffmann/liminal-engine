@@ -125,7 +125,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "script")
                     {
-                        entity.add_component<liminal::script>(value["filename"], this, entity.get_id());
+                        entity.add_component<liminal::script>(value["filename"], this, (entt::entity)entity);
                     }
 
                     if (key == "water")
@@ -151,21 +151,17 @@ void liminal::scene::save(const std::string &filename)
 liminal::entity liminal::scene::create_entity()
 {
     auto id = registry.create();
-    auto entity = liminal::entity(id, this);
-    entities[id] = entity;
-    return entity;
+    return liminal::entity(id, this);
 }
 
 liminal::entity liminal::scene::get_entity(entt::entity id)
 {
-    return entities[id];
+    return liminal::entity(id, this);
 }
 
 void liminal::scene::delete_entity(liminal::entity entity)
 {
-    auto id = entity.get_id();
-    registry.destroy(id);
-    entities.erase(id);
+    registry.destroy(entity);
 }
 
 void liminal::scene::update(unsigned int current_time, float delta_time)

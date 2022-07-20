@@ -35,7 +35,6 @@ namespace liminal
 
     private:
         btDiscreteDynamicsWorld *world;
-        std::unordered_map<entt::entity, liminal::entity> entities;
 
         friend class entity;
     };
