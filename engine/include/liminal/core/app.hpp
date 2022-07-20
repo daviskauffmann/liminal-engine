@@ -19,7 +19,7 @@ namespace liminal
         }
 
         virtual void update(unsigned int current_time, float delta_time) {}
-        virtual void resize(int width, int height) {}
+        virtual void resize(int width, int height);
     };
 
     liminal::app *create_app(int argc, char *argv[]);

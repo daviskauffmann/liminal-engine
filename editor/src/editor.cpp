@@ -8,44 +8,149 @@
 class editor : public liminal::app
 {
 public:
+    liminal::entity editor_entity;
+
     editor()
     {
         load_scene();
-        liminal::engine::instance->renderer->draw_to_imgui_texture = true;
     }
 
     void update(unsigned int current_time, float delta_time) override
     {
         ImGuiIO &io = ImGui::GetIO();
 
-        auto camera = scene->camera;
-        glm::vec3 camera_front = camera->calc_front();
-        glm::vec3 camera_right = camera->calc_right();
+        auto &transform = editor_entity.get_component<liminal::transform>();
+        auto &camera = editor_entity.get_component<liminal::camera>();
+        glm::vec3 camera_front = camera.calc_front(transform);
+        glm::vec3 camera_right = camera.calc_right(transform);
 
-        const float sensitivity = 0.1f;
-        if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_LEFT))
+        if (playing)
         {
-        }
-        else if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
-        {
-            camera->yaw -= liminal::input::mouse_dx * sensitivity;
-            camera->pitch += liminal::input::mouse_dy * sensitivity;
-            if (camera->pitch > 89)
+            // TODO: remove all this
+            // camera movement while in play mode should be controlled by scripts
+            static glm::vec3 velocity(0, 0, 0);
+            glm::vec3 acceleration(0, 0, 0);
+            const float speed = 50;
+            const float drag = 10;
+            bool sprint = false;
+            bool jumping = false;
+            if (!io.WantCaptureKeyboard)
             {
-                camera->pitch = 89;
+                if (liminal::input::key(liminal::keycode::KEYCODE_W))
+                {
+                    acceleration += camera_front;
+                }
+                if (liminal::input::key(liminal::keycode::KEYCODE_A))
+                {
+                    acceleration -= camera_right;
+                }
+                if (liminal::input::key(liminal::keycode::KEYCODE_S))
+                {
+                    acceleration -= camera_front;
+                }
+                if (liminal::input::key(liminal::keycode::KEYCODE_D))
+                {
+                    acceleration += camera_right;
+                }
+                if (liminal::input::key(liminal::keycode::KEYCODE_SPACE))
+                {
+                    acceleration.y = 1;
+                }
+                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+                {
+                    acceleration.y = -1;
+                }
+                if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+                {
+                    sprint = true;
+                }
+                if (liminal::input::key_down(liminal::keycode::KEYCODE_SPACE) && !jumping)
+                {
+                    velocity.y = 10;
+                    jumping = true;
+                }
             }
-            if (camera->pitch < -89)
+            float acceleration_length = glm::length(acceleration);
+            if (acceleration_length > 1)
             {
-                camera->pitch = -89;
+                acceleration /= acceleration_length;
             }
-        }
-        else if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
-        {
-            camera->position -= camera_right * (liminal::input::mouse_dx * sensitivity);
-            camera->position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
-        }
+            acceleration *= speed * (sprint ? 2 : 1);
+            acceleration -= velocity * drag;
+            acceleration.y = -9.8f;
+            transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
+            if (transform.position.y < 0)
+            {
+                transform.position.y = 0;
+                jumping = false;
+            }
+            velocity = acceleration * delta_time + velocity;
+            transform.rotation.z = glm::dot(camera_right, velocity);
 
-        camera->position += camera_front * (float)liminal::input::mouse_wheel_y;
+            if (!io.WantCaptureMouse)
+            {
+                if (SDL_GetRelativeMouseMode())
+                {
+                    const float sensitivity = 0.1f;
+                    transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
+                    transform.rotation.y += liminal::input::mouse_dx * sensitivity;
+                    if (transform.rotation.x > 89)
+                    {
+                        transform.rotation.x = 89;
+                    }
+                    if (transform.rotation.x < -89)
+                    {
+                        transform.rotation.x = -89;
+                    }
+
+                    camera.fov -= liminal::input::mouse_wheel_y;
+                    if (camera.fov <= 1)
+                    {
+                        camera.fov = 1;
+                    }
+                    if (camera.fov >= 120)
+                    {
+                        camera.fov = 120;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (liminal::input::mouse_button_down(liminal::mouse_button::MOUSE_BUTTON_LEFT))
+            {
+                auto mouse_position = ImGui::GetMousePos();
+                // auto viewport_size = ImVec2(scene_region_bounds[1].x - scene_region_bounds[0].x, scene_region_bounds[1].y - scene_region_bounds[0].y);
+                auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
+                auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
+                if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
+                {
+                    selected_entity_id = liminal::engine::instance->renderer->pick((int)mouse_x, (int)mouse_y);
+                }
+            }
+
+            const float sensitivity = 0.1f;
+            if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
+            {
+                transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
+                transform.rotation.x += liminal::input::mouse_dy * sensitivity;
+                if (transform.rotation.x > 89)
+                {
+                    transform.rotation.x = 89;
+                }
+                if (transform.rotation.x < -89)
+                {
+                    transform.rotation.x = -89;
+                }
+            }
+            else if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
+            {
+                transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
+                transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
+            }
+
+            transform.position += camera_front * (float)liminal::input::mouse_wheel_y;
+        }
 
         if (liminal::input::key_down(liminal::keycode::KEYCODE_N))
         {
@@ -175,14 +280,25 @@ public:
 
             if (ImGui::Begin("Scene", nullptr))
             {
-                static ImVec2 region_size = ImGui::GetContentRegionAvail();
-                ImVec2 new_region_size = ImGui::GetContentRegionAvail();
-                if (new_region_size.x != region_size.x || new_region_size.y != region_size.y)
+                auto viewport_offset = ImGui::GetCursorPos();
+
+                scene_region_size = ImGui::GetContentRegionAvail();
+                static auto prev_scene_region_size = ImVec2(0, 0);
+                if (scene_region_size.x != prev_scene_region_size.x || scene_region_size.y != prev_scene_region_size.y)
                 {
-                    liminal::engine::instance->renderer->set_target_size((int)new_region_size.x, (int)new_region_size.y);
-                    region_size = new_region_size;
+                    liminal::engine::instance->renderer->set_target_size((int)scene_region_size.x, (int)scene_region_size.y);
+                    prev_scene_region_size = scene_region_size;
                 }
-                ImGui::Image(liminal::engine::instance->renderer->imgui_texture_id, region_size, ImVec2{0, 1}, ImVec2{1, 0});
+
+                ImGui::Image((ImTextureID)(long long)camera.render_texture_id, scene_region_size, ImVec2{0, 1}, ImVec2{1, 0});
+
+                auto window_size = ImGui::GetWindowSize();
+                auto min_bound = ImGui::GetWindowPos();
+                min_bound.x += viewport_offset.x;
+                min_bound.y += viewport_offset.y;
+                auto max_bound = ImVec2(min_bound.x + window_size.x, min_bound.y + window_size.y);
+                scene_region_bounds[0] = ImVec2(min_bound.x, min_bound.y);
+                scene_region_bounds[1] = ImVec2(max_bound.x, max_bound.y);
             }
             ImGui::End();
 
@@ -194,12 +310,31 @@ public:
                 }
             }
             ImGui::End();
+
+            if (ImGui::Begin("Inspector"))
+            {
+                if (selected_entity_id != entt::null)
+                {
+                    auto entity = scene->get_entity(selected_entity_id);
+                    auto transform = entity.get_component<liminal::transform>();
+                    ImGui::Text("ID: %d", (int)selected_entity_id);
+                    ImGui::Text("Name: %s", transform.name.c_str());
+                }
+            }
+            ImGui::End();
         }
         ImGui::End();
     }
 
+    void resize(int width, int height) override {}
+
 private:
     bool playing = false;
+
+    ImVec2 scene_region_bounds[2];
+    ImVec2 scene_region_size;
+
+    entt::entity selected_entity_id = entt::null;
 
     void new_scene()
     {
@@ -208,12 +343,10 @@ private:
             delete scene;
         }
         scene = new liminal::scene();
-        scene->camera = new liminal::camera(
-            glm::vec3(0, 0, 3),
-            0,
-            0,
-            0,
-            45);
+
+        editor_entity = scene->create_entity();
+        editor_entity.add_component<liminal::transform>("Editor", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+        editor_entity.add_component<liminal::camera>(45.f, true);
     }
 
     void load_scene()
@@ -230,6 +363,15 @@ private:
     void play()
     {
         playing = true;
+
+        scene->delete_entity(editor_entity);
+
+        // TODO: remove this, should just come from what is placed in the scene
+        // the only caveat is that the camera.render_to_texture needs to be overridden to true when running in the editor, so that the scene can render to the ImGui window
+        editor_entity = scene->create_entity();
+        editor_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+        editor_entity.add_component<liminal::camera>(45.f, true);
+        editor_entity.add_component<liminal::audio_listener>();
 
         for (auto [entity, script] : scene->registry.view<liminal::script>().each())
         {

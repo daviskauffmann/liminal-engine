@@ -1,6 +1,5 @@
 #include <liminal/graphics/renderer.hpp>
 
-#include <entt/entt.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
@@ -8,9 +7,7 @@
 #include <liminal/components/spot_light.hpp>
 #include <liminal/components/sprite.hpp>
 #include <liminal/components/terrain.hpp>
-#include <liminal/components/transform.hpp>
 #include <liminal/components/water.hpp>
-#include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <imgui.h>
 #include <iostream>
@@ -49,8 +46,6 @@ liminal::renderer::renderer(
 {
     wireframe = false;
     greyscale = false;
-
-    draw_to_imgui_texture = false;
 
     // setup fbos
     this->target_width = target_width;
@@ -1369,35 +1364,40 @@ void liminal::renderer::setup_samplers()
     postprocess_program->unbind();
 }
 
-int liminal::renderer::pick(int x, int y)
+entt::entity liminal::renderer::pick(int x, int y)
 {
-    int pixel;
+    int id;
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
     {
         glReadBuffer(GL_COLOR_ATTACHMENT4);
-        glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
+        glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &id);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return pixel;
+
+    if (id == -1)
+    {
+        return entt::null;
+    }
+
+    return entt::entity(id);
 }
 
 void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time)
 {
-    if (!scene.camera)
+    for (auto [entity, camera, transform] : scene.registry.view<liminal::camera, liminal::transform>().each())
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        return;
+        render_shadows(scene, camera, transform);
+        render_objects(scene, camera, transform, hdr_fbo_id, render_width, render_height);
+        render_waters(scene, camera, transform, current_time);
+        render_sprites(scene);
+        render_screen(scene, camera);
     }
-
-    // render everything
-    render_shadows(scene);
-    render_objects(scene, hdr_fbo_id, render_width, render_height);
-    render_waters(scene, current_time);
-    render_sprites(scene);
-    render_screen(scene);
 }
 
-void liminal::renderer::render_shadows(liminal::scene &scene)
+void liminal::renderer::render_shadows(
+    liminal::scene &scene,
+    liminal::camera &camera,
+    liminal::transform &camera_transform)
 {
     int i = 0;
     for (auto [entity, directional_light, transform] : scene.registry.view<liminal::directional_light, liminal::transform>().each())
@@ -1415,8 +1415,8 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
             directional_light_near_plane,
             directional_light_far_plane);
         glm::mat4 view = glm::lookAt(
-            scene.camera->position - transform.rotation,
-            scene.camera->position,
+            camera_transform.position - transform.rotation,
+            camera_transform.position,
             glm::vec3(0, 1, 0));
         directional_light_transformation_matrices[i] = projection * view;
 
@@ -1653,11 +1653,17 @@ void liminal::renderer::render_shadows(liminal::scene &scene)
     }
 }
 
-void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane)
+void liminal::renderer::render_objects(
+    liminal::scene &scene,
+    liminal::camera &camera,
+    liminal::transform &camera_transform,
+    GLuint fbo_id,
+    GLsizei width, GLsizei height,
+    glm::vec4 clipping_plane)
 {
     // camera
-    glm::mat4 camera_projection = scene.camera->calc_projection((float)render_width / (float)render_height);
-    glm::mat4 camera_view = scene.camera->calc_view();
+    glm::mat4 camera_projection = camera.calc_projection((float)render_width / (float)render_height);
+    glm::mat4 camera_view = camera.calc_view(camera_transform);
 
     // draw to gbuffer
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
@@ -1668,6 +1674,9 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
         glEnable(GL_CLIP_DISTANCE0);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        int value = -1;
+        glClearTexImage(geometry_id_texture_id, 0, GL_RED_INTEGER, GL_INT, &value);
 
         for (auto [entity, transform, mesh_renderer] : scene.registry.view<liminal::transform, liminal::mesh_renderer>().each())
         {
@@ -1735,7 +1744,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
         // IBL
         deferred_ambient_program->bind();
         {
-            deferred_ambient_program->set_vec3("camera.position", scene.camera->position);
+            deferred_ambient_program->set_vec3("camera.position", camera_transform.position);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1782,7 +1791,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
 
             deferred_directional_program->bind();
             {
-                deferred_directional_program->set_vec3("camera.position", scene.camera->position);
+                deferred_directional_program->set_vec3("camera.position", camera_transform.position);
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1826,7 +1835,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
 
             deferred_point_program->bind();
             {
-                deferred_point_program->set_vec3("camera.position", scene.camera->position);
+                deferred_point_program->set_vec3("camera.position", camera_transform.position);
                 deferred_point_program->set_float("light.far_plane", point_light_far_plane);
 
                 glActiveTexture(GL_TEXTURE0);
@@ -1870,7 +1879,7 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
 
             deferred_spot_program->bind();
             {
-                deferred_spot_program->set_vec3("camera.position", scene.camera->position);
+                deferred_spot_program->set_vec3("camera.position", camera_transform.position);
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
@@ -1996,34 +2005,38 @@ void liminal::renderer::render_objects(liminal::scene &scene, GLuint fbo_id, GLs
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::render_waters(liminal::scene &scene, unsigned int current_time)
+void liminal::renderer::render_waters(
+    liminal::scene &scene,
+    liminal::camera &camera,
+    liminal::transform &camera_transform,
+    unsigned int current_time)
 {
     for (auto [entity, transform, water] : scene.registry.view<liminal::transform, liminal::water>().each())
     {
         // reflection
         glm::vec4 reflection_clipping_plane = {0, 1, 0, -transform.position.y};
-        if (scene.camera->position.y < transform.position.y) // flip reflection clipping plane if under the water
+        if (camera_transform.position.y < transform.position.y) // flip reflection clipping plane if under the water
         {
             reflection_clipping_plane *= -1.f;
         }
-        float previous_camera_y = scene.camera->position.y;
-        float previous_camera_pitch = scene.camera->pitch;
-        float previous_camera_roll = scene.camera->roll;
-        scene.camera->position.y -= 2 * (scene.camera->position.y - transform.position.y);
-        scene.camera->pitch = -scene.camera->pitch;
-        scene.camera->roll = -scene.camera->roll;
-        render_objects(scene, water_reflection_fbo_id, water_reflection_width, water_reflection_height, reflection_clipping_plane);
-        scene.camera->position.y = previous_camera_y;
-        scene.camera->pitch = previous_camera_pitch;
-        scene.camera->roll = previous_camera_roll;
+        float previous_camera_y = camera_transform.position.y;
+        float previous_camera_pitch = camera_transform.rotation.x;
+        float previous_camera_roll = camera_transform.rotation.z;
+        camera_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
+        camera_transform.rotation.x = -camera_transform.rotation.x;
+        camera_transform.rotation.z = -camera_transform.rotation.z;
+        render_objects(scene, camera, camera_transform, water_reflection_fbo_id, water_reflection_width, water_reflection_height, reflection_clipping_plane);
+        camera_transform.position.y = previous_camera_y;
+        camera_transform.rotation.x = previous_camera_pitch;
+        camera_transform.rotation.z = previous_camera_roll;
 
         // refraction
         glm::vec4 refraction_clipping_plane = {0, -1, 0, transform.position.y};
-        if (scene.camera->position.y < transform.position.y) // flip refraction clipping plane if under the water
+        if (camera_transform.position.y < transform.position.y) // flip refraction clipping plane if under the water
         {
             refraction_clipping_plane *= -1.f;
         }
-        render_objects(scene, water_refraction_fbo_id, water_refraction_width, water_refraction_height, refraction_clipping_plane);
+        render_objects(scene, camera, camera_transform, water_refraction_fbo_id, water_refraction_width, water_refraction_height, refraction_clipping_plane);
 
         // draw water meshes
         glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
@@ -2035,8 +2048,8 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
 
             water_program->bind();
             {
-                glm::mat4 camera_projection = scene.camera->calc_projection((float)render_width / (float)render_height);
-                glm::mat4 camera_view = scene.camera->calc_view();
+                glm::mat4 camera_projection = camera.calc_projection((float)render_width / (float)render_height);
+                glm::mat4 camera_view = camera.calc_view(camera_transform);
 
                 glm::mat4 model_matrix = transform.get_model_matrix();
 
@@ -2045,7 +2058,7 @@ void liminal::renderer::render_waters(liminal::scene &scene, unsigned int curren
                 water_program->set_float("tiling", water.tiling);
                 water_program->set_float("camera.near_plane", liminal::camera::near_plane);
                 water_program->set_float("camera.far_plane", liminal::camera::far_plane);
-                water_program->set_vec3("camera.position", scene.camera->position);
+                water_program->set_vec3("camera.position", camera_transform.position);
                 auto first_directional_light = scene.registry.view<liminal::directional_light>().front();
                 if (first_directional_light != entt::null)
                 {
@@ -2136,7 +2149,9 @@ void liminal::renderer::render_sprites(liminal::scene &scene)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::render_screen(liminal::scene &scene)
+void liminal::renderer::render_screen(
+    liminal::scene &scene,
+    liminal::camera &camera)
 {
     // apply gaussian blur to brightness map
     bool horizontal = true;
@@ -2173,7 +2188,7 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     }
 
     // final pass
-    glBindFramebuffer(GL_FRAMEBUFFER, draw_to_imgui_texture ? final_fbo_id : 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, camera.render_to_texture ? final_fbo_id : 0);
     {
         glViewport(0, 0, target_width, target_height);
         glDisable(GL_DEPTH_TEST);
@@ -2204,9 +2219,9 @@ void liminal::renderer::render_screen(liminal::scene &scene)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    if (draw_to_imgui_texture)
+    if (camera.render_to_texture)
     {
-        imgui_texture_id = (ImTextureID)(long long)final_texture_id;
+        camera.render_texture_id = final_texture_id;
     }
 
     // DEBUG: draw fbos

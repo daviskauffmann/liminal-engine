@@ -1,11 +1,14 @@
 #ifndef LIMINAL_GRAPHICS_RENDERER_HPP
 #define LIMINAL_GRAPHICS_RENDERER_HPP
 
+#include <entt/entt.hpp>
 #include <GL/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <imgui.h>
+#include <liminal/components/camera.hpp>
+#include <liminal/components/transform.hpp>
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/mesh.hpp>
 #include <liminal/graphics/model.hpp>
@@ -23,9 +26,6 @@ namespace liminal
     public:
         bool wireframe;
         bool greyscale;
-
-        bool draw_to_imgui_texture;
-        ImTextureID imgui_texture_id;
 
         renderer(
             GLsizei target_width, GLsizei target_height, float render_scale,
@@ -47,7 +47,7 @@ namespace liminal
 
         void reload_programs();
 
-        int pick(int x, int y);
+        entt::entity pick(int x, int y);
 
         void render(liminal::scene &scene, unsigned int current_time, float delta_time);
 
@@ -149,11 +149,26 @@ namespace liminal
 
         void setup_samplers();
 
-        void render_shadows(liminal::scene &scene);
-        void render_objects(liminal::scene &scene, GLuint fbo_id, GLsizei width, GLsizei height, glm::vec4 clipping_plane = glm::vec4(0));
-        void render_waters(liminal::scene &scene, unsigned int current_time);
+        void render_shadows(
+            liminal::scene &scene,
+            liminal::camera &camera,
+            liminal::transform &camera_transform);
+        void render_objects(
+            liminal::scene &scene,
+            liminal::camera &camera,
+            liminal::transform &camera_transform,
+            GLuint fbo_id,
+            GLsizei width, GLsizei height,
+            glm::vec4 clipping_plane = glm::vec4(0));
+        void render_waters(
+            liminal::scene &scene,
+            liminal::camera &camera,
+            liminal::transform &camera_transform,
+            unsigned int current_time);
         void render_sprites(liminal::scene &scene);
-        void render_screen(liminal::scene &scene);
+        void render_screen(
+            liminal::scene &scene,
+            liminal::camera &camera);
     };
 }
 

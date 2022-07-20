@@ -24,17 +24,18 @@ add_library(${PROJECT_NAME}
     src/stb_image.cpp
     src/stb_include.cpp
     src/audio/sound.cpp
-    src/components/audio_source.cpp
     src/components/audio_listener.cpp
+    src/components/audio_source.cpp
+    src/components/camera.cpp
     src/components/physical.cpp
     src/components/script.cpp
     src/components/sprite.cpp
     src/components/terrain.cpp
     src/components/transform.cpp
+    src/core/app.cpp
     src/core/engine.cpp
     src/core/platform.cpp
     src/core/scene.cpp
-    src/graphics/camera.cpp
     src/graphics/cubemap.cpp
     src/graphics/mesh.cpp
     src/graphics/model.cpp

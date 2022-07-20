@@ -6,7 +6,6 @@
 #include <liminal/core/engine.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/core/scene.hpp>
-#include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <liminal/input/input.hpp>
@@ -21,30 +20,6 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     (*lua)["GetKeyDown"] = [](liminal::keycode keycode) -> bool
     {
         return liminal::input::key_down(keycode);
-    };
-    (*lua)["GetCameraX"] = [scene]() -> float
-    {
-        return scene->camera->position.x;
-    };
-    (*lua)["GetCameraY"] = [scene]() -> float
-    {
-        return scene->camera->position.y;
-    };
-    (*lua)["GetCameraZ"] = [scene]() -> float
-    {
-        return scene->camera->position.z;
-    };
-    (*lua)["GetCameraRotX"] = [scene]() -> float
-    {
-        return scene->camera->calc_front().x;
-    };
-    (*lua)["GetCameraRotY"] = [scene]() -> float
-    {
-        return scene->camera->calc_front().y;
-    };
-    (*lua)["GetCameraRotZ"] = [scene]() -> float
-    {
-        return scene->camera->calc_front().z;
     };
     (*lua)["SetSkybox"] = [scene](const std::string &filename) -> void
     {
@@ -62,6 +37,17 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     (*lua)["GetEntity"] = [id]() -> entt::entity
     {
         return id;
+    };
+    (*lua)["GetEntityByName"] = [scene](const std::string &name) -> entt::entity
+    {
+        for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
+        {
+            if (transform.name == name)
+            {
+                return entity;
+            }
+        }
+        return entt::entity();
     };
     (*lua)["AddTransform"] = [scene](entt::entity id, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {

@@ -10,14 +10,12 @@ class btDiscreteDynamicsWorld;
 
 namespace liminal
 {
-    struct camera;
     struct skybox;
     class entity;
 
     class scene
     {
     public:
-        liminal::camera *camera;
         liminal::skybox *skybox;
         entt::registry registry; // TODO: make private
 
@@ -29,6 +27,7 @@ namespace liminal
 
         liminal::entity create_entity();
         liminal::entity get_entity(entt::entity id);
+        void delete_entity(liminal::entity entity);
 
         void update(unsigned int current_time, float delta_time);
 

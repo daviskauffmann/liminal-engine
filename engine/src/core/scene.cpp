@@ -17,7 +17,6 @@
 #include <liminal/core/engine.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/core/platform.hpp>
-#include <liminal/graphics/camera.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <nlohmann/json.hpp>
@@ -26,7 +25,6 @@
 
 liminal::scene::scene()
 {
-    camera = nullptr;
     skybox = nullptr;
 
     btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
@@ -161,6 +159,13 @@ liminal::entity liminal::scene::create_entity()
 liminal::entity liminal::scene::get_entity(entt::entity id)
 {
     return entities[id];
+}
+
+void liminal::scene::delete_entity(liminal::entity entity)
+{
+    auto id = entity.get_id();
+    registry.destroy(id);
+    entities.erase(id);
 }
 
 void liminal::scene::update(unsigned int current_time, float delta_time)

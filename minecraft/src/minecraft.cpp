@@ -18,18 +18,15 @@ namespace minecraft
     class app : public liminal::app
     {
     public:
+        liminal::entity player_entity;
+
         app()
         {
             SDL_SetRelativeMouseMode(SDL_TRUE);
 
             scene = new liminal::scene();
-            scene->camera = new liminal::camera(
-                glm::vec3(0, 0, 3),
-                0,
-                0,
-                0,
-                45);
             scene->skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_Env.hdr");
+
             auto sun = scene->create_entity();
             sun.add_component<liminal::transform>(
                 "Sun",
@@ -38,6 +35,10 @@ namespace minecraft
                 glm::vec3(0.352286, -0.547564, -0.758992),
                 glm::vec3(1, 1, 1));
             sun.add_component<liminal::directional_light>(glm::vec3(1, 1, 1));
+
+            player_entity = scene->create_entity();
+            player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+            player_entity.add_component<liminal::camera>(45.f);
 
             tiles_texture = new liminal::texture("assets/images/tiles.png", false, false);
 
@@ -67,9 +68,10 @@ namespace minecraft
                 SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
             }
 
-            auto camera = scene->camera;
-            glm::vec3 camera_front = camera->calc_front();
-            glm::vec3 camera_right = camera->calc_right();
+            auto &transform = player_entity.get_component<liminal::transform>();
+            auto &camera = player_entity.get_component<liminal::camera>();
+            glm::vec3 camera_front = camera.calc_front(transform);
+            glm::vec3 camera_right = camera.calc_right(transform);
 
             static glm::vec3 velocity(0, 0, 0);
             glm::vec3 acceleration(0, 0, 0);
@@ -114,34 +116,34 @@ namespace minecraft
             }
             acceleration *= speed * (sprint ? 2 : 1);
             acceleration -= velocity * drag;
-            camera->position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + camera->position;
+            transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
             velocity = acceleration * delta_time + velocity;
-            camera->roll = glm::dot(camera_right, velocity);
+            transform.rotation.z = glm::dot(camera_right, velocity);
 
             if (!io.WantCaptureMouse)
             {
                 if (SDL_GetRelativeMouseMode())
                 {
                     const float sensitivity = 0.1f;
-                    camera->pitch -= liminal::input::mouse_dy * sensitivity;
-                    camera->yaw += liminal::input::mouse_dx * sensitivity;
-                    if (camera->pitch > 89)
+                    transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
+                    transform.rotation.y += liminal::input::mouse_dx * sensitivity;
+                    if (transform.rotation.x > 89)
                     {
-                        camera->pitch = 89;
+                        transform.rotation.x = 89;
                     }
-                    if (camera->pitch < -89)
+                    if (transform.rotation.x < -89)
                     {
-                        camera->pitch = -89;
+                        transform.rotation.x = -89;
                     }
 
-                    camera->fov -= liminal::input::mouse_wheel_y;
-                    if (camera->fov <= 1)
+                    camera.fov -= liminal::input::mouse_wheel_y;
+                    if (camera.fov <= 1)
                     {
-                        camera->fov = 1;
+                        camera.fov = 1;
                     }
-                    if (camera->fov >= 120)
+                    if (camera.fov >= 120)
                     {
-                        camera->fov = 120;
+                        camera.fov = 120;
                     }
                 }
             }
@@ -151,7 +153,7 @@ namespace minecraft
 
     private:
         liminal::texture *tiles_texture;
-        std::unordered_map<glm::ivec3, minecraft::chunk> chunks;
+        std::unordered_map<glm::ivec3, liminal::entity> chunks;
 
         void create_chunk(int x, int y, int z)
         {
@@ -162,7 +164,7 @@ namespace minecraft
 
             chunk.position = glm::ivec3(x, y, z);
 
-            chunks.emplace(chunk.position, chunk);
+            chunks.emplace(chunk.position, chunk_entity);
         }
 
         minecraft::chunk &get_chunk(int x, int y, int z)
@@ -177,7 +179,7 @@ namespace minecraft
                 create_chunk(x, y, z);
             }
 
-            return chunks[world_position];
+            return chunks[world_position].get_component<minecraft::chunk>();
         }
 
         minecraft::block *get_block(int x, int y, int z)

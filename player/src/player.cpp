@@ -8,7 +8,7 @@
 class player : public liminal::app
 {
 public:
-    liminal::entity camera_entity;
+    liminal::entity player_entity;
 
     liminal::sound *ambient_sound;
     liminal::entity ambience_entity;
@@ -36,12 +36,6 @@ public:
         grass_texture = new liminal::texture("assets/images/grass_sprite.png");
 
         scene = new liminal::scene();
-        scene->camera = new liminal::camera(
-            glm::vec3(0, 0, 3),
-            0,
-            0,
-            0,
-            45);
         scene->load("assets/scenes/demo.json");
 
         // run init scripts
@@ -50,10 +44,10 @@ public:
             script.init();
         }
 
-        // TODO: camera should be a component maybe
-        camera_entity = scene->create_entity();
-        camera_entity.add_component<liminal::transform>("Camera", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        camera_entity.add_component<liminal::audio_listener>();
+        player_entity = scene->create_entity();
+        player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+        player_entity.add_component<liminal::camera>(45.f);
+        player_entity.add_component<liminal::audio_listener>();
 
         // TODO: these entities should come from the JSON file
         ambience_entity = scene->create_entity();
@@ -72,7 +66,7 @@ public:
         weapon_entity.add_component<liminal::audio_source>();
 
         ui_entity = scene->create_entity();
-        // ui_entity.add_component<liminal::sprite>(&grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0, glm::vec2(1, 1));}
+        // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.f, glm::vec2(1, 1));
     }
 
     ~player()
@@ -93,9 +87,10 @@ public:
             SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
         }
 
-        auto camera = scene->camera;
-        glm::vec3 camera_front = camera->calc_front();
-        glm::vec3 camera_right = camera->calc_right();
+        auto &transform = player_entity.get_component<liminal::transform>();
+        auto &camera = player_entity.get_component<liminal::camera>();
+        glm::vec3 camera_front = camera.calc_front(transform);
+        glm::vec3 camera_right = camera.calc_right(transform);
 
         static glm::vec3 velocity(0, 0, 0);
         glm::vec3 acceleration(0, 0, 0);
@@ -154,62 +149,50 @@ public:
         {
             acceleration.y = -9.8f;
         }
-        camera->position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + camera->position;
-        if (camera->position.y < 0 && !noclip)
+        transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
+        if (transform.position.y < 0 && !noclip)
         {
-            camera->position.y = 0;
+            transform.position.y = 0;
             jumping = false;
         }
         velocity = acceleration * delta_time + velocity;
-        camera->roll = glm::dot(camera_right, velocity);
+        transform.rotation.z = glm::dot(camera_right, velocity);
 
         if (!io.WantCaptureMouse)
         {
             if (SDL_GetRelativeMouseMode())
             {
                 const float sensitivity = 0.1f;
-                camera->pitch -= liminal::input::mouse_dy * sensitivity;
-                camera->yaw += liminal::input::mouse_dx * sensitivity;
-                if (camera->pitch > 89)
+                transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
+                transform.rotation.y += liminal::input::mouse_dx * sensitivity;
+                if (transform.rotation.x > 89)
                 {
-                    camera->pitch = 89;
+                    transform.rotation.x = 89;
                 }
-                if (camera->pitch < -89)
+                if (transform.rotation.x < -89)
                 {
-                    camera->pitch = -89;
+                    transform.rotation.x = -89;
                 }
 
-                camera->fov -= liminal::input::mouse_wheel_y;
-                if (camera->fov <= 1)
+                camera.fov -= liminal::input::mouse_wheel_y;
+                if (camera.fov <= 1)
                 {
-                    camera->fov = 1;
+                    camera.fov = 1;
                 }
-                if (camera->fov >= 120)
+                if (camera.fov >= 120)
                 {
-                    camera->fov = 120;
+                    camera.fov = 120;
                 }
             }
         }
 
-        // TODO: camera itself should be a component attached to the camera_entity
-        // and its transform would be changed directly, making this step unnecessary
-        camera_entity.get_component<liminal::transform>().position = camera->position;
-        camera_entity.get_component<liminal::transform>().rotation = camera->calc_front();
-
-        ambience_entity.get_component<liminal::transform>().position = camera->position;
-        weapon_entity.get_component<liminal::transform>().position = camera->position;
+        ambience_entity.get_component<liminal::transform>().position = transform.position;
+        weapon_entity.get_component<liminal::transform>().position = transform.position;
 
         if (!io.WantCaptureMouse)
         {
             if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
             {
-                int x = liminal::input::mouse_x;
-                int y = 720 - liminal::input::mouse_y;
-
-                int pixel = liminal::engine::instance->renderer->pick(x, y);
-                std::cout << "(" << x << ", " << y << ")"
-                          << ": " << pixel << std::endl;
-
                 auto &weapon_audio_source = weapon_entity.get_component<liminal::audio_source>();
                 if (!weapon_audio_source.is_playing())
                 {
@@ -229,11 +212,6 @@ public:
 
         // update scene
         scene->update(current_time, delta_time);
-    }
-
-    void resize(int width, int height) override
-    {
-        liminal::engine::instance->renderer->set_target_size(width, height);
     }
 };
 
