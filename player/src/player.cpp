@@ -16,10 +16,10 @@ namespace player
 
             // load assets
             // TODO: asset management
-            ambient_sound = new liminal::sound("assets/audio/ambient.wav");
-            bounce_sound = new liminal::sound("assets/audio/bounce.wav");
-            shoot_sound = new liminal::sound("assets/audio/shoot.wav");
-            grass_texture = new liminal::texture("assets/images/grass_sprite.png");
+            ambient_sound = liminal::assets::instance->load_sound("assets/audio/ambient.wav");
+            bounce_sound = liminal::assets::instance->load_sound("assets/audio/bounce.wav");
+            shoot_sound = liminal::assets::instance->load_sound("assets/audio/shoot.wav");
+            grass_texture = liminal::assets::instance->load_texture("assets/images/grass_sprite.png");
 
             scene = new liminal::scene();
             scene->load("assets/scenes/demo.json");
@@ -53,15 +53,6 @@ namespace player
 
             ui_entity = scene->create_entity();
             // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.f, glm::vec2(1, 1));
-        }
-
-        ~app()
-        {
-            // TODO: asset management, this is currently generating OpenAL errors for deleting in-use buffers
-            delete ambient_sound;
-            delete bounce_sound;
-            delete shoot_sound;
-            delete grass_texture;
         }
 
         void update(unsigned int current_time, float delta_time) override

@@ -405,6 +405,7 @@ namespace editor
 
     private:
         bool playing = false;
+        liminal::scene *editor_scene;
 
         ImVec2 scene_region_bounds[2];
         ImVec2 scene_region_size;

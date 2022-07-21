@@ -9,7 +9,17 @@ liminal::assets::assets()
 
 liminal::assets::~assets()
 {
+    for (auto it = sounds.begin(); it != sounds.end(); it++)
+    {
+        delete it->second;
+    }
+
     for (auto it = models.begin(); it != models.end(); it++)
+    {
+        delete it->second;
+    }
+
+    for (auto it = skyboxes.begin(); it != skyboxes.end(); it++)
     {
         delete it->second;
     }
@@ -18,6 +28,16 @@ liminal::assets::~assets()
     {
         delete it->second;
     }
+}
+
+liminal::sound *liminal::assets::load_sound(const std::string &filename)
+{
+    if (sounds.find(filename) == sounds.end())
+    {
+        sounds[filename] = new liminal::sound(filename);
+    }
+
+    return sounds[filename];
 }
 
 liminal::model *liminal::assets::load_model(const std::string &filename, bool flip_uvs)
