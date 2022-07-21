@@ -12,6 +12,8 @@ namespace liminal
     class assets
     {
     public:
+        static assets *instance;
+
         assets();
         ~assets();
 

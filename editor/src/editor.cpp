@@ -5,7 +5,6 @@
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
-#include <SDL2/SDL.h>
 
 class editor : public liminal::app
 {
@@ -152,11 +151,11 @@ public:
 
             if (ImGui::Begin("Scene", nullptr))
             {
-                auto &camera = *liminal::engine::instance->renderer->default_camera;
+                auto &camera = *liminal::renderer::instance->default_camera;
 
                 if (ImGui::IsWindowHovered())
                 {
-                    auto &transform = *liminal::engine::instance->renderer->default_camera_transform;
+                    auto &transform = *liminal::renderer::instance->default_camera_transform;
                     glm::vec3 camera_front = camera.calc_front(transform);
                     glm::vec3 camera_right = camera.calc_right(transform);
 
@@ -167,7 +166,7 @@ public:
                         auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
                         if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
                         {
-                            selected_entity_id = liminal::engine::instance->renderer->pick((int)mouse_x, (int)mouse_y);
+                            selected_entity = liminal::renderer::instance->pick((int)mouse_x, (int)mouse_y, scene);
                         }
                     }
 
@@ -199,7 +198,7 @@ public:
                 static auto prev_scene_region_size = ImVec2(0, 0);
                 if (scene_region_size.x != prev_scene_region_size.x || scene_region_size.y != prev_scene_region_size.y)
                 {
-                    liminal::engine::instance->renderer->set_target_size((int)scene_region_size.x, (int)scene_region_size.y);
+                    liminal::renderer::instance->set_target_size((int)scene_region_size.x, (int)scene_region_size.y);
                     prev_scene_region_size = scene_region_size;
                 }
 
@@ -215,10 +214,12 @@ public:
 
             if (ImGui::Begin("Scene Hierarchy"))
             {
-                for (auto [id, transform] : scene->registry.view<liminal::transform>().each())
+                for (auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
                 {
+                    auto entity = liminal::entity(id, scene);
+
                     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-                    if (id == selected_entity_id)
+                    if (entity == selected_entity)
                     {
                         flags |= ImGuiTreeNodeFlags_Selected;
                     }
@@ -226,7 +227,7 @@ public:
 
                     if (ImGui::IsItemClicked())
                     {
-                        selected_entity_id = id;
+                        selected_entity = entity;
                     }
 
                     auto deleted = false;
@@ -249,28 +250,26 @@ public:
 
                     if (deleted)
                     {
-                        auto entity = scene->get_entity(id);
                         scene->delete_entity(entity);
 
-                        if (id == selected_entity_id)
+                        if (entity == selected_entity)
                         {
-                            selected_entity_id = entt::null;
+                            selected_entity = liminal::entity();
                         }
                     }
                 }
 
                 if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
                 {
-                    selected_entity_id = entt::null;
+                    selected_entity = liminal::entity();
                 }
 
                 if (ImGui::BeginPopupContextWindow(0, 1, false))
                 {
                     if (ImGui::MenuItem("Create Entity"))
                     {
-                        auto entity = scene->create_entity();
-                        entity.add_component<liminal::transform>("New Entity", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-                        selected_entity_id = entity;
+                        auto entity = selected_entity = scene->create_entity();
+                        entity.add_component<liminal::transform>();
                     }
 
                     ImGui::EndPopup();
@@ -280,15 +279,13 @@ public:
 
             if (ImGui::Begin("Inspector"))
             {
-                if (selected_entity_id != entt::null)
+                if (selected_entity)
                 {
-                    auto entity = scene->get_entity(selected_entity_id);
-
-                    if (entity.has_components<liminal::transform>())
+                    if (selected_entity.has_components<liminal::transform>())
                     {
                         if (ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
                         {
-                            auto &transform = entity.get_component<liminal::transform>();
+                            auto &transform = selected_entity.get_component<liminal::transform>();
 
                             char buffer[256];
                             memset(buffer, 0, sizeof(buffer));
@@ -306,25 +303,28 @@ public:
                         }
                     }
 
-                    if (entity.has_components<liminal::mesh_renderer>())
+                    if (selected_entity.has_components<liminal::mesh_renderer>())
                     {
                         if (ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Mesh Renderer"))
                         {
-                            auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
+                            auto &mesh_renderer = selected_entity.get_component<liminal::mesh_renderer>();
 
                             if (ImGui::Button("Load Model"))
                             {
+                                // TODO: file dialog
+                                // TODO: drag and drop from asset browser
+                                mesh_renderer.model = liminal::assets::instance->load_model("assets/models/backpack/backpack.obj", true);
                             }
 
                             ImGui::TreePop();
                         }
                     }
 
-                    if (entity.has_components<liminal::point_light>())
+                    if (selected_entity.has_components<liminal::point_light>())
                     {
                         if (ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Point Light"))
                         {
-                            auto &point_light = entity.get_component<liminal::point_light>();
+                            auto &point_light = selected_entity.get_component<liminal::point_light>();
 
                             ImGui::DragFloat3("Color", glm::value_ptr(point_light.color), .1f);
 
@@ -339,16 +339,16 @@ public:
 
                     if (ImGui::BeginPopup("AddComponent"))
                     {
-                        if (!entity.has_components<liminal::mesh_renderer>() && ImGui::MenuItem("Mesh Renderer"))
+                        if (!selected_entity.has_components<liminal::mesh_renderer>() && ImGui::MenuItem("Mesh Renderer"))
                         {
-                            entity.add_component<liminal::mesh_renderer>(liminal::engine::instance->assets->load_model("assets/models/backpack/backpack.obj", true));
+                            selected_entity.add_component<liminal::mesh_renderer>();
 
                             ImGui::CloseCurrentPopup();
                         }
 
-                        if (!entity.has_components<liminal::point_light>() && ImGui::MenuItem("Point Light"))
+                        if (!selected_entity.has_components<liminal::point_light>() && ImGui::MenuItem("Point Light"))
                         {
-                            entity.add_component<liminal::point_light>(glm::vec3(1.f));
+                            selected_entity.add_component<liminal::point_light>();
 
                             ImGui::CloseCurrentPopup();
                         }
@@ -401,7 +401,7 @@ private:
     ImVec2 scene_region_bounds[2];
     ImVec2 scene_region_size;
 
-    entt::entity selected_entity_id = entt::null;
+    liminal::entity selected_entity;
 
     std::filesystem::path current_asset_directory = "assets";
 
@@ -413,8 +413,10 @@ private:
         }
         scene = new liminal::scene();
 
-        liminal::engine::instance->renderer->default_camera = new liminal::camera(45.f, true);
-        liminal::engine::instance->renderer->default_camera_transform = new liminal::transform();
+        liminal::renderer::instance->default_camera = new liminal::camera(45.f, true);
+        liminal::renderer::instance->default_camera_transform = new liminal::transform();
+
+        selected_entity = liminal::entity();
     }
 
     void load_scene()
@@ -432,17 +434,17 @@ private:
     {
         playing = true;
 
-        delete liminal::engine::instance->renderer->default_camera;
-        delete liminal::engine::instance->renderer->default_camera_transform;
+        delete liminal::renderer::instance->default_camera;
+        delete liminal::renderer::instance->default_camera_transform;
 
         // TODO: remove this, should just come from what is placed in the scene
         // the only caveat is that the camera.render_to_texture needs to be overridden to true when running in the editor, so that the scene can render to the ImGui window
         auto player = scene->create_entity();
-        player.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+        player.add_component<liminal::transform>("Player");
         player.add_component<liminal::camera>(45.f, true);
         player.add_component<liminal::audio_listener>();
 
-        for (auto [entity, script] : scene->registry.view<liminal::script>().each())
+        for (auto [id, script] : scene->get_entities_with<liminal::script>().each())
         {
             script.init();
         }

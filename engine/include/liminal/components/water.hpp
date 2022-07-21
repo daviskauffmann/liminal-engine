@@ -6,8 +6,9 @@
 
 namespace liminal
 {
-    struct water
+    class water
     {
+    public:
         float tiling;
     };
 }

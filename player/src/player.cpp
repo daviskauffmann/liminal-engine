@@ -3,7 +3,6 @@
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
-#include <SDL2/SDL.h>
 
 class player : public liminal::app
 {
@@ -26,7 +25,7 @@ public:
 
     player()
     {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
+        liminal::platform::instance->set_relative_mouse_mode(true);
 
         // load assets
         // TODO: asset management
@@ -39,7 +38,7 @@ public:
         scene->load("assets/scenes/demo.json");
 
         // run init scripts
-        for (auto [entity, script] : scene->registry.view<liminal::script>().each())
+        for (auto [id, script] : scene->get_entities_with<liminal::script>().each())
         {
             script.init();
         }
@@ -84,7 +83,7 @@ public:
 
         if (liminal::input::key_down(liminal::KEYCODE_TAB))
         {
-            SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+            liminal::platform::instance->set_relative_mouse_mode(!liminal::platform::instance->get_relative_mouse_mode());
         }
 
         auto &transform = player_entity.get_component<liminal::transform>();
@@ -160,7 +159,7 @@ public:
 
         if (!io.WantCaptureMouse)
         {
-            if (SDL_GetRelativeMouseMode())
+            if (liminal::platform::instance->get_relative_mouse_mode())
             {
                 const float sensitivity = 0.1f;
                 transform.rotation.x -= liminal::input::mouse_dy * sensitivity;

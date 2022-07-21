@@ -27,9 +27,9 @@ liminal::engine::engine()
 
 liminal::engine::~engine()
 {
-    delete assets;
-    delete platform;
-    delete renderer;
+    delete liminal::assets::instance;
+    delete liminal::platform::instance;
+    delete liminal::renderer::instance;
 }
 
 void liminal::engine::run(int argc, char *argv[])
@@ -79,16 +79,16 @@ void liminal::engine::run(int argc, char *argv[])
     }
 
     // init subsystems
-    assets = new liminal::assets();
-    platform = new liminal::platform(window_title, window_width, window_height);
-    renderer = new liminal::renderer(
+    auto assets = new liminal::assets();
+    auto platform = new liminal::platform(window_title, window_width, window_height);
+    auto renderer = new liminal::renderer(
         window_width, window_height, render_scale,
         4096, 512, 1024,
         window_width, window_height,
         window_width, window_height);
 
     // get imgui reference
-    ImGuiIO &io = ImGui::GetIO();
+    auto &io = ImGui::GetIO();
 
     // create client app
     auto app = liminal::create_app(argc, argv);

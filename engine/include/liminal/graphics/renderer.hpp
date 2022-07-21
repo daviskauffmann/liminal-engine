@@ -1,7 +1,6 @@
 #ifndef LIMINAL_GRAPHICS_RENDERER_HPP
 #define LIMINAL_GRAPHICS_RENDERER_HPP
 
-#include <entt/entt.hpp>
 #include <GL/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
@@ -24,6 +23,8 @@ namespace liminal
     class renderer
     {
     public:
+        static renderer *instance;
+
         liminal::camera *default_camera = nullptr;
         liminal::transform *default_camera_transform = nullptr;
 
@@ -50,7 +51,7 @@ namespace liminal
 
         void reload_programs();
 
-        entt::entity pick(int x, int y);
+        liminal::entity pick(int x, int y, liminal::scene *scene);
 
         void render(liminal::scene &scene, unsigned int current_time, float delta_time);
 

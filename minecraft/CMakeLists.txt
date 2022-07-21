@@ -3,9 +3,7 @@ project(minecraft)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(EnTT CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_package(SDL2 CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     src/blocks/air_block.cpp
@@ -24,8 +22,6 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        EnTT::EnTT
         glm::glm
         liminal_engine
-        SDL2::SDL2 SDL2::SDL2main
 )

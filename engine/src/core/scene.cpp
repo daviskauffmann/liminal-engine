@@ -15,7 +15,6 @@
 #include <liminal/components/transform.hpp>
 #include <liminal/components/water.hpp>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/engine.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/core/platform.hpp>
 #include <liminal/graphics/model.hpp>
@@ -38,12 +37,12 @@ liminal::scene::scene()
 
 liminal::scene::~scene()
 {
-    for (auto [entity, physical] : registry.view<liminal::physical>().each())
+    for (auto [id, physical] : get_entities_with<liminal::physical>().each())
     {
         world->removeRigidBody(physical.rigidbody);
     }
 
-    for (auto [entity, terrain] : registry.view<liminal::terrain>().each())
+    for (auto [id, terrain] : get_entities_with<liminal::terrain>().each())
     {
         world->removeRigidBody(terrain.rigidbody);
     }
@@ -63,7 +62,7 @@ void liminal::scene::load(const std::string &filename)
     {
         if (key == "skybox")
         {
-            skybox = liminal::engine::instance->assets->load_skybox(json["skybox"]);
+            skybox = liminal::assets::instance->load_skybox(json["skybox"]);
         }
 
         if (key == "entities")
@@ -120,8 +119,7 @@ void liminal::scene::load(const std::string &filename)
                     {
                         std::string filename(value["filename"]);
                         bool flip_uvs = value["flip_uvs"];
-                        auto &mesh_renderer = entity.add_component<liminal::mesh_renderer>(liminal::engine::instance->assets->load_model(filename, flip_uvs));
-                        mesh_renderer.model->update_bone_transformations(0, 0);
+                        entity.add_component<liminal::mesh_renderer>(liminal::assets::instance->load_model(filename, flip_uvs));
                     }
 
                     if (key == "script")
@@ -168,15 +166,15 @@ void liminal::scene::delete_entity(liminal::entity entity)
 void liminal::scene::update(unsigned int current_time, float delta_time)
 {
     // update scripts
-    for (auto [entity, script] : registry.view<liminal::script>().each())
+    for (auto [id, script] : get_entities_with<liminal::script>().each())
     {
         script.update(delta_time);
     }
 
     // update animations
-    for (auto [entity, mesh_renderer] : registry.view<liminal::mesh_renderer>().each())
+    for (auto [id, mesh_renderer] : get_entities_with<liminal::mesh_renderer>().each())
     {
-        if (mesh_renderer.model->has_animations())
+        if (mesh_renderer.model && mesh_renderer.model->has_animations())
         {
             // TODO: put current animation_index on the mesh_renderer component
             mesh_renderer.model->update_bone_transformations(0, current_time);
@@ -184,13 +182,13 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     }
 
     // update audio listener positions
-    for (auto [entity, audio_listener, transform] : registry.view<liminal::audio_listener, liminal::transform>().each())
+    for (auto [id, audio_listener, transform] : get_entities_with<liminal::audio_listener, liminal::transform>().each())
     {
         audio_listener.set_position(transform.position, transform.rotation);
     }
 
     // update audio source positions
-    for (auto [entity, audio_source, transform] : registry.view<liminal::audio_source, liminal::transform>().each())
+    for (auto [id, audio_source, transform] : get_entities_with<liminal::audio_source, liminal::transform>().each())
     {
         audio_source.set_position(transform.position);
     }
@@ -198,7 +196,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     // update world transforms in case the transform component changed
     // TODO: remove this, should just have a function that sets up the initial state of rigidbodies and then lets bullet be in charge
     // this would make it so that you can't move rigidbodies around in the editor (unless physics is turned off), but maybe this is okay
-    for (auto [entity, physical, transform] : registry.view<liminal::physical, liminal::transform>().each())
+    for (auto [id, physical, transform] : get_entities_with<liminal::physical, liminal::transform>().each())
     {
         btTransform world_transform;
         world_transform.setIdentity();
@@ -212,7 +210,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     world->stepSimulation(delta_time);
 
     // update transforms to respect physics simulation
-    for (auto [entity, physical, transform] : registry.view<liminal::physical, liminal::transform>().each())
+    for (auto [id, physical, transform] : get_entities_with<liminal::physical, liminal::transform>().each())
     {
         btTransform world_transform = physical.rigidbody->getWorldTransform();
 
@@ -227,7 +225,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
 
 void liminal::scene::reload_scripts()
 {
-    for (auto [entity, script] : registry.view<liminal::script>().each())
+    for (auto [id, script] : get_entities_with<liminal::script>().each())
     {
         // TODO:
     }

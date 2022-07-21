@@ -4,7 +4,6 @@
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
-#include <SDL2/SDL.h>
 #include <unordered_map>
 
 #include "blocks/air_block.hpp"
@@ -22,7 +21,7 @@ namespace minecraft
 
         app()
         {
-            SDL_SetRelativeMouseMode(SDL_TRUE);
+            liminal::platform::instance->set_relative_mouse_mode(true);
 
             scene = new liminal::scene();
             scene->skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_Env.hdr");
@@ -37,7 +36,7 @@ namespace minecraft
             sun.add_component<liminal::directional_light>(glm::vec3(1, 1, 1));
 
             player_entity = scene->create_entity();
-            player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+            player_entity.add_component<liminal::transform>("Player");
             player_entity.add_component<liminal::camera>(45.f);
 
             tiles_texture = new liminal::texture("assets/images/tiles.png", false, false);
@@ -65,7 +64,7 @@ namespace minecraft
 
             if (liminal::input::key_down(liminal::KEYCODE_TAB))
             {
-                SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+                liminal::platform::instance->set_relative_mouse_mode(!liminal::platform::instance->get_relative_mouse_mode());
             }
 
             auto &transform = player_entity.get_component<liminal::transform>();
@@ -122,7 +121,7 @@ namespace minecraft
 
             if (!io.WantCaptureMouse)
             {
-                if (SDL_GetRelativeMouseMode())
+                if (liminal::platform::instance->get_relative_mouse_mode())
                 {
                     const float sensitivity = 0.1f;
                     transform.rotation.x -= liminal::input::mouse_dy * sensitivity;

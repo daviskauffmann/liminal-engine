@@ -10,6 +10,8 @@ namespace liminal
     class platform
     {
     public:
+        static platform *instance;
+
         platform(const std::string &window_title, int window_width, int window_height);
         ~platform();
 
@@ -17,6 +19,8 @@ namespace liminal
         void set_window_size(int width, int height);
         void toggle_fullscreen();
         void toggle_vsync();
+        bool get_relative_mouse_mode();
+        void set_relative_mouse_mode(bool enabled);
 
         void process_event(SDL_Event *event);
 

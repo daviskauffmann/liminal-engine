@@ -11,8 +11,12 @@
 #include <SDL2/SDL_image.h>
 #include <sol/sol.hpp>
 
+liminal::platform *liminal::platform::instance = nullptr;
+
 liminal::platform::platform(const std::string &window_title, int window_width, int window_height)
 {
+    instance = this;
+
     // init SDL
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
     {
@@ -154,6 +158,16 @@ void liminal::platform::toggle_fullscreen()
 void liminal::platform::toggle_vsync()
 {
     SDL_GL_SetSwapInterval(!SDL_GL_GetSwapInterval());
+}
+
+bool liminal::platform::get_relative_mouse_mode()
+{
+    return SDL_GetRelativeMouseMode();
+}
+
+void liminal::platform::set_relative_mouse_mode(bool enabled)
+{
+    SDL_SetRelativeMouseMode((SDL_bool)enabled);
 }
 
 void liminal::platform::process_event(SDL_Event *event)

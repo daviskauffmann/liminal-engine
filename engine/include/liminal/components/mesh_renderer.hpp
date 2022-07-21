@@ -9,6 +9,8 @@ namespace liminal
     {
     public:
         liminal::model *model;
+
+        mesh_renderer(liminal::model *model = nullptr);
     };
 }
 

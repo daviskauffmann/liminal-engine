@@ -5,7 +5,6 @@
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/transform.hpp>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/engine.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/model.hpp>
@@ -30,7 +29,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["SetSkybox"] = [scene](const std::string &filename) -> void
     {
-        scene->skybox = liminal::engine::instance->assets->load_skybox(filename);
+        scene->skybox = liminal::assets::instance->load_skybox(filename);
     };
     (*lua)["AddEntity"] = [scene]() -> entt::entity
     {
@@ -42,11 +41,11 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["GetEntityByName"] = [scene](const std::string &name) -> entt::entity
     {
-        for (auto [entity, transform] : scene->registry.view<liminal::transform>().each())
+        for (auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
         {
             if (transform.name == name)
             {
-                return entity;
+                return id;
             }
         }
         return entt::null;
@@ -103,13 +102,13 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     (*lua)["AddMeshRenderer"] = [scene](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::mesh_renderer>(liminal::engine::instance->assets->load_model(filename, flip_uvs));
+        entity.add_component<liminal::mesh_renderer>(liminal::assets::instance->load_model(filename, flip_uvs));
     };
     (*lua)["UpdateMeshRenderer"] = [scene](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
         auto entity = scene->get_entity(id);
         auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
-        mesh_renderer.model = liminal::engine::instance->assets->load_model(filename, flip_uvs);
+        mesh_renderer.model = liminal::assets::instance->load_model(filename, flip_uvs);
     };
     (*lua)["AddPointLight"] = [scene](entt::entity id, float r, float g, float b) -> void
     {
@@ -155,12 +154,12 @@ liminal::script::~script()
     delete lua;
 }
 
-void liminal::script::init()
+void liminal::script::init() const
 {
     (*lua)["Init"]();
 }
 
-void liminal::script::update(float delta_time)
+void liminal::script::update(float delta_time) const
 {
     (*lua)["Update"](delta_time);
 }

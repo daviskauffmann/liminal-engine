@@ -6,7 +6,6 @@
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/engine.hpp>
 
 static inline glm::vec3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); }
 static inline glm::vec2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); }
@@ -60,7 +59,7 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
 {
     bone_transformations.clear();
 
-    if (scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
+    if (scene && scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
         float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.f;
         float time_in_ticks = ticks_per_second * (current_time / 1000.f);
@@ -196,7 +195,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
                 aiString path;
                 scene_material->GetTexture(type, i, &path);
                 std::string filename = directory + "/" + path.C_Str();
-                material_textures.push_back(liminal::engine::instance->assets->load_texture(filename));
+                material_textures.push_back(liminal::assets::instance->load_texture(filename));
             }
 
             textures.push_back(material_textures);

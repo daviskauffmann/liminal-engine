@@ -8,7 +8,7 @@ namespace liminal
     class point_light
     {
     public:
-        glm::vec3 color;
+        glm::vec3 color = glm::vec3(1);
     };
 }
 

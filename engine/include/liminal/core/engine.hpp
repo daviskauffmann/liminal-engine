@@ -3,18 +3,10 @@
 
 namespace liminal
 {
-    class assets;
-    class platform;
-    class renderer;
-
     class engine
     {
     public:
         static engine *instance;
-
-        liminal::assets *assets;
-        liminal::platform *platform;
-        liminal::renderer *renderer;
 
         engine();
         ~engine();

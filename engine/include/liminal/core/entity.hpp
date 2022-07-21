@@ -15,6 +15,16 @@ namespace liminal
               scene(scene) {}
         entity(const entity &other) = default;
 
+        bool operator==(const entity &other)
+        {
+            return id == other.id && scene == other.scene;
+        }
+
+        bool operator!=(const entity &other)
+        {
+            return !(*this == other);
+        }
+
         operator bool() const
         {
             return id != entt::null;
@@ -25,10 +35,10 @@ namespace liminal
             return id;
         }
 
-        template <typename... Component>
+        template <typename... Components>
         bool has_components()
         {
-            return scene->registry.all_of<Component...>(id);
+            return scene->registry.all_of<Components...>(id);
         }
 
         template <typename Component>

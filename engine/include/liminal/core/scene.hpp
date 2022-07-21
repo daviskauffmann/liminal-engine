@@ -1,7 +1,7 @@
 #ifndef LIMINAL_CORE_SCENE_HPP
 #define LIMINAL_CORE_SCENE_HPP
 
-#include <entt/entt.hpp> // TODO: remove this include by providing a proper API, that way the client app doesnt need to have an entt dependency
+#include <entt/entt.hpp>
 #include <imgui.h>
 #include <string>
 #include <unordered_map>
@@ -17,7 +17,6 @@ namespace liminal
     {
     public:
         liminal::skybox *skybox;
-        entt::registry registry; // TODO: make private
 
         scene();
         ~scene();
@@ -33,7 +32,14 @@ namespace liminal
 
         void reload_scripts();
 
+        template <typename... Components>
+        auto get_entities_with()
+        {
+            return registry.view<Components...>();
+        }
+
     private:
+        entt::registry registry;
         btDiscreteDynamicsWorld *world;
 
         friend class entity;
