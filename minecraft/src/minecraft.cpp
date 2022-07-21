@@ -19,7 +19,8 @@ namespace minecraft
     public:
         liminal::entity player_entity;
 
-        app()
+        app(int argc, char *argv[])
+            : liminal::app(argc, argv)
         {
             liminal::platform::instance->set_relative_mouse_mode(true);
 
@@ -191,5 +192,5 @@ namespace minecraft
 
 liminal::app *liminal::create_app(int argc, char *argv[])
 {
-    return new minecraft::app();
+    return new minecraft::app(argc, argv);
 }

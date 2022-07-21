@@ -1,13 +1,13 @@
 #ifndef LIMINAL_MAIN_HPP
 #define LIMINAL_MAIN_HPP
 
-#include <liminal/core/engine.hpp>
+#include <liminal/core/app.hpp>
 
 int main(int argc, char *argv[])
 {
-    auto engine = new liminal::engine();
-    engine->run(argc, argv);
-    delete engine;
+    auto app = liminal::create_app(argc, argv);
+    app->run();
+    delete app;
 
     return 0;
 }

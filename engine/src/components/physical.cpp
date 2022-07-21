@@ -1,7 +1,6 @@
 #include <liminal/components/physical.hpp>
 
 #include <bullet/btBulletDynamicsCommon.h>
-#include <liminal/core/engine.hpp>
 
 liminal::physical::physical(float mass) : mass(mass)
 {
