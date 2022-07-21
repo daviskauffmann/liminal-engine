@@ -50,10 +50,10 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
         }
         return entt::null;
     };
-    (*lua)["AddTransform"] = [scene](entt::entity id, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
+    (*lua)["AddTransform"] = [scene](entt::entity id, const std::string &name, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::transform>("New Entity", nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
+        entity.add_component<liminal::transform>(name, nullptr, glm::vec3(x, y, z), glm::vec3(rx, ry, rz), glm::vec3(sx, sy, sz));
     };
     (*lua)["GetTransformX"] = [scene](entt::entity id) -> float
     {

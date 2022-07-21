@@ -212,7 +212,7 @@ public:
             }
             ImGui::End();
 
-            if (ImGui::Begin("Scene Hierarchy"))
+            if (ImGui::Begin("Entities"))
             {
                 for (auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
                 {
@@ -240,24 +240,15 @@ public:
             }
             ImGui::End();
 
-            if (ImGui::Begin("Inspector"))
+            if (ImGui::Begin("Selected"))
             {
                 if (selected_entity)
                 {
+                    const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
+
                     if (selected_entity.has_components<liminal::transform>())
                     {
-                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform");
-
-                        auto deleted = false;
-                        if (ImGui::BeginPopupContextItem())
-                        {
-                            if (ImGui::MenuItem("Remove"))
-                            {
-                                deleted = true;
-                            }
-
-                            ImGui::EndPopup();
-                        }
+                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), flags, "Transform");
 
                         if (opened)
                         {
@@ -279,16 +270,11 @@ public:
 
                             ImGui::TreePop();
                         }
-
-                        if (deleted)
-                        {
-                            selected_entity.remove_component<liminal::transform>();
-                        }
                     }
 
                     if (selected_entity.has_components<liminal::mesh_renderer>())
                     {
-                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Mesh Renderer");
+                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), flags, "Mesh Renderer");
 
                         auto deleted = false;
                         if (ImGui::BeginPopupContextItem())
@@ -323,7 +309,7 @@ public:
 
                     if (selected_entity.has_components<liminal::point_light>())
                     {
-                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Point Light");
+                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), flags, "Point Light");
 
                         auto deleted = false;
                         if (ImGui::BeginPopupContextItem())
