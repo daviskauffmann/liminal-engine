@@ -30,6 +30,11 @@ namespace liminal
             return id != entt::null;
         }
 
+        operator uint64_t() const
+        {
+            return (uint64_t)id;
+        }
+
         operator entt::entity() const
         {
             return id;

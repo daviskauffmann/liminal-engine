@@ -216,46 +216,9 @@ public:
             {
                 for (auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
                 {
-                    auto entity = liminal::entity(id, scene);
-
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-                    if (entity == selected_entity)
+                    if (!transform.parent)
                     {
-                        flags |= ImGuiTreeNodeFlags_Selected;
-                    }
-                    auto opened = ImGui::TreeNodeEx((void *)id, flags, transform.name.c_str());
-
-                    if (ImGui::IsItemClicked())
-                    {
-                        selected_entity = entity;
-                    }
-
-                    auto deleted = false;
-                    if (ImGui::BeginPopupContextItem())
-                    {
-                        if (ImGui::MenuItem("Delete"))
-                        {
-                            deleted = true;
-                        }
-
-                        ImGui::EndPopup();
-                    }
-
-                    if (opened)
-                    {
-                        // TODO: recurse over children
-
-                        ImGui::TreePop();
-                    }
-
-                    if (deleted)
-                    {
-                        scene->delete_entity(entity);
-
-                        if (entity == selected_entity)
-                        {
-                            selected_entity = liminal::entity();
-                        }
+                        draw_entity_node(liminal::entity(id, scene), transform);
                     }
                 }
 
@@ -283,7 +246,20 @@ public:
                 {
                     if (selected_entity.has_components<liminal::transform>())
                     {
-                        if (ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform"))
+                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform");
+
+                        auto deleted = false;
+                        if (ImGui::BeginPopupContextItem())
+                        {
+                            if (ImGui::MenuItem("Remove"))
+                            {
+                                deleted = true;
+                            }
+
+                            ImGui::EndPopup();
+                        }
+
+                        if (opened)
                         {
                             auto &transform = selected_entity.get_component<liminal::transform>();
 
@@ -295,17 +271,37 @@ public:
                                 transform.name = std::string(buffer);
                             }
 
+                            ImGui::Text("Parent: %s", transform.parent ? transform.parent->name.c_str() : "null");
+
                             ImGui::DragFloat3("Position", glm::value_ptr(transform.position), .1f);
                             ImGui::DragFloat3("Rotation", glm::value_ptr(transform.rotation), .1f);
                             ImGui::DragFloat3("Scale", glm::value_ptr(transform.scale), .1f);
 
                             ImGui::TreePop();
                         }
+
+                        if (deleted)
+                        {
+                            selected_entity.remove_component<liminal::transform>();
+                        }
                     }
 
                     if (selected_entity.has_components<liminal::mesh_renderer>())
                     {
-                        if (ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Mesh Renderer"))
+                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Mesh Renderer");
+
+                        auto deleted = false;
+                        if (ImGui::BeginPopupContextItem())
+                        {
+                            if (ImGui::MenuItem("Remove"))
+                            {
+                                deleted = true;
+                            }
+
+                            ImGui::EndPopup();
+                        }
+
+                        if (opened)
                         {
                             auto &mesh_renderer = selected_entity.get_component<liminal::mesh_renderer>();
 
@@ -318,17 +314,40 @@ public:
 
                             ImGui::TreePop();
                         }
+
+                        if (deleted)
+                        {
+                            selected_entity.remove_component<liminal::mesh_renderer>();
+                        }
                     }
 
                     if (selected_entity.has_components<liminal::point_light>())
                     {
-                        if (ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Point Light"))
+                        auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Point Light");
+
+                        auto deleted = false;
+                        if (ImGui::BeginPopupContextItem())
+                        {
+                            if (ImGui::MenuItem("Remove"))
+                            {
+                                deleted = true;
+                            }
+
+                            ImGui::EndPopup();
+                        }
+
+                        if (opened)
                         {
                             auto &point_light = selected_entity.get_component<liminal::point_light>();
 
                             ImGui::DragFloat3("Color", glm::value_ptr(point_light.color), .1f);
 
                             ImGui::TreePop();
+                        }
+
+                        if (deleted)
+                        {
+                            selected_entity.remove_component<liminal::point_light>();
                         }
                     }
 
@@ -455,6 +474,75 @@ private:
         playing = false;
 
         load_scene();
+    }
+
+    void delete_entity(liminal::entity entity, liminal::transform &transform)
+    {
+        for (auto [child_id, child_transform] : scene->get_entities_with<liminal::transform>().each())
+        {
+            if (child_transform.parent == &transform)
+            {
+                delete_entity(liminal::entity(child_id, scene), child_transform);
+            }
+        }
+
+        scene->delete_entity(entity);
+
+        if (entity == selected_entity)
+        {
+            selected_entity = liminal::entity();
+        }
+    }
+
+    void draw_entity_node(liminal::entity entity, liminal::transform &transform)
+    {
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+        if (entity == selected_entity)
+        {
+            flags |= ImGuiTreeNodeFlags_Selected;
+        }
+        auto opened = ImGui::TreeNodeEx((void *)(uint64_t)entity, flags, transform.name.c_str());
+
+        if (ImGui::IsItemClicked())
+        {
+            selected_entity = entity;
+        }
+
+        auto deleted = false;
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem("Create Child"))
+            {
+                auto child = selected_entity = scene->create_entity();
+                auto &child_transform = child.add_component<liminal::transform>();
+                child_transform.parent = &transform;
+            }
+
+            if (ImGui::MenuItem("Delete"))
+            {
+                deleted = true;
+            }
+
+            ImGui::EndPopup();
+        }
+
+        if (opened)
+        {
+            for (auto [child_id, child_transform] : scene->get_entities_with<liminal::transform>().each())
+            {
+                if (child_transform.parent == &transform)
+                {
+                    draw_entity_node(liminal::entity(child_id, scene), child_transform);
+                }
+            }
+
+            ImGui::TreePop();
+        }
+
+        if (deleted)
+        {
+            delete_entity(entity, transform);
+        }
     }
 };
 
