@@ -14,6 +14,7 @@
 #include <liminal/components/terrain.hpp>
 #include <liminal/components/transform.hpp>
 #include <liminal/components/water.hpp>
+#include <liminal/core/assets.hpp>
 #include <liminal/core/engine.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/core/platform.hpp>
@@ -62,7 +63,7 @@ void liminal::scene::load(const std::string &filename)
     {
         if (key == "skybox")
         {
-            skybox = new liminal::skybox(json["skybox"]);
+            skybox = liminal::engine::instance->assets->load_skybox(json["skybox"]);
         }
 
         if (key == "entities")
@@ -119,7 +120,7 @@ void liminal::scene::load(const std::string &filename)
                     {
                         std::string filename(value["filename"]);
                         bool flip_uvs = value["flip_uvs"];
-                        auto &mesh_renderer = entity.add_component<liminal::mesh_renderer>(new liminal::model(filename, flip_uvs)); // TODO: asset manager
+                        auto &mesh_renderer = entity.add_component<liminal::mesh_renderer>(liminal::engine::instance->assets->load_model(filename, flip_uvs));
                         mesh_renderer.model->update_bone_transformations(0, 0);
                     }
 

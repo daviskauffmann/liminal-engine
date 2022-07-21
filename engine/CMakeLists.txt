@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME}
     src/components/terrain.cpp
     src/components/transform.cpp
     src/core/app.cpp
+    src/core/assets.cpp
     src/core/engine.cpp
     src/core/platform.cpp
     src/core/scene.cpp

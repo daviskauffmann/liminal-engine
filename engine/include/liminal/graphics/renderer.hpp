@@ -24,8 +24,11 @@ namespace liminal
     class renderer
     {
     public:
-        bool wireframe;
-        bool greyscale;
+        liminal::camera *default_camera = nullptr;
+        liminal::transform *default_camera_transform = nullptr;
+
+        bool wireframe = false;
+        bool greyscale = false;
 
         renderer(
             GLsizei target_width, GLsizei target_height, float render_scale,
@@ -59,50 +62,50 @@ namespace liminal
         GLsizei render_width;
         GLsizei render_height;
 
-        GLuint geometry_fbo_id;
-        GLuint geometry_position_texture_id;
-        GLuint geometry_normal_texture_id;
-        GLuint geometry_albedo_texture_id;
-        GLuint geometry_material_texture_id;
-        GLuint geometry_id_texture_id;
-        GLuint geometry_rbo_id;
+        GLuint geometry_fbo_id = 0;
+        GLuint geometry_position_texture_id = 0;
+        GLuint geometry_normal_texture_id = 0;
+        GLuint geometry_albedo_texture_id = 0;
+        GLuint geometry_material_texture_id = 0;
+        GLuint geometry_id_texture_id = 0;
+        GLuint geometry_rbo_id = 0;
 
-        GLuint hdr_fbo_id;
-        GLuint hdr_texture_ids[2];
-        GLuint hdr_rbo_id;
+        GLuint hdr_fbo_id = 0;
+        GLuint hdr_texture_ids[2] = {};
+        GLuint hdr_rbo_id = 0;
 
-        GLuint final_fbo_id;
-        GLuint final_texture_id;
+        GLuint final_fbo_id = 0;
+        GLuint final_texture_id = 0;
 
         GLsizei directional_light_depth_map_size;
-        GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS];
-        GLuint directional_light_depth_map_texture_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS];
-        glm::mat4 directional_light_transformation_matrices[NUM_DIRECTIONAL_LIGHT_SHADOWS];
+        GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
+        GLuint directional_light_depth_map_texture_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
+        glm::mat4 directional_light_transformation_matrices[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
 
         GLsizei point_light_depth_cubemap_size;
-        GLuint point_light_depth_cubemap_fbo_ids[NUM_POINT_LIGHT_SHADOWS];
-        GLuint point_light_depth_cubemap_texture_ids[NUM_POINT_LIGHT_SHADOWS];
-        std::vector<glm::mat4> point_light_transformation_matrices[NUM_POINT_LIGHT_SHADOWS];
+        GLuint point_light_depth_cubemap_fbo_ids[NUM_POINT_LIGHT_SHADOWS] = {};
+        GLuint point_light_depth_cubemap_texture_ids[NUM_POINT_LIGHT_SHADOWS] = {};
+        glm::mat4 point_light_transformation_matrices[NUM_POINT_LIGHT_SHADOWS][6] = {};
 
         GLsizei spot_light_depth_map_size;
-        GLuint spot_light_depth_map_fbo_ids[NUM_SPOT_LIGHT_SHADOWS];
-        GLuint spot_light_depth_map_texture_ids[NUM_SPOT_LIGHT_SHADOWS];
-        glm::mat4 spot_light_transformation_matrices[NUM_SPOT_LIGHT_SHADOWS];
+        GLuint spot_light_depth_map_fbo_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
+        GLuint spot_light_depth_map_texture_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
+        glm::mat4 spot_light_transformation_matrices[NUM_SPOT_LIGHT_SHADOWS] = {};
 
         GLsizei water_reflection_width;
         GLsizei water_reflection_height;
-        GLuint water_reflection_fbo_id;
-        GLuint water_reflection_color_texture_id;
-        GLuint water_reflection_rbo_id;
+        GLuint water_reflection_fbo_id = 0;
+        GLuint water_reflection_color_texture_id = 0;
+        GLuint water_reflection_rbo_id = 0;
 
         GLsizei water_refraction_width;
         GLsizei water_refraction_height;
-        GLuint water_refraction_fbo_id;
-        GLuint water_refraction_color_texture_id;
-        GLuint water_refraction_depth_texture_id;
+        GLuint water_refraction_fbo_id = 0;
+        GLuint water_refraction_color_texture_id = 0;
+        GLuint water_refraction_depth_texture_id = 0;
 
-        GLuint bloom_fbo_ids[2];
-        GLuint bloom_texture_ids[2];
+        GLuint bloom_fbo_ids[2] = {};
+        GLuint bloom_texture_ids[2] = {};
 
         GLsizei water_vertices_size;
         GLuint water_vao_id;
@@ -149,6 +152,11 @@ namespace liminal
 
         void setup_samplers();
 
+        void render_all(
+            liminal::scene &scene,
+            liminal::camera &camera,
+            liminal::transform &camera_transform,
+            unsigned int current_time);
         void render_shadows(
             liminal::scene &scene,
             liminal::camera &camera,

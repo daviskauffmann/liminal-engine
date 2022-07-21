@@ -21,10 +21,10 @@ namespace liminal
 
         camera(float fov, bool render_to_texture = false);
 
-        glm::vec3 calc_front(liminal::transform &transform) const;
-        glm::vec3 calc_right(liminal::transform &transform) const;
+        glm::vec3 calc_front(const liminal::transform &transform) const;
+        glm::vec3 calc_right(const liminal::transform &transform) const;
         glm::mat4 calc_projection(float aspect) const;
-        glm::mat4 calc_view(liminal::transform &transform) const;
+        glm::mat4 calc_view(const liminal::transform &transform) const;
     };
 }
 

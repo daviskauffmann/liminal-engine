@@ -173,6 +173,14 @@ public:
                 {
                     transform.rotation.x = -89;
                 }
+                if (transform.rotation.y < 0)
+                {
+                    transform.rotation.y = 360;
+                }
+                if (transform.rotation.y > 360)
+                {
+                    transform.rotation.y = 0;
+                }
 
                 camera.fov -= liminal::input::mouse_wheel_y;
                 if (camera.fov <= 1)

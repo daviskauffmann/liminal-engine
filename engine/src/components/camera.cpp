@@ -11,7 +11,7 @@ liminal::camera::camera(float fov, bool render_to_texture)
 {
 }
 
-glm::vec3 liminal::camera::calc_front(liminal::transform &transform) const
+glm::vec3 liminal::camera::calc_front(const liminal::transform &transform) const
 {
     glm::vec3 front(
         cosf(glm::radians(transform.rotation.y)) * cosf(glm::radians(transform.rotation.x)),
@@ -20,7 +20,7 @@ glm::vec3 liminal::camera::calc_front(liminal::transform &transform) const
     return glm::normalize(front);
 }
 
-glm::vec3 liminal::camera::calc_right(liminal::transform &transform) const
+glm::vec3 liminal::camera::calc_right(const liminal::transform &transform) const
 {
     glm::vec3 front = calc_front(transform);
     glm::vec3 right = glm::cross(front, glm::vec3(0, 1, 0));
@@ -33,7 +33,7 @@ glm::mat4 liminal::camera::calc_projection(float aspect) const
     return projection;
 }
 
-glm::mat4 liminal::camera::calc_view(liminal::transform &transform) const
+glm::mat4 liminal::camera::calc_view(const liminal::transform &transform) const
 {
     glm::vec3 front = calc_front(transform);
     glm::vec3 target = transform.position + front;

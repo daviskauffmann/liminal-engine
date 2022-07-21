@@ -10,9 +10,6 @@
 class editor : public liminal::app
 {
 public:
-    // TODO: perhaps editor camera should not exist within the ECS?
-    liminal::entity editor_entity;
-
     editor()
     {
         load_scene();
@@ -21,8 +18,6 @@ public:
     void update(unsigned int current_time, float delta_time) override
     {
         ImGuiIO &io = ImGui::GetIO();
-        auto &transform = editor_entity.get_component<liminal::transform>();
-        auto &camera = editor_entity.get_component<liminal::camera>();
 
         if (liminal::input::key_down(liminal::keycode::KEYCODE_N))
         {
@@ -79,25 +74,30 @@ public:
         ImGui::SetNextWindowPos(viewport->Pos);
         ImGui::SetNextWindowSize(viewport->Size);
         ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        window_flags |=
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoNavFocus;
 
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
         {
             window_flags |= ImGuiWindowFlags_NoBackground;
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        if (ImGui::Begin("DockSpace Demo", NULL, window_flags))
+        if (ImGui::Begin("Editor", NULL, window_flags))
         {
             ImGui::PopStyleVar(3);
 
             if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
             {
-                ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-                ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+                ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+                ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockspace_flags);
             }
 
             if (ImGui::BeginMenuBar())
@@ -152,8 +152,11 @@ public:
 
             if (ImGui::Begin("Scene", nullptr))
             {
+                auto &camera = *liminal::engine::instance->renderer->default_camera;
+
                 if (ImGui::IsWindowHovered())
                 {
+                    auto &transform = *liminal::engine::instance->renderer->default_camera_transform;
                     glm::vec3 camera_front = camera.calc_front(transform);
                     glm::vec3 camera_right = camera.calc_right(transform);
 
@@ -267,6 +270,7 @@ public:
                     {
                         auto entity = scene->create_entity();
                         entity.add_component<liminal::transform>("New Entity", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+                        selected_entity_id = entity;
                     }
 
                     ImGui::EndPopup();
@@ -302,6 +306,32 @@ public:
                         }
                     }
 
+                    if (entity.has_components<liminal::mesh_renderer>())
+                    {
+                        if (ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Mesh Renderer"))
+                        {
+                            auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
+
+                            if (ImGui::Button("Load Model"))
+                            {
+                            }
+
+                            ImGui::TreePop();
+                        }
+                    }
+
+                    if (entity.has_components<liminal::point_light>())
+                    {
+                        if (ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Point Light"))
+                        {
+                            auto &point_light = entity.get_component<liminal::point_light>();
+
+                            ImGui::DragFloat3("Color", glm::value_ptr(point_light.color), .1f);
+
+                            ImGui::TreePop();
+                        }
+                    }
+
                     if (ImGui::Button("Add Component"))
                     {
                         ImGui::OpenPopup("AddComponent");
@@ -309,9 +339,16 @@ public:
 
                     if (ImGui::BeginPopup("AddComponent"))
                     {
-                        if (ImGui::MenuItem("Mesh Renderer"))
+                        if (!entity.has_components<liminal::mesh_renderer>() && ImGui::MenuItem("Mesh Renderer"))
                         {
-                            entity.add_component<liminal::mesh_renderer>(new liminal::model("assets/models/backpack/backpack.obj", true)); // TODO: asset manager
+                            entity.add_component<liminal::mesh_renderer>(liminal::engine::instance->assets->load_model("assets/models/backpack/backpack.obj", true));
+
+                            ImGui::CloseCurrentPopup();
+                        }
+
+                        if (!entity.has_components<liminal::point_light>() && ImGui::MenuItem("Point Light"))
+                        {
+                            entity.add_component<liminal::point_light>(glm::vec3(1.f));
 
                             ImGui::CloseCurrentPopup();
                         }
@@ -354,8 +391,7 @@ public:
         ImGui::End();
     }
 
-    void
-    resize(int width, int height) override
+    void resize(int width, int height) override
     {
     }
 
@@ -377,9 +413,8 @@ private:
         }
         scene = new liminal::scene();
 
-        editor_entity = scene->create_entity();
-        editor_entity.add_component<liminal::transform>("Editor", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        editor_entity.add_component<liminal::camera>(45.f, true);
+        liminal::engine::instance->renderer->default_camera = new liminal::camera(45.f, true);
+        liminal::engine::instance->renderer->default_camera_transform = new liminal::transform();
     }
 
     void load_scene()
@@ -397,14 +432,15 @@ private:
     {
         playing = true;
 
-        scene->delete_entity(editor_entity);
+        delete liminal::engine::instance->renderer->default_camera;
+        delete liminal::engine::instance->renderer->default_camera_transform;
 
         // TODO: remove this, should just come from what is placed in the scene
         // the only caveat is that the camera.render_to_texture needs to be overridden to true when running in the editor, so that the scene can render to the ImGui window
-        editor_entity = scene->create_entity();
-        editor_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-        editor_entity.add_component<liminal::camera>(45.f, true);
-        editor_entity.add_component<liminal::audio_listener>();
+        auto player = scene->create_entity();
+        player.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+        player.add_component<liminal::camera>(45.f, true);
+        player.add_component<liminal::audio_listener>();
 
         for (auto [entity, script] : scene->registry.view<liminal::script>().each())
         {

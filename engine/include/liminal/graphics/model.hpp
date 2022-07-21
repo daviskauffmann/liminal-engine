@@ -47,8 +47,6 @@ namespace liminal
         std::vector<bone> bones;
         std::unordered_map<std::string, unsigned int> bone_indices;
 
-        std::unordered_map<std::string, liminal::texture *> loaded_textures;
-
         void process_node_meshes(const aiNode *node, const aiScene *scene);
         liminal::mesh *create_mesh(const aiMesh *mesh, const aiScene *scene);
 

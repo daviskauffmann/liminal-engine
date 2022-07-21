@@ -13,6 +13,7 @@
 #include "components\transform.hpp"
 #include "components\water.hpp"
 #include "core\app.hpp"
+#include "core\assets.hpp"
 #include "core\engine.hpp"
 #include "core\entity.hpp"
 #include "core\platform.hpp"

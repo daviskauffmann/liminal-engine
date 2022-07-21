@@ -5,6 +5,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
+#include <liminal/core/assets.hpp>
+#include <liminal/core/engine.hpp>
 
 static inline glm::vec3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); }
 static inline glm::vec2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); }
@@ -46,11 +48,6 @@ liminal::model::~model()
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
         delete meshes[i];
-    }
-
-    for (auto it = loaded_textures.begin(); it != loaded_textures.end(); it++)
-    {
-        delete it->second;
     }
 }
 
@@ -199,16 +196,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
                 aiString path;
                 scene_material->GetTexture(type, i, &path);
                 std::string filename = directory + "/" + path.C_Str();
-                if (loaded_textures.find(filename) == loaded_textures.end())
-                {
-                    liminal::texture *texture = new liminal::texture(filename); // TODO: asset manager
-                    material_textures.push_back(texture);
-                    loaded_textures[filename] = texture;
-                }
-                else
-                {
-                    material_textures.push_back(loaded_textures[filename]);
-                }
+                material_textures.push_back(liminal::engine::instance->assets->load_texture(filename));
             }
 
             textures.push_back(material_textures);

@@ -44,65 +44,15 @@ liminal::renderer::renderer(
     GLsizei water_reflection_width, GLsizei water_reflection_height,
     GLsizei water_refraction_width, GLsizei water_refraction_height)
 {
-    wireframe = false;
-    greyscale = false;
-
     // setup fbos
     this->target_width = target_width;
     this->target_height = target_height;
     this->render_scale = render_scale;
-    hdr_fbo_id = 0;
-    hdr_texture_ids[0] = 0;
-    hdr_texture_ids[1] = 0;
-    hdr_rbo_id = 0;
-    geometry_fbo_id = 0;
-    geometry_position_texture_id = 0;
-    geometry_normal_texture_id = 0;
-    geometry_albedo_texture_id = 0;
-    geometry_material_texture_id = 0;
-    geometry_rbo_id = 0;
-    final_fbo_id = 0;
-    final_texture_id = 0;
     calc_render_size();
-
-    for (size_t i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
-    {
-        directional_light_depth_map_fbo_ids[i] = 0;
-    }
-    for (size_t i = 0; i < NUM_DIRECTIONAL_LIGHT_SHADOWS; i++)
-    {
-        directional_light_depth_map_texture_ids[i] = 0;
-    }
     set_directional_light_depth_map_size(directional_light_depth_map_size);
-
-    for (size_t i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
-    {
-        point_light_depth_cubemap_fbo_ids[i] = 0;
-    }
-    for (size_t i = 0; i < NUM_POINT_LIGHT_SHADOWS; i++)
-    {
-        point_light_depth_cubemap_texture_ids[i] = 0;
-    }
     set_point_light_depth_cubemap_size(point_light_depth_cubemap_size);
-
-    for (size_t i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
-    {
-        spot_light_depth_map_fbo_ids[i] = 0;
-    }
-    for (size_t i = 0; i < NUM_SPOT_LIGHT_SHADOWS; i++)
-    {
-        spot_light_depth_map_texture_ids[i] = 0;
-    }
     set_spot_light_depth_map_size(spot_light_depth_map_size);
-
-    water_reflection_fbo_id = 0;
-    water_reflection_color_texture_id = 0;
-    water_reflection_rbo_id = 0;
     set_reflection_size(water_reflection_width, water_reflection_height);
-
-    water_refraction_fbo_id = 0;
-    water_refraction_color_texture_id = 0;
-    water_refraction_depth_texture_id = 0;
     set_refraction_size(water_refraction_width, water_refraction_height);
 
     // init OpenGL state
@@ -1384,14 +1334,28 @@ entt::entity liminal::renderer::pick(int x, int y)
 
 void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time)
 {
+    if (default_camera && default_camera_transform)
+    {
+        render_all(scene, *default_camera, *default_camera_transform, current_time);
+    }
+
     for (auto [entity, camera, transform] : scene.registry.view<liminal::camera, liminal::transform>().each())
     {
-        render_shadows(scene, camera, transform);
-        render_objects(scene, camera, transform, hdr_fbo_id, render_width, render_height);
-        render_waters(scene, camera, transform, current_time);
-        render_sprites(scene);
-        render_screen(scene, camera);
+        render_all(scene, camera, transform, current_time);
     }
+}
+
+void liminal::renderer::render_all(
+    liminal::scene &scene,
+    liminal::camera &camera,
+    liminal::transform &camera_transform,
+    unsigned int current_time)
+{
+    render_shadows(scene, camera, camera_transform);
+    render_objects(scene, camera, camera_transform, hdr_fbo_id, render_width, render_height);
+    render_waters(scene, camera, camera_transform, current_time);
+    render_sprites(scene);
+    render_screen(scene, camera);
 }
 
 void liminal::renderer::render_shadows(
@@ -1494,13 +1458,12 @@ void liminal::renderer::render_shadows(
             point_light_near_plane,
             point_light_far_plane);
 
-        point_light_transformation_matrices[i].clear();
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)));
-        point_light_transformation_matrices[i].push_back(projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0)));
+        point_light_transformation_matrices[i][0] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
+        point_light_transformation_matrices[i][1] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0));
+        point_light_transformation_matrices[i][2] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+        point_light_transformation_matrices[i][3] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
+        point_light_transformation_matrices[i][4] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
+        point_light_transformation_matrices[i][5] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids[i]);
         {

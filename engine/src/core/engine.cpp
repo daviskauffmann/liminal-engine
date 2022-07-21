@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <liminal/core/app.hpp>
+#include <liminal/core/assets.hpp>
 #include <liminal/core/platform.hpp>
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/renderer.hpp>
@@ -26,6 +27,7 @@ liminal::engine::engine()
 
 liminal::engine::~engine()
 {
+    delete assets;
     delete platform;
     delete renderer;
 }
@@ -77,6 +79,7 @@ void liminal::engine::run(int argc, char *argv[])
     }
 
     // init subsystems
+    assets = new liminal::assets();
     platform = new liminal::platform(window_title, window_width, window_height);
     renderer = new liminal::renderer(
         window_width, window_height, render_scale,
