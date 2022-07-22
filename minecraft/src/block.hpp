@@ -16,14 +16,15 @@ namespace minecraft
         DIRECTION_DOWN,
     };
 
-    struct tile
+    class tile
     {
+        public:
         int x;
         int y;
     };
 
     class chunk;
-    struct mesh_data;
+    class mesh_data;
 
     class block
     {

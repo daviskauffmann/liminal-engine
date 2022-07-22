@@ -17,6 +17,8 @@ namespace liminal
     class script
     {
     public:
+        // TODO: support multiple script instances in a single script component?
+        // because we can't have multiple of the same component on an entity
         sol::state *lua;
 
         script(const std::string &filename, liminal::scene *scene, entt::entity id);

@@ -21,7 +21,9 @@ Install the following using the package manager of your choice:
 - glew
 - glm
 - imgui [docking-experimental,opengl3-binding,sdl2-binding]
+- imguizmo
 - lua
+- nativefiledialog
 - nlohmann-json
 - openal-soft
 - sdl2

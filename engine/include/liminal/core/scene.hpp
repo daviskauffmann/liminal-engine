@@ -10,7 +10,7 @@ class btDiscreteDynamicsWorld;
 
 namespace liminal
 {
-    struct skybox;
+    class skybox;
     class entity;
 
     class scene

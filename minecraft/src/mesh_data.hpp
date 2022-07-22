@@ -6,8 +6,9 @@
 
 namespace minecraft
 {
-    struct mesh_data
+    class mesh_data
     {
+    public:
         std::vector<liminal::vertex> vertices;
         std::vector<unsigned int> indices;
 

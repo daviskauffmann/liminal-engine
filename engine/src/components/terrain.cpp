@@ -78,7 +78,7 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
         std::vector<liminal::texture *> textures_for_type;
         textures.push_back(textures_for_type);
     }
-    // TODO: cleanup textures in destructor
+
     textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture("assets/images/grass1-albedo3.png"));
     // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture(""));
     // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture(""));

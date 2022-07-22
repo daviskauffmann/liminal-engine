@@ -2,9 +2,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
+#include <imguizmo.h>
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
+#include <nfd.h>
 
 namespace editor
 {
@@ -28,6 +30,8 @@ namespace editor
         void update(unsigned int current_time, float delta_time) override
         {
             ImGuiIO &io = ImGui::GetIO();
+
+            ImGuizmo::BeginFrame();
 
             if (liminal::input::key_down(liminal::keycode::KEYCODE_N))
             {
@@ -165,12 +169,12 @@ namespace editor
                 if (ImGui::Begin("Scene", nullptr))
                 {
                     auto &camera = *liminal::renderer::instance->default_camera;
+                    auto &camera_transform = *liminal::renderer::instance->default_camera_transform;
 
-                    if (ImGui::IsWindowHovered())
+                    if (ImGui::IsWindowHovered() && !ImGuizmo::IsOver())
                     {
-                        auto &transform = *liminal::renderer::instance->default_camera_transform;
-                        glm::vec3 camera_front = camera.calc_front(transform);
-                        glm::vec3 camera_right = camera.calc_right(transform);
+                        auto camera_front = camera.calc_front(camera_transform);
+                        auto camera_right = camera.calc_right(camera_transform);
 
                         if (liminal::input::mouse_button_down(liminal::mouse_button::MOUSE_BUTTON_LEFT))
                         {
@@ -186,25 +190,25 @@ namespace editor
                         const float sensitivity = 0.1f;
                         if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
                         {
-                            transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
-                            transform.rotation.x += liminal::input::mouse_dy * sensitivity;
-                            if (transform.rotation.x > 89)
+                            camera_transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
+                            camera_transform.rotation.x += liminal::input::mouse_dy * sensitivity;
+                            if (camera_transform.rotation.x > 89)
                             {
-                                transform.rotation.x = 89;
+                                camera_transform.rotation.x = 89;
                             }
-                            if (transform.rotation.x < -89)
+                            if (camera_transform.rotation.x < -89)
                             {
-                                transform.rotation.x = -89;
+                                camera_transform.rotation.x = -89;
                             }
                         }
 
                         if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
                         {
-                            transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
-                            transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
+                            camera_transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
+                            camera_transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
                         }
 
-                        transform.position += camera_front * (float)liminal::input::mouse_wheel_y;
+                        camera_transform.position += camera_front * (float)liminal::input::mouse_wheel_y;
                     }
 
                     scene_region_size = ImGui::GetContentRegionAvail();
@@ -219,13 +223,39 @@ namespace editor
 
                     auto min_region = ImGui::GetWindowContentRegionMin();
                     auto max_region = ImGui::GetWindowContentRegionMax();
-                    auto viewport_offset = ImGui::GetWindowPos();
-                    scene_region_bounds[0] = ImVec2(min_region.x + viewport_offset.x, min_region.y + viewport_offset.y);
-                    scene_region_bounds[1] = ImVec2(max_region.x + viewport_offset.x, max_region.y + viewport_offset.y);
+                    auto window_pos = ImGui::GetWindowPos();
+                    scene_region_bounds[0] = ImVec2(min_region.x + window_pos.x, min_region.y + window_pos.y);
+                    scene_region_bounds[1] = ImVec2(max_region.x + window_pos.x, max_region.y + window_pos.y);
+
+                    if (selected_entity)
+                    {
+                        ImGuizmo::SetOrthographic(false);
+                        ImGuizmo::SetDrawlist();
+
+                        auto window_width = ImGui::GetWindowWidth();
+                        auto window_height = ImGui::GetWindowHeight();
+                        ImGuizmo::SetRect(window_pos.x, window_pos.y, window_width, window_height);
+
+                        auto camera_projection = camera.calc_projection(liminal::renderer::instance->get_aspect_ratio());
+                        auto camera_view = camera.calc_view(camera_transform);
+
+                        auto &transform = selected_entity.get_component<liminal::transform>();
+                        auto matrix = transform.get_model_matrix();
+
+                        if (ImGuizmo::Manipulate(
+                                glm::value_ptr(camera_view),
+                                glm::value_ptr(camera_projection),
+                                ImGuizmo::OPERATION::TRANSLATE,
+                                ImGuizmo::LOCAL,
+                                glm::value_ptr(matrix)))
+                        {
+                            transform.position = glm::vec3(matrix[3]);
+                        }
+                    }
                 }
                 ImGui::End();
 
-                if (ImGui::Begin("Entities"))
+                if (ImGui::Begin("Hierarchy"))
                 {
                     for (auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
                     {
@@ -253,7 +283,7 @@ namespace editor
                 }
                 ImGui::End();
 
-                if (ImGui::Begin("Selected"))
+                if (ImGui::Begin("Inspector"))
                 {
                     if (selected_entity)
                     {
@@ -304,11 +334,15 @@ namespace editor
                             {
                                 auto &mesh_renderer = selected_entity.get_component<liminal::mesh_renderer>();
 
+                                // TODO: drag and drop from asset browser
                                 if (ImGui::Button("Load Model"))
                                 {
-                                    // TODO: file dialog
-                                    // TODO: drag and drop from asset browser
-                                    mesh_renderer.model = liminal::assets::instance->load_model("assets/models/backpack/backpack.obj", true);
+                                    nfdchar_t *outPath = NULL;
+                                    nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+                                    if (result == NFD_OKAY)
+                                    {
+                                        mesh_renderer.model = liminal::assets::instance->load_model(outPath, true);
+                                    }
                                 }
 
                                 ImGui::TreePop();
@@ -416,7 +450,7 @@ namespace editor
     private:
         liminal::scene *scene = nullptr;
         liminal::scene *inactive_scene = nullptr;
-        
+
         bool playing = false;
 
         ImVec2 scene_region_bounds[2];

@@ -7,8 +7,9 @@
 
 namespace liminal
 {
-    struct cubemap
+    class cubemap
     {
+    public:
         GLuint texture_id;
 
         cubemap(std::vector<std::string> filenames);

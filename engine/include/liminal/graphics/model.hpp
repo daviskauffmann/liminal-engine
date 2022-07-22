@@ -13,8 +13,9 @@
 
 namespace liminal
 {
-    struct bone
+    class bone
     {
+    public:
         glm::mat4 offset;
         glm::mat4 transformation;
     };

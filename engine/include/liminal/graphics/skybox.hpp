@@ -6,8 +6,9 @@
 
 namespace liminal
 {
-    struct skybox
+    class skybox
     {
+    public:
         GLuint environment_cubemap_id;
         GLuint irradiance_cubemap_id;
         GLuint prefilter_cubemap_id;

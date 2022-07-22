@@ -11,8 +11,9 @@
 
 namespace liminal
 {
-    struct mesh
+    class mesh
     {
+    public:
         GLsizei vertices_size;
         GLsizei indices_size;
         GLuint vao_id;

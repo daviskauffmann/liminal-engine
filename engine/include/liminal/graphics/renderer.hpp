@@ -40,6 +40,8 @@ namespace liminal
             GLsizei water_refraction_width, GLsizei water_refraction_height);
         ~renderer();
 
+        float get_aspect_ratio();
+
         void set_target_size(GLsizei target_width, GLsizei target_height);
         void set_render_scale(float render_scale);
 

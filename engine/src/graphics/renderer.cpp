@@ -490,6 +490,11 @@ liminal::renderer::~renderer()
     delete DEBUG_sphere_mesh;
 }
 
+float liminal::renderer::get_aspect_ratio()
+{
+    return (float)render_width / (float)render_height;
+}
+
 void liminal::renderer::set_target_size(GLsizei target_width, GLsizei target_height)
 {
     this->target_width = target_width;
@@ -1634,7 +1639,7 @@ void liminal::renderer::render_objects(
     glm::vec4 clipping_plane)
 {
     // camera
-    glm::mat4 camera_projection = camera.calc_projection((float)render_width / (float)render_height);
+    glm::mat4 camera_projection = camera.calc_projection(get_aspect_ratio());
     glm::mat4 camera_view = camera.calc_view(camera_transform);
 
     // draw to gbuffer
@@ -2023,7 +2028,7 @@ void liminal::renderer::render_waters(
 
             water_program->bind();
             {
-                glm::mat4 camera_projection = camera.calc_projection((float)render_width / (float)render_height);
+                glm::mat4 camera_projection = camera.calc_projection(get_aspect_ratio());
                 glm::mat4 camera_view = camera.calc_view(camera_transform);
 
                 glm::mat4 model_matrix = transform.get_model_matrix();

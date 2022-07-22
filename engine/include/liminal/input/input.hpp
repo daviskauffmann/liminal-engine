@@ -268,8 +268,9 @@ namespace liminal
         NUM_KEYCODES = 512
     };
 
-    struct input
+    class input
     {
+    public:
         inline static std::array<bool, NUM_KEYCODES> keys;
         inline static std::array<bool, NUM_KEYCODES> last_keys;
 
