@@ -57,7 +57,11 @@ namespace minecraft
 
         ~app()
         {
-            scene->stop();
+            if (scene)
+            {
+                scene->stop();
+                delete scene;
+            }
 
             delete tiles_texture;
         }
@@ -152,9 +156,12 @@ namespace minecraft
             }
 
             scene->update(current_time, delta_time);
+            liminal::renderer::instance->render(*scene, current_time, delta_time);
         }
 
     private:
+        liminal::scene *scene = nullptr;
+
         liminal::texture *tiles_texture;
         std::unordered_map<glm::ivec3, liminal::entity> chunks;
 

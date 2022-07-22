@@ -17,6 +17,14 @@ namespace editor
             load_scene();
         }
 
+        ~app()
+        {
+            if (scene)
+            {
+                delete scene;
+            }
+        }
+
         void update(unsigned int current_time, float delta_time) override
         {
             ImGuiIO &io = ImGui::GetIO();
@@ -68,6 +76,8 @@ namespace editor
             {
                 scene->update(current_time, delta_time);
             }
+
+            liminal::renderer::instance->render(*scene, current_time, delta_time);
 
             ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -404,8 +414,10 @@ namespace editor
         }
 
     private:
+        liminal::scene *scene = nullptr;
+        liminal::scene *inactive_scene = nullptr;
+        
         bool playing = false;
-        liminal::scene *editor_scene;
 
         ImVec2 scene_region_bounds[2];
         ImVec2 scene_region_size;

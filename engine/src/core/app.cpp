@@ -76,11 +76,6 @@ liminal::app::app(int argc, char *argv[])
 
 liminal::app::~app()
 {
-    if (scene)
-    {
-        delete scene;
-    }
-
     delete liminal::assets::instance;
     delete liminal::platform::instance;
     delete liminal::renderer::instance;
@@ -160,8 +155,7 @@ void liminal::app::run()
             }
         }
 
-        ImGuiIO &io = ImGui::GetIO();
-        if (!io.WantCaptureKeyboard)
+        if (!ImGui::GetIO().WantCaptureKeyboard)
         {
             if (liminal::input::key_down(liminal::keycode::KEYCODE_RETURN) &&
                 liminal::input::key(liminal::keycode::KEYCODE_LALT))
@@ -184,11 +178,8 @@ void liminal::app::run()
         // start of frame
         liminal::platform::instance->begin_frame();
 
-        // update client app
+        // update app
         update(current_time, delta_time);
-
-        // render everything
-        liminal::renderer::instance->render(*scene, current_time, delta_time);
 
         // render console
         if (console_open)
@@ -223,7 +214,7 @@ void liminal::app::run()
                     else if (command == "reload")
                     {
                         liminal::renderer::instance->reload_programs();
-                        scene->reload_scripts();
+                        // TODO: reload lua scripts?
                     }
                     else if (command == "render_scale 1") // TODO: console commands with arguments
                     {

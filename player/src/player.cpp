@@ -52,7 +52,11 @@ namespace player
 
         ~app()
         {
-            scene->stop();
+            if (scene)
+            {
+                scene->stop();
+                delete scene;
+            }
         }
 
         void update(unsigned int current_time, float delta_time) override
@@ -197,9 +201,14 @@ namespace player
 
             // update scene
             scene->update(current_time, delta_time);
+
+            // render scene
+            liminal::renderer::instance->render(*scene, current_time, delta_time);
         }
 
     private:
+        liminal::scene *scene = nullptr;
+
         liminal::entity player_entity;
 
         liminal::sound *ambient_sound;

@@ -16,7 +16,7 @@ namespace liminal
     class scene
     {
         friend class entity;
-        
+
     public:
         liminal::skybox *skybox;
 
