@@ -697,7 +697,7 @@ void liminal::renderer::calc_render_size()
     {
         {
             glGenTextures(2, hdr_texture_ids);
-            for (size_t i = 0; i < 2; i++)
+            for (GLenum i = 0; i < 2; i++)
             {
                 glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
                 {
@@ -924,7 +924,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei point_light_d
             {
                 glBindTexture(GL_TEXTURE_CUBE_MAP, point_light_depth_cubemap_texture_ids[i]);
                 {
-                    for (unsigned int j = 0; j < 6; j++)
+                    for (GLenum j = 0; j < 6; j++)
                     {
                         glTexImage2D(
                             GL_TEXTURE_CUBE_MAP_POSITIVE_X + j,
@@ -1467,7 +1467,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                             depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
 
-                            for (unsigned int j = 0; j < 6; j++)
+                            for (size_t j = 0; j < 6; j++)
                             {
                                 depth_cube_skinned_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(j) + "]", point_light_transformation_matrices[i][j]);
                             }
@@ -1485,7 +1485,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
-                            for (unsigned int j = 0; j < 6; j++)
+                            for (size_t j = 0; j < 6; j++)
                             {
                                 depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(j) + "]", point_light_transformation_matrices[i][j]);
                             }
@@ -1503,7 +1503,7 @@ void liminal::renderer::render_shadows(
             // TODO: point light shadows disabled on terrain for now due to performance; investigate this
             // depth_cube_mesh_program->bind();
             // {
-            //     for (unsigned int j = 0; j < 6; j++)
+            //     for (size_t j = 0; j < 6; j++)
             //     {
             //         depth_cube_mesh_program->set_mat4("light.transformation_matrices[" + std::to_string(j) + "]", point_light_transformation_matrices[i][j]);
             //     }

@@ -173,7 +173,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glGenTextures(1, &environment_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
     {
-        for (unsigned int i = 0; i < 6; i++)
+        for (GLenum i = 0; i < 6; i++)
         {
             glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -209,7 +209,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, equirectangular_texture_id);
 
-            for (unsigned int i = 0; i < 6; i++)
+            for (GLenum i = 0; i < 6; i++)
             {
                 glFramebufferTexture2D(
                     GL_FRAMEBUFFER,
@@ -245,7 +245,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glGenTextures(1, &irradiance_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
     {
-        for (unsigned int i = 0; i < 6; i++)
+        for (GLenum i = 0; i < 6; i++)
         {
             glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -296,7 +296,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
 
-            for (unsigned int i = 0; i < 6; i++)
+            for (GLenum i = 0; i < 6; i++)
             {
                 glFramebufferTexture2D(
                     GL_FRAMEBUFFER,
@@ -324,7 +324,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glGenTextures(1, &prefilter_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
     {
-        for (unsigned int i = 0; i < 6; i++)
+        for (GLenum i = 0; i < 6; i++)
         {
             glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -382,7 +382,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
 
                 prefilter_convolution_program->set_float("roughness", (float)mip_level / (float)(max_mip_levels - 1));
 
-                for (unsigned int i = 0; i < 6; ++i)
+                for (GLenum i = 0; i < 6; ++i)
                 {
                     glFramebufferTexture2D(
                         GL_FRAMEBUFFER,

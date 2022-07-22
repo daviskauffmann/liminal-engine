@@ -9,7 +9,7 @@ liminal::cubemap::cubemap(std::vector<std::string> filenames)
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
     {
-        for (unsigned int i = 0; i < 6; i++)
+        for (GLenum i = 0; i < 6; i++)
         {
             auto surface = IMG_Load(filenames[i].c_str());
             if (!surface)
