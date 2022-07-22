@@ -211,7 +211,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
 
 void liminal::model::process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
 {
-    std::string node_name(node->mName.data);
+    const std::string node_name(node->mName.data);
     auto node_transformation = mat4_cast(node->mTransformation);
 
     if (scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
@@ -239,7 +239,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
         }
     }
 
-    auto global_transformation = parent_transformation * node_transformation;
+    const auto global_transformation = parent_transformation * node_transformation;
 
     if (bone_indices.find(node_name) != bone_indices.end())
     {
@@ -276,15 +276,15 @@ void liminal::model::calc_interpolated_position(aiVector3D &out, float animation
         return;
     }
 
-    auto position_index = find_position_index(animation_time, node_animation);
-    auto next_position_index = position_index + 1;
+    const auto position_index = find_position_index(animation_time, node_animation);
+    const auto next_position_index = position_index + 1;
 
-    auto delta_time = (float)(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
-    auto factor = (animation_time - (float)node_animation->mPositionKeys[position_index].mTime) / delta_time;
+    const auto delta_time = (float)(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
+    const auto factor = (animation_time - (float)node_animation->mPositionKeys[position_index].mTime) / delta_time;
 
     const auto &start = node_animation->mPositionKeys[position_index].mValue;
     const auto &end = node_animation->mPositionKeys[next_position_index].mValue;
-    auto delta = end - start;
+    const auto delta = end - start;
 
     out = start + factor * delta;
 }
@@ -312,11 +312,11 @@ void liminal::model::calc_interpolated_rotation(aiQuaternion &out, float animati
         return;
     }
 
-    auto rotation_index = find_rotation_index(animation_time, node_animation);
-    auto next_rotation_index = rotation_index + 1;
+    const auto rotation_index = find_rotation_index(animation_time, node_animation);
+    const auto next_rotation_index = rotation_index + 1;
 
-    auto delta_time = (float)(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
-    auto factor = (animation_time - (float)node_animation->mRotationKeys[rotation_index].mTime) / delta_time;
+    const auto delta_time = (float)(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
+    const auto factor = (animation_time - (float)node_animation->mRotationKeys[rotation_index].mTime) / delta_time;
 
     const auto &start = node_animation->mRotationKeys[rotation_index].mValue;
     const auto &end = node_animation->mRotationKeys[next_rotation_index].mValue;
@@ -348,15 +348,15 @@ void liminal::model::calc_interpolated_scale(aiVector3D &out, float animation_ti
         return;
     }
 
-    auto scale_index = find_scale_index(animation_time, node_animation);
-    auto next_scale_index = scale_index + 1;
+    const auto scale_index = find_scale_index(animation_time, node_animation);
+    const auto next_scale_index = scale_index + 1;
 
-    auto delta_time = (float)(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
-    auto factor = (animation_time - (float)node_animation->mScalingKeys[scale_index].mTime) / delta_time;
+    const auto delta_time = (float)(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
+    const auto factor = (animation_time - (float)node_animation->mScalingKeys[scale_index].mTime) / delta_time;
 
     const auto &start = node_animation->mScalingKeys[scale_index].mValue;
     const auto &end = node_animation->mScalingKeys[next_scale_index].mValue;
-    auto delta = end - start;
+    const auto delta = end - start;
 
     out = start + factor * delta;
 }

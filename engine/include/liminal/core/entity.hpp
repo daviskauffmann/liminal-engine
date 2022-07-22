@@ -40,13 +40,13 @@ namespace liminal
         }
 
         template <typename... Components>
-        bool has_components()
+        bool has_components() const
         {
             return scene->registry.all_of<Components...>(id);
         }
 
         template <typename Component>
-        Component &get_component()
+        Component &get_component() const
         {
             return scene->registry.get<Component>(id);
         }
@@ -58,7 +58,7 @@ namespace liminal
         }
 
         template <typename Component>
-        void remove_component()
+        void remove_component() const
         {
             scene->registry.remove<Component>(id);
         }

@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <liminal/graphics/program.hpp>
+#include <memory>
 #include <stb_image.h>
 #include <vector>
 
@@ -33,7 +34,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glDeleteTextures(1, &prefilter_cubemap_id);
 
     // setup capture mesh
-    std::vector<float> capture_vertices =
+    const std::vector<float> capture_vertices =
         {-1, +1, -1,
          -1, -1, -1,
          +1, -1, -1,
@@ -75,7 +76,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
          +1, -1, -1,
          -1, -1, +1,
          +1, -1, +1};
-    GLsizei capture_vertices_size = (GLsizei)(capture_vertices.size() * sizeof(float));
+    const GLsizei capture_vertices_size = (GLsizei)(capture_vertices.size() * sizeof(float));
     GLuint capture_vao_id;
     GLuint capture_vbo_id;
 
@@ -93,8 +94,8 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glBindVertexArray(0);
 
     // setup capture matrices
-    auto capture_projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
-    glm::mat4 capture_mvps[] =
+    const auto capture_projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
+    const glm::mat4 capture_mvps[] =
         {capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
          capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
          capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
@@ -144,7 +145,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     {
         stbi_set_flip_vertically_on_load(true);
         int width, height, num_components;
-        float *image = stbi_loadf(filename.c_str(), &width, &height, &num_components, 0);
+        const auto image = stbi_loadf(filename.c_str(), &width, &height, &num_components, 0);
         if (!image)
         {
             std::cerr << "Error: Failed to load skybox texture: " << stbi_failure_reason() << std::endl;
@@ -194,7 +195,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    liminal::program *equirectangular_to_cubemap_program = new liminal::program(
+    const auto equirectangular_to_cubemap_program = std::make_unique<liminal::program>(
         "assets/shaders/cubemap.vs",
         "assets/shaders/equirectangular_to_cubemap.fs");
 
@@ -230,8 +231,6 @@ void liminal::skybox::set_cubemap(const std::string &filename)
         equirectangular_to_cubemap_program->unbind();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    delete equirectangular_to_cubemap_program;
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
     {
@@ -281,7 +280,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    liminal::program *irradiance_convolution_program = new liminal::program(
+    const auto irradiance_convolution_program = std::make_unique<liminal::program>(
         "assets/shaders/cubemap.vs",
         "assets/shaders/irradiance_convolution.fs");
 
@@ -318,8 +317,6 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    delete irradiance_convolution_program;
-
     // create prefilter cubemap from environment cubemap
     glGenTextures(1, &prefilter_cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
@@ -347,7 +344,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    liminal::program *prefilter_convolution_program = new liminal::program(
+    const auto prefilter_convolution_program = std::make_unique<liminal::program>(
         "assets/shaders/cubemap.vs",
         "assets/shaders/prefilter_convolution.fs");
 
@@ -404,8 +401,6 @@ void liminal::skybox::set_cubemap(const std::string &filename)
         prefilter_convolution_program->unbind();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    delete prefilter_convolution_program;
 
     // cleanup
     glDeleteFramebuffers(1, &capture_fbo_id);

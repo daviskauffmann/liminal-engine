@@ -33,7 +33,7 @@ namespace player
 
             ambience_entity = scene->create_entity();
             ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            auto &ambience_audio_source = ambience_entity.add_component<liminal::audio_source>();
+            const auto &ambience_audio_source = ambience_entity.add_component<liminal::audio_source>();
             ambience_audio_source.set_loop(true);
             ambience_audio_source.set_gain(0.25f);
             ambience_audio_source.play(*ambient_sound);
@@ -59,9 +59,9 @@ namespace player
             }
         }
 
-        void update(unsigned int current_time, float delta_time) override
+        void update(const unsigned int current_time, const float delta_time) override
         {
-            auto &io = ImGui::GetIO();
+            const auto &io = ImGui::GetIO();
 
             if (liminal::input::key_down(liminal::KEYCODE_TAB))
             {
@@ -77,8 +77,8 @@ namespace player
             glm::vec3 acceleration(0, 0, 0);
             const float speed = 50;
             const float drag = 10;
-            bool sprint = false;
-            bool jumping = false;
+            auto sprint = false;
+            auto jumping = false;
             if (!io.WantCaptureKeyboard)
             {
                 if (liminal::input::key(liminal::keycode::KEYCODE_W))
@@ -119,7 +119,7 @@ namespace player
                     noclip = !noclip;
                 }
             }
-            float acceleration_length = glm::length(acceleration);
+            const auto acceleration_length = glm::length(acceleration);
             if (acceleration_length > 1)
             {
                 acceleration /= acceleration_length;

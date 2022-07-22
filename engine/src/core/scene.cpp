@@ -28,10 +28,10 @@ liminal::scene::scene()
 {
     skybox = nullptr;
 
-    auto collision_configuration = new btDefaultCollisionConfiguration();
-    auto dispatcher = new btCollisionDispatcher(collision_configuration);
-    auto pair_cache = new btDbvtBroadphase();
-    auto constraint_solver = new btSequentialImpulseConstraintSolver();
+    const auto collision_configuration = new btDefaultCollisionConfiguration();
+    const auto dispatcher = new btCollisionDispatcher(collision_configuration);
+    const auto pair_cache = new btDbvtBroadphase();
+    const auto constraint_solver = new btSequentialImpulseConstraintSolver();
     world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
     world->setGravity(btVector3(0, -9.8f, 0));
 }
@@ -154,7 +154,7 @@ void liminal::scene::save(const std::string &filename)
 
 liminal::entity liminal::scene::create_entity()
 {
-    auto id = registry.create();
+    const auto id = registry.create();
     return liminal::entity(id, this);
 }
 

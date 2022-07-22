@@ -11,7 +11,7 @@ liminal::cubemap::cubemap(std::vector<std::string> filenames)
     {
         for (GLenum i = 0; i < 6; i++)
         {
-            auto surface = IMG_Load(filenames[i].c_str());
+            const auto surface = IMG_Load(filenames[i].c_str());
             if (!surface)
             {
                 std::cerr << "Error: Failed to load cubemap: " << IMG_GetError() << std::endl;

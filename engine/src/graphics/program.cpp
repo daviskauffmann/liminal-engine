@@ -32,7 +32,7 @@ void liminal::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
     // would need some way to update texture samplers, but only the renderer knows that information right now
-    auto new_program_id = create_program();
+    const auto new_program_id = create_program();
     if (new_program_id)
     {
         glDeleteProgram(program_id);
@@ -87,9 +87,9 @@ void liminal::program::set_mat4_vector(const std::string &name, const std::vecto
 
 GLuint liminal::program::create_program() const
 {
-    auto program_id = glCreateProgram();
+    const auto program_id = glCreateProgram();
 
-    auto vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
+    const auto vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
     if (!vertex_shader)
     {
         return 0;
@@ -107,7 +107,7 @@ GLuint liminal::program::create_program() const
         glAttachShader(program_id, geometry_shader);
     }
 
-    auto fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
+    const auto fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
     if (!fragment_shader)
     {
         return 0;
@@ -165,10 +165,10 @@ GLuint liminal::program::create_program() const
 
 GLuint liminal::program::create_shader(GLenum type, const std::string &filename) const
 {
-    auto shader_id = glCreateShader(type);
+    const auto shader_id = glCreateShader(type);
 
     char error[256];
-    auto source = stb_include_file(
+    const auto source = stb_include_file(
         const_cast<char *>(filename.c_str()),
         NULL,
         const_cast<char *>("assets/shaders"),
@@ -203,15 +203,10 @@ GLuint liminal::program::create_shader(GLenum type, const std::string &filename)
 
 GLint liminal::program::get_location(const std::string &name) const
 {
-    GLint location;
     if (uniforms.find(name) == uniforms.end())
     {
-        location = glGetUniformLocation(program_id, name.c_str());
-        uniforms[name] = location;
+        uniforms[name] = glGetUniformLocation(program_id, name.c_str());
     }
-    else
-    {
-        location = uniforms[name];
-    }
-    return location;
+
+    return uniforms[name];
 }

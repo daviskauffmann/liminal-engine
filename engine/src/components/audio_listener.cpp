@@ -17,7 +17,7 @@ void liminal::audio_listener::set_position(
     glm::vec3 velocity = last_position - position;
     alListenerfv(AL_VELOCITY, glm::value_ptr(velocity));
 
-    float orientation[] = {
+    const float orientation[] = {
         rotation.x, rotation.y, rotation.z,
         0, 1, 0};
     alListenerfv(AL_ORIENTATION, orientation);

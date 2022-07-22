@@ -33,7 +33,7 @@ void liminal::audio_source::set_position(const glm::vec3 &position)
 {
     alSourcefv(source_id, AL_POSITION, glm::value_ptr(position));
 
-    glm::vec3 velocity = last_position - position;
+    const glm::vec3 velocity = last_position - position;
     alSourcefv(source_id, AL_VELOCITY, glm::value_ptr(velocity));
 
     last_position = position;

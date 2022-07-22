@@ -7,6 +7,7 @@
 
 namespace liminal
 {
+    // TODO: remove this class? it is unused right now
     class cubemap
     {
     public:

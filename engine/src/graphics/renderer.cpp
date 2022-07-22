@@ -74,7 +74,7 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &water_vao_id);
     glBindVertexArray(water_vao_id);
     {
-        std::vector<GLfloat> water_vertices =
+        const std::vector<GLfloat> water_vertices =
             {-1, -1,
              -1, +1,
              +1, -1,
@@ -98,7 +98,7 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &skybox_vao_id);
     glBindVertexArray(skybox_vao_id);
     {
-        std::vector<GLfloat> skybox_vertices =
+        const std::vector<GLfloat> skybox_vertices =
             {-1, +1, -1,
              -1, -1, -1,
              +1, -1, -1,
@@ -156,7 +156,7 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &sprite_vao_id);
     glBindVertexArray(sprite_vao_id);
     {
-        std::vector<GLfloat> sprite_vertices =
+        const std::vector<GLfloat> sprite_vertices =
             {+0, +1, +0, +1,
              +1, +0, +1, +0,
              +0, +0, +0, +0,
@@ -182,7 +182,7 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &screen_vao_id);
     glBindVertexArray(screen_vao_id);
     {
-        std::vector<GLfloat> screen_vertices =
+        const std::vector<GLfloat> screen_vertices =
             {-1, -1, +0, +0,
              -1, +1, +0, +1,
              +1, -1, +1, +0,
@@ -1351,14 +1351,14 @@ void liminal::renderer::render_shadows(
             break;
         }
 
-        auto projection = glm::ortho(
+        const auto projection = glm::ortho(
             -directional_light_shadow_map_size,
             directional_light_shadow_map_size,
             -directional_light_shadow_map_size,
             directional_light_shadow_map_size,
             directional_light_near_plane,
             directional_light_far_plane);
-        auto view = glm::lookAt(
+        const auto view = glm::lookAt(
             camera_transform.position - transform.rotation,
             camera_transform.position,
             glm::vec3(0, 1, 0));
@@ -1382,7 +1382,7 @@ void liminal::renderer::render_shadows(
             {
                 if (mesh_renderer.model)
                 {
-                    auto model_matrix = transform.get_model_matrix();
+                    const auto model_matrix = transform.get_model_matrix();
                     if (mesh_renderer.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
@@ -1411,7 +1411,7 @@ void liminal::renderer::render_shadows(
             {
                 for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
                 {
-                    auto model_matrix = terrain.get_model_matrix();
+                    const auto model_matrix = terrain.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
 
@@ -1435,12 +1435,11 @@ void liminal::renderer::render_shadows(
             break;
         }
 
-        glm::mat4 projection = glm::perspective(
+        const glm::mat4 projection = glm::perspective(
             glm::radians(90.f),
             1.f,
             point_light_near_plane,
             point_light_far_plane);
-
         point_light_transformation_matrices[i][0] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
         point_light_transformation_matrices[i][1] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0));
         point_light_transformation_matrices[i][2] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
@@ -1459,7 +1458,7 @@ void liminal::renderer::render_shadows(
             {
                 if (mesh_renderer.model)
                 {
-                    auto model_matrix = transform2.get_model_matrix();
+                    const auto model_matrix = transform2.get_model_matrix();
                     if (mesh_renderer.model->has_animations())
                     {
                         depth_cube_skinned_mesh_program->bind();
@@ -1513,7 +1512,7 @@ void liminal::renderer::render_shadows(
 
             //     for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>())
             //     {
-            //         auto model_matrix = terrain.get_model_matrix();
+            //         const auto model_matrix = terrain.get_model_matrix();
 
             //         depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
@@ -1537,15 +1536,15 @@ void liminal::renderer::render_shadows(
             break;
         }
 
-        glm::mat4 projection = glm::perspective(
+        const glm::mat4 projection = glm::perspective(
             glm::radians(90.f),
             1.f,
             spot_light_near_plane,
             spot_light_far_plane);
-        glm::vec3 front = glm::normalize(transform.rotation);
-        glm::vec3 target = transform.position + front;
-        glm::vec3 up(0, 1, 0);
-        glm::mat4 view = glm::lookAt(transform.position, target, up);
+        const glm::vec3 front = glm::normalize(transform.rotation);
+        const glm::vec3 target = transform.position + front;
+        const glm::vec3 up(0, 1, 0);
+        const glm::mat4 view = glm::lookAt(transform.position, target, up);
         spot_light_transformation_matrices[i] = projection * view;
 
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids[i]);
@@ -1559,7 +1558,7 @@ void liminal::renderer::render_shadows(
             {
                 if (mesh_renderer.model)
                 {
-                    auto model_matrix = transform2.get_model_matrix();
+                    const auto model_matrix = transform2.get_model_matrix();
                     if (mesh_renderer.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
@@ -1588,7 +1587,7 @@ void liminal::renderer::render_shadows(
             {
                 for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
                 {
-                    auto model_matrix = terrain.get_model_matrix();
+                    const auto model_matrix = terrain.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
 
@@ -1614,8 +1613,8 @@ void liminal::renderer::render_objects(
     const glm::vec4 &clipping_plane) const
 {
     // camera
-    auto camera_projection = camera.calc_projection(get_aspect_ratio());
-    auto camera_view = camera.calc_view(camera_transform);
+    const auto camera_projection = camera.calc_projection(get_aspect_ratio());
+    const auto camera_view = camera.calc_view(camera_transform);
 
     // draw to gbuffer
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
@@ -1634,7 +1633,7 @@ void liminal::renderer::render_objects(
         {
             if (mesh_renderer.model)
             {
-                auto model_matrix = transform.get_model_matrix();
+                const auto model_matrix = transform.get_model_matrix();
                 if (mesh_renderer.model->has_animations())
                 {
                     geometry_skinned_mesh_program->bind();
@@ -1671,7 +1670,7 @@ void liminal::renderer::render_objects(
 
             for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
             {
-                auto model_matrix = terrain.get_model_matrix();
+                const auto model_matrix = terrain.get_model_matrix();
 
                 geometry_terrain_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 geometry_terrain_program->set_mat4("model_matrix", model_matrix);
@@ -1938,7 +1937,7 @@ void liminal::renderer::render_objects(
             {
                 color_program->bind();
                 {
-                    glm::mat4 model_matrix(1);
+                    auto model_matrix = glm::identity<glm::mat4>();
                     model_matrix = glm::translate(model_matrix, transform.position);
                     model_matrix = glm::scale(model_matrix, {.25f, .25f, .25f});
 
@@ -1998,10 +1997,10 @@ void liminal::renderer::render_waters(
 
             water_program->bind();
             {
-                auto camera_projection = camera.calc_projection(get_aspect_ratio());
-                auto camera_view = camera.calc_view(camera_transform);
+                const auto camera_projection = camera.calc_projection(get_aspect_ratio());
+                const auto camera_view = camera.calc_view(camera_transform);
 
-                auto model_matrix = transform.get_model_matrix();
+                const auto model_matrix = transform.get_model_matrix();
 
                 water_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 water_program->set_mat4("model_matrix", model_matrix);
@@ -2076,11 +2075,11 @@ void liminal::renderer::render_sprites(liminal::scene &scene) const
 
         sprite_program->bind();
         {
-            glm::mat4 projection_matrix = glm::ortho(-1, 1, -1, 1, 0, 100);
+            const glm::mat4 projection_matrix = glm::ortho(-1, 1, -1, 1, 0, 100);
 
             for (auto [id, sprite] : scene.get_entities_with<liminal::sprite>().each())
             {
-                auto model_matrix = sprite.get_model_matrix();
+                const auto model_matrix = sprite.get_model_matrix();
                 sprite_program->set_mat4("mvp_matrix", projection_matrix * model_matrix);
                 sprite_program->set_vec3("sprite.color", sprite.color);
 

@@ -31,7 +31,7 @@ liminal::app::app(int argc, char *argv[])
         option_adder("v,version", "Print version");
         option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
 
-        auto result = options.parse(argc, argv);
+        const auto result = options.parse(argc, argv);
 
         window_height = result["height"].as<int>();
 
@@ -58,9 +58,9 @@ liminal::app::app(int argc, char *argv[])
     }
 
     // init subsystems
-    auto assets = new liminal::assets();
-    auto platform = new liminal::platform(window_title, window_width, window_height);
-    auto renderer = new liminal::renderer(
+    const auto assets = new liminal::assets();
+    const auto platform = new liminal::platform(window_title, window_width, window_height);
+    const auto renderer = new liminal::renderer(
         window_width, window_height, render_scale,
         4096, 512, 1024,
         window_width, window_height,
@@ -87,9 +87,9 @@ void liminal::app::run()
     {
         // calculate time between frames
         static unsigned int current_time = 0;
-        auto previous_time = current_time;
+        const auto previous_time = current_time;
         current_time = SDL_GetTicks();
-        auto delta_time = ((current_time - previous_time) / 1000.f) * time_scale;
+        const auto delta_time = ((current_time - previous_time) / 1000.f);
 
         // gather input
         liminal::input::last_keys = liminal::input::keys;
@@ -100,7 +100,7 @@ void liminal::app::run()
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
-        auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
+        const auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
         for (size_t button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
         {
             liminal::input::mouse_buttons[button] = mouse_buttons & SDL_BUTTON(button);
@@ -179,7 +179,7 @@ void liminal::app::run()
         liminal::platform::instance->begin_frame();
 
         // update app
-        update(current_time, delta_time);
+        update(current_time, delta_time * time_scale);
 
         // render console
         if (console_open)

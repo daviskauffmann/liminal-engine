@@ -16,7 +16,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
 {
     lua = new sol::state;
     lua->open_libraries(sol::lib::base, sol::lib::math);
-    auto result = lua->script_file(filename);
+    const auto result = lua->script_file(filename);
     if (!result.valid())
     {
         std::cerr << "Error: Failed to load script: " << filename << std::endl;
@@ -57,43 +57,43 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["GetTransformX"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto transform = entity.get_component<liminal::transform>();
         return transform.position.x;
     };
     (*lua)["GetTransformY"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto transform = entity.get_component<liminal::transform>();
         return transform.position.y;
     };
     (*lua)["GetTransformZ"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto transform = entity.get_component<liminal::transform>();
         return transform.position.z;
     };
     (*lua)["GetTransformRotX"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto transform = entity.get_component<liminal::transform>();
         return transform.rotation.x;
     };
     (*lua)["GetTransformRotY"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto transform = entity.get_component<liminal::transform>();
         return transform.rotation.y;
     };
     (*lua)["GetTransformRotZ"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto transform = entity.get_component<liminal::transform>();
         return transform.rotation.z;
     };
     (*lua)["UpdateTransform"] = [scene](entt::entity id, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz) -> void
     {
-        auto entity = scene->get_entity(id);
+        const auto entity = scene->get_entity(id);
         auto &transform = entity.get_component<liminal::transform>();
         transform.position = glm::vec3(x, y, z);
         transform.rotation = glm::vec3(rx, ry, rz);
@@ -123,23 +123,23 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     };
     (*lua)["GetCameraFrontX"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto camera = entity.get_component<liminal::camera>();
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto camera = entity.get_component<liminal::camera>();
+        const auto transform = entity.get_component<liminal::transform>();
         return camera.calc_front(transform).x;
     };
     (*lua)["GetCameraFrontY"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto camera = entity.get_component<liminal::camera>();
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto camera = entity.get_component<liminal::camera>();
+        const auto transform = entity.get_component<liminal::transform>();
         return camera.calc_front(transform).y;
     };
     (*lua)["GetCameraFrontZ"] = [scene](entt::entity id) -> float
     {
-        auto entity = scene->get_entity(id);
-        auto camera = entity.get_component<liminal::camera>();
-        auto transform = entity.get_component<liminal::transform>();
+        const auto entity = scene->get_entity(id);
+        const auto camera = entity.get_component<liminal::camera>();
+        const auto transform = entity.get_component<liminal::transform>();
         return camera.calc_front(transform).z;
     };
     (*lua)["AddScript"] = [scene](entt::entity id, const std::string &filename) -> void

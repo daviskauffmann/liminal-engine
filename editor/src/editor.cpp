@@ -29,7 +29,7 @@ namespace editor
 
         void update(unsigned int current_time, float delta_time) override
         {
-            auto &io = ImGui::GetIO();
+            const auto &io = ImGui::GetIO();
 
             ImGuizmo::BeginFrame();
 
@@ -83,36 +83,31 @@ namespace editor
 
             liminal::renderer::instance->render(*scene, current_time, delta_time);
 
-            ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-            ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-
-            auto viewport = ImGui::GetMainViewport();
+            const auto viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->Pos);
             ImGui::SetNextWindowSize(viewport->Size);
             ImGui::SetNextWindowViewport(viewport->ID);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-            window_flags |=
+
+            const ImGuiWindowFlags window_flags =
+                ImGuiWindowFlags_MenuBar |
+                ImGuiWindowFlags_NoDocking |
                 ImGuiWindowFlags_NoTitleBar |
                 ImGuiWindowFlags_NoCollapse |
                 ImGuiWindowFlags_NoResize |
                 ImGuiWindowFlags_NoMove |
                 ImGuiWindowFlags_NoBringToFrontOnFocus |
                 ImGuiWindowFlags_NoNavFocus;
-
-            if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-            {
-                window_flags |= ImGuiWindowFlags_NoBackground;
-            }
-
             if (ImGui::Begin("Editor", NULL, window_flags))
             {
                 ImGui::PopStyleVar(3);
 
                 if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
                 {
-                    auto dockspace_id = ImGui::GetID("Dockspace");
+                    const auto dockspace_id = ImGui::GetID("Dockspace");
+                    const ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
                     ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockspace_flags);
                 }
 
@@ -173,14 +168,14 @@ namespace editor
 
                     if (ImGui::IsWindowHovered() && !ImGuizmo::IsOver())
                     {
-                        auto camera_front = camera.calc_front(camera_transform);
-                        auto camera_right = camera.calc_right(camera_transform);
+                        const auto camera_front = camera.calc_front(camera_transform);
+                        const auto camera_right = camera.calc_right(camera_transform);
 
                         if (liminal::input::mouse_button_down(liminal::mouse_button::MOUSE_BUTTON_LEFT))
                         {
-                            auto mouse_position = ImGui::GetMousePos();
-                            auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
-                            auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
+                            const auto mouse_position = ImGui::GetMousePos();
+                            const auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
+                            const auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
                             if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
                             {
                                 selected_entity = liminal::renderer::instance->pick((int)mouse_x, (int)mouse_y, scene);
@@ -221,9 +216,9 @@ namespace editor
 
                     ImGui::Image((ImTextureID)(long long)camera.render_texture_id, scene_region_size, ImVec2{0, 1}, ImVec2{1, 0});
 
-                    auto min_region = ImGui::GetWindowContentRegionMin();
-                    auto max_region = ImGui::GetWindowContentRegionMax();
-                    auto window_pos = ImGui::GetWindowPos();
+                    const auto min_region = ImGui::GetWindowContentRegionMin();
+                    const auto max_region = ImGui::GetWindowContentRegionMax();
+                    const auto window_pos = ImGui::GetWindowPos();
                     scene_region_bounds[0] = ImVec2(min_region.x + window_pos.x, min_region.y + window_pos.y);
                     scene_region_bounds[1] = ImVec2(max_region.x + window_pos.x, max_region.y + window_pos.y);
 
@@ -232,12 +227,12 @@ namespace editor
                         ImGuizmo::SetOrthographic(false);
                         ImGuizmo::SetDrawlist();
 
-                        auto window_width = ImGui::GetWindowWidth();
-                        auto window_height = ImGui::GetWindowHeight();
+                        const auto window_width = ImGui::GetWindowWidth();
+                        const auto window_height = ImGui::GetWindowHeight();
                         ImGuizmo::SetRect(window_pos.x, window_pos.y, window_width, window_height);
 
-                        auto camera_projection = camera.calc_projection(liminal::renderer::instance->get_aspect_ratio());
-                        auto camera_view = camera.calc_view(camera_transform);
+                        const auto camera_projection = camera.calc_projection(liminal::renderer::instance->get_aspect_ratio());
+                        const auto camera_view = camera.calc_view(camera_transform);
 
                         auto &transform = selected_entity.get_component<liminal::transform>();
                         auto matrix = transform.get_model_matrix();
@@ -291,7 +286,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::transform>())
                         {
-                            auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), flags, "Transform");
+                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), flags, "Transform");
 
                             if (opened)
                             {
@@ -317,7 +312,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::mesh_renderer>())
                         {
-                            auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), flags, "Mesh Renderer");
+                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), flags, "Mesh Renderer");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -339,7 +334,7 @@ namespace editor
                                 {
                                     // TODO: move file dialog to platform?
                                     nfdchar_t *outPath;
-                                    auto result = NFD_OpenDialog(NULL, NULL, &outPath);
+                                    const auto result = NFD_OpenDialog(NULL, NULL, &outPath);
                                     if (result == NFD_OKAY)
                                     {
                                         mesh_renderer.model = liminal::assets::instance->load_model(outPath, true);
@@ -357,7 +352,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::point_light>())
                         {
-                            auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), flags, "Point Light");
+                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), flags, "Point Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -424,9 +419,9 @@ namespace editor
 
                     for (auto &directory_entry : std::filesystem::directory_iterator(current_asset_directory))
                     {
-                        auto path = directory_entry.path();
-                        auto filename = path.filename();
-                        auto filename_string = filename.string();
+                        const auto path = directory_entry.path();
+                        const auto filename = path.filename();
+                        const auto filename_string = filename.string();
                         if (ImGui::Button(filename_string.c_str()))
                         {
                             if (directory_entry.is_directory())
@@ -535,7 +530,7 @@ namespace editor
             {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
-            auto opened = ImGui::TreeNodeEx((void *)(uint64_t)entity, flags, transform.name.c_str());
+            const auto opened = ImGui::TreeNodeEx((void *)(uint64_t)entity, flags, transform.name.c_str());
 
             if (ImGui::IsItemClicked())
             {

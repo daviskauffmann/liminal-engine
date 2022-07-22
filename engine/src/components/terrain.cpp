@@ -20,7 +20,7 @@ liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position
       size(size),
       height_scale(height_scale)
 {
-    auto surface = IMG_Load(filename.c_str());
+    const auto surface = IMG_Load(filename.c_str());
     if (!surface)
     {
         std::cerr << "Error: Failed to load terrain heightmap texture: " << IMG_GetError() << std::endl;
@@ -114,9 +114,9 @@ liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position
     btTransform transform;
     transform.setIdentity();
     transform.setOrigin(btVector3(position.x, position.y, position.z));
-    auto motion_state = new btDefaultMotionState(transform);
-    auto collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
-    auto construction_info = btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape);
+    const auto motion_state = new btDefaultMotionState(transform);
+    const auto collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
+    const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape);
     rigidbody = new btRigidBody(construction_info);
 }
 
@@ -129,11 +129,7 @@ liminal::terrain::~terrain()
 glm::mat4 liminal::terrain::get_model_matrix() const
 {
     // TODO: remove and use transform component
-    auto model = glm::identity<glm::mat4>();
-
-    model = glm::translate(model, position);
-
-    return model;
+    return glm::translate(glm::identity<glm::mat4>(), position);
 }
 
 float liminal::terrain::get_height(SDL_Surface *surface, int x, int z) const
@@ -143,7 +139,7 @@ float liminal::terrain::get_height(SDL_Surface *surface, int x, int z) const
         return 0;
     }
 
-    union pixel_t
+    const union pixel_t
     {
         unsigned int pixel;
         struct color_t

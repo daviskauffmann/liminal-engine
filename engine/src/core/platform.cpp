@@ -24,14 +24,14 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
         return;
     }
 
-    int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
+    const int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
     if (IMG_Init(img_flags) != img_flags)
     {
         std::cerr << "Error: Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
         return;
     }
 
-    int mix_flags = 0;
+    const int mix_flags = 0;
     if (Mix_Init(mix_flags) != mix_flags)
     {
         std::cerr << "Error: Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
@@ -66,7 +66,7 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
     SDL_GL_MakeCurrent(window, context);
 
     // init GLEW
-    auto error = glewInit();
+    const auto error = glewInit();
     if (error != GLEW_OK)
     {
         std::cerr << "Error: Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
@@ -144,7 +144,7 @@ void liminal::platform::set_window_size(int width, int height)
 
 void liminal::platform::toggle_fullscreen()
 {
-    auto flags = SDL_GetWindowFlags(window);
+    const auto flags = SDL_GetWindowFlags(window);
     if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
     {
         SDL_SetWindowFullscreen(window, 0);
