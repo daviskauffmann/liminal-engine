@@ -15,12 +15,12 @@
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float size, float height_scale)
+liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position, float size, float height_scale)
     : position(position),
       size(size),
       height_scale(height_scale)
 {
-    SDL_Surface *surface = IMG_Load(filename.c_str());
+    auto surface = IMG_Load(filename.c_str());
     if (!surface)
     {
         std::cerr << "Error: Failed to load terrain heightmap texture: " << IMG_GetError() << std::endl;
@@ -114,9 +114,10 @@ liminal::terrain::terrain(const std::string &filename, glm::vec3 position, float
     btTransform transform;
     transform.setIdentity();
     transform.setOrigin(btVector3(position.x, position.y, position.z));
-    btDefaultMotionState *motion_state = new btDefaultMotionState(transform);
-    btCollisionShape *collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
-    rigidbody = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape));
+    auto motion_state = new btDefaultMotionState(transform);
+    auto collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
+    auto construction_info = btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape);
+    rigidbody = new btRigidBody(construction_info);
 }
 
 liminal::terrain::~terrain()
@@ -127,7 +128,8 @@ liminal::terrain::~terrain()
 
 glm::mat4 liminal::terrain::get_model_matrix() const
 {
-    glm::mat4 model = glm::identity<glm::mat4>();
+    // TODO: remove and use transform component
+    auto model = glm::identity<glm::mat4>();
 
     model = glm::translate(model, position);
 
@@ -153,7 +155,7 @@ float liminal::terrain::get_height(SDL_Surface *surface, int x, int z) const
         } color;
     } pixel = *(pixel_t *)((unsigned char *)surface->pixels + z * surface->pitch + x * surface->format->BytesPerPixel);
 
-    float height = (float)((pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b));
+    auto height = (float)((pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b));
     height -= 0xffffff / 2;
     height /= 0xffffff / 2;
     height *= height_scale;

@@ -29,7 +29,7 @@ namespace editor
 
         void update(unsigned int current_time, float delta_time) override
         {
-            ImGuiIO &io = ImGui::GetIO();
+            auto &io = ImGui::GetIO();
 
             ImGuizmo::BeginFrame();
 
@@ -86,7 +86,7 @@ namespace editor
             ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
-            ImGuiViewport *viewport = ImGui::GetMainViewport();
+            auto viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->Pos);
             ImGui::SetNextWindowSize(viewport->Size);
             ImGui::SetNextWindowViewport(viewport->ID);
@@ -112,7 +112,7 @@ namespace editor
 
                 if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
                 {
-                    ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+                    auto dockspace_id = ImGui::GetID("Dockspace");
                     ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockspace_flags);
                 }
 
@@ -187,7 +187,7 @@ namespace editor
                             }
                         }
 
-                        const float sensitivity = 0.1f;
+                        const auto sensitivity = 0.1f;
                         if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
                         {
                             camera_transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
@@ -337,8 +337,9 @@ namespace editor
                                 // TODO: drag and drop from asset browser
                                 if (ImGui::Button("Load Model"))
                                 {
-                                    nfdchar_t *outPath = NULL;
-                                    nfdresult_t result = NFD_OpenDialog(NULL, NULL, &outPath);
+                                    // TODO: move file dialog to platform?
+                                    nfdchar_t *outPath;
+                                    auto result = NFD_OpenDialog(NULL, NULL, &outPath);
                                     if (result == NFD_OKAY)
                                     {
                                         mesh_renderer.model = liminal::assets::instance->load_model(outPath, true);

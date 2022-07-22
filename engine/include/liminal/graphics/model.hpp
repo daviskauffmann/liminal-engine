@@ -34,12 +34,12 @@ namespace liminal
         void set_animation(unsigned int index);
         void update_bone_transformations(unsigned int animation_index, unsigned int current_time);
 
-        void draw_meshes(liminal::program *program) const;
+        void draw_meshes(const liminal::program &program) const;
 
     private:
         std::string directory;
         Assimp::Importer importer;
-        const aiScene *scene;
+        const aiScene *scene = nullptr;
 
         std::vector<liminal::mesh *> meshes;
 

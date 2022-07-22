@@ -23,5 +23,5 @@ void main()
 {		
     vec2 uv = sample_spherical_map(normalize(vertex.position));
     vec3 color = texture(equirectangular_map, uv).rgb;
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(color, 1);
 }

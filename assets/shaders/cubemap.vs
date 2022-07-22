@@ -13,5 +13,5 @@ void main()
 {
     vertex.position = position;
 
-    gl_Position = mvp_matrix * vec4(position, 1.0);
+    gl_Position = mvp_matrix * vec4(position, 1);
 }

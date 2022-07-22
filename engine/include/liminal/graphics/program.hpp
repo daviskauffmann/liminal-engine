@@ -29,10 +29,10 @@ namespace liminal
         void set_int(const std::string &name, GLint value) const;
         void set_unsigned_int(const std::string &name, GLuint value) const;
         void set_float(const std::string &name, GLfloat value) const;
-        void set_vec3(const std::string &name, glm::vec3 vec3) const;
-        void set_vec4(const std::string &name, glm::vec4 vec4) const;
-        void set_mat4(const std::string &name, glm::mat4 mat4) const;
-        void set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const;
+        void set_vec3(const std::string &name, const glm::vec3 &vec3) const;
+        void set_vec4(const std::string &name, const glm::vec4 &vec4) const;
+        void set_mat4(const std::string &name, const glm::mat4 &mat4) const;
+        void set_mat4_vector(const std::string &name, const std::vector<glm::mat4> &mat4_vector) const;
 
     private:
         const std::string vertex_filename;

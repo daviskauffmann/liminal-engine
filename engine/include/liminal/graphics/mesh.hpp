@@ -27,7 +27,7 @@ namespace liminal
             std::vector<std::vector<liminal::texture *>> textures);
         ~mesh();
 
-        void draw(liminal::program *program) const;
+        void draw(const liminal::program &program) const;
     };
 }
 

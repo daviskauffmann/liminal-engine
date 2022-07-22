@@ -32,7 +32,7 @@ uniform int id;
 
 vec3 calc_normal()
 {
-    vec3 tangent_normal = texture(material.normal_map, vertex.uv).xyz * 2.0 - 1.0;
+    vec3 tangent_normal = texture(material.normal_map, vertex.uv).xyz * 2 - 1;
 
     vec3 q1 = dFdx(vertex.position);
     vec3 q2 = dFdy(vertex.position);
@@ -52,9 +52,9 @@ void main()
     position_map = vertex.position;
     normal_map = material.has_normal_map ? calc_normal() : normalize(vertex.normal);
     albedo_map = texture(material.albedo_map, vertex.uv).rgb;
-    material_map.r = material.has_metallic_map ? texture(material.metallic_map, vertex.uv).r : 0.0;
-    material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : 1.0;
-    material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1.0;
-    material_map.a = material.has_height_map ? texture(material.height_map, vertex.uv).r : 0.0;
+    material_map.r = material.has_metallic_map ? texture(material.metallic_map, vertex.uv).r : 0;
+    material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : 1;
+    material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1;
+    material_map.a = material.has_height_map ? texture(material.height_map, vertex.uv).r : 0;
     id_map = id;
 }

@@ -18,14 +18,14 @@ uniform mat4 mvp_matrix;
 uniform mat4 model_matrix;
 uniform vec4 clipping_plane;
 
-uniform float tiling = 1.0;
+uniform float tiling = 1;
 
 void main()
 {
-    vertex.position = (model_matrix * vec4(position, 1.0)).xyz;
-    vertex.normal = (model_matrix * vec4(normal, 0.0)).xyz;
+    vertex.position = (model_matrix * vec4(position, 1)).xyz;
+    vertex.normal = (model_matrix * vec4(normal, 0)).xyz;
     vertex.uv = uv * tiling;
 
-    gl_Position = mvp_matrix * vec4(position, 1.0);
-	gl_ClipDistance[0] = dot(vec4(vertex.position, 1.0), clipping_plane);
+    gl_Position = mvp_matrix * vec4(position, 1);
+	gl_ClipDistance[0] = dot(vec4(vertex.position, 1), clipping_plane);
 }

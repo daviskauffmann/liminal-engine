@@ -47,7 +47,7 @@ liminal::mesh::~mesh()
     glDeleteBuffers(1, &ebo_id);
 }
 
-void liminal::mesh::draw(liminal::program *program) const
+void liminal::mesh::draw(const liminal::program &program) const
 {
     // TODO: support multiple textures per type in the shader?
 
@@ -63,60 +63,60 @@ void liminal::mesh::draw(liminal::program *program) const
 
     if (textures.size() > 0 && textures[aiTextureType_NORMALS].size() > 0)
     {
-        program->set_int("material.has_normal_map", 1);
+        program.set_int("material.has_normal_map", 1);
         textures[aiTextureType_NORMALS][0]->bind(1);
     }
     else
     {
-        program->set_int("material.has_normal_map", 0);
+        program.set_int("material.has_normal_map", 0);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     if (textures.size() > 0 && textures[aiTextureType_SHININESS].size() > 0)
     {
-        program->set_int("material.has_metallic_map", 1);
+        program.set_int("material.has_metallic_map", 1);
         textures[aiTextureType_SHININESS][0]->bind(2);
     }
     else
     {
-        program->set_int("material.has_metallic_map", 0);
+        program.set_int("material.has_metallic_map", 0);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     if (textures.size() > 0 && textures[aiTextureType_OPACITY].size() > 0)
     {
-        program->set_int("material.has_roughness_map", 1);
+        program.set_int("material.has_roughness_map", 1);
         textures[aiTextureType_OPACITY][0]->bind(3);
     }
     else
     {
-        program->set_int("material.has_roughness_map", 0);
+        program.set_int("material.has_roughness_map", 0);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     if (textures.size() > 0 && textures[aiTextureType_AMBIENT].size() > 0)
     {
-        program->set_int("material.has_occlusion_map", 1);
+        program.set_int("material.has_occlusion_map", 1);
         textures[aiTextureType_AMBIENT][0]->bind(4);
     }
     else
     {
-        program->set_int("material.has_occlusion_map", 0);
+        program.set_int("material.has_occlusion_map", 0);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     if (textures.size() > 0 && textures[aiTextureType_HEIGHT].size() > 0)
     {
-        program->set_int("material.has_height_map", 1);
+        program.set_int("material.has_height_map", 1);
         textures[aiTextureType_HEIGHT][0]->bind(5);
     }
     else
     {
-        program->set_int("material.has_height_map", 0);
+        program.set_int("material.has_height_map", 0);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, 0);
     }

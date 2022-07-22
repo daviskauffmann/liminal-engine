@@ -15,7 +15,7 @@ uniform struct Sprite
 
 void main()
 {    
-	vec4 color = texture(sprite.texture, vertex.uv) * vec4(sprite.color, 1.0);
+	vec4 color = texture(sprite.texture, vertex.uv) * vec4(sprite.color, 1);
 	if (color.a < 0.1)
 	{
 		discard;

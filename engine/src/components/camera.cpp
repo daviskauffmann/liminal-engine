@@ -22,30 +22,22 @@ glm::vec3 liminal::camera::calc_front(const liminal::transform &transform) const
 
 glm::vec3 liminal::camera::calc_right(const liminal::transform &transform) const
 {
-    glm::vec3 front = calc_front(transform);
-    glm::vec3 right = glm::cross(front, glm::vec3(0, 1, 0));
+    auto front = calc_front(transform);
+    auto right = glm::cross(front, glm::vec3(0, 1, 0));
     return glm::normalize(right);
 }
 
 glm::mat4 liminal::camera::calc_projection(float aspect) const
 {
-    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, near_plane, far_plane);
-    return projection;
+    return glm::perspective(glm::radians(fov), aspect, near_plane, far_plane);
 }
 
 glm::mat4 liminal::camera::calc_view(const liminal::transform &transform) const
 {
-    glm::vec3 front = calc_front(transform);
-    glm::vec3 target = transform.position + front;
-
-    glm::vec3 right = calc_right(transform);
-    glm::mat4 rotation = glm::rotate(glm::identity<glm::mat4>(), glm::radians(transform.rotation.z), front);
-    right = glm::vec3(rotation * glm::vec4(right, 1));
-
-    glm::vec3 up = glm::cross(right, front);
-    up = glm::normalize(up);
-
-    glm::mat4 view = glm::lookAt(transform.position, target, up);
-
-    return view;
+    auto front = calc_front(transform);
+    auto rotation = glm::rotate(glm::identity<glm::mat4>(), glm::radians(transform.rotation.z), front);
+    auto right = calc_right(transform);
+    auto rotated_right = glm::vec3(rotation * glm::vec4(right, 1));
+    auto up = glm::normalize(glm::cross(rotated_right, front));
+    return glm::lookAt(transform.position, transform.position + front, up);
 }

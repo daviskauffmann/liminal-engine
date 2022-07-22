@@ -32,7 +32,7 @@ void liminal::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
     // would need some way to update texture samplers, but only the renderer knows that information right now
-    GLuint new_program_id = create_program();
+    auto new_program_id = create_program();
     if (new_program_id)
     {
         glDeleteProgram(program_id);
@@ -65,38 +65,38 @@ void liminal::program::set_float(const std::string &name, GLfloat value) const
     glUniform1f(get_location(name), value);
 }
 
-void liminal::program::set_vec3(const std::string &name, glm::vec3 vec3) const
+void liminal::program::set_vec3(const std::string &name, const glm::vec3 &vec3) const
 {
     glUniform3fv(get_location(name), 1, glm::value_ptr(vec3));
 }
 
-void liminal::program::set_vec4(const std::string &name, glm::vec4 vec4) const
+void liminal::program::set_vec4(const std::string &name, const glm::vec4 &vec4) const
 {
     glUniform4fv(get_location(name), 1, glm::value_ptr(vec4));
 }
 
-void liminal::program::set_mat4(const std::string &name, glm::mat4 mat4) const
+void liminal::program::set_mat4(const std::string &name, const glm::mat4 &mat4) const
 {
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
-void liminal::program::set_mat4_vector(const std::string &name, std::vector<glm::mat4> mat4_vector) const
+void liminal::program::set_mat4_vector(const std::string &name, const std::vector<glm::mat4> &mat4_vector) const
 {
     glUniformMatrix4fv(get_location(name), (GLsizei)mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
 }
 
 GLuint liminal::program::create_program() const
 {
-    GLuint program_id = glCreateProgram();
+    auto program_id = glCreateProgram();
 
-    GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
+    auto vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_filename);
     if (!vertex_shader)
     {
         return 0;
     }
     glAttachShader(program_id, vertex_shader);
 
-    GLuint geometry_shader = 0;
+    auto geometry_shader = 0;
     if (!geometry_filename.empty())
     {
         geometry_shader = create_shader(GL_GEOMETRY_SHADER, geometry_filename);
@@ -107,7 +107,7 @@ GLuint liminal::program::create_program() const
         glAttachShader(program_id, geometry_shader);
     }
 
-    GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
+    auto fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_filename);
     if (!fragment_shader)
     {
         return 0;
@@ -165,10 +165,10 @@ GLuint liminal::program::create_program() const
 
 GLuint liminal::program::create_shader(GLenum type, const std::string &filename) const
 {
-    GLuint shader_id = glCreateShader(type);
+    auto shader_id = glCreateShader(type);
 
     char error[256];
-    char *source = stb_include_file(
+    auto source = stb_include_file(
         const_cast<char *>(filename.c_str()),
         NULL,
         const_cast<char *>("assets/shaders"),

@@ -5,6 +5,7 @@
 #include <liminal/audio/sound.hpp>
 #include <liminal/components/audio_listener.hpp>
 #include <liminal/components/audio_source.hpp>
+#include <liminal/components/camera.hpp>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/physical.hpp>
@@ -27,10 +28,10 @@ liminal::scene::scene()
 {
     skybox = nullptr;
 
-    btDefaultCollisionConfiguration *collision_configuration = new btDefaultCollisionConfiguration();
-    btDispatcher *dispatcher = new btCollisionDispatcher(collision_configuration);
-    btBroadphaseInterface *pair_cache = new btDbvtBroadphase();
-    btConstraintSolver *constraint_solver = new btSequentialImpulseConstraintSolver();
+    auto collision_configuration = new btDefaultCollisionConfiguration();
+    auto dispatcher = new btCollisionDispatcher(collision_configuration);
+    auto pair_cache = new btDbvtBroadphase();
+    auto constraint_solver = new btSequentialImpulseConstraintSolver();
     world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
     world->setGravity(btVector3(0, -9.8f, 0));
 }
@@ -97,7 +98,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "transform")
                     {
-                        std::string name = std::string(value["name"]);
+                        std::string name(value["name"]);
                         glm::vec3 position(
                             value["position"]["x"],
                             value["position"]["y"],
@@ -195,9 +196,9 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     }
 
     // update audio listener positions
-    for (auto [id, audio_listener, transform] : get_entities_with<liminal::audio_listener, liminal::transform>().each())
+    for (auto [id, audio_listener, camera, transform] : get_entities_with<liminal::audio_listener, liminal::camera, liminal::transform>().each())
     {
-        audio_listener.set_position(transform.position, transform.rotation);
+        audio_listener.set_position(transform.position, camera.calc_front(transform));
     }
 
     // update audio source positions

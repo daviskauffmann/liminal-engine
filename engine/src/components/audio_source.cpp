@@ -5,9 +5,8 @@
 liminal::audio_source::audio_source()
 {
     alGenSources(1, &source_id);
-    this->last_position = glm::vec3(0);
 
-    alSourcefv(source_id, AL_POSITION, glm::value_ptr(this->last_position));
+    alSourcefv(source_id, AL_POSITION, glm::value_ptr(last_position));
 }
 
 liminal::audio_source::~audio_source()
@@ -30,14 +29,14 @@ void liminal::audio_source::set_pitch(float pitch) const
     alSourcef(source_id, AL_PITCH, pitch);
 }
 
-void liminal::audio_source::set_position(glm::vec3 position) const
+void liminal::audio_source::set_position(const glm::vec3 &position)
 {
-    glm::vec3 velocity = this->last_position - position;
-
     alSourcefv(source_id, AL_POSITION, glm::value_ptr(position));
+
+    glm::vec3 velocity = last_position - position;
     alSourcefv(source_id, AL_VELOCITY, glm::value_ptr(velocity));
 
-    this->last_position = position;
+    last_position = position;
 }
 
 bool liminal::audio_source::is_playing() const

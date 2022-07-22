@@ -93,7 +93,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glBindVertexArray(0);
 
     // setup capture matrices
-    glm::mat4 capture_projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
+    auto capture_projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
     glm::mat4 capture_mvps[] =
         {capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
          capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
@@ -361,11 +361,11 @@ void liminal::skybox::set_cubemap(const std::string &filename)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
 
-            const unsigned int max_mip_levels = 5;
-            for (unsigned int mip_level = 0; mip_level < max_mip_levels; mip_level++)
+            const GLsizei max_mip_levels = 5;
+            for (GLint mip_level = 0; mip_level < max_mip_levels; mip_level++)
             {
-                unsigned int mip_width = (unsigned int)(prefilter_size * std::pow(0.5f, (float)mip_level));
-                unsigned int mip_height = (unsigned int)(prefilter_size * std::pow(0.5f, (float)mip_level));
+                auto mip_width = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
+                auto mip_height = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
 
                 glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
                 {

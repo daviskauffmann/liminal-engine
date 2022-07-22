@@ -15,8 +15,6 @@ static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(
 
 liminal::model::model(liminal::mesh *mesh)
 {
-    scene = nullptr;
-
     meshes.push_back(mesh);
 }
 
@@ -61,9 +59,9 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
 
     if (scene && scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        float ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.f;
-        float time_in_ticks = ticks_per_second * (current_time / 1000.f);
-        float animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
+        auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.f;
+        auto time_in_ticks = ticks_per_second * (current_time / 1000.f);
+        auto animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
 
@@ -75,7 +73,7 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
     }
 }
 
-void liminal::model::draw_meshes(liminal::program *program) const
+void liminal::model::draw_meshes(const liminal::program &program) const
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
@@ -87,7 +85,7 @@ void liminal::model::process_node_meshes(const aiNode *node, const aiScene *scen
 {
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
-        aiMesh *scene_mesh = scene->mMeshes[node->mMeshes[i]];
+        auto scene_mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(create_mesh(scene_mesh, scene));
     }
 
@@ -162,8 +160,8 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
 
             for (unsigned int j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
             {
-                unsigned int vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
-                float weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
+                auto vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
+                auto weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
                 vertices[vertex_id].add_bone_data(bone_index, weight);
             }
         }
@@ -174,7 +172,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
     {
         for (unsigned int i = 0; i < scene_mesh->mNumFaces; i++)
         {
-            aiFace face = scene_mesh->mFaces[i];
+            auto face = scene_mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++)
             {
                 indices.push_back(face.mIndices[j]);
@@ -185,8 +183,8 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
     // process textures
     if (scene->HasMaterials())
     {
-        aiMaterial *scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
-        for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
+        auto scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
+        for (auto type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
         {
             std::vector<liminal::texture *> material_textures;
 
@@ -194,7 +192,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
             {
                 aiString path;
                 scene_material->GetTexture(type, i, &path);
-                std::string filename = directory + "/" + path.C_Str();
+                auto filename = directory + "/" + path.C_Str();
                 material_textures.push_back(liminal::assets::instance->load_texture(filename));
             }
 
@@ -214,38 +212,38 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
 void liminal::model::process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
 {
     std::string node_name(node->mName.data);
-    glm::mat4 node_transformation = mat4_cast(node->mTransformation);
+    auto node_transformation = mat4_cast(node->mTransformation);
 
     if (scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        const aiAnimation *scene_animation = scene->mAnimations[animation_index];
-        const aiNodeAnim *node_animation = find_node_animation(scene_animation, node_name);
+        const auto scene_animation = scene->mAnimations[animation_index];
+        const auto node_animation = find_node_animation(scene_animation, node_name);
         if (node_animation)
         {
             aiVector3D interpolated_position;
             calc_interpolated_position(interpolated_position, animation_time, node_animation);
-            glm::vec3 position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
-            glm::mat4 position = glm::translate(glm::identity<glm::mat4>(), position_vector);
+            auto position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
+            auto position = glm::translate(glm::identity<glm::mat4>(), position_vector);
 
             aiQuaternion interpolated_rotation;
             calc_interpolated_rotation(interpolated_rotation, animation_time, node_animation);
-            glm::quat rotation_vector = quat_cast(interpolated_rotation);
-            glm::mat4 rotation = glm::toMat4(rotation_vector);
+            auto rotation_vector = quat_cast(interpolated_rotation);
+            auto rotation = glm::toMat4(rotation_vector);
 
             aiVector3D interpolated_scale;
             calc_interpolated_scale(interpolated_scale, animation_time, node_animation);
-            glm::vec3 scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
-            glm::mat4 scale = glm::scale(glm::identity<glm::mat4>(), scale_vector);
+            auto scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
+            auto scale = glm::scale(glm::identity<glm::mat4>(), scale_vector);
 
             node_transformation = position * rotation * scale;
         }
     }
 
-    glm::mat4 global_transformation = parent_transformation * node_transformation;
+    auto global_transformation = parent_transformation * node_transformation;
 
     if (bone_indices.find(node_name) != bone_indices.end())
     {
-        unsigned int bone_index = bone_indices[node_name];
+        auto bone_index = bone_indices[node_name];
         bones[bone_index].transformation = global_inverse_transform * global_transformation * bones[bone_index].offset;
     }
 
@@ -259,7 +257,7 @@ const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *scene_a
 {
     for (unsigned int i = 0; i < scene_animation->mNumChannels; i++)
     {
-        const aiNodeAnim *node_animation = scene_animation->mChannels[i];
+        const auto node_animation = scene_animation->mChannels[i];
 
         if (std::string(node_animation->mNodeName.data) == node_name)
         {
@@ -278,15 +276,15 @@ void liminal::model::calc_interpolated_position(aiVector3D &out, float animation
         return;
     }
 
-    unsigned int position_index = find_position_index(animation_time, node_animation);
-    unsigned int next_position_index = position_index + 1;
+    auto position_index = find_position_index(animation_time, node_animation);
+    auto next_position_index = position_index + 1;
 
-    float delta_time = (float)(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
-    float factor = (animation_time - (float)node_animation->mPositionKeys[position_index].mTime) / delta_time;
+    auto delta_time = (float)(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
+    auto factor = (animation_time - (float)node_animation->mPositionKeys[position_index].mTime) / delta_time;
 
-    const aiVector3D &start = node_animation->mPositionKeys[position_index].mValue;
-    const aiVector3D &end = node_animation->mPositionKeys[next_position_index].mValue;
-    aiVector3D delta = end - start;
+    const auto &start = node_animation->mPositionKeys[position_index].mValue;
+    const auto &end = node_animation->mPositionKeys[next_position_index].mValue;
+    auto delta = end - start;
 
     out = start + factor * delta;
 }
@@ -314,14 +312,14 @@ void liminal::model::calc_interpolated_rotation(aiQuaternion &out, float animati
         return;
     }
 
-    unsigned int rotation_index = find_rotation_index(animation_time, node_animation);
-    unsigned int next_rotation_index = rotation_index + 1;
+    auto rotation_index = find_rotation_index(animation_time, node_animation);
+    auto next_rotation_index = rotation_index + 1;
 
-    float delta_time = (float)(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
-    float factor = (animation_time - (float)node_animation->mRotationKeys[rotation_index].mTime) / delta_time;
+    auto delta_time = (float)(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
+    auto factor = (animation_time - (float)node_animation->mRotationKeys[rotation_index].mTime) / delta_time;
 
-    const aiQuaternion &start = node_animation->mRotationKeys[rotation_index].mValue;
-    const aiQuaternion &end = node_animation->mRotationKeys[next_rotation_index].mValue;
+    const auto &start = node_animation->mRotationKeys[rotation_index].mValue;
+    const auto &end = node_animation->mRotationKeys[next_rotation_index].mValue;
     aiQuaternion::Interpolate(out, start, end, factor);
 
     out = out.Normalize();
@@ -350,15 +348,15 @@ void liminal::model::calc_interpolated_scale(aiVector3D &out, float animation_ti
         return;
     }
 
-    unsigned int scale_index = find_scale_index(animation_time, node_animation);
-    unsigned int next_scale_index = scale_index + 1;
+    auto scale_index = find_scale_index(animation_time, node_animation);
+    auto next_scale_index = scale_index + 1;
 
-    float delta_time = (float)(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
-    float factor = (animation_time - (float)node_animation->mScalingKeys[scale_index].mTime) / delta_time;
+    auto delta_time = (float)(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
+    auto factor = (animation_time - (float)node_animation->mScalingKeys[scale_index].mTime) / delta_time;
 
-    const aiVector3D &start = node_animation->mScalingKeys[scale_index].mValue;
-    const aiVector3D &end = node_animation->mScalingKeys[next_scale_index].mValue;
-    aiVector3D delta = end - start;
+    const auto &start = node_animation->mScalingKeys[scale_index].mValue;
+    const auto &end = node_animation->mScalingKeys[next_scale_index].mValue;
+    auto delta = end - start;
 
     out = start + factor * delta;
 }

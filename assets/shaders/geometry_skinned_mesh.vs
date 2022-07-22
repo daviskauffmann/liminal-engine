@@ -24,20 +24,20 @@ uniform mat4 bone_transformations[MAX_BONE_TRANSFORMATIONS];
 uniform mat4 model_matrix;
 uniform vec4 clipping_plane;
 
-uniform float tiling = 1.0;
+uniform float tiling = 1;
 
 void main()
 {
-    mat4 bone_transformation = mat4(0.0);
+    mat4 bone_transformation = mat4(0);
     for (int i = 0; i < NUM_BONES_PER_VERTEX; i++)
     {
         bone_transformation += bone_transformations[bone_ids[i]] * bone_weights[i];
     }
 
-    vertex.position = (model_matrix * bone_transformation * vec4(position, 1.0)).xyz;
-    vertex.normal = (model_matrix * bone_transformation * vec4(normal, 0.0)).xyz;
+    vertex.position = (model_matrix * bone_transformation * vec4(position, 1)).xyz;
+    vertex.normal = (model_matrix * bone_transformation * vec4(normal, 0)).xyz;
     vertex.uv = uv * tiling;
 
-    gl_Position = mvp_matrix * bone_transformation * vec4(position, 1.0);
-	gl_ClipDistance[0] = dot(vec4(vertex.position, 1.0), clipping_plane);
+    gl_Position = mvp_matrix * bone_transformation * vec4(position, 1);
+	gl_ClipDistance[0] = dot(vec4(vertex.position, 1), clipping_plane);
 }

@@ -66,7 +66,7 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
     SDL_GL_MakeCurrent(window, context);
 
     // init GLEW
-    GLenum error = glewInit();
+    auto error = glewInit();
     if (error != GLEW_OK)
     {
         std::cerr << "Error: Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
@@ -103,7 +103,7 @@ liminal::platform::platform(const std::string &window_title, int window_width, i
     // init ImGui
     ImGui::CreateContext();
 
-    ImGuiIO &io = ImGui::GetIO();
+    auto &io = ImGui::GetIO();
     io.ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
     io.IniFilename = "assets/imgui.ini";
 
@@ -144,7 +144,7 @@ void liminal::platform::set_window_size(int width, int height)
 
 void liminal::platform::toggle_fullscreen()
 {
-    unsigned int flags = SDL_GetWindowFlags(window);
+    auto flags = SDL_GetWindowFlags(window);
     if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
     {
         SDL_SetWindowFullscreen(window, 0);

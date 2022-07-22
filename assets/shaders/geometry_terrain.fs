@@ -27,7 +27,7 @@ uniform sampler2D blend_map;
 
 vec3 calc_normal()
 {
-    vec3 tangent_normal = texture(materials[0].normal_map, vertex.uv).xyz * 2.0 - 1.0;
+    vec3 tangent_normal = texture(materials[0].normal_map, vertex.uv).xyz * 2 - 1;
 
     vec3 q1 = dFdx(vertex.position);
     vec3 q2 = dFdy(vertex.position);

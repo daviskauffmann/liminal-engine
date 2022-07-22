@@ -269,7 +269,7 @@ liminal::renderer::renderer(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        liminal::program *brdf_program = new liminal::program(
+        auto brdf_program = std::make_unique<liminal::program>(
             "assets/shaders/brdf.vs",
             "assets/shaders/brdf.fs");
 
@@ -289,72 +289,70 @@ liminal::renderer::renderer(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        delete brdf_program;
-
         glDeleteFramebuffers(1, &capture_fbo_id);
         glDeleteRenderbuffers(1, &capture_rbo_id);
     }
 
     // create shader programs
-    depth_mesh_program = new liminal::program(
+    depth_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_mesh.vs",
         "assets/shaders/depth.fs");
-    depth_skinned_mesh_program = new liminal::program(
+    depth_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_skinned_mesh.vs",
         "assets/shaders/depth.fs");
-    depth_cube_mesh_program = new liminal::program(
+    depth_cube_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_cube_mesh.vs",
         "assets/shaders/depth_cube.gs",
         "assets/shaders/depth_cube.fs");
-    depth_cube_skinned_mesh_program = new liminal::program(
+    depth_cube_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_cube_skinned_mesh.vs",
         "assets/shaders/depth_cube.gs",
         "assets/shaders/depth_cube.fs");
-    color_program = new liminal::program(
+    color_program = std::make_unique<liminal::program>(
         "assets/shaders/color.vs",
         "assets/shaders/color.fs");
-    geometry_mesh_program = new liminal::program(
+    geometry_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_mesh.fs");
-    geometry_skinned_mesh_program = new liminal::program(
+    geometry_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_skinned_mesh.vs",
         "assets/shaders/geometry_mesh.fs");
-    geometry_terrain_program = new liminal::program(
+    geometry_terrain_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_terrain.fs");
-    deferred_ambient_program = new liminal::program(
+    deferred_ambient_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_ambient.fs");
-    deferred_directional_program = new liminal::program(
+    deferred_directional_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_directional.fs");
-    deferred_point_program = new liminal::program(
+    deferred_point_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_point.fs");
-    deferred_spot_program = new liminal::program(
+    deferred_spot_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_spot.fs");
-    skybox_program = new liminal::program(
+    skybox_program = std::make_unique<liminal::program>(
         "assets/shaders/skybox.vs",
         "assets/shaders/skybox.fs");
-    water_program = new liminal::program(
+    water_program = std::make_unique<liminal::program>(
         "assets/shaders/water.vs",
         "assets/shaders/water.fs");
-    sprite_program = new liminal::program(
+    sprite_program = std::make_unique<liminal::program>(
         "assets/shaders/sprite.vs",
         "assets/shaders/sprite.fs");
-    gaussian_program = new liminal::program(
+    gaussian_program = std::make_unique<liminal::program>(
         "assets/shaders/gaussian.vs",
         "assets/shaders/gaussian.fs");
-    postprocess_program = new liminal::program(
+    postprocess_program = std::make_unique<liminal::program>(
         "assets/shaders/postprocess.vs",
         "assets/shaders/postprocess.fs");
 
     setup_samplers();
 
     // create water textures
-    water_dudv_texture = new liminal::texture("assets/images/water_dudv.png");
-    water_normal_texture = new liminal::texture("assets/images/water_normal.png");
+    water_dudv_texture = std::make_unique<liminal::texture>("assets/images/water_dudv.png");
+    water_normal_texture = std::make_unique<liminal::texture>("assets/images/water_normal.png");
 
     // DEBUG: create sphere mesh
     // http://www.songho.ca/opengl/gl_sphere.html
@@ -411,7 +409,7 @@ liminal::renderer::renderer(
 
         std::vector<std::vector<liminal::texture *>> textures;
 
-        DEBUG_sphere_mesh = new liminal::mesh(vertices, indices, textures);
+        DEBUG_sphere_mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
     }
 }
 
@@ -465,32 +463,9 @@ liminal::renderer::~renderer()
     glDeleteBuffers(1, &screen_vbo_id);
 
     glDeleteTextures(1, &brdf_texture_id);
-
-    delete depth_mesh_program;
-    delete depth_skinned_mesh_program;
-    delete depth_cube_mesh_program;
-    delete depth_cube_skinned_mesh_program;
-    delete color_program;
-    delete geometry_mesh_program;
-    delete geometry_skinned_mesh_program;
-    delete geometry_terrain_program;
-    delete deferred_ambient_program;
-    delete deferred_directional_program;
-    delete deferred_point_program;
-    delete deferred_spot_program;
-    delete skybox_program;
-    delete water_program;
-    delete sprite_program;
-    delete gaussian_program;
-    delete postprocess_program;
-
-    delete water_dudv_texture;
-    delete water_normal_texture;
-
-    delete DEBUG_sphere_mesh;
 }
 
-float liminal::renderer::get_aspect_ratio()
+float liminal::renderer::get_aspect_ratio() const
 {
     return (float)render_width / (float)render_height;
 }
@@ -722,7 +697,7 @@ void liminal::renderer::calc_render_size()
     {
         {
             glGenTextures(2, hdr_texture_ids);
-            for (unsigned int i = 0; i < 2; i++)
+            for (size_t i = 0; i < 2; i++)
             {
                 glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
                 {
@@ -789,7 +764,7 @@ void liminal::renderer::calc_render_size()
     // setup bloom fbo
     glGenFramebuffers(2, bloom_fbo_ids);
     glGenTextures(2, bloom_texture_ids);
-    for (unsigned int i = 0; i < 2; i++)
+    for (size_t i = 0; i < 2; i++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[i]);
         {
@@ -1212,7 +1187,7 @@ void liminal::renderer::reload_programs()
     setup_samplers();
 }
 
-void liminal::renderer::setup_samplers()
+void liminal::renderer::setup_samplers() const
 {
     geometry_mesh_program->bind();
     {
@@ -1325,7 +1300,7 @@ void liminal::renderer::setup_samplers()
     postprocess_program->unbind();
 }
 
-liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene)
+liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene) const
 {
     entt::entity id;
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
@@ -1337,7 +1312,7 @@ liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene)
     return scene->get_entity(id);
 }
 
-void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time)
+void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time) const
 {
     if (default_camera && default_camera_transform)
     {
@@ -1352,23 +1327,23 @@ void liminal::renderer::render(liminal::scene &scene, unsigned int current_time,
 
 void liminal::renderer::render_all(
     liminal::scene &scene,
-    liminal::camera &camera,
-    liminal::transform &camera_transform,
-    unsigned int current_time)
+    const liminal::camera &camera,
+    const liminal::transform &camera_transform,
+    unsigned int current_time) const
 {
     render_shadows(scene, camera, camera_transform);
     render_objects(scene, camera, camera_transform, hdr_fbo_id, render_width, render_height);
     render_waters(scene, camera, camera_transform, current_time);
     render_sprites(scene);
-    render_screen(scene, camera);
+    render_screen(camera);
 }
 
 void liminal::renderer::render_shadows(
     liminal::scene &scene,
-    liminal::camera &camera,
-    liminal::transform &camera_transform)
+    const liminal::camera &camera,
+    const liminal::transform &camera_transform) const
 {
-    int i = 0;
+    size_t i = 0;
     for (auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, liminal::transform>().each())
     {
         if (i >= NUM_DIRECTIONAL_LIGHT_SHADOWS)
@@ -1376,14 +1351,14 @@ void liminal::renderer::render_shadows(
             break;
         }
 
-        glm::mat4 projection = glm::ortho(
+        auto projection = glm::ortho(
             -directional_light_shadow_map_size,
             directional_light_shadow_map_size,
             -directional_light_shadow_map_size,
             directional_light_shadow_map_size,
             directional_light_near_plane,
             directional_light_far_plane);
-        glm::mat4 view = glm::lookAt(
+        auto view = glm::lookAt(
             camera_transform.position - transform.rotation,
             camera_transform.position,
             glm::vec3(0, 1, 0));
@@ -1407,7 +1382,7 @@ void liminal::renderer::render_shadows(
             {
                 if (mesh_renderer.model)
                 {
-                    glm::mat4 model_matrix = transform.get_model_matrix();
+                    auto model_matrix = transform.get_model_matrix();
                     if (mesh_renderer.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
@@ -1415,7 +1390,7 @@ void liminal::renderer::render_shadows(
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
                             depth_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
 
-                            mesh_renderer.model->draw_meshes(depth_skinned_mesh_program);
+                            mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
                         depth_skinned_mesh_program->unbind();
                     }
@@ -1425,7 +1400,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
 
-                            mesh_renderer.model->draw_meshes(depth_mesh_program);
+                            mesh_renderer.model->draw_meshes(*depth_mesh_program);
                         }
                         depth_mesh_program->unbind();
                     }
@@ -1436,11 +1411,11 @@ void liminal::renderer::render_shadows(
             {
                 for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
                 {
-                    glm::mat4 model_matrix = terrain.get_model_matrix();
+                    auto model_matrix = terrain.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
 
-                    terrain.mesh->draw(depth_mesh_program);
+                    terrain.mesh->draw(*depth_mesh_program);
                 }
             }
             depth_mesh_program->unbind();
@@ -1484,7 +1459,7 @@ void liminal::renderer::render_shadows(
             {
                 if (mesh_renderer.model)
                 {
-                    glm::mat4 model_matrix = transform2.get_model_matrix();
+                    auto model_matrix = transform2.get_model_matrix();
                     if (mesh_renderer.model->has_animations())
                     {
                         depth_cube_skinned_mesh_program->bind();
@@ -1500,7 +1475,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_skinned_mesh_program->set_vec3("light.position", transform.position);
 
-                            mesh_renderer.model->draw_meshes(depth_cube_skinned_mesh_program);
+                            mesh_renderer.model->draw_meshes(*depth_cube_skinned_mesh_program);
                         }
                         depth_cube_skinned_mesh_program->unbind();
                     }
@@ -1518,7 +1493,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
-                            mesh_renderer.model->draw_meshes(depth_cube_mesh_program);
+                            mesh_renderer.model->draw_meshes(*depth_cube_mesh_program);
                         }
                         depth_cube_mesh_program->unbind();
                     }
@@ -1538,11 +1513,11 @@ void liminal::renderer::render_shadows(
 
             //     for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>())
             //     {
-            //         glm::mat4 model_matrix = terrain.get_model_matrix();
+            //         auto model_matrix = terrain.get_model_matrix();
 
             //         depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
-            //         terrain.mesh->draw(depth_cube_mesh_program);
+            //         terrain.mesh->draw(*depth_cube_mesh_program);
             //     }
             // }
             // depth_cube_mesh_program->unbind();
@@ -1584,7 +1559,7 @@ void liminal::renderer::render_shadows(
             {
                 if (mesh_renderer.model)
                 {
-                    glm::mat4 model_matrix = transform2.get_model_matrix();
+                    auto model_matrix = transform2.get_model_matrix();
                     if (mesh_renderer.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
@@ -1592,7 +1567,7 @@ void liminal::renderer::render_shadows(
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
                             depth_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
 
-                            mesh_renderer.model->draw_meshes(depth_skinned_mesh_program);
+                            mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
                         depth_skinned_mesh_program->unbind();
                     }
@@ -1602,7 +1577,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
 
-                            mesh_renderer.model->draw_meshes(depth_mesh_program);
+                            mesh_renderer.model->draw_meshes(*depth_mesh_program);
                         }
                         depth_mesh_program->unbind();
                     }
@@ -1613,11 +1588,11 @@ void liminal::renderer::render_shadows(
             {
                 for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
                 {
-                    glm::mat4 model_matrix = terrain.get_model_matrix();
+                    auto model_matrix = terrain.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
 
-                    terrain.mesh->draw(depth_mesh_program);
+                    terrain.mesh->draw(*depth_mesh_program);
                 }
             }
             depth_mesh_program->unbind();
@@ -1632,15 +1607,15 @@ void liminal::renderer::render_shadows(
 
 void liminal::renderer::render_objects(
     liminal::scene &scene,
-    liminal::camera &camera,
-    liminal::transform &camera_transform,
+    const liminal::camera &camera,
+    const liminal::transform &camera_transform,
     GLuint fbo_id,
     GLsizei width, GLsizei height,
-    glm::vec4 clipping_plane)
+    const glm::vec4 &clipping_plane) const
 {
     // camera
-    glm::mat4 camera_projection = camera.calc_projection(get_aspect_ratio());
-    glm::mat4 camera_view = camera.calc_view(camera_transform);
+    auto camera_projection = camera.calc_projection(get_aspect_ratio());
+    auto camera_view = camera.calc_view(camera_transform);
 
     // draw to gbuffer
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
@@ -1659,7 +1634,7 @@ void liminal::renderer::render_objects(
         {
             if (mesh_renderer.model)
             {
-                glm::mat4 model_matrix = transform.get_model_matrix();
+                auto model_matrix = transform.get_model_matrix();
                 if (mesh_renderer.model->has_animations())
                 {
                     geometry_skinned_mesh_program->bind();
@@ -1670,7 +1645,7 @@ void liminal::renderer::render_objects(
                         geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_skinned_mesh_program->set_int("id", (int)id);
 
-                        mesh_renderer.model->draw_meshes(geometry_skinned_mesh_program);
+                        mesh_renderer.model->draw_meshes(*geometry_skinned_mesh_program);
                     }
                     geometry_skinned_mesh_program->unbind();
                 }
@@ -1683,7 +1658,7 @@ void liminal::renderer::render_objects(
                         geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_mesh_program->set_int("id", (int)id);
 
-                        mesh_renderer.model->draw_meshes(geometry_mesh_program);
+                        mesh_renderer.model->draw_meshes(*geometry_mesh_program);
                     }
                     geometry_mesh_program->unbind();
                 }
@@ -1696,13 +1671,13 @@ void liminal::renderer::render_objects(
 
             for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
             {
-                glm::mat4 model_matrix = terrain.get_model_matrix();
+                auto model_matrix = terrain.get_model_matrix();
 
                 geometry_terrain_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 geometry_terrain_program->set_mat4("model_matrix", model_matrix);
                 geometry_terrain_program->set_float("tiling", terrain.size);
 
-                terrain.mesh->draw(geometry_terrain_program);
+                terrain.mesh->draw(*geometry_terrain_program);
             }
         }
         geometry_terrain_program->unbind();
@@ -1782,7 +1757,7 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
-                int i = 0;
+                size_t i = 0;
                 for (auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, liminal::transform>().each())
                 {
                     deferred_directional_program->set_vec3("light.direction", transform.rotation);
@@ -1827,7 +1802,7 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
-                int i = 0;
+                size_t i = 0;
                 for (auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, liminal::transform>().each())
                 {
                     deferred_point_program->set_vec3("light.position", transform.position);
@@ -1870,7 +1845,7 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
-                int i = 0;
+                size_t i = 0;
                 for (auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, liminal::transform>().each())
                 {
                     deferred_spot_program->set_vec3("light.position", transform.position);
@@ -1965,14 +1940,14 @@ void liminal::renderer::render_objects(
                 {
                     glm::mat4 model_matrix(1);
                     model_matrix = glm::translate(model_matrix, transform.position);
-                    model_matrix = glm::scale(model_matrix, {0.25f, 0.25f, 0.25f});
+                    model_matrix = glm::scale(model_matrix, {.25f, .25f, .25f});
 
                     color_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                     color_program->set_mat4("model_matrix", model_matrix);
                     color_program->set_vec4("clipping_plane", clipping_plane);
                     color_program->set_vec3("color", point_light.color);
 
-                    DEBUG_sphere_mesh->draw(color_program);
+                    DEBUG_sphere_mesh->draw(*color_program);
                 }
                 color_program->unbind();
             }
@@ -1987,31 +1962,26 @@ void liminal::renderer::render_objects(
 
 void liminal::renderer::render_waters(
     liminal::scene &scene,
-    liminal::camera &camera,
-    liminal::transform &camera_transform,
-    unsigned int current_time)
+    const liminal::camera &camera,
+    const liminal::transform &camera_transform,
+    unsigned int current_time) const
 {
     for (auto [id, transform, water] : scene.get_entities_with<liminal::transform, liminal::water>().each())
     {
         // reflection
-        glm::vec4 reflection_clipping_plane = {0, 1, 0, -transform.position.y};
+        glm::vec4 reflection_clipping_plane(0, 1, 0, -transform.position.y);
         if (camera_transform.position.y < transform.position.y) // flip reflection clipping plane if under the water
         {
             reflection_clipping_plane *= -1.f;
         }
-        float previous_camera_y = camera_transform.position.y;
-        float previous_camera_pitch = camera_transform.rotation.x;
-        float previous_camera_roll = camera_transform.rotation.z;
-        camera_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
-        camera_transform.rotation.x = -camera_transform.rotation.x;
-        camera_transform.rotation.z = -camera_transform.rotation.z;
-        render_objects(scene, camera, camera_transform, water_reflection_fbo_id, water_reflection_width, water_reflection_height, reflection_clipping_plane);
-        camera_transform.position.y = previous_camera_y;
-        camera_transform.rotation.x = previous_camera_pitch;
-        camera_transform.rotation.z = previous_camera_roll;
+        liminal::transform reflected_transform = camera_transform;
+        reflected_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
+        reflected_transform.rotation.x = -camera_transform.rotation.x;
+        reflected_transform.rotation.z = -camera_transform.rotation.z;
+        render_objects(scene, camera, reflected_transform, water_reflection_fbo_id, water_reflection_width, water_reflection_height, reflection_clipping_plane);
 
         // refraction
-        glm::vec4 refraction_clipping_plane = {0, -1, 0, transform.position.y};
+        glm::vec4 refraction_clipping_plane(0, -1, 0, transform.position.y);
         if (camera_transform.position.y < transform.position.y) // flip refraction clipping plane if under the water
         {
             refraction_clipping_plane *= -1.f;
@@ -2028,10 +1998,10 @@ void liminal::renderer::render_waters(
 
             water_program->bind();
             {
-                glm::mat4 camera_projection = camera.calc_projection(get_aspect_ratio());
-                glm::mat4 camera_view = camera.calc_view(camera_transform);
+                auto camera_projection = camera.calc_projection(get_aspect_ratio());
+                auto camera_view = camera.calc_view(camera_transform);
 
-                glm::mat4 model_matrix = transform.get_model_matrix();
+                auto model_matrix = transform.get_model_matrix();
 
                 water_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 water_program->set_mat4("model_matrix", model_matrix);
@@ -2098,7 +2068,7 @@ void liminal::renderer::render_waters(
     }
 }
 
-void liminal::renderer::render_sprites(liminal::scene &scene)
+void liminal::renderer::render_sprites(liminal::scene &scene) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
     {
@@ -2110,7 +2080,7 @@ void liminal::renderer::render_sprites(liminal::scene &scene)
 
             for (auto [id, sprite] : scene.get_entities_with<liminal::sprite>().each())
             {
-                glm::mat4 model_matrix = sprite.get_model_matrix();
+                auto model_matrix = sprite.get_model_matrix();
                 sprite_program->set_mat4("mvp_matrix", projection_matrix * model_matrix);
                 sprite_program->set_vec3("sprite.color", sprite.color);
 
@@ -2129,19 +2099,17 @@ void liminal::renderer::render_sprites(liminal::scene &scene)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::render_screen(
-    liminal::scene &scene,
-    liminal::camera &camera)
+void liminal::renderer::render_screen(const liminal::camera &camera) const
 {
     // apply gaussian blur to brightness map
-    bool horizontal = true;
+    auto horizontal = true;
     {
         glViewport(0, 0, target_width / 8, target_height / 8);
 
         gaussian_program->bind();
         {
             bool first_iteration = true;
-            for (unsigned int i = 0; i < 10; i++)
+            for (size_t i = 0; i < 10; i++)
             {
                 glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[horizontal]);
                 {

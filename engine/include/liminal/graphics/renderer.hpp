@@ -13,6 +13,7 @@
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/program.hpp>
 #include <liminal/graphics/texture.hpp>
+#include <memory>
 
 #define NUM_DIRECTIONAL_LIGHT_SHADOWS 1
 #define NUM_POINT_LIGHT_SHADOWS 4
@@ -40,7 +41,7 @@ namespace liminal
             GLsizei water_refraction_width, GLsizei water_refraction_height);
         ~renderer();
 
-        float get_aspect_ratio();
+        float get_aspect_ratio() const;
 
         void set_target_size(GLsizei target_width, GLsizei target_height);
         void set_render_scale(float render_scale);
@@ -53,9 +54,9 @@ namespace liminal
 
         void reload_programs();
 
-        liminal::entity pick(int x, int y, liminal::scene *scene);
+        liminal::entity pick(int x, int y, liminal::scene *scene) const;
 
-        void render(liminal::scene &scene, unsigned int current_time, float delta_time);
+        void render(liminal::scene &scene, unsigned int current_time, float delta_time) const;
 
     private:
         GLsizei target_width;
@@ -83,17 +84,17 @@ namespace liminal
         GLsizei directional_light_depth_map_size;
         GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
         GLuint directional_light_depth_map_texture_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
-        glm::mat4 directional_light_transformation_matrices[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
+        mutable glm::mat4 directional_light_transformation_matrices[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
 
         GLsizei point_light_depth_cubemap_size;
         GLuint point_light_depth_cubemap_fbo_ids[NUM_POINT_LIGHT_SHADOWS] = {};
         GLuint point_light_depth_cubemap_texture_ids[NUM_POINT_LIGHT_SHADOWS] = {};
-        glm::mat4 point_light_transformation_matrices[NUM_POINT_LIGHT_SHADOWS][6] = {};
+        mutable glm::mat4 point_light_transformation_matrices[NUM_POINT_LIGHT_SHADOWS][6] = {};
 
         GLsizei spot_light_depth_map_size;
         GLuint spot_light_depth_map_fbo_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
         GLuint spot_light_depth_map_texture_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
-        glm::mat4 spot_light_transformation_matrices[NUM_SPOT_LIGHT_SHADOWS] = {};
+        mutable glm::mat4 spot_light_transformation_matrices[NUM_SPOT_LIGHT_SHADOWS] = {};
 
         GLsizei water_reflection_width;
         GLsizei water_reflection_height;
@@ -128,58 +129,56 @@ namespace liminal
 
         GLuint brdf_texture_id;
 
-        liminal::program *depth_mesh_program;
-        liminal::program *depth_skinned_mesh_program;
-        liminal::program *depth_cube_mesh_program;
-        liminal::program *depth_cube_skinned_mesh_program;
-        liminal::program *color_program;
-        liminal::program *geometry_mesh_program;
-        liminal::program *geometry_skinned_mesh_program;
-        liminal::program *geometry_terrain_program;
-        liminal::program *deferred_ambient_program;
-        liminal::program *deferred_directional_program;
-        liminal::program *deferred_point_program;
-        liminal::program *deferred_spot_program;
-        liminal::program *skybox_program;
-        liminal::program *water_program;
-        liminal::program *sprite_program;
-        liminal::program *gaussian_program;
-        liminal::program *postprocess_program;
+        std::unique_ptr<liminal::program> depth_mesh_program;
+        std::unique_ptr<liminal::program> depth_skinned_mesh_program;
+        std::unique_ptr<liminal::program> depth_cube_mesh_program;
+        std::unique_ptr<liminal::program> depth_cube_skinned_mesh_program;
+        std::unique_ptr<liminal::program> color_program;
+        std::unique_ptr<liminal::program> geometry_mesh_program;
+        std::unique_ptr<liminal::program> geometry_skinned_mesh_program;
+        std::unique_ptr<liminal::program> geometry_terrain_program;
+        std::unique_ptr<liminal::program> deferred_ambient_program;
+        std::unique_ptr<liminal::program> deferred_directional_program;
+        std::unique_ptr<liminal::program> deferred_point_program;
+        std::unique_ptr<liminal::program> deferred_spot_program;
+        std::unique_ptr<liminal::program> skybox_program;
+        std::unique_ptr<liminal::program> water_program;
+        std::unique_ptr<liminal::program> sprite_program;
+        std::unique_ptr<liminal::program> gaussian_program;
+        std::unique_ptr<liminal::program> postprocess_program;
 
-        liminal::texture *water_dudv_texture;
-        liminal::texture *water_normal_texture;
+        std::unique_ptr<liminal::texture> water_dudv_texture;
+        std::unique_ptr<liminal::texture> water_normal_texture;
 
-        liminal::mesh *DEBUG_sphere_mesh;
+        std::unique_ptr<liminal::mesh> DEBUG_sphere_mesh;
 
         void calc_render_size();
 
-        void setup_samplers();
+        void setup_samplers() const;
 
         void render_all(
             liminal::scene &scene,
-            liminal::camera &camera,
-            liminal::transform &camera_transform,
-            unsigned int current_time);
+            const liminal::camera &camera,
+            const liminal::transform &camera_transform,
+            unsigned int current_time) const;
         void render_shadows(
             liminal::scene &scene,
-            liminal::camera &camera,
-            liminal::transform &camera_transform);
+            const liminal::camera &camera,
+            const liminal::transform &camera_transform) const;
         void render_objects(
             liminal::scene &scene,
-            liminal::camera &camera,
-            liminal::transform &camera_transform,
+            const liminal::camera &camera,
+            const liminal::transform &camera_transform,
             GLuint fbo_id,
             GLsizei width, GLsizei height,
-            glm::vec4 clipping_plane = glm::vec4(0));
+            const glm::vec4 &clipping_plane = glm::vec4(0)) const;
         void render_waters(
             liminal::scene &scene,
-            liminal::camera &camera,
-            liminal::transform &camera_transform,
-            unsigned int current_time);
-        void render_sprites(liminal::scene &scene);
-        void render_screen(
-            liminal::scene &scene,
-            liminal::camera &camera);
+            const liminal::camera &camera,
+            const liminal::transform &camera_transform,
+            unsigned int current_time) const;
+        void render_sprites(liminal::scene &scene) const;
+        void render_screen(const liminal::camera &camera) const;
     };
 }
 

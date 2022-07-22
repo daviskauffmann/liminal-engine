@@ -24,14 +24,14 @@ liminal::app::app(int argc, char *argv[])
     {
         cxxopts::Options options(argv[0]);
 
-        cxxopts::OptionAdder option_adder = options.add_options();
+        auto option_adder = options.add_options();
         option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
         option_adder("h,help", "Print usage");
         option_adder("scale", "Set render scale", cxxopts::value<float>()->default_value("1.0"));
         option_adder("v,version", "Print version");
         option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
 
-        cxxopts::ParseResult result = options.parse(argc, argv);
+        auto result = options.parse(argc, argv);
 
         window_height = result["height"].as<int>();
 
@@ -87,20 +87,20 @@ void liminal::app::run()
     {
         // calculate time between frames
         static unsigned int current_time = 0;
-        unsigned int previous_time = current_time;
+        auto previous_time = current_time;
         current_time = SDL_GetTicks();
-        float delta_time = ((current_time - previous_time) / 1000.f) * time_scale;
+        auto delta_time = ((current_time - previous_time) / 1000.f) * time_scale;
 
         // gather input
         liminal::input::last_keys = liminal::input::keys;
-        const unsigned char *keys = SDL_GetKeyboardState(nullptr);
+        const auto keys = SDL_GetKeyboardState(nullptr);
         for (size_t scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
         {
             liminal::input::keys[scancode] = keys[scancode];
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
-        unsigned int mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
+        auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
         for (size_t button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
         {
             liminal::input::mouse_buttons[button] = mouse_buttons & SDL_BUTTON(button);
@@ -225,23 +225,23 @@ void liminal::app::run()
                     }
                     else if (command == "render_scale 0.5")
                     {
-                        render_scale = 0.5f;
+                        render_scale = .5f;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     else if (command == "render_scale 0.1")
                     {
-                        render_scale = 0.1f;
+                        render_scale = .1f;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     else if (command == "toggle_slomo")
                     {
-                        if (time_scale > 0.25f)
+                        if (time_scale > .25f)
                         {
-                            time_scale = 0.25f;
+                            time_scale = .25f;
                         }
                         else
                         {

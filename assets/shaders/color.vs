@@ -9,6 +9,6 @@ uniform vec4 clipping_plane;
 
 void main()
 {
-    gl_Position = mvp_matrix * vec4(position, 1.0);
-	gl_ClipDistance[0] = dot(model_matrix * vec4(position, 1.0), clipping_plane);
+    gl_Position = mvp_matrix * vec4(position, 1);
+	gl_ClipDistance[0] = dot(model_matrix * vec4(position, 1), clipping_plane);
 }

@@ -50,27 +50,27 @@ void main()
     vec3 f0 = vec3(0.04);
     f0 = mix(f0, albedo, metallic);
 
-    vec3 f = fresnel_schlick_roughness(max(dot(n, v), 0.0), f0, roughness);
+    vec3 f = fresnel_schlick_roughness(max(dot(n, v), 0), f0, roughness);
     vec3 ks = f;
-    vec3 kd = 1.0 - ks;
-    kd *= 1.0 - metallic;
+    vec3 kd = 1 - ks;
+    kd *= 1 - metallic;
     vec3 irradiance = texture(skybox.irradiance_cubemap, n).rgb;
     vec3 diffuse = irradiance * albedo;
     const float MAX_REFLECTION_LOD = 4.0;
     vec3 prefilter = textureLod(skybox.prefilter_cubemap, r,  roughness * MAX_REFLECTION_LOD).rgb;    
-    vec2 brdf  = texture(brdf_map, vec2(max(dot(n, v), 0.0), roughness)).rg;
+    vec2 brdf  = texture(brdf_map, vec2(max(dot(n, v), 0), roughness)).rg;
     vec3 specular = prefilter * (f * brdf.x + brdf.y);
     vec3 color = (kd * diffuse + specular) * ao;
 
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(color, 1);
 
     float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0)
+    if (brightness > 1)
     {
-        bright_color = vec4(color, 1.0);
+        bright_color = vec4(color, 1);
     }
     else
     {
-        bright_color = vec4(0.0, 0.0, 0.0, 1.0);
+        bright_color = vec4(0, 0, 0, 1);
     }
 }

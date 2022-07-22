@@ -11,7 +11,7 @@ liminal::cubemap::cubemap(std::vector<std::string> filenames)
     {
         for (unsigned int i = 0; i < 6; i++)
         {
-            SDL_Surface *surface = IMG_Load(filenames[i].c_str());
+            auto surface = IMG_Load(filenames[i].c_str());
             if (!surface)
             {
                 std::cerr << "Error: Failed to load cubemap: " << IMG_GetError() << std::endl;

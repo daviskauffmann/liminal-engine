@@ -12,11 +12,11 @@ uniform mat4 bone_transformations[MAX_BONE_TRANSFORMATIONS];
 
 void main()
 {
-    mat4 bone_transformation = mat4(0.0);
+    mat4 bone_transformation = mat4(0);
     for (int i = 0; i < NUM_BONES_PER_VERTEX; i++)
     {
         bone_transformation += bone_transformations[bone_ids[i]] * bone_weights[i];
     }
 
-    gl_Position = mvp_matrix * bone_transformation * vec4(position, 1.0);
+    gl_Position = mvp_matrix * bone_transformation * vec4(position, 1);
 }

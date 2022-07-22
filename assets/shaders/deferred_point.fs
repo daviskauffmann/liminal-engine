@@ -62,51 +62,51 @@ void main()
     vec3 l = normalize(light.position - position);
     vec3 h = normalize(v + l);
     float distance = length(light.position - position);
-    float attenuation = 1.0 / (distance * distance);
+    float attenuation = 1 / (distance * distance);
     vec3 radiance = light.color * attenuation;
 
     float ndf = distribution_ggx(n, h, roughness);
     float g = geometry_smith(n, v, l, roughness);
-    vec3 f = fresnel_schlick(clamp(dot(h, v), 0.0, 1.0), f0);
+    vec3 f = fresnel_schlick(clamp(dot(h, v), 0, 1), f0);
 
     vec3 numerator = ndf * g * f;
-    float denominator = 4 * max(dot(n, v), 0.0) * max(dot(n, l), 0.0);
+    float denominator = 4 * max(dot(n, v), 0) * max(dot(n, l), 0);
     vec3 specular = numerator / max(denominator, 0.001);
 
     vec3 ks = f;
-    vec3 kd = vec3(1.0) - ks;
-    kd *= 1.0 - metallic;
+    vec3 kd = vec3(1) - ks;
+    kd *= 1 - metallic;
     float n_dot_l = max(dot(n, l), 0.0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
     
     vec3 frag_to_light = position - light.position;
     float current_depth = length(frag_to_light);
-    float shadow = 0.0;
+    float shadow = 0;
     float bias = 0.15;
     int samples = 20;
     float view_distance = length(camera.position - position);
-    float disk_radius = (1.0 + (view_distance / light.far_plane)) / 25.0;
+    float disk_radius = (1 + (view_distance / light.far_plane)) / 25;
     for (int i = 0; i < samples; i++)
     {
         float closest_depth = texture(light.depth_cubemap, frag_to_light + grid_sampling_disk[i] * disk_radius).r;
         closest_depth *= light.far_plane;
         if (current_depth - bias > closest_depth)
         {
-            shadow += 1.0;
+            shadow += 1;
         }
     }
     shadow /= float(samples);
-    color = (1.0 - shadow) * color;
+    color = (1 - shadow) * color;
 
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(color, 1);
 
     float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0)
+    if (brightness > 1)
     {
-        bright_color = vec4(color, 1.0);
+        bright_color = vec4(color, 1);
     }
     else
     {
-        bright_color = vec4(0.0, 0.0, 0.0, 1.0);
+        bright_color = vec4(0, 0, 0, 1);
     }
 }

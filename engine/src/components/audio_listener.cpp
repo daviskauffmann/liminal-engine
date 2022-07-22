@@ -3,7 +3,14 @@
 #include <AL/al.h>
 #include <glm/gtc/type_ptr.hpp>
 
-void liminal::audio_listener::set_position(glm::vec3 position, glm::vec3 rotation)
+liminal::audio_listener::audio_listener()
+{
+    alListenerfv(AL_POSITION, glm::value_ptr(last_position));
+}
+
+void liminal::audio_listener::set_position(
+    const glm::vec3 &position,
+    const glm::vec3 &rotation)
 {
     alListenerfv(AL_POSITION, glm::value_ptr(position));
 

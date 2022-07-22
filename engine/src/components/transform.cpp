@@ -7,6 +7,6 @@
 
 glm::mat4 liminal::transform::get_model_matrix() const
 {
-    glm::mat4 model = parent ? parent->get_model_matrix() : glm::identity<glm::mat4>();
+    auto model = parent ? parent->get_model_matrix() : glm::identity<glm::mat4>();
     return glm::translate(model, position) * glm::toMat4(glm::quat(rotation)) * glm::scale(model, scale);
 }

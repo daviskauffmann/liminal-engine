@@ -13,8 +13,8 @@ uniform sampler2D bloom_map;
 uniform uint greyscale;
 
 const float gamma = 2.2;
-const float exposure = 1.0;
-const float white = 1.0;
+const float exposure = 1;
+const float white = 1;
 
 void main()
 {
@@ -23,14 +23,14 @@ void main()
 
 	vec3 color = (hdr_color + bloom_color) * exposure;
 	float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-	float mapped_luminance = (luminance * (1.0 + luminance / (white * white))) / (1.0 + luminance);
+	float mapped_luminance = (luminance * (1 + luminance / (white * white))) / (1 + luminance);
     color = (mapped_luminance / luminance) * color;
-    color = pow(color, vec3(1.0 / gamma));
+    color = pow(color, vec3(1 / gamma));
 
 	if (greyscale == 1)
 	{
 		color = vec3((color.r + color.g + color.b) / 3);
 	}
 
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(color, 1);
 }

@@ -33,7 +33,7 @@ namespace minecraft
                 "Sun",
                 nullptr,
                 glm::vec3(0, 0, 0),
-                glm::vec3(0.352286, -0.547564, -0.758992),
+                glm::vec3(0.352286f, -0.547564f, -0.758992f),
                 glm::vec3(1, 1, 1));
             sun.add_component<liminal::directional_light>(glm::vec3(1, 1, 1));
 
@@ -131,7 +131,7 @@ namespace minecraft
             {
                 if (liminal::platform::instance->get_relative_mouse_mode())
                 {
-                    const float sensitivity = 0.1f;
+                    const auto sensitivity = 0.1f;
                     transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
                     transform.rotation.y += liminal::input::mouse_dx * sensitivity;
                     if (transform.rotation.x > 89)

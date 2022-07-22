@@ -22,7 +22,7 @@ namespace player
             grass_texture = liminal::assets::instance->load_texture("assets/images/grass_sprite.png");
 
             scene = new liminal::scene();
-            scene->load("assets/scenes/demo.json");
+            scene->load("assets/scenes/demo2.json");
             scene->start();
 
             // TODO: these entities should come from the JSON file
@@ -61,7 +61,7 @@ namespace player
 
         void update(unsigned int current_time, float delta_time) override
         {
-            ImGuiIO &io = ImGui::GetIO();
+            auto &io = ImGui::GetIO();
 
             if (liminal::input::key_down(liminal::KEYCODE_TAB))
             {
@@ -70,8 +70,8 @@ namespace player
 
             auto &transform = player_entity.get_component<liminal::transform>();
             auto &camera = player_entity.get_component<liminal::camera>();
-            glm::vec3 camera_front = camera.calc_front(transform);
-            glm::vec3 camera_right = camera.calc_right(transform);
+            auto camera_front = camera.calc_front(transform);
+            auto camera_right = camera.calc_right(transform);
 
             static glm::vec3 velocity(0, 0, 0);
             glm::vec3 acceleration(0, 0, 0);
@@ -143,7 +143,7 @@ namespace player
             {
                 if (liminal::platform::instance->get_relative_mouse_mode())
                 {
-                    const float sensitivity = 0.1f;
+                    const auto sensitivity = 0.1f;
                     transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
                     transform.rotation.y += liminal::input::mouse_dx * sensitivity;
                     if (transform.rotation.x > 89)
