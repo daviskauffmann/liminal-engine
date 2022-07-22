@@ -1329,7 +1329,7 @@ liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene)
         glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &id);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return liminal::entity(id, scene);
+    return scene->get_entity(id);
 }
 
 void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time)
@@ -2034,7 +2034,7 @@ void liminal::renderer::render_waters(
                 water_program->set_float("camera.near_plane", liminal::camera::near_plane);
                 water_program->set_float("camera.far_plane", liminal::camera::far_plane);
                 water_program->set_vec3("camera.position", camera_transform.position);
-                auto first_directional_light = liminal::entity(scene.get_entities_with<liminal::directional_light>().front(), &scene);
+                auto first_directional_light = scene.get_entity(scene.get_entities_with<liminal::directional_light>().front());
                 if (first_directional_light)
                 {
                     // TODO: specular reflections for all lights

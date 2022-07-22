@@ -25,6 +25,7 @@ namespace minecraft
             liminal::platform::instance->set_relative_mouse_mode(true);
 
             scene = new liminal::scene();
+            scene->start();
             scene->skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_Env.hdr");
 
             auto sun = scene->create_entity();
@@ -56,6 +57,8 @@ namespace minecraft
 
         ~app()
         {
+            scene->stop();
+
             delete tiles_texture;
         }
 

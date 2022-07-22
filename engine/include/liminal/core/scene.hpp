@@ -15,10 +15,13 @@ namespace liminal
 
     class scene
     {
+        friend class entity;
+        
     public:
         liminal::skybox *skybox;
 
         scene();
+        scene(const liminal::scene &other);
         ~scene();
 
         void load(const std::string &filename);
@@ -28,7 +31,9 @@ namespace liminal
         liminal::entity get_entity(entt::entity id);
         void delete_entity(liminal::entity entity);
 
+        void start();
         void update(unsigned int current_time, float delta_time);
+        void stop();
 
         void reload_scripts();
 
@@ -41,8 +46,6 @@ namespace liminal
     private:
         entt::registry registry;
         btDiscreteDynamicsWorld *world;
-
-        friend class entity;
     };
 }
 

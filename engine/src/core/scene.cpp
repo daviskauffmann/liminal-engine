@@ -35,6 +35,10 @@ liminal::scene::scene()
     world->setGravity(btVector3(0, -9.8f, 0));
 }
 
+liminal::scene::scene(const liminal::scene &other)
+{
+}
+
 liminal::scene::~scene()
 {
     for (auto [id, physical] : get_entities_with<liminal::physical>().each())
@@ -163,6 +167,15 @@ void liminal::scene::delete_entity(liminal::entity entity)
     registry.destroy(entity);
 }
 
+void liminal::scene::start()
+{
+    // init scripts
+    for (auto [id, script] : get_entities_with<liminal::script>().each())
+    {
+        script.init();
+    }
+}
+
 void liminal::scene::update(unsigned int current_time, float delta_time)
 {
     // update scripts
@@ -221,6 +234,10 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
 
         world_transform.getRotation().getEulerZYX(transform.rotation.z, transform.rotation.y, transform.rotation.x);
     }
+}
+
+void liminal::scene::stop()
+{
 }
 
 void liminal::scene::reload_scripts()

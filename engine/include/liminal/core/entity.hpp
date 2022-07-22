@@ -13,7 +13,6 @@ namespace liminal
         entity(entt::entity id, liminal::scene *scene)
             : id(id),
               scene(scene) {}
-        entity(const entity &other) = default;
 
         bool operator==(const entity &other)
         {

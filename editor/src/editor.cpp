@@ -221,13 +221,13 @@ namespace editor
                     {
                         if (!transform.parent)
                         {
-                            draw_entity_node(liminal::entity(id, scene), transform);
+                            draw_entity_node(scene->get_entity(id), transform);
                         }
                     }
 
                     if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
                     {
-                        selected_entity = liminal::entity();
+                        selected_entity = {};
                     }
 
                     if (ImGui::BeginPopupContextWindow(0, 1, false))
@@ -425,7 +425,7 @@ namespace editor
             liminal::renderer::instance->default_camera = new liminal::camera(45.f, true);
             liminal::renderer::instance->default_camera_transform = new liminal::transform();
 
-            selected_entity = liminal::entity();
+            selected_entity = {};
         }
 
         void load_scene()
@@ -442,6 +442,7 @@ namespace editor
         void play()
         {
             playing = true;
+            scene->start();
 
             delete liminal::renderer::instance->default_camera;
             delete liminal::renderer::instance->default_camera_transform;
@@ -452,16 +453,12 @@ namespace editor
             player.add_component<liminal::transform>("Player");
             player.add_component<liminal::camera>(45.f, true);
             player.add_component<liminal::audio_listener>();
-
-            for (auto [id, script] : scene->get_entities_with<liminal::script>().each())
-            {
-                script.init();
-            }
         }
 
         void stop()
         {
             playing = false;
+            scene->stop();
 
             load_scene();
         }
@@ -472,7 +469,7 @@ namespace editor
             {
                 if (child_transform.parent == &transform)
                 {
-                    delete_entity(liminal::entity(child_id, scene), child_transform);
+                    delete_entity(scene->get_entity(child_id), child_transform);
                 }
             }
 
@@ -480,7 +477,7 @@ namespace editor
 
             if (entity == selected_entity)
             {
-                selected_entity = liminal::entity();
+                selected_entity = {};
             }
         }
 
@@ -522,7 +519,7 @@ namespace editor
                 {
                     if (child_transform.parent == &transform)
                     {
-                        draw_entity_node(liminal::entity(child_id, scene), child_transform);
+                        draw_entity_node(scene->get_entity(child_id), child_transform);
                     }
                 }
 

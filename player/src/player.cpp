@@ -23,12 +23,7 @@ namespace player
 
             scene = new liminal::scene();
             scene->load("assets/scenes/demo.json");
-
-            // run init scripts
-            for (auto [id, script] : scene->get_entities_with<liminal::script>().each())
-            {
-                script.init();
-            }
+            scene->start();
 
             // TODO: these entities should come from the JSON file
             player_entity = scene->create_entity();
@@ -53,6 +48,11 @@ namespace player
 
             ui_entity = scene->create_entity();
             // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.f, glm::vec2(1, 1));
+        }
+
+        ~app()
+        {
+            scene->stop();
         }
 
         void update(unsigned int current_time, float delta_time) override
