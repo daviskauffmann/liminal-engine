@@ -14,19 +14,19 @@ git submodule update --init
 
 Install the following using the package manager of your choice:
 
-- Assimp
-- Bullet3
+- assimp
+- bullet3
 - cxxopts
-- EnTT
-- GLEW
-- GLM
-- ImGui [docking-experimental,opengl3-binding,sdl2-binding]
-- Lua
+- entt
+- glew
+- glm
+- imgui [docking-experimental,opengl3-binding,sdl2-binding]
+- lua
 - nlohmann-json
-- OpenAL Soft
-- SDL2
-- SDL2-image [libjpeg-turbo]
-- SDL2-mixer
+- openal-soft
+- sdl2
+- sdl2-image [libjpeg-turbo]
+- sdl2-mixer
 - sol2
 - stb
 
