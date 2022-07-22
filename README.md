@@ -20,18 +20,15 @@ Install the following using the package manager of your choice:
 - EnTT
 - GLEW
 - GLM
-- nlohmann-json
+- ImGui [docking-experimental,opengl3-binding,sdl2-binding]
 - Lua
+- nlohmann-json
 - OpenAL Soft
 - SDL2
 - SDL2-image [libjpeg-turbo]
 - SDL2-mixer
 - sol2
 - stb
-
-These dependencies are included as submodules:
-
-- Dear ImGui
 
 ### Build
 

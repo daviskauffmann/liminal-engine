@@ -4,18 +4,15 @@ project(liminal_player)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     src/player.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ../extern/imgui
-)
-
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         glm::glm
+        imgui::imgui
         liminal_engine
 )

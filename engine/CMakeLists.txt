@@ -9,8 +9,9 @@ find_package(cxxopts CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 find_package(Lua REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
@@ -20,7 +21,6 @@ find_package(sol2 CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb.h")
 
 add_library(${PROJECT_NAME}
-    src/imgui.cpp
     src/stb_image.cpp
     src/stb_include.cpp
     src/audio/sound.cpp
@@ -52,8 +52,6 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
         ${LUA_INCLUDE_DIR}
-        ../extern/imgui
-        ../extern/imgui/backends
         ${STB_INCLUDE_DIRS}
 )
 
@@ -64,6 +62,7 @@ target_link_libraries(${PROJECT_NAME}
         EnTT::EnTT
         GLEW::GLEW
         glm::glm
+        imgui::imgui
         ${LUA_LIBRARIES}
         nlohmann_json nlohmann_json::nlohmann_json
         OpenAL::OpenAL

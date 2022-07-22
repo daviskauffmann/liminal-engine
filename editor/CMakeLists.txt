@@ -5,19 +5,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/appicon.rc")
 
 find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     src/editor.cpp
     ${APP_ICON_RESOURCE_WINDOWS}
 )
 
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ../extern/imgui
-)
-
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         glm::glm
+        imgui::imgui
         liminal_engine
 )
