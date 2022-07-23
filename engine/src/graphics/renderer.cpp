@@ -23,11 +23,6 @@
 
 // TODO: print more specific errors when framebuffers fail
 
-// TODO: create low level renderer API?
-// this renderer would become the high level API, which would make use of the llapi
-// but the llapi would be exposed to engine users in case they want to write their own shaders and rendering pipeline
-// both APIs would probably not be interopable with each other
-
 constexpr float directional_light_shadow_map_size = 10;
 constexpr float directional_light_near_plane = -10;
 constexpr float directional_light_far_plane = 10;
@@ -1319,7 +1314,7 @@ void liminal::renderer::render(liminal::scene &scene, unsigned int current_time,
         render_all(scene, *default_camera, *default_camera_transform, current_time);
     }
 
-    for (auto [id, camera, transform] : scene.get_entities_with<liminal::camera, liminal::transform>().each())
+    for (const auto [id, camera, transform] : scene.get_entities_with<const liminal::camera, const liminal::transform>().each())
     {
         render_all(scene, camera, transform, current_time);
     }
@@ -1344,7 +1339,7 @@ void liminal::renderer::render_shadows(
     const liminal::transform &camera_transform) const
 {
     size_t i = 0;
-    for (auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, liminal::transform>().each())
+    for (const auto [id, directional_light, transform] : scene.get_entities_with<const liminal::directional_light, const liminal::transform>().each())
     {
         if (i >= NUM_DIRECTIONAL_LIGHT_SHADOWS)
         {
@@ -1378,7 +1373,7 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (auto [id, mesh_renderer, transform] : scene.get_entities_with<liminal::mesh_renderer, liminal::transform>().each())
+            for (const auto [id, mesh_renderer, transform] : scene.get_entities_with<const liminal::mesh_renderer, const liminal::transform>().each())
             {
                 if (mesh_renderer.model)
                 {
@@ -1409,7 +1404,7 @@ void liminal::renderer::render_shadows(
 
             depth_mesh_program->bind();
             {
-                for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
+                for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>().each())
                 {
                     const auto model_matrix = terrain.get_model_matrix();
 
@@ -1428,7 +1423,7 @@ void liminal::renderer::render_shadows(
     }
 
     i = 0;
-    for (auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, liminal::transform>().each())
+    for (const auto [id, point_light, transform] : scene.get_entities_with<const liminal::point_light, const liminal::transform>().each())
     {
         if (i >= NUM_POINT_LIGHT_SHADOWS)
         {
@@ -1454,7 +1449,7 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (auto [id, transform2, mesh_renderer] : scene.get_entities_with<liminal::transform, liminal::mesh_renderer>().each())
+            for (const auto [id, transform2, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
             {
                 if (mesh_renderer.model)
                 {
@@ -1510,7 +1505,7 @@ void liminal::renderer::render_shadows(
             //     depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
             //     depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
-            //     for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>())
+            //     for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>())
             //     {
             //         const auto model_matrix = terrain.get_model_matrix();
 
@@ -1529,7 +1524,7 @@ void liminal::renderer::render_shadows(
     }
 
     i = 0;
-    for (auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, liminal::transform>().each())
+    for (const auto [id, spot_light, transform] : scene.get_entities_with<const liminal::spot_light, const liminal::transform>().each())
     {
         if (i >= NUM_SPOT_LIGHT_SHADOWS)
         {
@@ -1554,7 +1549,7 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (auto [id, transform2, mesh_renderer] : scene.get_entities_with<liminal::transform, liminal::mesh_renderer>().each())
+            for (const auto [id, transform2, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
             {
                 if (mesh_renderer.model)
                 {
@@ -1585,7 +1580,7 @@ void liminal::renderer::render_shadows(
 
             depth_mesh_program->bind();
             {
-                for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
+                for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>().each())
                 {
                     const auto model_matrix = terrain.get_model_matrix();
 
@@ -1629,7 +1624,7 @@ void liminal::renderer::render_objects(
         int value = -1;
         glClearTexImage(geometry_id_texture_id, 0, GL_RED_INTEGER, GL_INT, &value);
 
-        for (auto [id, transform, mesh_renderer] : scene.get_entities_with<liminal::transform, liminal::mesh_renderer>().each())
+        for (const auto [id, transform, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
         {
             if (mesh_renderer.model)
             {
@@ -1668,7 +1663,7 @@ void liminal::renderer::render_objects(
         {
             geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
 
-            for (auto [id, terrain] : scene.get_entities_with<liminal::terrain>().each())
+            for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>().each())
             {
                 const auto model_matrix = terrain.get_model_matrix();
 
@@ -1757,7 +1752,7 @@ void liminal::renderer::render_objects(
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
                 size_t i = 0;
-                for (auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, liminal::transform>().each())
+                for (const auto [id, directional_light, transform] : scene.get_entities_with<const liminal::directional_light, const liminal::transform>().each())
                 {
                     deferred_directional_program->set_vec3("light.direction", transform.rotation);
                     deferred_directional_program->set_vec3("light.color", directional_light.color);
@@ -1802,7 +1797,7 @@ void liminal::renderer::render_objects(
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
                 size_t i = 0;
-                for (auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, liminal::transform>().each())
+                for (const auto [id, point_light, transform] : scene.get_entities_with<const liminal::point_light, const liminal::transform>().each())
                 {
                     deferred_point_program->set_vec3("light.position", transform.position);
                     deferred_point_program->set_vec3("light.color", point_light.color);
@@ -1845,7 +1840,7 @@ void liminal::renderer::render_objects(
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
                 size_t i = 0;
-                for (auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, liminal::transform>().each())
+                for (const auto [id, spot_light, transform] : scene.get_entities_with<const liminal::spot_light, const liminal::transform>().each())
                 {
                     deferred_spot_program->set_vec3("light.position", transform.position);
                     deferred_spot_program->set_vec3("light.direction", transform.rotation);
@@ -1933,7 +1928,7 @@ void liminal::renderer::render_objects(
         {
             glEnable(GL_CLIP_DISTANCE0);
 
-            for (auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, liminal::transform>().each())
+            for (const auto [id, point_light, transform] : scene.get_entities_with<const liminal::point_light, const liminal::transform>().each())
             {
                 color_program->bind();
                 {
@@ -1965,7 +1960,7 @@ void liminal::renderer::render_waters(
     const liminal::transform &camera_transform,
     unsigned int current_time) const
 {
-    for (auto [id, transform, water] : scene.get_entities_with<liminal::transform, liminal::water>().each())
+    for (const auto [id, transform, water] : scene.get_entities_with<const liminal::transform, const liminal::water>().each())
     {
         // reflection
         glm::vec4 reflection_clipping_plane(0, 1, 0, -transform.position.y);
@@ -2008,10 +2003,11 @@ void liminal::renderer::render_waters(
                 water_program->set_float("camera.near_plane", liminal::camera::near_plane);
                 water_program->set_float("camera.far_plane", liminal::camera::far_plane);
                 water_program->set_vec3("camera.position", camera_transform.position);
-                auto first_directional_light = scene.get_entity(scene.get_entities_with<liminal::directional_light>().front());
+                auto first_directional_light = scene.get_entity(scene.get_entities_with<const liminal::directional_light>().front());
                 if (first_directional_light)
                 {
-                    // TODO: specular reflections for all lights
+                    // TODO: specular reflections for all lights?
+                    // or just support only one directional light in a scene, there is probably no reason to have multiple
                     water_program->set_vec3("light.direction", first_directional_light.get_component<liminal::transform>().rotation);
                     water_program->set_vec3("light.color", first_directional_light.get_component<liminal::directional_light>().color);
                 }
@@ -2077,7 +2073,7 @@ void liminal::renderer::render_sprites(liminal::scene &scene) const
         {
             const glm::mat4 projection_matrix = glm::ortho(-1, 1, -1, 1, 0, 100);
 
-            for (auto [id, sprite] : scene.get_entities_with<liminal::sprite>().each())
+            for (const auto [id, sprite] : scene.get_entities_with<const liminal::sprite>().each())
             {
                 const auto model_matrix = sprite.get_model_matrix();
                 sprite_program->set_mat4("mvp_matrix", projection_matrix * model_matrix);

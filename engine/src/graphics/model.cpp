@@ -1,6 +1,7 @@
 #include <liminal/graphics/model.hpp>
 
 #include <assimp/postprocess.h>
+#include <filesystem>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -19,7 +20,7 @@ liminal::model::model(liminal::mesh *mesh)
 }
 
 liminal::model::model(const std::string &filename, bool flip_uvs)
-    : directory(filename.substr(0, filename.find_last_of('/')))
+    : directory(std::filesystem::path(filename).parent_path().string())
 {
     unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_GenSmoothNormals;
     if (flip_uvs)
@@ -193,7 +194,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiSce
                 aiString path;
                 scene_material->GetTexture(type, i, &path);
                 auto filename = directory + "/" + path.C_Str();
-                material_textures.push_back(liminal::assets::instance->load_texture(filename));
+                material_textures.push_back(liminal::assets::instance->load<liminal::texture>(filename));
             }
 
             textures.push_back(material_textures);

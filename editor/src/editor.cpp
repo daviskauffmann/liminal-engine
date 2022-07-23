@@ -252,7 +252,7 @@ namespace editor
 
                 if (ImGui::Begin("Hierarchy"))
                 {
-                    for (auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
+                    for (const auto [id, transform] : scene->get_entities_with<const liminal::transform>().each())
                     {
                         if (!transform.parent)
                         {
@@ -337,7 +337,8 @@ namespace editor
                                     const auto result = NFD_OpenDialog(NULL, NULL, &outPath);
                                     if (result == NFD_OKAY)
                                     {
-                                        mesh_renderer.model = liminal::assets::instance->load_model(outPath, true);
+                                        // TODO: crashes when loading an animated mesh
+                                        mesh_renderer.model = liminal::assets::instance->load<liminal::model>(outPath, true);
                                     }
                                 }
 
@@ -505,9 +506,9 @@ namespace editor
             load_scene();
         }
 
-        void delete_entity(liminal::entity entity, liminal::transform &transform)
+        void delete_entity(liminal::entity entity, const liminal::transform &transform)
         {
-            for (auto [child_id, child_transform] : scene->get_entities_with<liminal::transform>().each())
+            for (const auto [child_id, child_transform] : scene->get_entities_with<const liminal::transform>().each())
             {
                 if (child_transform.parent == &transform)
                 {
@@ -523,7 +524,7 @@ namespace editor
             }
         }
 
-        void draw_entity_node(liminal::entity entity, liminal::transform &transform)
+        void draw_entity_node(liminal::entity entity, const liminal::transform &transform)
         {
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
             if (entity == selected_entity)
@@ -544,7 +545,7 @@ namespace editor
                 {
                     auto child = selected_entity = scene->create_entity();
                     auto &child_transform = child.add_component<liminal::transform>();
-                    child_transform.parent = &transform;
+                    child_transform.parent = const_cast<liminal::transform *>(&transform);
                 }
 
                 if (ImGui::MenuItem("Delete"))
@@ -557,7 +558,7 @@ namespace editor
 
             if (opened)
             {
-                for (auto [child_id, child_transform] : scene->get_entities_with<liminal::transform>().each())
+                for (const auto [child_id, child_transform] : scene->get_entities_with<const liminal::transform>().each())
                 {
                     if (child_transform.parent == &transform)
                     {

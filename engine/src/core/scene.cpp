@@ -42,12 +42,12 @@ liminal::scene::scene(const liminal::scene &other)
 
 liminal::scene::~scene()
 {
-    for (auto [id, physical] : get_entities_with<liminal::physical>().each())
+    for (const auto [id, physical] : get_entities_with<const liminal::physical>().each())
     {
         world->removeRigidBody(physical.rigidbody);
     }
 
-    for (auto [id, terrain] : get_entities_with<liminal::terrain>().each())
+    for (const auto [id, terrain] : get_entities_with<const liminal::terrain>().each())
     {
         world->removeRigidBody(terrain.rigidbody);
     }
@@ -63,20 +63,20 @@ void liminal::scene::load(const std::string &filename)
     nlohmann::json json;
     stream >> json;
 
-    for (auto &[key, value] : json.items())
+    for (const auto &[key, value] : json.items())
     {
         if (key == "skybox")
         {
-            skybox = liminal::assets::instance->load_skybox(json["skybox"]);
+            skybox = liminal::assets::instance->load<liminal::skybox>(json["skybox"]);
         }
 
         if (key == "entities")
         {
-            for (auto &element : value)
+            for (const auto &element : value)
             {
                 auto entity = create_entity();
 
-                for (auto &[key, value] : element.items())
+                for (const auto &[key, value] : element.items())
                 {
                     if (key == "directional_light")
                     {
@@ -116,15 +116,15 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "physical")
                     {
-                        auto &physical = entity.add_component<liminal::physical>(value["mass"]);
+                        const auto &physical = entity.add_component<liminal::physical>(value["mass"]);
                         world->addRigidBody(physical.rigidbody);
                     }
 
                     if (key == "mesh_renderer")
                     {
-                        std::string filename(value["filename"]);
-                        bool flip_uvs = value["flip_uvs"];
-                        entity.add_component<liminal::mesh_renderer>(liminal::assets::instance->load_model(filename, flip_uvs));
+                        const std::string filename(value["filename"]);
+                        const bool flip_uvs = value["flip_uvs"];
+                        entity.add_component<liminal::mesh_renderer>(liminal::assets::instance->load<liminal::model>(filename, flip_uvs));
                     }
 
                     if (key == "script")
@@ -139,7 +139,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (key == "terrain")
                     {
-                        auto &terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0, 0, 0), 100.f, 5.f);
+                        const auto &terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0, 0, 0), 100.f, 5.f);
                         world->addRigidBody(terrain.rigidbody);
                     }
                 }
@@ -171,7 +171,7 @@ void liminal::scene::delete_entity(liminal::entity entity)
 void liminal::scene::start()
 {
     // init scripts
-    for (auto [id, script] : get_entities_with<liminal::script>().each())
+    for (const auto [id, script] : get_entities_with<const liminal::script>().each())
     {
         script.init();
     }
@@ -180,13 +180,13 @@ void liminal::scene::start()
 void liminal::scene::update(unsigned int current_time, float delta_time)
 {
     // update scripts
-    for (auto [id, script] : get_entities_with<liminal::script>().each())
+    for (const auto [id, script] : get_entities_with<const liminal::script>().each())
     {
         script.update(delta_time);
     }
 
     // update animations
-    for (auto [id, mesh_renderer] : get_entities_with<liminal::mesh_renderer>().each())
+    for (const auto [id, mesh_renderer] : get_entities_with<const liminal::mesh_renderer>().each())
     {
         if (mesh_renderer.model && mesh_renderer.model->has_animations())
         {
@@ -196,21 +196,19 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     }
 
     // update audio listener positions
-    for (auto [id, audio_listener, camera, transform] : get_entities_with<liminal::audio_listener, liminal::camera, liminal::transform>().each())
+    for (const auto [id, audio_listener, camera, transform] : get_entities_with<liminal::audio_listener, const liminal::camera, const liminal::transform>().each())
     {
         audio_listener.set_position(transform.position, camera.calc_front(transform));
     }
 
     // update audio source positions
-    for (auto [id, audio_source, transform] : get_entities_with<liminal::audio_source, liminal::transform>().each())
+    for (const auto [id, audio_source, transform] : get_entities_with<liminal::audio_source, const liminal::transform>().each())
     {
         audio_source.set_position(transform.position);
     }
 
     // update world transforms in case the transform component changed
-    // TODO: remove this, should just have a function that sets up the initial state of rigidbodies and then lets bullet be in charge
-    // this would make it so that you can't move rigidbodies around in the editor (unless physics is turned off), but maybe this is okay
-    for (auto [id, physical, transform] : get_entities_with<liminal::physical, liminal::transform>().each())
+    for (const auto [id, physical, transform] : get_entities_with<const liminal::physical, const liminal::transform>().each())
     {
         btTransform world_transform;
         world_transform.setIdentity();
@@ -224,7 +222,7 @@ void liminal::scene::update(unsigned int current_time, float delta_time)
     world->stepSimulation(delta_time);
 
     // update transforms to respect physics simulation
-    for (auto [id, physical, transform] : get_entities_with<liminal::physical, liminal::transform>().each())
+    for (const auto [id, physical, transform] : get_entities_with<const liminal::physical, liminal::transform>().each())
     {
         btTransform world_transform = physical.rigidbody->getWorldTransform();
 
@@ -243,7 +241,7 @@ void liminal::scene::stop()
 
 void liminal::scene::reload_scripts()
 {
-    for (auto [id, script] : get_entities_with<liminal::script>().each())
+    for (const auto [id, script] : get_entities_with<const liminal::script>().each())
     {
         // TODO:
     }
