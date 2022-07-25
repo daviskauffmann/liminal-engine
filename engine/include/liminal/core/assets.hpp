@@ -29,6 +29,8 @@ namespace liminal
         }
 
     private:
+        // TODO: void * cannot be properly deleted
+        // perhaps make this entire class a template and have multiple instances for each type of asset?
         std::unordered_map<std::string, void *> cache;
     };
 }

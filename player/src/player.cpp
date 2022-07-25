@@ -118,10 +118,9 @@ namespace player
                     noclip = !noclip;
                 }
             }
-            const auto acceleration_length = glm::length(acceleration);
-            if (acceleration_length > 1)
+            if (glm::length(acceleration) > 1)
             {
-                acceleration /= acceleration_length;
+                acceleration = glm::normalize(acceleration);
             }
             acceleration *= speed * (sprint ? 2 : 1);
             acceleration -= velocity * drag;
