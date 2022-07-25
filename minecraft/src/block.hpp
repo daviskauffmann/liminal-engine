@@ -18,7 +18,7 @@ namespace minecraft
 
     class tile
     {
-        public:
+    public:
         int x;
         int y;
     };

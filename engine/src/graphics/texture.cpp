@@ -1,7 +1,7 @@
 #include <liminal/graphics/texture.hpp>
 
-#include <iostream>
 #include <SDL2/SDL.h>
+#include <iostream>
 #include <stb_image.h>
 
 liminal::texture::texture(const std::string &filename, bool srgb, bool filter)
@@ -26,7 +26,7 @@ liminal::texture::texture(const std::string &filename, bool srgb, bool filter)
         internal_format = srgb ? GL_SRGB : GL_RGB;
         format = GL_RGB;
     }
-    else if (num_components == 4)
+    else /*if (num_components == 4)*/
     {
         internal_format = srgb ? GL_SRGB_ALPHA : GL_RGBA;
         format = GL_RGBA;

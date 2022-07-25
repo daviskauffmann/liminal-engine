@@ -43,14 +43,14 @@ namespace liminal
 
         float get_aspect_ratio() const;
 
-        void set_target_size(GLsizei target_width, GLsizei target_height);
-        void set_render_scale(float render_scale);
+        void set_target_size(GLsizei width, GLsizei height);
+        void set_render_scale(float scale);
 
-        void set_directional_light_depth_map_size(GLsizei directional_light_depth_map_size);
-        void set_point_light_depth_cubemap_size(GLsizei point_light_depth_cubemap_size);
-        void set_spot_light_depth_map_size(GLsizei spot_light_depth_map_size);
-        void set_reflection_size(GLsizei water_reflection_width, GLsizei water_reflection_height);
-        void set_refraction_size(GLsizei water_refraction_width, GLsizei water_refraction_height);
+        void set_directional_light_depth_map_size(GLsizei size);
+        void set_point_light_depth_cubemap_size(GLsizei size);
+        void set_spot_light_depth_map_size(GLsizei size);
+        void set_reflection_size(GLsizei width, GLsizei height);
+        void set_refraction_size(GLsizei width, GLsizei height);
 
         void reload_programs();
 
@@ -163,7 +163,6 @@ namespace liminal
             unsigned int current_time) const;
         void render_shadows(
             liminal::scene &scene,
-            const liminal::camera &camera,
             const liminal::transform &camera_transform) const;
         void render_objects(
             liminal::scene &scene,

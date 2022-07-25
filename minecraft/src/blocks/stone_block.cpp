@@ -1,6 +1,6 @@
 #include "stone_block.hpp"
 
-minecraft::tile minecraft::stone_block::get_tile(minecraft::direction direction)
+minecraft::tile minecraft::stone_block::get_tile(minecraft::direction)
 {
     tile tile;
     tile.x = 0;

@@ -2,6 +2,8 @@
 
 #include <entt/entt.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
+#include <iostream>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/point_light.hpp>
@@ -11,8 +13,6 @@
 #include <liminal/components/water.hpp>
 #include <liminal/core/entity.hpp>
 #include <liminal/graphics/skybox.hpp>
-#include <imgui.h>
-#include <iostream>
 
 // TODO: create a proper rendering API rather than reading from the entt registry directly
 
@@ -465,17 +465,17 @@ float liminal::renderer::get_aspect_ratio() const
     return (float)render_width / (float)render_height;
 }
 
-void liminal::renderer::set_target_size(GLsizei target_width, GLsizei target_height)
+void liminal::renderer::set_target_size(GLsizei width, GLsizei height)
 {
-    this->target_width = target_width;
-    this->target_height = target_height;
+    target_width = width;
+    target_height = height;
 
     calc_render_size();
 }
 
-void liminal::renderer::set_render_scale(float render_scale)
+void liminal::renderer::set_render_scale(float scale)
 {
-    this->render_scale = render_scale;
+    render_scale = scale;
 
     calc_render_size();
 }
@@ -846,9 +846,9 @@ void liminal::renderer::calc_render_size()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::set_directional_light_depth_map_size(GLsizei directional_light_depth_map_size)
+void liminal::renderer::set_directional_light_depth_map_size(GLsizei size)
 {
-    this->directional_light_depth_map_size = directional_light_depth_map_size;
+    directional_light_depth_map_size = size;
 
     glDeleteFramebuffers(NUM_DIRECTIONAL_LIGHT_SHADOWS, directional_light_depth_map_fbo_ids);
     glDeleteTextures(NUM_DIRECTIONAL_LIGHT_SHADOWS, directional_light_depth_map_texture_ids);
@@ -868,8 +868,8 @@ void liminal::renderer::set_directional_light_depth_map_size(GLsizei directional
                     GL_TEXTURE_2D,
                     0,
                     GL_DEPTH_COMPONENT32,
-                    directional_light_depth_map_size,
-                    directional_light_depth_map_size,
+                    size,
+                    size,
                     0,
                     GL_DEPTH_COMPONENT,
                     GL_FLOAT,
@@ -900,9 +900,9 @@ void liminal::renderer::set_directional_light_depth_map_size(GLsizei directional
     }
 }
 
-void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei point_light_depth_cubemap_size)
+void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei size)
 {
-    this->point_light_depth_cubemap_size = point_light_depth_cubemap_size;
+    point_light_depth_cubemap_size = size;
 
     glDeleteFramebuffers(NUM_POINT_LIGHT_SHADOWS, point_light_depth_cubemap_fbo_ids);
     glDeleteTextures(NUM_POINT_LIGHT_SHADOWS, point_light_depth_cubemap_texture_ids);
@@ -925,8 +925,8 @@ void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei point_light_d
                             GL_TEXTURE_CUBE_MAP_POSITIVE_X + j,
                             0,
                             GL_DEPTH_COMPONENT,
-                            point_light_depth_cubemap_size,
-                            point_light_depth_cubemap_size,
+                            size,
+                            size,
                             0,
                             GL_DEPTH_COMPONENT,
                             GL_FLOAT,
@@ -957,9 +957,9 @@ void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei point_light_d
     }
 }
 
-void liminal::renderer::set_spot_light_depth_map_size(GLsizei spot_light_depth_map_size)
+void liminal::renderer::set_spot_light_depth_map_size(GLsizei size)
 {
-    this->spot_light_depth_map_size = spot_light_depth_map_size;
+    spot_light_depth_map_size = size;
 
     glDeleteFramebuffers(NUM_SPOT_LIGHT_SHADOWS, spot_light_depth_map_fbo_ids);
     glDeleteTextures(NUM_SPOT_LIGHT_SHADOWS, spot_light_depth_map_texture_ids);
@@ -980,8 +980,8 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei spot_light_depth_m
                         GL_TEXTURE_2D,
                         0,
                         GL_DEPTH_COMPONENT,
-                        spot_light_depth_map_size,
-                        spot_light_depth_map_size,
+                        size,
+                        size,
                         0,
                         GL_DEPTH_COMPONENT,
                         GL_FLOAT,
@@ -1013,10 +1013,10 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei spot_light_depth_m
     }
 }
 
-void liminal::renderer::set_reflection_size(GLsizei water_reflection_width, GLsizei water_reflection_height)
+void liminal::renderer::set_reflection_size(GLsizei wdith, GLsizei height)
 {
-    this->water_reflection_width = water_reflection_width;
-    this->water_reflection_height = water_reflection_height;
+    water_reflection_width = wdith;
+    water_reflection_height = height;
 
     glDeleteFramebuffers(1, &water_reflection_fbo_id);
     glDeleteTextures(1, &water_reflection_color_texture_id);
@@ -1034,8 +1034,8 @@ void liminal::renderer::set_reflection_size(GLsizei water_reflection_width, GLsi
                     GL_TEXTURE_2D,
                     0,
                     GL_RGBA16F,
-                    water_reflection_width,
-                    water_reflection_height,
+                    wdith,
+                    height,
                     0,
                     GL_RGBA,
                     GL_FLOAT,
@@ -1060,8 +1060,8 @@ void liminal::renderer::set_reflection_size(GLsizei water_reflection_width, GLsi
                 glRenderbufferStorage(
                     GL_RENDERBUFFER,
                     GL_DEPTH_COMPONENT,
-                    water_reflection_width,
-                    water_reflection_height);
+                    wdith,
+                    height);
             }
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -1081,10 +1081,10 @@ void liminal::renderer::set_reflection_size(GLsizei water_reflection_width, GLsi
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::set_refraction_size(GLsizei water_refraction_width, GLsizei water_refraction_height)
+void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
 {
-    this->water_refraction_width = water_refraction_width;
-    this->water_refraction_height = water_refraction_height;
+    water_refraction_width = width;
+    water_refraction_height = height;
 
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
     glDeleteTextures(1, &water_refraction_color_texture_id);
@@ -1102,8 +1102,8 @@ void liminal::renderer::set_refraction_size(GLsizei water_refraction_width, GLsi
                     GL_TEXTURE_2D,
                     0,
                     GL_RGBA16F,
-                    water_refraction_width,
-                    water_refraction_height,
+                    width,
+                    height,
                     0,
                     GL_RGBA,
                     GL_FLOAT,
@@ -1131,8 +1131,8 @@ void liminal::renderer::set_refraction_size(GLsizei water_refraction_width, GLsi
                     GL_TEXTURE_2D,
                     0,
                     GL_DEPTH_COMPONENT,
-                    water_refraction_width,
-                    water_refraction_height,
+                    width,
+                    height,
                     0,
                     GL_DEPTH_COMPONENT,
                     GL_FLOAT,
@@ -1307,7 +1307,7 @@ liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene) con
     return scene->get_entity(id);
 }
 
-void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float delta_time) const
+void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float) const
 {
     if (default_camera && default_camera_transform)
     {
@@ -1326,7 +1326,7 @@ void liminal::renderer::render_all(
     const liminal::transform &camera_transform,
     unsigned int current_time) const
 {
-    render_shadows(scene, camera, camera_transform);
+    render_shadows(scene, camera_transform);
     render_objects(scene, camera, camera_transform, hdr_fbo_id, render_width, render_height);
     render_waters(scene, camera, camera_transform, current_time);
     render_sprites(scene);
@@ -1335,7 +1335,6 @@ void liminal::renderer::render_all(
 
 void liminal::renderer::render_shadows(
     liminal::scene &scene,
-    const liminal::camera &camera,
     const liminal::transform &camera_transform) const
 {
     size_t i = 0;
@@ -1373,19 +1372,19 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (const auto [id, mesh_renderer, transform] : scene.get_entities_with<const liminal::mesh_renderer, const liminal::transform>().each())
+            for (const auto [_id, _mesh_renderer, _transform] : scene.get_entities_with<const liminal::mesh_renderer, const liminal::transform>().each())
             {
-                if (mesh_renderer.model)
+                if (_mesh_renderer.model)
                 {
-                    const auto model_matrix = transform.get_model_matrix();
-                    if (mesh_renderer.model->has_animations())
+                    const auto model_matrix = _transform.get_model_matrix();
+                    if (_mesh_renderer.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
                         {
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
-                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
 
-                            mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
+                            _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
                         depth_skinned_mesh_program->unbind();
                     }
@@ -1395,7 +1394,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
 
-                            mesh_renderer.model->draw_meshes(*depth_mesh_program);
+                            _mesh_renderer.model->draw_meshes(*depth_mesh_program);
                         }
                         depth_mesh_program->unbind();
                     }
@@ -1404,13 +1403,13 @@ void liminal::renderer::render_shadows(
 
             depth_mesh_program->bind();
             {
-                for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>().each())
+                for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>().each())
                 {
-                    const auto model_matrix = terrain.get_model_matrix();
+                    const auto model_matrix = _terrain.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", directional_light_transformation_matrices[i] * model_matrix);
 
-                    terrain.mesh->draw(*depth_mesh_program);
+                    _terrain.mesh->draw(*depth_mesh_program);
                 }
             }
             depth_mesh_program->unbind();
@@ -1449,17 +1448,17 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (const auto [id, transform2, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
+            for (const auto [_id, _transform, _mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
             {
-                if (mesh_renderer.model)
+                if (_mesh_renderer.model)
                 {
-                    const auto model_matrix = transform2.get_model_matrix();
-                    if (mesh_renderer.model->has_animations())
+                    const auto model_matrix = _transform.get_model_matrix();
+                    if (_mesh_renderer.model->has_animations())
                     {
                         depth_cube_skinned_mesh_program->bind();
                         {
                             depth_cube_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
-                            depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
+                            depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
 
                             for (size_t j = 0; j < 6; j++)
                             {
@@ -1469,7 +1468,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_skinned_mesh_program->set_vec3("light.position", transform.position);
 
-                            mesh_renderer.model->draw_meshes(*depth_cube_skinned_mesh_program);
+                            _mesh_renderer.model->draw_meshes(*depth_cube_skinned_mesh_program);
                         }
                         depth_cube_skinned_mesh_program->unbind();
                     }
@@ -1487,7 +1486,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
-                            mesh_renderer.model->draw_meshes(*depth_cube_mesh_program);
+                            _mesh_renderer.model->draw_meshes(*depth_cube_mesh_program);
                         }
                         depth_cube_mesh_program->unbind();
                     }
@@ -1505,13 +1504,13 @@ void liminal::renderer::render_shadows(
             //     depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
             //     depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
-            //     for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>())
+            //     for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>())
             //     {
-            //         const auto model_matrix = terrain.get_model_matrix();
+            //         const auto model_matrix = _terrain.get_model_matrix();
 
             //         depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
-            //         terrain.mesh->draw(*depth_cube_mesh_program);
+            //         _terrain.mesh->draw(*depth_cube_mesh_program);
             //     }
             // }
             // depth_cube_mesh_program->unbind();
@@ -1549,19 +1548,19 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (const auto [id, transform2, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
+            for (const auto [_id, _transform, _mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
             {
-                if (mesh_renderer.model)
+                if (_mesh_renderer.model)
                 {
-                    const auto model_matrix = transform2.get_model_matrix();
-                    if (mesh_renderer.model->has_animations())
+                    const auto model_matrix = _transform.get_model_matrix();
+                    if (_mesh_renderer.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
                         {
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
-                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
 
-                            mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
+                            _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
                         depth_skinned_mesh_program->unbind();
                     }
@@ -1571,7 +1570,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
 
-                            mesh_renderer.model->draw_meshes(*depth_mesh_program);
+                            _mesh_renderer.model->draw_meshes(*depth_mesh_program);
                         }
                         depth_mesh_program->unbind();
                     }
@@ -1580,13 +1579,13 @@ void liminal::renderer::render_shadows(
 
             depth_mesh_program->bind();
             {
-                for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>().each())
+                for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>().each())
                 {
-                    const auto model_matrix = terrain.get_model_matrix();
+                    const auto model_matrix = _terrain.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", spot_light_transformation_matrices[i] * model_matrix);
 
-                    terrain.mesh->draw(*depth_mesh_program);
+                    _terrain.mesh->draw(*depth_mesh_program);
                 }
             }
             depth_mesh_program->unbind();

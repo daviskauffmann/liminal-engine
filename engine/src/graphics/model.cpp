@@ -38,7 +38,7 @@ liminal::model::model(const std::string &filename, bool flip_uvs)
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
     num_bones = 0;
 
-    process_node_meshes(scene->mRootNode, scene);
+    process_node_meshes(scene->mRootNode);
 }
 
 liminal::model::~model()
@@ -82,21 +82,21 @@ void liminal::model::draw_meshes(const liminal::program &program) const
     }
 }
 
-void liminal::model::process_node_meshes(const aiNode *node, const aiScene *scene)
+void liminal::model::process_node_meshes(const aiNode *node)
 {
     for (size_t i = 0; i < node->mNumMeshes; i++)
     {
         auto scene_mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(create_mesh(scene_mesh, scene));
+        meshes.push_back(create_mesh(scene_mesh));
     }
 
     for (size_t i = 0; i < node->mNumChildren; i++)
     {
-        process_node_meshes(node->mChildren[i], scene);
+        process_node_meshes(node->mChildren[i]);
     }
 }
 
-liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh, const aiScene *scene)
+liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
 {
     std::vector<liminal::vertex> vertices;
     std::vector<unsigned int> indices;

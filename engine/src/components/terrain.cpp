@@ -1,12 +1,12 @@
 #include <liminal/components/terrain.hpp>
 
+#include <SDL2/SDL_image.h>
 #include <assimp/scene.h>
 #include <bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <liminal/core/assets.hpp>
 #include <liminal/graphics/texture.hpp>
-#include <SDL2/SDL_image.h>
 
 // TODO: multiple textures w/ blend map
 

@@ -30,32 +30,6 @@
         },
         {
             "transform": {
-                "name": "Water",
-                "position": {
-                    "x": 0,
-                    "y": -2,
-                    "z": 0
-                },
-                "rotation": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 0
-                },
-                "scale": {
-                    "x": 100,
-                    "y": 1,
-                    "z": 100
-                }
-            },
-            "water": {
-                "tiling": 10
-            }
-        },
-        {
-            "terrain": {}
-        },
-        {
-            "transform": {
                 "name": "Backpack",
                 "position": {
                     "x": 0,
@@ -76,60 +50,6 @@
             "mesh_renderer": {
                 "filename": "assets/models/backpack/backpack.obj",
                 "flip_uvs": true
-            }
-        },
-        {
-            "transform": {
-                "name": "Bob",
-                "position": {
-                    "x": 5,
-                    "y": 0,
-                    "z": 0
-                },
-                "rotation": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 0
-                },
-                "scale": {
-                    "x": 0.05,
-                    "y": 0.05,
-                    "z": 0.05
-                }
-            },
-            "physical": {
-                "mass": 1.0
-            },
-            "mesh_renderer": {
-                "filename": "assets/models/boblampclean/boblampclean.md5mesh",
-                "flip_uvs": false
-            }
-        },
-        {
-            "transform": {
-                "name": "Dude",
-                "position": {
-                    "x": -5,
-                    "y": 0,
-                    "z": 0
-                },
-                "rotation": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 0
-                },
-                "scale": {
-                    "x": 1,
-                    "y": 1,
-                    "z": 1
-                }
-            },
-            "physical": {
-                "mass": 1.0
-            },
-            "mesh_renderer": {
-                "filename": "assets/models/dude/model.dae",
-                "flip_uvs": false
             }
         },
         {

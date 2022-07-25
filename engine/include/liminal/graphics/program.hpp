@@ -1,8 +1,8 @@
 #ifndef LIMINAL_GRAPHICS_PROGRAM_HPP
 #define LIMINAL_GRAPHICS_PROGRAM_HPP
 
-#include <glm/glm.hpp>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

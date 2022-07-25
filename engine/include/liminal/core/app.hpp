@@ -12,7 +12,7 @@ namespace liminal
         void run();
         void stop();
 
-        virtual void update(const unsigned int current_time, const float delta_time) {}
+        virtual void update(const unsigned int current_time, const float delta_time);
         virtual void resize(int width, int height);
 
     private:

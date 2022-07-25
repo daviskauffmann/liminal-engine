@@ -1,8 +1,8 @@
 #include <liminal/graphics/cubemap.hpp>
 
-#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <iostream>
 
 liminal::cubemap::cubemap(std::vector<std::string> filenames)
 {

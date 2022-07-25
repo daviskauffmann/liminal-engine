@@ -36,7 +36,7 @@ liminal::scene::scene()
     world->setGravity(btVector3(0, -9.8f, 0));
 }
 
-liminal::scene::scene(const liminal::scene &other)
+liminal::scene::scene(const liminal::scene &)
 {
 }
 
@@ -76,70 +76,81 @@ void liminal::scene::load(const std::string &filename)
             {
                 auto entity = create_entity();
 
-                for (const auto &[key, value] : element.items())
+                for (const auto &[component_key, component_value] : element.items())
                 {
-                    if (key == "directional_light")
+                    if (component_key == "directional_light")
                     {
-                        glm::vec3 color(
-                            value["color"]["r"],
-                            value["color"]["g"],
-                            value["color"]["b"]);
-                        entity.add_component<liminal::directional_light>(color);
+                        entity.add_component<liminal::directional_light>(
+                            glm::vec3(
+                                component_value["color"]["r"],
+                                component_value["color"]["g"],
+                                component_value["color"]["b"]));
                     }
 
-                    if (key == "spot_light")
+                    if (component_key == "spot_light")
                     {
-                        glm::vec3 color(
-                            value["color"]["r"],
-                            value["color"]["g"],
-                            value["color"]["b"]);
-                        entity.add_component<liminal::spot_light>(color, value["inner_cutoff"], value["outer_cutoff"]);
+                        entity.add_component<liminal::spot_light>(
+                            glm::vec3(
+                                component_value["color"]["r"],
+                                component_value["color"]["g"],
+                                component_value["color"]["b"]),
+                            component_value["inner_cutoff"],
+                            component_value["outer_cutoff"]);
                     }
 
-                    if (key == "transform")
+                    if (component_key == "transform")
                     {
-                        std::string name(value["name"]);
-                        glm::vec3 position(
-                            value["position"]["x"],
-                            value["position"]["y"],
-                            value["position"]["z"]);
-                        glm::vec3 rotation(
-                            value["rotation"]["x"],
-                            value["rotation"]["y"],
-                            value["rotation"]["z"]);
-                        glm::vec3 scale(
-                            value["scale"]["x"],
-                            value["scale"]["y"],
-                            value["scale"]["z"]);
-                        entity.add_component<liminal::transform>(name, nullptr, position, rotation, scale);
+                        entity.add_component<liminal::transform>(
+                            component_value["name"],
+                            nullptr, // TODO: support parenting from JSON file
+                            glm::vec3(
+                                component_value["position"]["x"],
+                                component_value["position"]["y"],
+                                component_value["position"]["z"]),
+                            glm::vec3(
+                                component_value["rotation"]["x"],
+                                component_value["rotation"]["y"],
+                                component_value["rotation"]["z"]),
+                            glm::vec3(
+                                component_value["scale"]["x"],
+                                component_value["scale"]["y"],
+                                component_value["scale"]["z"]));
                     }
 
-                    if (key == "physical")
+                    if (component_key == "physical")
                     {
-                        const auto &physical = entity.add_component<liminal::physical>(value["mass"]);
+                        const auto &physical = entity.add_component<liminal::physical>(component_value["mass"]);
                         world->addRigidBody(physical.rigidbody);
                     }
 
-                    if (key == "mesh_renderer")
+                    if (component_key == "mesh_renderer")
                     {
-                        const std::string filename(value["filename"]);
-                        const bool flip_uvs = value["flip_uvs"];
-                        entity.add_component<liminal::mesh_renderer>(liminal::assets::instance->load<liminal::model>(filename, flip_uvs));
+                        entity.add_component<liminal::mesh_renderer>(
+                            liminal::assets::instance->load<liminal::model>(
+                                component_value["filename"],
+                                component_value["flip_uvs"]));
                     }
 
-                    if (key == "script")
+                    if (component_key == "script")
                     {
-                        entity.add_component<liminal::script>(value["filename"], this, (entt::entity)entity);
+                        entity.add_component<liminal::script>(
+                            component_value["filename"],
+                            this,
+                            (entt::entity)entity);
                     }
 
-                    if (key == "water")
+                    if (component_key == "water")
                     {
-                        entity.add_component<liminal::water>(value["tiling"]);
+                        entity.add_component<liminal::water>(component_value["tiling"]);
                     }
 
-                    if (key == "terrain")
+                    if (component_key == "terrain")
                     {
-                        const auto &terrain = entity.add_component<liminal::terrain>("assets/images/heightmap.png", glm::vec3(0, 0, 0), 100.f, 5.f);
+                        const auto &terrain = entity.add_component<liminal::terrain>(
+                            "assets/images/heightmap.png",
+                            glm::vec3(0, 0, 0),
+                            100.f,
+                            5.f);
                         world->addRigidBody(terrain.rigidbody);
                     }
                 }
@@ -148,7 +159,7 @@ void liminal::scene::load(const std::string &filename)
     }
 }
 
-void liminal::scene::save(const std::string &filename)
+void liminal::scene::save(const std::string &)
 {
 }
 

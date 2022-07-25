@@ -48,8 +48,8 @@ namespace liminal
         std::vector<bone> bones;
         std::unordered_map<std::string, unsigned int> bone_indices;
 
-        void process_node_meshes(const aiNode *node, const aiScene *scene);
-        liminal::mesh *create_mesh(const aiMesh *mesh, const aiScene *scene);
+        void process_node_meshes(const aiNode *node);
+        liminal::mesh *create_mesh(const aiMesh *mesh);
 
         void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string node_name);

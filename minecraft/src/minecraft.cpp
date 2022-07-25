@@ -1,24 +1,21 @@
+#include "block.hpp"
+#include "blocks/air_block.hpp"
+#include "blocks/grass_block.hpp"
+#include "chunk.hpp"
+#include "mesh_data.hpp"
+#include "world.hpp"
 #include <glm/glm.hpp>
-#include <glm/gtx/hash.hpp>
 #include <imgui.h>
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
 #include <unordered_map>
 
-#include "blocks/air_block.hpp"
-#include "blocks/grass_block.hpp"
-#include "block.hpp"
-#include "chunk.hpp"
-#include "mesh_data.hpp"
-
 namespace minecraft
 {
     class app : public liminal::app
     {
     public:
-        liminal::entity player_entity;
-
         app(int argc, char *argv[])
             : liminal::app(argc, argv)
         {
@@ -41,34 +38,23 @@ namespace minecraft
             player_entity.add_component<liminal::transform>("Player");
             player_entity.add_component<liminal::camera>(45.f);
 
-            tiles_texture = new liminal::texture("assets/images/tiles.png", false, false);
-
-            for (int x = -2; x < 2; x++)
-            {
-                for (int y = -1; y < 1; y++)
-                {
-                    for (int z = -1; z < 1; z++)
-                    {
-                        create_chunk(x * minecraft::chunk::size, y * minecraft::chunk::size, z * minecraft::chunk::size);
-                    }
-                }
-            }
+            world = new minecraft::world(scene);
         }
 
         ~app()
         {
+            delete world;
+
             if (scene)
             {
                 scene->stop();
                 delete scene;
             }
-
-            delete tiles_texture;
         }
 
         void update(unsigned int current_time, float delta_time) override
         {
-            ImGuiIO &io = ImGui::GetIO();
+            auto &io = ImGui::GetIO();
 
             if (liminal::input::key_down(liminal::KEYCODE_TAB))
             {
@@ -161,41 +147,9 @@ namespace minecraft
     private:
         liminal::scene *scene = nullptr;
 
-        liminal::texture *tiles_texture;
-        std::unordered_map<glm::ivec3, liminal::entity> chunks;
+        liminal::entity player_entity;
 
-        void create_chunk(int x, int y, int z)
-        {
-            liminal::entity chunk_entity = scene->create_entity();
-            chunk_entity.add_component<liminal::transform>("Chunk", nullptr, glm::vec3(x, y, z), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            auto &chunk = chunk_entity.add_component<minecraft::chunk>();
-            chunk_entity.add_component<liminal::mesh_renderer>(new liminal::model(chunk.render(tiles_texture)));
-
-            chunk.position = glm::ivec3(x, y, z);
-
-            chunks.emplace(chunk.position, chunk_entity);
-        }
-
-        minecraft::chunk &get_chunk(int x, int y, int z)
-        {
-            glm::ivec3 world_position;
-            world_position.x = (int)std::floor(x / minecraft::chunk::size) * minecraft::chunk::size;
-            world_position.y = (int)std::floor(y / minecraft::chunk::size) * minecraft::chunk::size;
-            world_position.z = (int)std::floor(z / minecraft::chunk::size) * minecraft::chunk::size;
-
-            if (chunks.find(world_position) == chunks.end())
-            {
-                create_chunk(x, y, z);
-            }
-
-            return chunks[world_position].get_component<minecraft::chunk>();
-        }
-
-        minecraft::block *get_block(int x, int y, int z)
-        {
-            auto &chunk = get_chunk(x, y, z);
-            return chunk.get_block(x - chunk.position.x, y - chunk.position.y, z - chunk.position.z);
-        }
+        minecraft::world *world;
     };
 }
 

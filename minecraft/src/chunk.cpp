@@ -1,12 +1,15 @@
 #include "chunk.hpp"
 
+#include "block.hpp"
 #include "blocks/air_block.hpp"
 #include "blocks/grass_block.hpp"
 #include "blocks/stone_block.hpp"
-#include "block.hpp"
 #include "mesh_data.hpp"
+#include "world.hpp"
 
-minecraft::chunk::chunk()
+minecraft::chunk::chunk(minecraft::world *world, const glm::ivec3 &position)
+    : world(world),
+      position(position)
 {
     for (int x = 0; x < size; x++)
     {
@@ -14,7 +17,7 @@ minecraft::chunk::chunk()
         {
             for (int z = 0; z < size; z++)
             {
-                blocks[x][y][z] = new air_block();
+                blocks[x][y][z] = new grass_block();
             }
         }
     }
@@ -22,7 +25,14 @@ minecraft::chunk::chunk()
 
 minecraft::block *minecraft::chunk::get_block(int x, int y, int z)
 {
-    return blocks[x][y][z];
+    if (x >= 0 && x < minecraft::chunk::size &&
+        y >= 0 && y < minecraft::chunk::size &&
+        z >= 0 && z < minecraft::chunk::size)
+    {
+        return blocks[x][y][z];
+    }
+
+    return world->get_block(position.x + x, position.x + y, position.x + z);
 }
 
 liminal::mesh *minecraft::chunk::render(liminal::texture *tiles_texture)

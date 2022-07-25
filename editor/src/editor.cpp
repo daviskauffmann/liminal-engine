@@ -226,10 +226,7 @@ namespace editor
                     {
                         ImGuizmo::SetOrthographic(false);
                         ImGuizmo::SetDrawlist();
-
-                        const auto window_width = ImGui::GetWindowWidth();
-                        const auto window_height = ImGui::GetWindowHeight();
-                        ImGuizmo::SetRect(window_pos.x, window_pos.y, window_width, window_height);
+                        ImGuizmo::SetRect(window_pos.x, window_pos.y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
                         const auto camera_projection = camera.calc_projection(liminal::renderer::instance->get_aspect_ratio());
                         const auto camera_view = camera.calc_view(camera_transform);
@@ -440,7 +437,7 @@ namespace editor
             ImGui::End();
         }
 
-        void resize(int width, int height) override
+        void resize(int, int) override
         {
         }
 

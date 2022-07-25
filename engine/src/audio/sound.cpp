@@ -1,7 +1,7 @@
 #include <liminal/audio/sound.hpp>
 
-#include <iostream>
 #include <SDL2/SDL_mixer.h>
+#include <iostream>
 
 liminal::sound::sound(const std::string &filename)
 {

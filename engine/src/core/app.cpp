@@ -1,6 +1,7 @@
 #include <liminal/core/app.hpp>
 
 #include <AL/al.h>
+#include <SDL2/SDL.h>
 #include <bullet/btBulletDynamicsCommon.h>
 #include <cxxopts.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,7 +12,6 @@
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/renderer.hpp>
 #include <liminal/input/input.hpp>
-#include <SDL2/SDL.h>
 #include <string>
 
 constexpr const char *version_string = "v0.0.1";
@@ -58,9 +58,9 @@ liminal::app::app(int argc, char *argv[])
     }
 
     // init subsystems
-    const auto assets = new liminal::assets();
-    const auto platform = new liminal::platform(window_title, window_width, window_height);
-    const auto renderer = new liminal::renderer(
+    new liminal::assets();
+    new liminal::platform(window_title, window_width, window_height);
+    new liminal::renderer(
         window_width, window_height, render_scale,
         4096, 512, 1024,
         window_width, window_height,
@@ -274,6 +274,10 @@ void liminal::app::run()
 void liminal::app::stop()
 {
     running = false;
+}
+
+void liminal::app::update(const unsigned int, const float)
+{
 }
 
 void liminal::app::resize(int width, int height)

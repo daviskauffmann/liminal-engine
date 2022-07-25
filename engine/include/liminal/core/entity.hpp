@@ -14,12 +14,12 @@ namespace liminal
             : id(id),
               scene(scene) {}
 
-        bool operator==(const entity &other)
+        auto operator==(const entity &other)
         {
             return id == other.id && scene == other.scene;
         }
 
-        bool operator!=(const entity &other)
+        auto operator!=(const entity &other)
         {
             return !(*this == other);
         }
@@ -40,25 +40,25 @@ namespace liminal
         }
 
         template <typename... Components>
-        bool has_components() const
+        auto has_components() const
         {
             return scene->registry.all_of<Components...>(id);
         }
 
         template <typename Component>
-        Component &get_component() const
+        auto &get_component() const
         {
             return scene->registry.get<Component>(id);
         }
 
         template <typename Component, typename... Args>
-        Component &add_component(Args &&...args)
+        auto &add_component(Args &&...args)
         {
             return scene->registry.emplace<Component>(id, std::forward<Args>(args)...);
         }
 
         template <typename Component>
-        void remove_component() const
+        auto remove_component()
         {
             scene->registry.remove<Component>(id);
         }
