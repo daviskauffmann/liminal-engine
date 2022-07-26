@@ -17,11 +17,18 @@ namespace minecraft
         minecraft::world *world;
         glm::ivec3 position;
         minecraft::block *blocks[size][size][size];
+        bool update = false;
 
         chunk(minecraft::world *world, const glm::ivec3 &position);
+        ~chunk();
 
         minecraft::block *get_block(int x, int y, int z);
-        liminal::mesh *render(liminal::texture *tiles_texture);
+        void set_block(int x, int y, int z, minecraft::block *block);
+
+        liminal::mesh *create_mesh(liminal::texture *tiles_texture);
+
+    private:
+        inline bool in_range(int x, int y, int z);
     };
 }
 

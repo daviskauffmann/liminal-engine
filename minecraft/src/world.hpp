@@ -18,6 +18,9 @@ namespace minecraft
         void create_chunk(int x, int y, int z);
         minecraft::chunk *get_chunk(int x, int y, int z);
         minecraft::block *get_block(int x, int y, int z);
+        void set_block(int x, int y, int z, minecraft::block *block);
+
+        void update();
 
     private:
         liminal::scene *scene;

@@ -140,6 +140,7 @@ namespace minecraft
                 }
             }
 
+            world->update();
             scene->update(current_time, delta_time);
             liminal::renderer::instance->render(*scene, current_time, delta_time);
         }
