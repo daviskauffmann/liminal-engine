@@ -32,7 +32,7 @@ namespace minecraft
                 glm::vec3(0, 0, 0),
                 glm::vec3(0.352286f, -0.547564f, -0.758992f),
                 glm::vec3(1, 1, 1));
-            sun.add_component<liminal::directional_light>(glm::vec3(1, 1, 1));
+            sun.add_component<liminal::directional_light>(glm::vec3(5, 5, 5));
 
             player_entity = scene->create_entity();
             player_entity.add_component<liminal::transform>("Player");
@@ -45,14 +45,11 @@ namespace minecraft
         {
             delete world;
 
-            if (scene)
-            {
-                scene->stop();
-                delete scene;
-            }
+            scene->stop();
+            delete scene;
         }
 
-        void update(unsigned int current_time, float delta_time) override
+        void update(const unsigned int current_time, const float delta_time) override
         {
             auto &io = ImGui::GetIO();
 

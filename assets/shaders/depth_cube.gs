@@ -9,7 +9,7 @@ uniform struct Light
 {
     float far_plane;
     vec3 position;
-    mat4 transformation_matrices[6];
+    mat4 view_projection_matrices[6];
 } light;
 
 void main()
@@ -20,7 +20,7 @@ void main()
         for (int i = 0; i < 3; i++)
         {
             frag_position = gl_in[i].gl_Position;
-            gl_Position = light.transformation_matrices[face] * frag_position;
+            gl_Position = light.view_projection_matrices[face] * frag_position;
             EmitVertex();
         }
         EndPrimitive();

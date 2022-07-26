@@ -1,21 +1,14 @@
 #include "grass_block.hpp"
 
-minecraft::tile minecraft::grass_block::get_tile(minecraft::direction direction)
+glm::ivec2 minecraft::grass_block::get_tile(const minecraft::direction direction) const
 {
-    minecraft::tile tile;
     switch (direction)
     {
-    case minecraft::direction::DIRECTION_UP:
-        tile.x = 2;
-        tile.y = 0;
-        return tile;
-    case minecraft::direction::DIRECTION_DOWN:
-        tile.x = 1;
-        tile.y = 0;
-        return tile;
+    case minecraft::direction::UP:
+        return glm::ivec2(2, 0);
+    case minecraft::direction::DOWN:
+        return glm::ivec2(1, 0);
     default:
-        tile.x = 3;
-        tile.y = 0;
-        return tile;
+        return glm::ivec2(3, 0);
     }
 }

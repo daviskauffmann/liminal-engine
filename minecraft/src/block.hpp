@@ -8,19 +8,12 @@ namespace minecraft
 {
     enum direction
     {
-        DIRECTION_NORTH,
-        DIRECTION_EAST,
-        DIRECTION_SOUTH,
-        DIRECTION_WEST,
-        DIRECTION_UP,
-        DIRECTION_DOWN,
-    };
-
-    class tile
-    {
-    public:
-        int x;
-        int y;
+        NORTH,
+        EAST,
+        SOUTH,
+        WEST,
+        UP,
+        DOWN,
     };
 
     class chunk;
@@ -29,18 +22,18 @@ namespace minecraft
     class block
     {
     public:
-        virtual bool is_solid(direction direction);
-        virtual void add_to_mesh(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
+        virtual bool is_solid(const minecraft::direction direction) const;
+        virtual void add_to_mesh(const minecraft::chunk *const chunk, const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
 
     private:
-        virtual void add_face_up(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
-        virtual void add_face_down(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
-        virtual void add_face_north(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
-        virtual void add_face_east(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
-        virtual void add_face_south(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
-        virtual void add_face_west(minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data);
-        virtual std::vector<glm::vec2> get_face_uvs(minecraft::direction direction);
-        virtual minecraft::tile get_tile(minecraft::direction direction);
+        virtual void add_face_up(const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
+        virtual void add_face_down(const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
+        virtual void add_face_north(const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
+        virtual void add_face_east(const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
+        virtual void add_face_south(const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
+        virtual void add_face_west(const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const;
+        virtual std::vector<glm::vec2> get_face_uvs(const minecraft::direction direction) const;
+        virtual glm::ivec2 get_tile(const minecraft::direction direction) const;
     };
 }
 

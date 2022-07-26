@@ -1,6 +1,7 @@
 #include "world.hpp"
 
 #include "blocks/air_block.hpp"
+#include "blocks/dirt_block.hpp"
 #include "blocks/grass_block.hpp"
 #include "blocks/stone_block.hpp"
 #include "chunk.hpp"
@@ -26,22 +27,45 @@ minecraft::world::~world()
     delete tiles_texture;
 }
 
-void minecraft::world::create_chunk(int x, int y, int z)
+void minecraft::world::update() const
 {
+    for (const auto &it : chunk_entities)
+    {
+        const auto entity = it.second;
+        auto &chunk = entity.get_component<minecraft::chunk>();
+        if (chunk.update)
+        {
+            auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
+            delete mesh_renderer.model;
+            mesh_renderer.model = new liminal::model(chunk.create_mesh(tiles_texture));
+
+            chunk.update = false;
+        }
+    }
+}
+
+void minecraft::world::create_chunk(const int x, const int y, const int z)
+{
+    const auto chunk_position = get_chunk_position(x, y, z);
+
+    if (get_chunk_entity(chunk_position))
+    {
+        return;
+    }
+
     auto chunk_entity = scene->create_entity();
     chunk_entity.add_component<liminal::transform>(
         "Chunk",
         nullptr,
-        glm::vec3(x, y, z),
+        chunk_position,
         glm::vec3(0, 0, 0),
         glm::vec3(1, 1, 1));
-    auto &chunk = chunk_entity.add_component<minecraft::chunk>(
+    chunk_entity.add_component<minecraft::chunk>(
         this,
-        glm::ivec3(x, y, z));
-    chunk_entity.add_component<liminal::mesh_renderer>(
-        new liminal::model(chunk.create_mesh(tiles_texture)));
+        chunk_position);
+    chunk_entity.add_component<liminal::mesh_renderer>();
 
-    chunks.emplace(chunk.position, chunk_entity);
+    chunk_entities.emplace(chunk_position, chunk_entity);
 
     for (int xi = 0; xi < minecraft::chunk::size; xi++)
     {
@@ -49,9 +73,17 @@ void minecraft::world::create_chunk(int x, int y, int z)
         {
             for (int zi = 0; zi < minecraft::chunk::size; zi++)
             {
-                if (yi <= 7)
+                if (yi == minecraft::chunk::size - 1)
                 {
                     set_block(x + xi, y + yi, z + zi, new minecraft::grass_block());
+                }
+                else if (yi >= 10)
+                {
+                    set_block(x + xi, y + yi, z + zi, new minecraft::dirt_block());
+                }
+                else if (yi >= 5)
+                {
+                    set_block(x + xi, y + yi, z + zi, new minecraft::stone_block());
                 }
                 else
                 {
@@ -62,22 +94,32 @@ void minecraft::world::create_chunk(int x, int y, int z)
     }
 }
 
-minecraft::chunk *minecraft::world::get_chunk(int x, int y, int z)
+minecraft::chunk *minecraft::world::get_chunk(const int x, int const y, int const z) const
 {
-    glm::ivec3 world_position;
-    world_position.x = (int)std::floor((float)x / minecraft::chunk::size) * minecraft::chunk::size;
-    world_position.y = (int)std::floor((float)y / minecraft::chunk::size) * minecraft::chunk::size;
-    world_position.z = (int)std::floor((float)z / minecraft::chunk::size) * minecraft::chunk::size;
+    const auto chunk_position = get_chunk_position(x, y, z);
+    const auto chunk_entity = get_chunk_entity(chunk_position);
 
-    if (chunks.find(world_position) == chunks.end())
+    if (!chunk_entity)
     {
         return nullptr;
     }
 
-    return &chunks[world_position].get_component<minecraft::chunk>();
+    return &chunk_entity.get_component<minecraft::chunk>();
 }
 
-minecraft::block *minecraft::world::get_block(int x, int y, int z)
+void minecraft::world::destroy_chunk(const int x, const int y, const int z)
+{
+    const auto chunk_position = get_chunk_position(x, y, z);
+    const auto chunk_entity = get_chunk_entity(chunk_position);
+
+    if (chunk_entity)
+    {
+        chunk_entities.erase(chunk_position);
+        scene->delete_entity(chunk_entity);
+    }
+}
+
+minecraft::block *minecraft::world::get_block(const int x, const int y, const int z) const
 {
     const auto chunk = get_chunk(x, y, z);
 
@@ -91,7 +133,7 @@ minecraft::block *minecraft::world::get_block(int x, int y, int z)
     return chunk->get_block(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z);
 }
 
-void minecraft::world::set_block(int x, int y, int z, minecraft::block *block)
+void minecraft::world::set_block(const int x, const int y, const int z, minecraft::block *const block)
 {
     const auto chunk = get_chunk(x, y, z);
 
@@ -101,19 +143,20 @@ void minecraft::world::set_block(int x, int y, int z, minecraft::block *block)
     }
 }
 
-void minecraft::world::update()
+glm::ivec3 minecraft::world::get_chunk_position(const int x, const int y, const int z) const
 {
-    for (const auto &it : chunks)
-    {
-        auto entity = it.second;
-        auto &chunk = entity.get_component<minecraft::chunk>();
-        if (chunk.update)
-        {
-            auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
-            delete mesh_renderer.model;
-            mesh_renderer.model = new liminal::model(chunk.create_mesh(tiles_texture));
+    return glm::ivec3(
+        (int)std::floor((float)x / minecraft::chunk::size) * minecraft::chunk::size,
+        (int)std::floor((float)y / minecraft::chunk::size) * minecraft::chunk::size,
+        (int)std::floor((float)z / minecraft::chunk::size) * minecraft::chunk::size);
+}
 
-            chunk.update = false;
-        }
+liminal::entity minecraft::world::get_chunk_entity(const glm::ivec3 &chunk_position) const
+{
+    if (chunk_entities.find(chunk_position) == chunk_entities.end())
+    {
+        return {};
     }
+
+    return chunk_entities.at(chunk_position);
 }

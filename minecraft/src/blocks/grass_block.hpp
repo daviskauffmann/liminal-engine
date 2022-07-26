@@ -8,7 +8,7 @@ namespace minecraft
     class grass_block : public minecraft::block
     {
     public:
-        minecraft::tile get_tile(minecraft::direction direction) override;
+        glm::ivec2 get_tile(const minecraft::direction direction) const override;
     };
 }
 

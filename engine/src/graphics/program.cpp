@@ -32,6 +32,11 @@ void liminal::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
     // would need some way to update texture samplers, but only the renderer knows that information right now
+    //      perhaps add another method, sorta like set_int (set_sampler_id?)
+    //      this would call set_int, but additionally add the name/value pair to a map
+    //      and then when reloading, just go through the map and call set_int on all the registered samplers
+    //      the renderer would still be the one to set up the initial samplers when it creates the programs
+    //      but after that the renderer would no longer be needed to do shader reloads
     const auto new_program_id = create_program();
     if (new_program_id)
     {

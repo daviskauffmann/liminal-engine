@@ -37,7 +37,7 @@ minecraft::chunk::~chunk()
     }
 }
 
-minecraft::block *minecraft::chunk::get_block(int x, int y, int z)
+minecraft::block *minecraft::chunk::get_block(const int x, const int y, const int z) const
 {
     if (in_range(x, y, z))
     {
@@ -47,30 +47,25 @@ minecraft::block *minecraft::chunk::get_block(int x, int y, int z)
     return world->get_block(position.x + x, position.y + y, position.z + z);
 }
 
-void minecraft::chunk::set_block(int x, int y, int z, minecraft::block *block)
+void minecraft::chunk::set_block(const int x, const int y, const int z, minecraft::block *const block)
 {
     if (in_range(x, y, z))
     {
-        if (blocks[x][y][z])
-        {
-            delete blocks[x][y][z];
-        }
-
+        delete blocks[x][y][z];
         blocks[x][y][z] = block;
-
         update = true;
     }
 }
 
-liminal::mesh *minecraft::chunk::create_mesh(liminal::texture *tiles_texture)
+liminal::mesh *minecraft::chunk::create_mesh(liminal::texture *const tiles_texture) const
 {
     minecraft::mesh_data mesh_data;
 
-    for (int x = 0; x < 16; x++)
+    for (int x = 0; x < size; x++)
     {
-        for (int y = 0; y < 16; y++)
+        for (int y = 0; y < size; y++)
         {
-            for (int z = 0; z < 16; z++)
+            for (int z = 0; z < size; z++)
             {
                 blocks[x][y][z]->add_to_mesh(this, x, y, z, &mesh_data);
             }
@@ -88,9 +83,9 @@ liminal::mesh *minecraft::chunk::create_mesh(liminal::texture *tiles_texture)
     return new liminal::mesh(mesh_data.vertices, mesh_data.indices, textures);
 }
 
-inline bool minecraft::chunk::in_range(int x, int y, int z)
+inline bool minecraft::chunk::in_range(const int x, const int y, const int z) const
 {
-    return x >= 0 && x < minecraft::chunk::size &&
-           y >= 0 && y < minecraft::chunk::size &&
-           z >= 0 && z < minecraft::chunk::size;
+    return x >= 0 && x < size &&
+           y >= 0 && y < size &&
+           z >= 0 && z < size;
 }

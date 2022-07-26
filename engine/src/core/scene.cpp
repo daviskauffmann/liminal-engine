@@ -188,7 +188,7 @@ void liminal::scene::start()
     }
 }
 
-void liminal::scene::update(unsigned int current_time, float delta_time)
+void liminal::scene::update(const unsigned int current_time, const float delta_time)
 {
     // update scripts
     for (const auto [id, script] : get_entities_with<const liminal::script>().each())

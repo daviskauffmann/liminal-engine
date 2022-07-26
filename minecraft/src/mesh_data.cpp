@@ -2,11 +2,13 @@
 
 void minecraft::mesh_data::add_quad_indices()
 {
-    indices.push_back((unsigned int)(vertices.size() - 4));
-    indices.push_back((unsigned int)(vertices.size() - 3));
-    indices.push_back((unsigned int)(vertices.size() - 2));
+    auto size = vertices.size();
 
-    indices.push_back((unsigned int)(vertices.size() - 4));
-    indices.push_back((unsigned int)(vertices.size() - 2));
-    indices.push_back((unsigned int)(vertices.size() - 1));
+    indices.push_back((unsigned int)(size - 4));
+    indices.push_back((unsigned int)(size - 3));
+    indices.push_back((unsigned int)(size - 2));
+
+    indices.push_back((unsigned int)(size - 4));
+    indices.push_back((unsigned int)(size - 2));
+    indices.push_back((unsigned int)(size - 1));
 }

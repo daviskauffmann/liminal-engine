@@ -27,7 +27,7 @@ namespace editor
             }
         }
 
-        void update(unsigned int current_time, float delta_time) override
+        void update(const unsigned int current_time, const float delta_time) override
         {
             const auto &io = ImGui::GetIO();
 
@@ -299,9 +299,9 @@ namespace editor
 
                                 ImGui::Text("Parent: %s", transform.parent ? transform.parent->name.c_str() : "null");
 
-                                ImGui::DragFloat3("Position", glm::value_ptr(transform.position), .1f);
-                                ImGui::DragFloat3("Rotation", glm::value_ptr(transform.rotation), .1f);
-                                ImGui::DragFloat3("Scale", glm::value_ptr(transform.scale), .1f);
+                                ImGui::DragFloat3("Position", glm::value_ptr(transform.position), 0.1f);
+                                ImGui::DragFloat3("Rotation", glm::value_ptr(transform.rotation), 0.1f);
+                                ImGui::DragFloat3("Scale", glm::value_ptr(transform.scale), 0.1f);
 
                                 ImGui::TreePop();
                             }
@@ -348,6 +348,38 @@ namespace editor
                             }
                         }
 
+                        if (selected_entity.has_components<liminal::directional_light>())
+                        {
+                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::directional_light).hash_code(), flags, "Directional Light");
+
+                            auto deleted = false;
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Remove"))
+                                {
+                                    deleted = true;
+                                }
+
+                                ImGui::EndPopup();
+                            }
+
+                            if (opened)
+                            {
+                                auto &directional_light = selected_entity.get_component<liminal::directional_light>();
+
+                                ImGui::DragFloat3("Color", glm::value_ptr(directional_light.color), 0.1f);
+
+                                ImGui::Image((ImTextureID)(long long)directional_light.depth_map_texture_id, ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+
+                                ImGui::TreePop();
+                            }
+
+                            if (deleted)
+                            {
+                                selected_entity.remove_component<liminal::directional_light>();
+                            }
+                        }
+
                         if (selected_entity.has_components<liminal::point_light>())
                         {
                             const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), flags, "Point Light");
@@ -367,7 +399,7 @@ namespace editor
                             {
                                 auto &point_light = selected_entity.get_component<liminal::point_light>();
 
-                                ImGui::DragFloat3("Color", glm::value_ptr(point_light.color), .1f);
+                                ImGui::DragFloat3("Color", glm::value_ptr(point_light.color), 0.1f);
 
                                 ImGui::TreePop();
                             }
@@ -375,6 +407,40 @@ namespace editor
                             if (deleted)
                             {
                                 selected_entity.remove_component<liminal::point_light>();
+                            }
+                        }
+
+                        if (selected_entity.has_components<liminal::spot_light>())
+                        {
+                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::spot_light).hash_code(), flags, "Spot Light");
+
+                            auto deleted = false;
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Remove"))
+                                {
+                                    deleted = true;
+                                }
+
+                                ImGui::EndPopup();
+                            }
+
+                            if (opened)
+                            {
+                                auto &spot_light = selected_entity.get_component<liminal::spot_light>();
+
+                                ImGui::DragFloat3("Color", glm::value_ptr(spot_light.color), 0.1f);
+                                ImGui::DragFloat("Inner Cutoff", &spot_light.inner_cutoff);
+                                ImGui::DragFloat("Outer Cutoff", &spot_light.outer_cutoff);
+
+                                ImGui::Image((ImTextureID)(long long)spot_light.depth_map_texture_id, ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+
+                                ImGui::TreePop();
+                            }
+
+                            if (deleted)
+                            {
+                                selected_entity.remove_component<liminal::directional_light>();
                             }
                         }
 

@@ -280,7 +280,7 @@ void liminal::app::update(const unsigned int, const float)
 {
 }
 
-void liminal::app::resize(int width, int height)
+void liminal::app::resize(const int width, const int height)
 {
     liminal::renderer::instance->set_target_size(width, height);
 }

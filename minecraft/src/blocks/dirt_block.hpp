@@ -1,11 +1,11 @@
-#ifndef MINECRAFT_STONE_BLOCK_HPP
-#define MINECRAFT_STONE_BLOCK_HPP
+#ifndef MINECRAFT_DIRT_BLOCK_HPP
+#define MINECRAFT_DIRT_BLOCK_HPP
 
 #include "../block.hpp"
 
 namespace minecraft
 {
-    class stone_block : public minecraft::block
+    class dirt_block : public minecraft::block
     {
     public:
         glm::ivec2 get_tile(const minecraft::direction direction) const override;

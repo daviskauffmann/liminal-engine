@@ -11,6 +11,9 @@ namespace liminal
         glm::vec3 color = glm::vec3(1.f);
         float inner_cutoff = 12.5f;
         float outer_cutoff = 15.f;
+
+        glm::mat4 view_projection_matrix = {};
+        GLuint depth_map_texture_id = 0;
     };
 }
 

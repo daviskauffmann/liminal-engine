@@ -84,17 +84,14 @@ namespace liminal
         GLsizei directional_light_depth_map_size;
         GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
         GLuint directional_light_depth_map_texture_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
-        mutable glm::mat4 directional_light_transformation_matrices[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
 
         GLsizei point_light_depth_cubemap_size;
         GLuint point_light_depth_cubemap_fbo_ids[NUM_POINT_LIGHT_SHADOWS] = {};
         GLuint point_light_depth_cubemap_texture_ids[NUM_POINT_LIGHT_SHADOWS] = {};
-        mutable glm::mat4 point_light_transformation_matrices[NUM_POINT_LIGHT_SHADOWS][6] = {};
 
         GLsizei spot_light_depth_map_size;
         GLuint spot_light_depth_map_fbo_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
         GLuint spot_light_depth_map_texture_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
-        mutable glm::mat4 spot_light_transformation_matrices[NUM_SPOT_LIGHT_SHADOWS] = {};
 
         GLsizei water_reflection_width;
         GLsizei water_reflection_height;
