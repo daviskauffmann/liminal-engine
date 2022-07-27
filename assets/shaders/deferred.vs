@@ -1,5 +1,7 @@
 #version 460 core
 
+#include "glsl/cascaded_shadowmap_constants.glsl"
+
 layout (location = 0) in vec2 position;
 layout (location = 1) in vec2 uv;
 

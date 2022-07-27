@@ -2,11 +2,13 @@
 #define LIMINAL_GRAPHICS_RENDERER_HPP
 
 #include <GL/glew.h>
+#include <array>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <imgui.h>
 #include <liminal/components/camera.hpp>
+#include <liminal/components/directional_light.hpp>
 #include <liminal/components/transform.hpp>
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/mesh.hpp>
@@ -15,15 +17,15 @@
 #include <liminal/graphics/texture.hpp>
 #include <memory>
 
-#define NUM_DIRECTIONAL_LIGHT_SHADOWS 1
-#define NUM_POINT_LIGHT_SHADOWS 4
-#define NUM_SPOT_LIGHT_SHADOWS 1
-
 namespace liminal
 {
     class renderer
     {
     public:
+        static constexpr std::size_t num_directional_light_shadows = 1;
+        static constexpr std::size_t num_point_light_shadows = 4;
+        static constexpr std::size_t num_spot_light_shadows = 1;
+
         static renderer *instance;
 
         liminal::camera *default_camera = nullptr;
@@ -75,23 +77,23 @@ namespace liminal
         GLuint geometry_rbo_id = 0;
 
         GLuint hdr_fbo_id = 0;
-        GLuint hdr_texture_ids[2] = {};
+        std::array<GLuint, 2> hdr_texture_ids = {};
         GLuint hdr_rbo_id = 0;
 
         GLuint final_fbo_id = 0;
         GLuint final_texture_id = 0;
 
         GLsizei directional_light_depth_map_size;
-        GLuint directional_light_depth_map_fbo_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
-        GLuint directional_light_depth_map_texture_ids[NUM_DIRECTIONAL_LIGHT_SHADOWS] = {};
+        std::array<GLuint, num_directional_light_shadows> directional_light_depth_map_fbo_ids = {};
+        std::array<std::array<GLuint, liminal::directional_light::num_cascades>, num_directional_light_shadows> directional_light_depth_map_texture_ids = {};
 
         GLsizei point_light_depth_cubemap_size;
-        GLuint point_light_depth_cubemap_fbo_ids[NUM_POINT_LIGHT_SHADOWS] = {};
-        GLuint point_light_depth_cubemap_texture_ids[NUM_POINT_LIGHT_SHADOWS] = {};
+        std::array<GLuint, num_point_light_shadows> point_light_depth_cubemap_fbo_ids = {};
+        std::array<GLuint, num_point_light_shadows> point_light_depth_cubemap_texture_ids = {};
 
         GLsizei spot_light_depth_map_size;
-        GLuint spot_light_depth_map_fbo_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
-        GLuint spot_light_depth_map_texture_ids[NUM_SPOT_LIGHT_SHADOWS] = {};
+        std::array<GLuint, num_spot_light_shadows> spot_light_depth_map_fbo_ids = {};
+        std::array<GLuint, num_spot_light_shadows> spot_light_depth_map_texture_ids = {};
 
         GLsizei water_reflection_width;
         GLsizei water_reflection_height;
@@ -105,8 +107,8 @@ namespace liminal
         GLuint water_refraction_color_texture_id = 0;
         GLuint water_refraction_depth_texture_id = 0;
 
-        GLuint bloom_fbo_ids[2] = {};
-        GLuint bloom_texture_ids[2] = {};
+        std::array<GLuint, 2> bloom_fbo_ids = {};
+        std::array<GLuint, 2> bloom_texture_ids = {};
 
         GLsizei water_vertices_size;
         GLuint water_vao_id;

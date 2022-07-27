@@ -12,12 +12,13 @@ namespace liminal
     class terrain
     {
     public:
+        btDiscreteDynamicsWorld *world;
         glm::vec3 position;
         float size;
         liminal::mesh *mesh;
         btRigidBody *rigidbody;
 
-        terrain(const std::string &filename, const glm::vec3 &position, float size, float height_scale);
+        terrain(btDiscreteDynamicsWorld *const world, const std::string &filename, const glm::vec3 &position, const float size, const float height_scale);
         ~terrain();
 
         glm::mat4 get_model_matrix() const;
@@ -25,9 +26,7 @@ namespace liminal
     private:
         float height_scale;
 
-        std::vector<float> heightfield;
-
-        float get_height(SDL_Surface *surface, int x, int z) const;
+        float get_height(const SDL_Surface *const surface, const int x, const int z) const;
     };
 }
 

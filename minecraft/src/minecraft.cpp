@@ -41,7 +41,7 @@ namespace minecraft
             world = new minecraft::world(scene);
         }
 
-        ~app()
+        ~app() override
         {
             delete world;
 

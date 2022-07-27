@@ -43,7 +43,7 @@ liminal::model::model(const std::string &filename, bool flip_uvs)
 
 liminal::model::~model()
 {
-    for (size_t i = 0; i < meshes.size(); i++)
+    for (std::size_t i = 0; i < meshes.size(); i++)
     {
         delete meshes[i];
     }
@@ -67,7 +67,7 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
 
         bone_transformations.resize(num_bones);
-        for (size_t i = 0; i < num_bones; i++)
+        for (std::size_t i = 0; i < num_bones; i++)
         {
             bone_transformations[i] = bones[i].transformation;
         }
@@ -76,7 +76,7 @@ void liminal::model::update_bone_transformations(unsigned int animation_index, u
 
 void liminal::model::draw_meshes(const liminal::program &program) const
 {
-    for (size_t i = 0; i < meshes.size(); i++)
+    for (std::size_t i = 0; i < meshes.size(); i++)
     {
         meshes[i]->draw(program);
     }
@@ -84,13 +84,13 @@ void liminal::model::draw_meshes(const liminal::program &program) const
 
 void liminal::model::process_node_meshes(const aiNode *node)
 {
-    for (size_t i = 0; i < node->mNumMeshes; i++)
+    for (std::size_t i = 0; i < node->mNumMeshes; i++)
     {
         auto scene_mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(create_mesh(scene_mesh));
     }
 
-    for (size_t i = 0; i < node->mNumChildren; i++)
+    for (std::size_t i = 0; i < node->mNumChildren; i++)
     {
         process_node_meshes(node->mChildren[i]);
     }
@@ -103,7 +103,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
     std::vector<std::vector<liminal::texture *>> textures;
 
     // process vertices
-    for (size_t i = 0; i < scene_mesh->mNumVertices; i++)
+    for (std::size_t i = 0; i < scene_mesh->mNumVertices; i++)
     {
         liminal::vertex vertex;
 
@@ -128,9 +128,9 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
             vertex.bitangent = vec3_cast(scene_mesh->mBitangents[i]);
         }
 
-        for (size_t j = 0; j < NUM_BONES_PER_VERTEX; j++)
+        for (std::size_t j = 0; j < liminal::vertex::num_bones; j++)
         {
-            vertex.bone_ids[j] = NUM_BONES_PER_VERTEX;
+            vertex.bone_ids[j] = liminal::vertex::num_bones;
             vertex.bone_weights[j] = 0;
         }
 
@@ -140,7 +140,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
     // process bones
     if (scene_mesh->HasBones())
     {
-        for (size_t i = 0; i < scene_mesh->mNumBones; i++)
+        for (std::size_t i = 0; i < scene_mesh->mNumBones; i++)
         {
             unsigned int bone_index;
             std::string bone_name(scene_mesh->mBones[i]->mName.data);
@@ -159,7 +159,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
                 bone_index = bone_indices[bone_name];
             }
 
-            for (size_t j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
+            for (std::size_t j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
             {
                 auto vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
                 auto weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
@@ -171,10 +171,10 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
     // process indices
     if (scene_mesh->HasFaces())
     {
-        for (size_t i = 0; i < scene_mesh->mNumFaces; i++)
+        for (std::size_t i = 0; i < scene_mesh->mNumFaces; i++)
         {
             auto face = scene_mesh->mFaces[i];
-            for (size_t j = 0; j < face.mNumIndices; j++)
+            for (std::size_t j = 0; j < face.mNumIndices; j++)
             {
                 indices.push_back(face.mIndices[j]);
             }
@@ -248,7 +248,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
         bones[bone_index].transformation = global_inverse_transform * global_transformation * bones[bone_index].offset;
     }
 
-    for (size_t i = 0; i < node->mNumChildren; i++)
+    for (std::size_t i = 0; i < node->mNumChildren; i++)
     {
         process_node_animations(animation_index, animation_time, node->mChildren[i], global_transformation);
     }
@@ -256,7 +256,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
 
 const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *scene_animation, const std::string node_name)
 {
-    for (size_t i = 0; i < scene_animation->mNumChannels; i++)
+    for (std::size_t i = 0; i < scene_animation->mNumChannels; i++)
     {
         const auto node_animation = scene_animation->mChannels[i];
 

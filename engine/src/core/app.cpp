@@ -94,14 +94,14 @@ void liminal::app::run()
         // gather input
         liminal::input::last_keys = liminal::input::keys;
         const auto keys = SDL_GetKeyboardState(nullptr);
-        for (size_t scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
+        for (std::size_t scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
         {
             liminal::input::keys[scancode] = keys[scancode];
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
         const auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
-        for (size_t button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
+        for (std::size_t button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
         {
             liminal::input::mouse_buttons[button] = mouse_buttons & SDL_BUTTON(button);
         }

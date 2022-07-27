@@ -13,8 +13,9 @@
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position, float size, float height_scale)
-    : position(position),
+liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::string &filename, const glm::vec3 &position, const float size, const float height_scale)
+    : world(world),
+      position(position),
       size(size),
       height_scale(height_scale)
 {
@@ -24,6 +25,8 @@ liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position
         std::cerr << "Error: Failed to load terrain heightmap texture: " << IMG_GetError() << std::endl;
         return;
     }
+
+    std::vector<float> heightfield;
 
     std::vector<liminal::vertex> vertices;
     for (int z = 0; z < surface->h; z++)
@@ -116,11 +119,16 @@ liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position
     const auto collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
     const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape);
     rigidbody = new btRigidBody(construction_info);
+    world->addRigidBody(rigidbody);
 }
 
 liminal::terrain::~terrain()
 {
     delete mesh;
+
+    delete rigidbody->getMotionState();
+    delete rigidbody->getCollisionShape();
+    world->removeRigidBody(rigidbody);
     delete rigidbody;
 }
 
@@ -130,7 +138,7 @@ glm::mat4 liminal::terrain::get_model_matrix() const
     return glm::translate(glm::identity<glm::mat4>(), position);
 }
 
-float liminal::terrain::get_height(SDL_Surface *surface, int x, int z) const
+float liminal::terrain::get_height(const SDL_Surface *const surface, const int x, const int z) const
 {
     if (x < 0 || x >= surface->w || z < 0 || z >= surface->h)
     {

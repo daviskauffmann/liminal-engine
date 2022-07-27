@@ -32,7 +32,7 @@ liminal::scene::scene()
     const auto dispatcher = new btCollisionDispatcher(collision_configuration);
     const auto pair_cache = new btDbvtBroadphase();
     const auto constraint_solver = new btSequentialImpulseConstraintSolver();
-    world = new btDiscreteDynamicsWorld(dispatcher, pair_cache, constraint_solver, collision_configuration);
+    world = std::make_unique<btDiscreteDynamicsWorld>(dispatcher, pair_cache, constraint_solver, collision_configuration);
     world->setGravity(btVector3(0, -9.8f, 0));
 }
 
@@ -42,19 +42,11 @@ liminal::scene::scene(const liminal::scene &)
 
 liminal::scene::~scene()
 {
-    for (const auto [id, physical] : get_entities_with<const liminal::physical>().each())
-    {
-        world->removeRigidBody(physical.rigidbody);
-    }
-
-    for (const auto [id, terrain] : get_entities_with<const liminal::terrain>().each())
-    {
-        world->removeRigidBody(terrain.rigidbody);
-    }
-
     registry.clear();
 
-    delete world;
+    delete world->getDispatcher();
+    delete world->getPairCache();
+    delete world->getConstraintSolver();
 }
 
 void liminal::scene::load(const std::string &filename)
@@ -119,8 +111,7 @@ void liminal::scene::load(const std::string &filename)
 
                     if (component_key == "physical")
                     {
-                        const auto &physical = entity.add_component<liminal::physical>(component_value["mass"]);
-                        world->addRigidBody(physical.rigidbody);
+                        entity.add_component<liminal::physical>(world.get(), component_value["mass"]);
                     }
 
                     if (component_key == "mesh_renderer")
@@ -146,12 +137,12 @@ void liminal::scene::load(const std::string &filename)
 
                     if (component_key == "terrain")
                     {
-                        const auto &terrain = entity.add_component<liminal::terrain>(
+                        entity.add_component<liminal::terrain>(
+                            world.get(),
                             "assets/images/heightmap.png",
                             glm::vec3(0, 0, 0),
                             100.f,
                             5.f);
-                        world->addRigidBody(terrain.rigidbody);
                     }
                 }
             }

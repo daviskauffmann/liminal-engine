@@ -3,6 +3,7 @@
 
 #include <entt/entt.hpp>
 #include <imgui.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -45,7 +46,7 @@ namespace liminal
 
     private:
         entt::registry registry;
-        btDiscreteDynamicsWorld *world;
+        std::unique_ptr<btDiscreteDynamicsWorld> world;
     };
 }
 

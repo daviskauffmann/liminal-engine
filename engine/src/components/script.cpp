@@ -15,6 +15,7 @@
 liminal::script::script(const std::string &filename, liminal::scene *scene, entt::entity id)
 {
     lua = new sol::state;
+
     lua->open_libraries(sol::lib::base, sol::lib::math);
     const auto result = lua->script_file(filename);
     if (!result.valid())

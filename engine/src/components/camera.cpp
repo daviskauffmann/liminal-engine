@@ -2,9 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-float liminal::camera::near_plane = 0.1f;
-float liminal::camera::far_plane = 1000;
-
 liminal::camera::camera(float fov, bool render_to_texture)
     : fov(fov),
       render_to_texture(render_to_texture)

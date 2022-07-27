@@ -11,8 +11,8 @@ namespace liminal
     class camera
     {
     public:
-        static float near_plane;
-        static float far_plane;
+        static constexpr float near_plane = 0.1f;
+        static constexpr float far_plane = 1000;
 
         float fov;
 

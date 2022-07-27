@@ -2,7 +2,7 @@
 
 void minecraft::mesh_data::add_quad_indices()
 {
-    auto size = vertices.size();
+    const auto size = vertices.size();
 
     indices.push_back((unsigned int)(size - 4));
     indices.push_back((unsigned int)(size - 3));

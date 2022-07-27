@@ -1,5 +1,6 @@
 #version 460 core
 
+#include "glsl/cascaded_shadowmap_constants.glsl"
 #include "glsl/distribution_ggx.glsl"
 #include "glsl/fresnel_schlick.glsl"
 #include "glsl/geometry_smith.glsl"
@@ -30,8 +31,8 @@ uniform struct Light
 {
     vec3 direction;
     vec3 color;
-    mat4 view_projection_matrix;
-    sampler2D depth_map;
+    mat4 view_projection_matrices[NUM_DIRECTIONAL_LIGHT_CASCADES];
+    sampler2D depth_map[NUM_DIRECTIONAL_LIGHT_CASCADES];
 } light;
 
 void main()
@@ -68,17 +69,17 @@ void main()
     float n_dot_l = max(dot(n, l), 0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
    
-    vec4 light_space_position = light.view_projection_matrix * vec4(position, 1);
+    vec4 light_space_position = light.view_projection_matrices[0] * vec4(position, 1);
     vec3 light_space_proj_coords = (light_space_position.xyz / light_space_position.w) * 0.5 + 0.5;
     float current_depth = light_space_proj_coords.z;
     float bias = max(0.005 * (1 - dot(n, l)), 0.005);
     float shadow = 0;
-    vec2 texel_size = float(1) / textureSize(light.depth_map, 0);
+    vec2 texel_size = float(1) / textureSize(light.depth_map[0], 0);
     for (int x = -1; x <= 1; x++)
     {
         for (int y = -1; y <= 1; y++)
         {
-            float pcf_depth = texture(light.depth_map, light_space_proj_coords.xy + vec2(x, y) * texel_size).r;
+            float pcf_depth = texture(light.depth_map[0], light_space_proj_coords.xy + vec2(x, y) * texel_size).r;
             shadow += current_depth - bias > pcf_depth ? 1 : 0;
         }
     }

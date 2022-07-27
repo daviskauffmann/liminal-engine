@@ -19,7 +19,7 @@ namespace editor
             load_scene();
         }
 
-        ~app()
+        ~app() override
         {
             if (scene)
             {
@@ -369,7 +369,10 @@ namespace editor
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(directional_light.color), 0.1f);
 
-                                ImGui::Image((ImTextureID)(long long)directional_light.depth_map_texture_id, ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+                                for (std::size_t i = 0; i < liminal::directional_light::num_cascades; i++)
+                                {
+                                    ImGui::Image((ImTextureID)(long long)directional_light.depth_map_texture_ids[i], ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+                                }
 
                                 ImGui::TreePop();
                             }
@@ -503,7 +506,7 @@ namespace editor
             ImGui::End();
         }
 
-        void resize(int, int) override
+        void resize(const int, const int) override
         {
         }
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(liminal_editor)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/appicon.rc")
 
 find_package(glm CONFIG REQUIRED)

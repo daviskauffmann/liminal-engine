@@ -49,7 +49,7 @@ namespace player
             // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.f, glm::vec2(1, 1));
         }
 
-        ~app()
+        ~app() override
         {
             if (scene)
             {

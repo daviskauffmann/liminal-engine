@@ -4,6 +4,7 @@
 #include <glm/gtx/hash.hpp>
 #include <glm/vec3.hpp>
 #include <liminal/liminal.hpp>
+#include <memory>
 
 namespace minecraft
 {
@@ -14,7 +15,6 @@ namespace minecraft
     {
     public:
         world(liminal::scene *scene);
-        ~world();
 
         void update() const;
 
@@ -27,7 +27,7 @@ namespace minecraft
 
     private:
         liminal::scene *scene;
-        liminal::texture *tiles_texture;
+        std::unique_ptr<liminal::texture> tiles_texture;
         std::unordered_map<glm::ivec3, liminal::entity> chunk_entities;
 
         glm::ivec3 get_chunk_position(const int x, const int y, const int z) const;
