@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     src/chunk.cpp
     src/mesh_data.cpp
     src/minecraft.cpp
+    src/SimplexNoise.cpp
     src/world.cpp
 )
 

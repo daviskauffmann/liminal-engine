@@ -1,5 +1,6 @@
 #include "world.hpp"
 
+#include "SimplexNoise.h"
 #include "blocks/air_block.hpp"
 #include "blocks/dirt_block.hpp"
 #include "blocks/grass_block.hpp"
@@ -10,11 +11,11 @@ minecraft::world::world(liminal::scene *scene)
     : scene(scene),
       tiles_texture(new liminal::texture("assets/images/tiles.png", false, false))
 {
-    for (int x = -2; x < 2; x++)
+    for (int x = -4; x < 4; x++)
     {
-        for (int y = -1; y < 1; y++)
+        for (int y = -1; y < 3; y++)
         {
-            for (int z = -1; z < 1; z++)
+            for (int z = -4; z < 4; z++)
             {
                 create_chunk(x * minecraft::chunk::size, y * minecraft::chunk::size, z * minecraft::chunk::size);
             }
@@ -44,6 +45,12 @@ void minecraft::world::update() const
     }
 }
 
+int get_noise(const int x, const int y, const int z, const float scale, const int max)
+{
+    const auto simplex = SimplexNoise();
+    return (int)std::floor(simplex.noise(x * scale, y * scale, z * scale) + 1.f) * (max / 2.f);
+}
+
 void minecraft::world::create_chunk(const int x, const int y, const int z)
 {
     const auto chunk_position = get_chunk_position(x, y, z);
@@ -67,27 +74,78 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
 
     chunk_entities.emplace(chunk_position, chunk_entity);
 
-    for (int xi = 0; xi < minecraft::chunk::size; xi++)
+    // for (int xi = 0; xi < minecraft::chunk::size; xi++)
+    // {
+    //     for (int yi = 0; yi < minecraft::chunk::size; yi++)
+    //     {
+    //         for (int zi = 0; zi < minecraft::chunk::size; zi++)
+    //         {
+    //             if (yi == minecraft::chunk::size - 1)
+    //             {
+    //                 set_block(x + xi, y + yi, z + zi, new minecraft::grass_block());
+    //             }
+    //             else if (yi >= 10)
+    //             {
+    //                 set_block(x + xi, y + yi, z + zi, new minecraft::dirt_block());
+    //             }
+    //             else if (yi >= 5)
+    //             {
+    //                 set_block(x + xi, y + yi, z + zi, new minecraft::stone_block());
+    //             }
+    //             else
+    //             {
+    //                 set_block(x + xi, y + yi, z + zi, new minecraft::air_block());
+    //             }
+    //         }
+    //     }
+    // }
+
+    for (int xi = chunk_position.x; xi < (int)(chunk_position.x + minecraft::chunk::size); xi++)
     {
-        for (int yi = 0; yi < minecraft::chunk::size; yi++)
+        for (int zi = chunk_position.z; zi < (int)(chunk_position.z + minecraft::chunk::size); zi++)
         {
-            for (int zi = 0; zi < minecraft::chunk::size; zi++)
+            const auto stone_base_height = -24.f;
+            const auto stone_base_noise = 0.05f;
+            const auto stone_base_noise_height = 4.f;
+
+            const auto stone_mountain_height = 48.f;
+            const auto stone_mountain_frequency = 0.008f;
+            const auto stone_min_height = -12.f;
+
+            const auto dirt_base_height = 1.f;
+            const auto dirt_noise = 0.04f;
+            const auto dirt_noise_height = 3.f;
+
+            auto stone_height = (int)std::floor(stone_base_height);
+            stone_height += get_noise(xi, 0, zi, stone_mountain_frequency, (int)std::floor(stone_mountain_height));
+
+            if (stone_height < stone_min_height)
             {
-                if (yi == minecraft::chunk::size - 1)
+                stone_height = (int)std::floor(stone_min_height);
+            }
+
+            stone_height += get_noise(xi, 0, zi, stone_base_noise, (int)std::floor(stone_base_noise_height));
+
+            auto dirt_height = stone_height + (int)std::floor(dirt_base_height);
+            dirt_height += get_noise(xi, 100, zi, dirt_noise, (int)std::floor(dirt_noise_height));
+
+            for (int yi = chunk_position.y; yi < (int)(chunk_position.y + minecraft::chunk::size); yi++)
+            {
+                if (yi <= stone_height)
                 {
-                    set_block(x + xi, y + yi, z + zi, new minecraft::grass_block());
+                    set_block(xi, yi, zi, new minecraft::stone_block());
                 }
-                else if (yi >= 10)
+                else if (yi < dirt_height)
                 {
-                    set_block(x + xi, y + yi, z + zi, new minecraft::dirt_block());
+                    set_block(xi, yi, zi, new minecraft::dirt_block());
                 }
-                else if (yi >= 5)
+                else if (yi == dirt_height)
                 {
-                    set_block(x + xi, y + yi, z + zi, new minecraft::stone_block());
+                    set_block(xi, yi, zi, new minecraft::grass_block());
                 }
                 else
                 {
-                    set_block(x + xi, y + yi, z + zi, new minecraft::air_block());
+                    set_block(xi, yi, zi, new minecraft::air_block());
                 }
             }
         }

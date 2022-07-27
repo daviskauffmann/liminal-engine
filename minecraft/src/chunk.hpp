@@ -12,7 +12,7 @@ namespace minecraft
     class chunk
     {
     public:
-        static const size_t size = 32;
+        static const size_t size = 16;
 
         minecraft::world *world;
         glm::ivec3 position;
