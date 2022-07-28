@@ -27,7 +27,6 @@ add_library(${PROJECT_NAME}
     src/components/audio_listener.cpp
     src/components/audio_source.cpp
     src/components/camera.cpp
-    src/components/mesh_renderer.cpp
     src/components/physical.cpp
     src/components/script.cpp
     src/components/sprite.cpp

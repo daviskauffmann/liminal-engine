@@ -107,7 +107,7 @@ namespace editor
                 if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
                 {
                     const auto dockspace_id = ImGui::GetID("Dockspace");
-                    const ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+                    constexpr ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
                     ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockspace_flags);
                 }
 
@@ -207,20 +207,19 @@ namespace editor
                     }
 
                     scene_region_size = ImGui::GetContentRegionAvail();
-                    static auto prev_scene_region_size = ImVec2(0, 0);
                     if (scene_region_size.x != prev_scene_region_size.x || scene_region_size.y != prev_scene_region_size.y)
                     {
                         liminal::renderer::instance->set_target_size((int)scene_region_size.x, (int)scene_region_size.y);
                         prev_scene_region_size = scene_region_size;
                     }
 
-                    ImGui::Image((ImTextureID)(long long)camera.render_texture_id, scene_region_size, ImVec2{0, 1}, ImVec2{1, 0});
+                    ImGui::Image((ImTextureID)(long long)camera.render_texture_id, scene_region_size, {0, 1}, {1, 0});
 
                     const auto min_region = ImGui::GetWindowContentRegionMin();
                     const auto max_region = ImGui::GetWindowContentRegionMax();
                     const auto window_pos = ImGui::GetWindowPos();
-                    scene_region_bounds[0] = ImVec2(min_region.x + window_pos.x, min_region.y + window_pos.y);
-                    scene_region_bounds[1] = ImVec2(max_region.x + window_pos.x, max_region.y + window_pos.y);
+                    scene_region_bounds[0] = {min_region.x + window_pos.x, min_region.y + window_pos.y};
+                    scene_region_bounds[1] = {max_region.x + window_pos.x, max_region.y + window_pos.y};
 
                     if (selected_entity)
                     {
@@ -516,10 +515,11 @@ namespace editor
 
         bool playing = false;
 
-        ImVec2 scene_region_bounds[2];
-        ImVec2 scene_region_size;
+        ImVec2 scene_region_bounds[2] = {};
+        ImVec2 scene_region_size = {};
+        ImVec2 prev_scene_region_size = {};
 
-        liminal::entity selected_entity;
+        liminal::entity selected_entity = {};
 
         std::filesystem::path current_asset_directory = "assets";
 
@@ -560,7 +560,7 @@ namespace editor
             // the only caveat is that the camera.render_to_texture needs to be overridden to true when running in the editor, so that the scene can render to the ImGui window
             auto player = scene->create_entity();
             player.add_component<liminal::transform>("Player");
-            player.add_component<liminal::camera>(45.f, true);
+            player.add_component<liminal::camera>(45.0f, true);
             player.add_component<liminal::audio_listener>();
         }
 

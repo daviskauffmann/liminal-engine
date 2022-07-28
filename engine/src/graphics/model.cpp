@@ -8,9 +8,9 @@
 #include <iostream>
 #include <liminal/core/assets.hpp>
 
-static inline glm::vec3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); }
-static inline glm::vec2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); }
-static inline glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); }
+static inline glm::vec3 vec3_cast(const aiVector3D &v) { return {v.x, v.y, v.z}; }
+static inline glm::vec2 vec2_cast(const aiVector3D &v) { return {v.x, v.y}; }
+static inline glm::quat quat_cast(const aiQuaternion &q) { return {q.w, q.x, q.y, q.z}; }
 static inline glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
@@ -19,7 +19,7 @@ liminal::model::model(liminal::mesh *mesh)
     meshes.push_back(mesh);
 }
 
-liminal::model::model(const std::string &filename, bool flip_uvs)
+liminal::model::model(const std::string &filename, const bool flip_uvs)
     : directory(std::filesystem::path(filename).parent_path().string())
 {
     unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_GenSmoothNormals;
@@ -39,6 +39,8 @@ liminal::model::model(const std::string &filename, bool flip_uvs)
     num_bones = 0;
 
     process_node_meshes(scene->mRootNode);
+
+    update_bone_transformations(0, 0);
 }
 
 liminal::model::~model()
@@ -54,14 +56,24 @@ bool liminal::model::has_animations() const
     return scene ? scene->HasAnimations() : false;
 }
 
-void liminal::model::update_bone_transformations(unsigned int animation_index, unsigned int current_time)
+unsigned int liminal::model::num_animations() const
+{
+    return scene ? scene->mNumAnimations : 0;
+}
+
+void liminal::model::set_animation(const unsigned int)
+{
+    // TODO: set stored animation index and remove `animation_index` from other function calls
+}
+
+void liminal::model::update_bone_transformations(const unsigned int animation_index, const unsigned int current_time)
 {
     bone_transformations.clear();
 
     if (scene && scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.f;
-        auto time_in_ticks = ticks_per_second * (current_time / 1000.f);
+        auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
+        auto time_in_ticks = ticks_per_second * (current_time / 1000.0f);
         auto animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
@@ -82,7 +94,7 @@ void liminal::model::draw_meshes(const liminal::program &program) const
     }
 }
 
-void liminal::model::process_node_meshes(const aiNode *node)
+void liminal::model::process_node_meshes(const aiNode *const node)
 {
     for (std::size_t i = 0; i < node->mNumMeshes; i++)
     {
@@ -96,7 +108,7 @@ void liminal::model::process_node_meshes(const aiNode *node)
     }
 }
 
-liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
+liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
 {
     std::vector<liminal::vertex> vertices;
     std::vector<unsigned int> indices;
@@ -210,7 +222,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *scene_mesh)
     return new liminal::mesh(vertices, indices, textures);
 }
 
-void liminal::model::process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation)
+void liminal::model::process_node_animations(const unsigned int animation_index, const float animation_time, const aiNode *const node, const glm::mat4 &parent_transformation)
 {
     const std::string node_name(node->mName.data);
     auto node_transformation = mat4_cast(node->mTransformation);
@@ -254,7 +266,7 @@ void liminal::model::process_node_animations(unsigned int animation_index, float
     }
 }
 
-const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *scene_animation, const std::string node_name)
+const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *const scene_animation, const std::string &node_name)
 {
     for (std::size_t i = 0; i < scene_animation->mNumChannels; i++)
     {
@@ -269,7 +281,7 @@ const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *scene_a
     return nullptr;
 }
 
-void liminal::model::calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
+void liminal::model::calc_interpolated_position(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation)
 {
     if (node_animation->mNumPositionKeys == 1)
     {
@@ -290,7 +302,7 @@ void liminal::model::calc_interpolated_position(aiVector3D &out, float animation
     out = start + factor * delta;
 }
 
-unsigned int liminal::model::find_position_index(float animation_time, const aiNodeAnim *node_animation)
+unsigned int liminal::model::find_position_index(const float animation_time, const aiNodeAnim *const node_animation)
 {
     for (unsigned int i = 0; i < node_animation->mNumPositionKeys - 1; i++)
     {
@@ -305,7 +317,7 @@ unsigned int liminal::model::find_position_index(float animation_time, const aiN
     return 0;
 }
 
-void liminal::model::calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation)
+void liminal::model::calc_interpolated_rotation(aiQuaternion &out, const float animation_time, const aiNodeAnim *const node_animation)
 {
     if (node_animation->mNumRotationKeys == 1)
     {
@@ -326,7 +338,7 @@ void liminal::model::calc_interpolated_rotation(aiQuaternion &out, float animati
     out = out.Normalize();
 }
 
-unsigned int liminal::model::find_rotation_index(float animation_time, const aiNodeAnim *node_animation)
+unsigned int liminal::model::find_rotation_index(const float animation_time, const aiNodeAnim *const node_animation)
 {
     for (unsigned int i = 0; i < node_animation->mNumRotationKeys - 1; i++)
     {
@@ -341,7 +353,7 @@ unsigned int liminal::model::find_rotation_index(float animation_time, const aiN
     return 0;
 }
 
-void liminal::model::calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation)
+void liminal::model::calc_interpolated_scale(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation)
 {
     if (node_animation->mNumScalingKeys == 1)
     {
@@ -362,7 +374,7 @@ void liminal::model::calc_interpolated_scale(aiVector3D &out, float animation_ti
     out = start + factor * delta;
 }
 
-unsigned int liminal::model::find_scale_index(float animation_time, const aiNodeAnim *node_animation)
+unsigned int liminal::model::find_scale_index(const float animation_time, const aiNodeAnim *const node_animation)
 {
     for (unsigned int i = 0; i < node_animation->mNumScalingKeys - 1; i++)
     {

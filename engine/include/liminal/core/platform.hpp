@@ -12,20 +12,20 @@ namespace liminal
     public:
         static platform *instance;
 
-        platform(const std::string &window_title, int window_width, int window_height);
+        platform(const std::string &window_title, const int window_width, const int window_height);
         ~platform();
 
-        void set_window_title(const std::string &title);
-        void set_window_size(int width, int height);
-        void toggle_fullscreen();
-        void toggle_vsync();
-        bool get_relative_mouse_mode();
-        void set_relative_mouse_mode(bool enabled);
+        void set_window_title(const std::string &title) const;
+        void set_window_size(const int width, const int height) const;
+        void toggle_fullscreen() const;
+        void toggle_vsync() const;
+        bool get_relative_mouse_mode() const;
+        void set_relative_mouse_mode(const bool enabled) const;
 
-        void process_event(SDL_Event *event);
+        void process_event(const SDL_Event *const event) const;
 
-        void begin_frame();
-        void end_frame();
+        void begin_frame() const;
+        void end_frame() const;
 
     private:
         SDL_Window *window;

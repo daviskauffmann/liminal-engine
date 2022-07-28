@@ -22,43 +22,43 @@ namespace liminal
     class renderer
     {
     public:
-        static constexpr std::size_t num_directional_light_shadows = 1;
-        static constexpr std::size_t num_point_light_shadows = 4;
-        static constexpr std::size_t num_spot_light_shadows = 1;
+        static constexpr std::size_t num_directional_light_shadows{1};
+        static constexpr std::size_t num_point_light_shadows{4};
+        static constexpr std::size_t num_spot_light_shadows{1};
 
         static renderer *instance;
 
-        liminal::camera *default_camera = nullptr;
-        liminal::transform *default_camera_transform = nullptr;
+        liminal::camera *default_camera{};
+        liminal::transform *default_camera_transform{};
 
-        bool wireframe = false;
-        bool greyscale = false;
+        bool wireframe{false};
+        bool greyscale{false};
 
         renderer(
-            GLsizei target_width, GLsizei target_height, float render_scale,
-            GLsizei directional_light_depth_map_size,
-            GLsizei point_light_depth_cubemap_size,
-            GLsizei spot_light_depth_map_size,
-            GLsizei water_reflection_width, GLsizei water_reflection_height,
-            GLsizei water_refraction_width, GLsizei water_refraction_height);
+            const GLsizei target_width, const GLsizei target_height, const float render_scale,
+            const GLsizei directional_light_depth_map_size,
+            const GLsizei point_light_depth_cubemap_size,
+            const GLsizei spot_light_depth_map_size,
+            const GLsizei water_reflection_width, const GLsizei water_reflection_height,
+            const GLsizei water_refraction_width, const GLsizei water_refraction_height);
         ~renderer();
 
         float get_aspect_ratio() const;
 
-        void set_target_size(GLsizei width, GLsizei height);
-        void set_render_scale(float scale);
+        void set_target_size(const GLsizei width, const GLsizei height);
+        void set_render_scale(const float scale);
 
-        void set_directional_light_depth_map_size(GLsizei size);
-        void set_point_light_depth_cubemap_size(GLsizei size);
-        void set_spot_light_depth_map_size(GLsizei size);
-        void set_reflection_size(GLsizei width, GLsizei height);
-        void set_refraction_size(GLsizei width, GLsizei height);
+        void set_directional_light_depth_map_size(const GLsizei size);
+        void set_point_light_depth_cubemap_size(const GLsizei size);
+        void set_spot_light_depth_map_size(const GLsizei size);
+        void set_reflection_size(const GLsizei width, const GLsizei height);
+        void set_refraction_size(const GLsizei width, const GLsizei height);
 
         void reload_programs();
 
-        liminal::entity pick(int x, int y, liminal::scene *scene) const;
+        liminal::entity pick(const int x, const int y, liminal::scene *scene) const;
 
-        void render(liminal::scene &scene, unsigned int current_time, float delta_time) const;
+        void render(liminal::scene &scene, const unsigned int current_time, const float delta_time) const;
 
     private:
         GLsizei target_width;

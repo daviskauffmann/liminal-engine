@@ -76,7 +76,7 @@ void main()
     vec3 ks = f;
     vec3 kd = vec3(1) - ks;
     kd *= 1 - metallic;
-    float n_dot_l = max(dot(n, l), 0.0);
+    float n_dot_l = max(dot(n, l), 0);
     vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
     
     vec3 frag_to_light = position - light.position;

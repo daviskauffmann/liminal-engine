@@ -43,7 +43,7 @@ void minecraft::world::update() const
 int get_noise(const int x, const int y, const int z, const float scale, const int max)
 {
     const auto simplex = SimplexNoise();
-    return (int)(std::floor(simplex.noise(x * scale, y * scale, z * scale) + 1.f) * (max / 2.f));
+    return (int)(std::floor(simplex.noise(x * scale, y * scale, z * scale) + 1) * (max / 2.0f));
 }
 
 void minecraft::world::create_chunk(const int x, const int y, const int z)

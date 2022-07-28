@@ -141,8 +141,8 @@ void liminal::scene::load(const std::string &filename)
                             world.get(),
                             "assets/images/heightmap.png",
                             glm::vec3(0, 0, 0),
-                            100.f,
-                            5.f);
+                            100.0f,
+                            5.0f);
                     }
                 }
             }

@@ -13,9 +13,9 @@ namespace liminal
         audio_source();
         ~audio_source();
 
-        void set_loop(bool loop) const;
-        void set_gain(float gain) const;
-        void set_pitch(float pitch) const;
+        void set_loop(const bool loop) const;
+        void set_gain(const float gain) const;
+        void set_pitch(const float pitch) const;
         void set_position(const glm::vec3 &position);
         bool is_playing() const;
         void play(const liminal::sound &sound) const;
@@ -25,7 +25,7 @@ namespace liminal
 
     private:
         ALuint source_id;
-        glm::vec3 last_position = glm::vec3(0);
+        glm::vec3 last_position = {};
     };
 }
 

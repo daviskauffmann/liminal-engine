@@ -8,9 +8,7 @@ namespace liminal
     class mesh_renderer
     {
     public:
-        liminal::model *model;
-
-        mesh_renderer(liminal::model *model = nullptr);
+        liminal::model *model = nullptr;
     };
 }
 

@@ -9,7 +9,7 @@ namespace liminal
     class water
     {
     public:
-        float tiling;
+        float tiling = 1;
     };
 }
 

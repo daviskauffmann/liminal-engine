@@ -25,6 +25,7 @@ namespace liminal
 
     private:
         float height_scale;
+        std::vector<float> heightfield;
 
         float get_height(const SDL_Surface *const surface, const int x, const int z) const;
     };

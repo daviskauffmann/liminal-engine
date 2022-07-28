@@ -12,7 +12,7 @@
 #include <liminal/input/input.hpp>
 #include <sol/sol.hpp>
 
-liminal::script::script(const std::string &filename, liminal::scene *scene, entt::entity id)
+liminal::script::script(const std::string &filename, liminal::scene *const scene, const entt::entity id)
 {
     lua = new sol::state;
 
@@ -96,9 +96,9 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     {
         const auto entity = scene->get_entity(id);
         auto &transform = entity.get_component<liminal::transform>();
-        transform.position = glm::vec3(x, y, z);
-        transform.rotation = glm::vec3(rx, ry, rz);
-        transform.scale = glm::vec3(sx, sy, sz);
+        transform.position = {x, y, z};
+        transform.rotation = {rx, ry, rz};
+        transform.scale = {sx, sy, sz};
     };
     (*lua)["AddMeshRenderer"] = [scene](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
@@ -120,7 +120,7 @@ liminal::script::script(const std::string &filename, liminal::scene *scene, entt
     {
         auto entity = scene->get_entity(id);
         auto &point_light = entity.get_component<liminal::point_light>();
-        point_light.color = glm::vec3(r, g, b);
+        point_light.color = {r, g, b};
     };
     (*lua)["GetCameraFrontX"] = [scene](entt::entity id) -> float
     {
@@ -160,7 +160,7 @@ void liminal::script::init() const
     (*lua)["Init"]();
 }
 
-void liminal::script::update(float delta_time) const
+void liminal::script::update(const float delta_time) const
 {
     (*lua)["Update"](delta_time);
 }

@@ -26,13 +26,13 @@ namespace liminal
         std::vector<glm::mat4> bone_transformations;
 
         model(liminal::mesh *mesh);
-        model(const std::string &filename, bool flip_uvs = false);
+        model(const std::string &filename, const bool flip_uvs = false);
         ~model();
 
         bool has_animations() const;
         unsigned int num_animations() const;
-        void set_animation(unsigned int index);
-        void update_bone_transformations(unsigned int animation_index, unsigned int current_time);
+        void set_animation(const unsigned int index);
+        void update_bone_transformations(const unsigned int animation_index, const unsigned int current_time);
 
         void draw_meshes(const liminal::program &program) const;
 
@@ -51,14 +51,14 @@ namespace liminal
         void process_node_meshes(const aiNode *node);
         liminal::mesh *create_mesh(const aiMesh *mesh);
 
-        void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
-        const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string node_name);
-        void calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
-        unsigned int find_position_index(float animation_time, const aiNodeAnim *node_animation);
-        void calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation);
-        unsigned int find_rotation_index(float animation_time, const aiNodeAnim *node_animation);
-        void calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation);
-        unsigned int find_scale_index(float animation_time, const aiNodeAnim *node_animation);
+        void process_node_animations(const unsigned int animation_index, const float animation_time, const aiNode *const node, const glm::mat4 &parent_transformation);
+        const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string &node_name);
+        void calc_interpolated_position(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation);
+        unsigned int find_position_index(const float animation_time, const aiNodeAnim *const node_animation);
+        void calc_interpolated_rotation(aiQuaternion &out, const float animation_time, const aiNodeAnim *const node_animation);
+        unsigned int find_rotation_index(const float animation_time, const aiNodeAnim *const node_animation);
+        void calc_interpolated_scale(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation);
+        unsigned int find_scale_index(const float animation_time, const aiNodeAnim *const node_animation);
     };
 }
 

@@ -26,25 +26,23 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
         return;
     }
 
-    std::vector<float> heightfield;
-
     std::vector<liminal::vertex> vertices;
     for (int z = 0; z < surface->h; z++)
     {
         for (int x = 0; x < surface->w; x++)
         {
             liminal::vertex vertex;
-            vertex.position = glm::vec3(
+            vertex.position = {
                 -(float)x / ((float)surface->w - 1) * size,
                 get_height(surface, x, z),
-                -(float)z / ((float)surface->h - 1) * size);
+                -(float)z / ((float)surface->h - 1) * size};
             vertex.normal = glm::normalize(glm::vec3(
                 get_height(surface, x + 1, z) - get_height(surface, x - 1, z),
                 2,
                 get_height(surface, x, z + 1) - get_height(surface, x, z - 1)));
-            vertex.uv = glm::vec2(
+            vertex.uv = {
                 (float)x / ((float)surface->w - 1),
-                (float)z / ((float)surface->h - 1));
+                (float)z / ((float)surface->h - 1)};
             vertices.push_back(vertex);
 
             heightfield.push_back(vertex.position.x);

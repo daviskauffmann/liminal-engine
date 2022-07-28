@@ -4,7 +4,7 @@
 #include <SDL2/SDL_image.h>
 #include <iostream>
 
-liminal::cubemap::cubemap(std::vector<std::string> filenames)
+liminal::cubemap::cubemap(const std::vector<std::string> &filenames)
 {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);

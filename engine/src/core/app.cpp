@@ -41,7 +41,7 @@ liminal::app::app(int argc, char *argv[])
             return;
         }
 
-        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.f);
+        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
 
         if (result.count("version"))
         {
@@ -89,19 +89,19 @@ void liminal::app::run()
         static unsigned int current_time = 0;
         const auto previous_time = current_time;
         current_time = SDL_GetTicks();
-        const auto delta_time = ((current_time - previous_time) / 1000.f);
+        const auto delta_time = ((current_time - previous_time) / 1000.0f);
 
         // gather input
         liminal::input::last_keys = liminal::input::keys;
         const auto keys = SDL_GetKeyboardState(nullptr);
-        for (std::size_t scancode = 0; scancode < liminal::keycode::NUM_KEYCODES; scancode++)
+        for (std::size_t scancode = 0; scancode < liminal::input::keys.size(); scancode++)
         {
             liminal::input::keys[scancode] = keys[scancode];
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
         const auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
-        for (std::size_t button = 0; button < liminal::mouse_button::NUM_MOUSE_BUTTONS; button++)
+        for (std::size_t button = 0; button < liminal::input::mouse_buttons.size(); button++)
         {
             liminal::input::mouse_buttons[button] = mouse_buttons & SDL_BUTTON(button);
         }
@@ -186,6 +186,8 @@ void liminal::app::run()
         {
             if (ImGui::Begin("Console", &console_open))
             {
+                // TODO: no local static!!!
+                // should add proper engine logging and have the console display those logs
                 static std::vector<std::string> messages;
 
                 char command_c_str[256] = {};
@@ -225,23 +227,23 @@ void liminal::app::run()
                     }
                     else if (command == "render_scale 0.5")
                     {
-                        render_scale = .5f;
+                        render_scale = 0.5f;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     else if (command == "render_scale 0.1")
                     {
-                        render_scale = .1f;
+                        render_scale = 0.1f;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
                         std::cout << "Render scale changed to " << render_scale << std::endl;
                     }
                     else if (command == "toggle_slomo")
                     {
-                        if (time_scale > .25f)
+                        if (time_scale > 0.25f)
                         {
-                            time_scale = .25f;
+                            time_scale = 0.25f;
                         }
                         else
                         {

@@ -12,10 +12,10 @@ namespace liminal
     {
     public:
         liminal::texture *texture = nullptr;
-        glm::vec3 color = glm::vec3(1);
-        glm::vec2 position = glm::vec2();
+        glm::vec3 color = {1, 1, 1};
+        glm::vec2 position = {};
         float rotation = 0;
-        glm::vec2 scale = glm::vec2(1);
+        glm::vec2 scale = {1, 1};
 
         glm::mat4 get_model_matrix() const;
     };

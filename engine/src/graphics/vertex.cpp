@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void liminal::vertex::add_bone_data(unsigned int id, float weight)
+void liminal::vertex::add_bone_data(const unsigned int id, const float weight)
 {
     for (std::size_t i = 0; i < num_bones; i++)
     {

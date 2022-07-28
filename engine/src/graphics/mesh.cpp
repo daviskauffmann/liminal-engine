@@ -3,9 +3,9 @@
 #include <assimp/scene.h>
 
 liminal::mesh::mesh(
-    std::vector<liminal::vertex> vertices,
-    std::vector<GLuint> indices,
-    std::vector<std::vector<liminal::texture *>> textures)
+    const std::vector<liminal::vertex> &vertices,
+    const std::vector<GLuint> &indices,
+    const std::vector<std::vector<liminal::texture *>> &textures)
     : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)

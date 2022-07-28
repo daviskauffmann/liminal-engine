@@ -14,17 +14,17 @@ liminal::audio_source::~audio_source()
     alDeleteSources(1, &source_id);
 }
 
-void liminal::audio_source::set_loop(bool loop) const
+void liminal::audio_source::set_loop(const bool loop) const
 {
     alSourcei(source_id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
 }
 
-void liminal::audio_source::set_gain(float gain) const
+void liminal::audio_source::set_gain(const float gain) const
 {
     alSourcef(source_id, AL_GAIN, gain);
 }
 
-void liminal::audio_source::set_pitch(float pitch) const
+void liminal::audio_source::set_pitch(const float pitch) const
 {
     alSourcef(source_id, AL_PITCH, pitch);
 }
@@ -33,7 +33,7 @@ void liminal::audio_source::set_position(const glm::vec3 &position)
 {
     alSourcefv(source_id, AL_POSITION, glm::value_ptr(position));
 
-    const glm::vec3 velocity = last_position - position;
+    const auto velocity = last_position - position;
     alSourcefv(source_id, AL_VELOCITY, glm::value_ptr(velocity));
 
     last_position = position;

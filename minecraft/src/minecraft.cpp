@@ -36,7 +36,7 @@ namespace minecraft
 
             player_entity = scene->create_entity();
             player_entity.add_component<liminal::transform>("Player");
-            player_entity.add_component<liminal::camera>(45.f);
+            player_entity.add_component<liminal::camera>(45.0f);
 
             world = new minecraft::world(scene);
         }
@@ -63,10 +63,10 @@ namespace minecraft
             glm::vec3 camera_front = camera.calc_front(transform);
             glm::vec3 camera_right = camera.calc_right(transform);
 
-            static glm::vec3 velocity(0, 0, 0);
-            glm::vec3 acceleration(0, 0, 0);
-            const float speed = 50;
-            const float drag = 10;
+            static auto velocity = glm::vec3(0, 0, 0);
+            auto acceleration = glm::vec3(0, 0, 0);
+            constexpr auto speed = 50.0f;
+            constexpr auto drag = 10.0f;
             bool sprint = false;
             if (!io.WantCaptureKeyboard)
             {
@@ -113,7 +113,7 @@ namespace minecraft
             {
                 if (liminal::platform::instance->get_relative_mouse_mode())
                 {
-                    const auto sensitivity = 0.1f;
+                    constexpr auto sensitivity = 0.1f;
                     transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
                     transform.rotation.y += liminal::input::mouse_dx * sensitivity;
                     if (transform.rotation.x > 89)
@@ -143,7 +143,7 @@ namespace minecraft
         }
 
     private:
-        liminal::scene *scene = nullptr;
+        liminal::scene *scene;
 
         liminal::entity player_entity;
 

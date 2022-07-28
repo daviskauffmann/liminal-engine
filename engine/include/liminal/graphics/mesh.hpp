@@ -1,11 +1,11 @@
 #ifndef LIMINAL_GRAPHICS_MESH_HPP
 #define LIMINAL_GRAPHICS_MESH_HPP
 
+#include <GL/glew.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <GL/glew.h>
-#include <liminal/graphics/texture.hpp>
 #include <liminal/graphics/program.hpp>
+#include <liminal/graphics/texture.hpp>
 #include <liminal/graphics/vertex.hpp>
 #include <vector>
 
@@ -22,9 +22,9 @@ namespace liminal
         std::vector<std::vector<liminal::texture *>> textures;
 
         mesh(
-            std::vector<liminal::vertex> vertices,
-            std::vector<unsigned int> indices,
-            std::vector<std::vector<liminal::texture *>> textures);
+            const std::vector<liminal::vertex> &vertices,
+            const std::vector<unsigned int> &indices,
+            const std::vector<std::vector<liminal::texture *>> &textures);
         ~mesh();
 
         void draw(const liminal::program &program) const;

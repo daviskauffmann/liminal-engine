@@ -1,7 +1,8 @@
 #include <liminal/graphics/skybox.hpp>
 
-#include <glm/matrix.hpp>
+#include <array>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/matrix.hpp>
 #include <iostream>
 #include <liminal/graphics/program.hpp>
 #include <memory>
@@ -14,9 +15,6 @@ constexpr GLsizei prefilter_size = 128;
 
 liminal::skybox::skybox(const std::string &filename)
 {
-    this->environment_cubemap_id = 0;
-    this->irradiance_cubemap_id = 0;
-    this->prefilter_cubemap_id = 0;
     set_cubemap(filename);
 }
 
@@ -34,48 +32,48 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glDeleteTextures(1, &prefilter_cubemap_id);
 
     // setup capture mesh
-    const std::vector<float> capture_vertices =
-        {-1, +1, -1,
-         -1, -1, -1,
-         +1, -1, -1,
-         +1, -1, -1,
-         +1, +1, -1,
-         -1, +1, -1,
+    constexpr std::array<GLfloat, 108> capture_vertices{
+        -1, +1, -1,
+        -1, -1, -1,
+        +1, -1, -1,
+        +1, -1, -1,
+        +1, +1, -1,
+        -1, +1, -1,
 
-         -1, -1, +1,
-         -1, -1, -1,
-         -1, +1, -1,
-         -1, +1, -1,
-         -1, +1, +1,
-         -1, -1, +1,
+        -1, -1, +1,
+        -1, -1, -1,
+        -1, +1, -1,
+        -1, +1, -1,
+        -1, +1, +1,
+        -1, -1, +1,
 
-         +1, -1, -1,
-         +1, -1, +1,
-         +1, +1, +1,
-         +1, +1, +1,
-         +1, +1, -1,
-         +1, -1, -1,
+        +1, -1, -1,
+        +1, -1, +1,
+        +1, +1, +1,
+        +1, +1, +1,
+        +1, +1, -1,
+        +1, -1, -1,
 
-         -1, -1, +1,
-         -1, +1, +1,
-         +1, +1, +1,
-         +1, +1, +1,
-         +1, -1, +1,
-         -1, -1, +1,
+        -1, -1, +1,
+        -1, +1, +1,
+        +1, +1, +1,
+        +1, +1, +1,
+        +1, -1, +1,
+        -1, -1, +1,
 
-         -1, +1, -1,
-         +1, +1, -1,
-         +1, +1, +1,
-         +1, +1, +1,
-         -1, +1, +1,
-         -1, +1, -1,
+        -1, +1, -1,
+        +1, +1, -1,
+        +1, +1, +1,
+        +1, +1, +1,
+        -1, +1, +1,
+        -1, +1, -1,
 
-         -1, -1, -1,
-         -1, -1, +1,
-         +1, -1, -1,
-         +1, -1, -1,
-         -1, -1, +1,
-         +1, -1, +1};
+        -1, -1, -1,
+        -1, -1, +1,
+        +1, -1, -1,
+        +1, -1, -1,
+        -1, -1, +1,
+        +1, -1, +1};
     const GLsizei capture_vertices_size = (GLsizei)(capture_vertices.size() * sizeof(float));
     GLuint capture_vao_id;
     GLuint capture_vbo_id;
@@ -94,14 +92,14 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     glBindVertexArray(0);
 
     // setup capture matrices
-    const auto capture_projection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
-    const glm::mat4 capture_mvps[] =
-        {capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
-         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
-         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
-         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
-         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
-         capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))};
+    const auto capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    const auto capture_mvps = std::array{
+        capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
+        capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
+        capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
+        capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
+        capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
+        capture_projection * glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))};
 
     // setup capture fbo
     GLuint capture_fbo_id;
@@ -162,6 +160,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
             GL_RGB,
             GL_FLOAT,
             image);
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -187,6 +186,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
                 GL_FLOAT,
                 nullptr);
         }
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -257,6 +257,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
                 GL_FLOAT,
                 nullptr);
         }
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -334,6 +335,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
                 GL_FLOAT,
                 nullptr);
         }
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -358,11 +360,11 @@ void liminal::skybox::set_cubemap(const std::string &filename)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
 
-            const GLsizei max_mip_levels = 5;
+            constexpr GLsizei max_mip_levels = 5;
             for (GLint mip_level = 0; mip_level < max_mip_levels; mip_level++)
             {
-                auto mip_width = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
-                auto mip_height = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
+                const auto mip_width = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
+                const auto mip_height = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
 
                 glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
                 {

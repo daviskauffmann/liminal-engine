@@ -27,7 +27,7 @@ namespace player
             // TODO: these entities should come from the JSON file
             player_entity = scene->create_entity();
             player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            player_entity.add_component<liminal::camera>(45.f);
+            player_entity.add_component<liminal::camera>(45.0f);
             player_entity.add_component<liminal::audio_listener>();
 
             ambience_entity = scene->create_entity();
@@ -46,7 +46,7 @@ namespace player
             weapon_entity.add_component<liminal::audio_source>();
 
             ui_entity = scene->create_entity();
-            // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.f, glm::vec2(1, 1));
+            // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.0f, glm::vec2(1, 1));
         }
 
         ~app() override
@@ -72,10 +72,10 @@ namespace player
             auto camera_front = camera.calc_front(transform);
             auto camera_right = camera.calc_right(transform);
 
-            static glm::vec3 velocity(0, 0, 0);
-            glm::vec3 acceleration(0, 0, 0);
-            const float speed = 50;
-            const float drag = 10;
+            static auto velocity = glm::vec3(0, 0, 0);
+            auto acceleration = glm::vec3(0, 0, 0);
+            constexpr auto speed = 50.0f;
+            constexpr auto drag = 10.0f;
             auto sprint = false;
             auto jumping = false;
             if (!io.WantCaptureKeyboard)
@@ -205,7 +205,7 @@ namespace player
         }
 
     private:
-        liminal::scene *scene = nullptr;
+        liminal::scene *scene;
 
         liminal::entity player_entity;
 

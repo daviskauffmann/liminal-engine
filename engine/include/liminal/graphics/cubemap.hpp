@@ -13,7 +13,7 @@ namespace liminal
     public:
         GLuint texture_id;
 
-        cubemap(std::vector<std::string> filenames);
+        cubemap(const std::vector<std::string> &filenames);
         ~cubemap();
     };
 }

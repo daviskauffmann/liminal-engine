@@ -50,12 +50,12 @@ void liminal::program::bind() const
     glUseProgram(program_id);
 }
 
-void liminal::program::unbind(void) const
+void liminal::program::unbind() const
 {
     glUseProgram(0);
 }
 
-void liminal::program::set_int(const std::string &name, GLint value) const
+void liminal::program::set_int(const std::string &name, const GLint value) const
 {
     glUniform1i(get_location(name), value);
 }
@@ -65,7 +65,7 @@ void liminal::program::set_unsigned_int(const std::string &name, GLuint value) c
     glUniform1ui(get_location(name), value);
 }
 
-void liminal::program::set_float(const std::string &name, GLfloat value) const
+void liminal::program::set_float(const std::string &name, const GLfloat value) const
 {
     glUniform1f(get_location(name), value);
 }
@@ -168,7 +168,7 @@ GLuint liminal::program::create_program() const
     return new_program_id;
 }
 
-GLuint liminal::program::create_shader(GLenum type, const std::string &filename) const
+GLuint liminal::program::create_shader(const GLenum type, const std::string &filename) const
 {
     const auto shader_id = glCreateShader(type);
 

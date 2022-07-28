@@ -12,7 +12,7 @@ namespace liminal
     class point_light
     {
     public:
-        glm::vec3 color = glm::vec3(1);
+        glm::vec3 color = {1, 1, 1};
 
         std::array<glm::mat4, 6> view_projection_matrices = {};
         GLuint depth_cubemap_texture_id = 0;

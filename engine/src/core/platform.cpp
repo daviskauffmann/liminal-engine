@@ -13,7 +13,7 @@
 
 liminal::platform *liminal::platform::instance = nullptr;
 
-liminal::platform::platform(const std::string &window_title, int window_width, int window_height)
+liminal::platform::platform(const std::string &window_title, const int window_width, const int window_height)
 {
     instance = this;
 
@@ -132,17 +132,17 @@ liminal::platform::~platform()
     SDL_Quit();
 }
 
-void liminal::platform::set_window_title(const std::string &title)
+void liminal::platform::set_window_title(const std::string &title) const
 {
     SDL_SetWindowTitle(window, title.c_str());
 }
 
-void liminal::platform::set_window_size(int width, int height)
+void liminal::platform::set_window_size(const int width, const int height) const
 {
     SDL_SetWindowSize(window, width, height);
 }
 
-void liminal::platform::toggle_fullscreen()
+void liminal::platform::toggle_fullscreen() const
 {
     const auto flags = SDL_GetWindowFlags(window);
     if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
@@ -155,34 +155,34 @@ void liminal::platform::toggle_fullscreen()
     }
 }
 
-void liminal::platform::toggle_vsync()
+void liminal::platform::toggle_vsync() const
 {
     SDL_GL_SetSwapInterval(!SDL_GL_GetSwapInterval());
 }
 
-bool liminal::platform::get_relative_mouse_mode()
+bool liminal::platform::get_relative_mouse_mode() const
 {
     return SDL_GetRelativeMouseMode();
 }
 
-void liminal::platform::set_relative_mouse_mode(bool enabled)
+void liminal::platform::set_relative_mouse_mode(const bool enabled) const
 {
     SDL_SetRelativeMouseMode((SDL_bool)enabled);
 }
 
-void liminal::platform::process_event(SDL_Event *event)
+void liminal::platform::process_event(const SDL_Event *const event) const
 {
     ImGui_ImplSDL2_ProcessEvent(event);
 }
 
-void liminal::platform::begin_frame()
+void liminal::platform::begin_frame() const
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame(window);
     ImGui::NewFrame();
 }
 
-void liminal::platform::end_frame()
+void liminal::platform::end_frame() const
 {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

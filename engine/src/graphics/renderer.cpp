@@ -37,12 +37,12 @@ constexpr float spot_light_far_plane = 10;
 liminal::renderer *liminal::renderer::instance = nullptr;
 
 liminal::renderer::renderer(
-    GLsizei target_width, GLsizei target_height, float render_scale,
-    GLsizei directional_light_depth_map_size,
-    GLsizei point_light_depth_cubemap_size,
-    GLsizei spot_light_depth_map_size,
-    GLsizei water_reflection_width, GLsizei water_reflection_height,
-    GLsizei water_refraction_width, GLsizei water_refraction_height)
+    const GLsizei target_width, const GLsizei target_height, const float render_scale,
+    const GLsizei directional_light_depth_map_size,
+    const GLsizei point_light_depth_cubemap_size,
+    const GLsizei spot_light_depth_map_size,
+    const GLsizei water_reflection_width, const GLsizei water_reflection_height,
+    const GLsizei water_refraction_width, const GLsizei water_refraction_height)
 {
     instance = this;
 
@@ -70,14 +70,14 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &water_vao_id);
     glBindVertexArray(water_vao_id);
     {
-        const std::vector<GLfloat> water_vertices =
-            {-1, -1,
-             -1, +1,
-             +1, -1,
+        constexpr std::array<GLfloat, 12> water_vertices{
+            -1, -1,
+            -1, +1,
+            +1, -1,
 
-             +1, -1,
-             -1, +1,
-             +1, +1};
+            +1, -1,
+            -1, +1,
+            +1, +1};
         water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &water_vbo_id);
@@ -94,48 +94,48 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &skybox_vao_id);
     glBindVertexArray(skybox_vao_id);
     {
-        const std::vector<GLfloat> skybox_vertices =
-            {-1, +1, -1,
-             -1, -1, -1,
-             +1, -1, -1,
-             +1, -1, -1,
-             +1, +1, -1,
-             -1, +1, -1,
+        constexpr std::array<GLfloat, 108> skybox_vertices{
+            -1, +1, -1,
+            -1, -1, -1,
+            +1, -1, -1,
+            +1, -1, -1,
+            +1, +1, -1,
+            -1, +1, -1,
 
-             -1, -1, +1,
-             -1, -1, -1,
-             -1, +1, -1,
-             -1, +1, -1,
-             -1, +1, +1,
-             -1, -1, +1,
+            -1, -1, +1,
+            -1, -1, -1,
+            -1, +1, -1,
+            -1, +1, -1,
+            -1, +1, +1,
+            -1, -1, +1,
 
-             +1, -1, -1,
-             +1, -1, +1,
-             +1, +1, +1,
-             +1, +1, +1,
-             +1, +1, -1,
-             +1, -1, -1,
+            +1, -1, -1,
+            +1, -1, +1,
+            +1, +1, +1,
+            +1, +1, +1,
+            +1, +1, -1,
+            +1, -1, -1,
 
-             -1, -1, +1,
-             -1, +1, +1,
-             +1, +1, +1,
-             +1, +1, +1,
-             +1, -1, +1,
-             -1, -1, +1,
+            -1, -1, +1,
+            -1, +1, +1,
+            +1, +1, +1,
+            +1, +1, +1,
+            +1, -1, +1,
+            -1, -1, +1,
 
-             -1, +1, -1,
-             +1, +1, -1,
-             +1, +1, +1,
-             +1, +1, +1,
-             -1, +1, +1,
-             -1, +1, -1,
+            -1, +1, -1,
+            +1, +1, -1,
+            +1, +1, +1,
+            +1, +1, +1,
+            -1, +1, +1,
+            -1, +1, -1,
 
-             -1, -1, -1,
-             -1, -1, +1,
-             +1, -1, -1,
-             +1, -1, -1,
-             -1, -1, +1,
-             +1, -1, +1};
+            -1, -1, -1,
+            -1, -1, +1,
+            +1, -1, -1,
+            +1, -1, -1,
+            -1, -1, +1,
+            +1, -1, +1};
         skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &skybox_vbo_id);
@@ -152,14 +152,14 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &sprite_vao_id);
     glBindVertexArray(sprite_vao_id);
     {
-        const std::vector<GLfloat> sprite_vertices =
-            {+0, +1, +0, +1,
-             +1, +0, +1, +0,
-             +0, +0, +0, +0,
+        constexpr std::array<GLfloat, 24> sprite_vertices{
+            +0, +1, +0, +1,
+            +1, +0, +1, +0,
+            +0, +0, +0, +0,
 
-             +0, +1, +0, +1,
-             +1, +1, +1, +1,
-             +1, +0, +1, +0};
+            +0, +1, +0, +1,
+            +1, +1, +1, +1,
+            +1, +0, +1, +0};
         sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &sprite_vbo_id);
@@ -178,13 +178,14 @@ liminal::renderer::renderer(
     glGenVertexArrays(1, &screen_vao_id);
     glBindVertexArray(screen_vao_id);
     {
-        const std::vector<GLfloat> screen_vertices =
-            {-1, -1, +0, +0,
-             -1, +1, +0, +1,
-             +1, -1, +1, +0,
-             +1, -1, +1, +0,
-             -1, +1, +0, +1,
-             +1, +1, +1, +1};
+        constexpr std::array<GLfloat, 24> screen_vertices{
+            -1, -1, +0, +0,
+            -1, +1, +0, +1,
+            +1, -1, +1, +0,
+
+            +1, -1, +1, +0,
+            -1, +1, +0, +1,
+            +1, +1, +1, +1};
         screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &screen_vbo_id);
@@ -201,7 +202,7 @@ liminal::renderer::renderer(
 
     // create brdf texture
     {
-        const GLsizei brdf_size = 512;
+        constexpr GLsizei brdf_size = 512;
 
         GLuint capture_fbo_id;
         GLuint capture_rbo_id;
@@ -265,7 +266,7 @@ liminal::renderer::renderer(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        auto brdf_program = std::make_unique<liminal::program>(
+        const auto brdf_program = std::make_unique<liminal::program>(
             "assets/shaders/brdf.vs",
             "assets/shaders/brdf.fs");
 
@@ -354,20 +355,21 @@ liminal::renderer::renderer(
     // http://www.songho.ca/opengl/gl_sphere.html
     {
         std::vector<liminal::vertex> vertices;
-        float radius = 1;
-        std::size_t stack_count = 36;
-        std::size_t sector_count = 18;
-        float length_inv = 1 / radius;
-        float sector_step = 2 * 3.14f / sector_count;
-        float stack_step = 3.14f / stack_count;
+        constexpr auto radius = 1.0f;
+        constexpr std::size_t stack_count = 36;
+        constexpr std::size_t sector_count = 18;
+        constexpr auto length_inv = 1 / radius;
+        constexpr auto sector_step = 2 * 3.14f / sector_count;
+        constexpr auto stack_step = 3.14f / stack_count;
         for (std::size_t i = 0; i <= stack_count; i++)
         {
-            float stack_angle = 3.14f / 2 - i * stack_step;
-            float xy = radius * cosf(stack_angle);
-            float z = radius * sinf(stack_angle);
+            const auto stack_angle = 3.14f / 2 - i * stack_step;
+            const auto xy = radius * cosf(stack_angle);
+            const auto z = radius * sinf(stack_angle);
             for (std::size_t j = 0; j <= sector_count; j++)
             {
-                float sector_angle = j * sector_step;
+                const float sector_angle = j * sector_step;
+
                 liminal::vertex vertex;
                 vertex.position.x = xy * cosf(sector_angle);
                 vertex.position.y = xy * sinf(sector_angle);
@@ -469,7 +471,7 @@ float liminal::renderer::get_aspect_ratio() const
     return (float)render_width / (float)render_height;
 }
 
-void liminal::renderer::set_target_size(GLsizei width, GLsizei height)
+void liminal::renderer::set_target_size(const GLsizei width, const GLsizei height)
 {
     target_width = width;
     target_height = height;
@@ -477,7 +479,7 @@ void liminal::renderer::set_target_size(GLsizei width, GLsizei height)
     calc_render_size();
 }
 
-void liminal::renderer::set_render_scale(float scale)
+void liminal::renderer::set_render_scale(const float scale)
 {
     render_scale = scale;
 
@@ -673,13 +675,13 @@ void liminal::renderer::calc_render_size()
         }
 
         {
-            GLenum geometry_color_attachments[] = {
+            constexpr std::array<GLenum, 5> geometry_color_attachments{
                 GL_COLOR_ATTACHMENT0,
                 GL_COLOR_ATTACHMENT1,
                 GL_COLOR_ATTACHMENT2,
                 GL_COLOR_ATTACHMENT3,
                 GL_COLOR_ATTACHMENT4};
-            glDrawBuffers(sizeof(geometry_color_attachments) / sizeof(GLenum), geometry_color_attachments);
+            glDrawBuffers((GLsizei)geometry_color_attachments.size(), geometry_color_attachments.data());
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -746,10 +748,10 @@ void liminal::renderer::calc_render_size()
         }
 
         {
-            GLenum hdr_color_attachments[] = {
+            constexpr std::array<GLenum, 2> hdr_color_attachments{
                 GL_COLOR_ATTACHMENT0,
                 GL_COLOR_ATTACHMENT1};
-            glDrawBuffers(sizeof(hdr_color_attachments) / sizeof(GLenum), hdr_color_attachments);
+            glDrawBuffers((GLsizei)hdr_color_attachments.size(), hdr_color_attachments.data());
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -836,9 +838,9 @@ void liminal::renderer::calc_render_size()
         }
 
         {
-            GLenum final_color_attachments[] = {
+            constexpr std::array<GLenum, 1> final_color_attachments{
                 GL_COLOR_ATTACHMENT0};
-            glDrawBuffers(sizeof(final_color_attachments) / sizeof(GLenum), final_color_attachments);
+            glDrawBuffers((GLsizei)final_color_attachments.size(), final_color_attachments.data());
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -850,7 +852,7 @@ void liminal::renderer::calc_render_size()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::renderer::set_directional_light_depth_map_size(GLsizei size)
+void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
 {
     directional_light_depth_map_size = size;
 
@@ -883,12 +885,14 @@ void liminal::renderer::set_directional_light_depth_map_size(GLsizei size)
                         GL_DEPTH_COMPONENT,
                         GL_FLOAT,
                         nullptr);
+
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                    GLfloat border_color[] = {1, 1, 1, 1};
-                    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
+                    constexpr std::array<GLfloat, 4> border_color{1, 1, 1, 1};
+                    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
                 }
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
@@ -910,7 +914,7 @@ void liminal::renderer::set_directional_light_depth_map_size(GLsizei size)
     }
 }
 
-void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei size)
+void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
 {
     point_light_depth_cubemap_size = size;
 
@@ -942,6 +946,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei size)
                             GL_FLOAT,
                             nullptr);
                     }
+
                     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -967,7 +972,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(GLsizei size)
     }
 }
 
-void liminal::renderer::set_spot_light_depth_map_size(GLsizei size)
+void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
 {
     spot_light_depth_map_size = size;
 
@@ -996,12 +1001,14 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei size)
                         GL_DEPTH_COMPONENT,
                         GL_FLOAT,
                         nullptr);
+
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                    GLfloat border_color[] = {1, 1, 1, 1};
-                    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
+                    constexpr std::array<GLfloat, 4> border_color{1, 1, 1, 1};
+                    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
                 }
                 glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -1023,7 +1030,7 @@ void liminal::renderer::set_spot_light_depth_map_size(GLsizei size)
     }
 }
 
-void liminal::renderer::set_reflection_size(GLsizei wdith, GLsizei height)
+void liminal::renderer::set_reflection_size(const GLsizei wdith, const GLsizei height)
 {
     water_reflection_width = wdith;
     water_reflection_height = height;
@@ -1050,6 +1057,7 @@ void liminal::renderer::set_reflection_size(GLsizei wdith, GLsizei height)
                     GL_RGBA,
                     GL_FLOAT,
                     nullptr);
+
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             }
@@ -1118,6 +1126,7 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
                     GL_RGBA,
                     GL_FLOAT,
                     nullptr);
+
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1147,6 +1156,7 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
                     GL_DEPTH_COMPONENT,
                     GL_FLOAT,
                     nullptr);
+
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             }
@@ -1307,7 +1317,11 @@ void liminal::renderer::setup_samplers() const
     postprocess_program->unbind();
 }
 
-liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene) const
+// TODO: mouse picking doesn't work if water is present in the scene
+// this is because the reflection and refraction rendering overwrites the entity ids
+// and because they have clipping planes it doesn't write entity ids back in certain regions
+// interestingly, you can pick an entity when looking at it from underwater
+liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene *scene) const
 {
     entt::entity id;
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
@@ -1319,7 +1333,7 @@ liminal::entity liminal::renderer::pick(int x, int y, liminal::scene *scene) con
     return scene->get_entity(id);
 }
 
-void liminal::renderer::render(liminal::scene &scene, unsigned int current_time, float) const
+void liminal::renderer::render(liminal::scene &scene, const unsigned int current_time, const float) const
 {
     if (default_camera && default_camera_transform)
     {
@@ -1369,9 +1383,9 @@ void liminal::renderer::render_shadows(
             glEnable(GL_CULL_FACE);
 
             // const auto aspect_ratio = get_aspect_ratio();
-            // const auto tan_half_h_fov = tanf(glm::radians(90.f / 2.f));
-            // const auto tan_half_v_fov = tanf(glm::radians((90.f * aspect_ratio) / 2.f));
-            // const float cascade_end[] = {1.f, 25.f, 90.f, 200.f};
+            // const auto tan_half_h_fov = tanf(glm::radians(90.0f / 2.0f));
+            // const auto tan_half_v_fov = tanf(glm::radians((90.0f * aspect_ratio) / 2.0f));
+            // const float cascade_end[] = {1.0f, 25.0f, 90.0f, 200.0f};
 
             for (std::size_t j = 0; j < liminal::directional_light::num_cascades; j++)
             {
@@ -1416,7 +1430,7 @@ void liminal::renderer::render_shadows(
                 const auto view = glm::lookAt(
                     camera_transform.position - transform.rotation,
                     camera_transform.position,
-                    glm::vec3(0, 1, 0));
+                    {0, 1, 0});
                 directional_light.view_projection_matrices[j] = projection * view;
                 directional_light.depth_map_texture_ids[j] = directional_light_depth_map_texture_ids[i][j];
 
@@ -1493,9 +1507,9 @@ void liminal::renderer::render_shadows(
             continue;
         }
 
-        const glm::mat4 projection = glm::perspective(
-            glm::radians(90.f),
-            1.f,
+        const auto projection = glm::perspective(
+            glm::radians(90.0f),
+            1.0f,
             point_light_near_plane,
             point_light_far_plane);
         point_light.view_projection_matrices[0] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
@@ -1598,15 +1612,15 @@ void liminal::renderer::render_shadows(
             continue;
         }
 
-        const glm::mat4 projection = glm::perspective(
-            glm::radians(90.f),
-            1.f,
+        const auto projection = glm::perspective(
+            glm::radians(90.0f),
+            1.0f,
             spot_light_near_plane,
             spot_light_far_plane);
-        const glm::vec3 front = glm::normalize(transform.rotation);
-        const glm::vec3 target = transform.position + front;
-        const glm::vec3 up(0, 1, 0);
-        const glm::mat4 view = glm::lookAt(transform.position, target, up);
+        const auto front = glm::normalize(transform.rotation);
+        const auto target = transform.position + front;
+        constexpr auto up = glm::vec3(0, 1, 0);
+        const auto view = glm::lookAt(transform.position, target, up);
         spot_light.view_projection_matrix = projection * view;
         spot_light.depth_map_texture_id = spot_light_depth_map_texture_ids[i];
 
@@ -1689,7 +1703,7 @@ void liminal::renderer::render_objects(
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        int value = -1;
+        constexpr auto value = -1;
         glClearTexImage(geometry_id_texture_id, 0, GL_RED_INTEGER, GL_INT, &value);
 
         for (const auto [id, transform, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
@@ -2031,7 +2045,7 @@ void liminal::renderer::render_waters(
         glm::vec4 reflection_clipping_plane(0, 1, 0, -transform.position.y);
         if (camera_transform.position.y < transform.position.y) // flip reflection clipping plane if under the water
         {
-            reflection_clipping_plane *= -1.f;
+            reflection_clipping_plane *= -1.0f;
         }
         liminal::transform reflected_transform = camera_transform;
         reflected_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
@@ -2043,7 +2057,7 @@ void liminal::renderer::render_waters(
         glm::vec4 refraction_clipping_plane(0, -1, 0, transform.position.y);
         if (camera_transform.position.y < transform.position.y) // flip refraction clipping plane if under the water
         {
-            refraction_clipping_plane *= -1.f;
+            refraction_clipping_plane *= -1.0f;
         }
         render_objects(scene, camera, camera_transform, water_refraction_fbo_id, water_refraction_width, water_refraction_height, refraction_clipping_plane);
 

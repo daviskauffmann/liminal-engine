@@ -15,7 +15,7 @@ namespace liminal
             const glm::vec3 &rotation);
 
     private:
-        glm::vec3 last_position = glm::vec3(0);
+        glm::vec3 last_position = {};
     };
 }
 
