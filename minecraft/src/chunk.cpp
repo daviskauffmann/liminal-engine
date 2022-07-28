@@ -7,7 +7,7 @@
 #include "mesh_data.hpp"
 #include "world.hpp"
 
-minecraft::chunk::chunk(minecraft::world *world, const glm::ivec3 &position)
+minecraft::chunk::chunk(minecraft::world *const world, const glm::ivec3 &position)
     : world(world),
       position(position)
 {
@@ -47,7 +47,7 @@ minecraft::block *minecraft::chunk::get_block(const int x, const int y, const in
     return world->get_block(position.x + x, position.y + y, position.z + z);
 }
 
-void minecraft::chunk::set_block(const int x, const int y, const int z, minecraft::block *const block)
+void minecraft::chunk::set_block(const int x, const int y, const int z, minecraft::block *block)
 {
     if (in_range(x, y, z))
     {

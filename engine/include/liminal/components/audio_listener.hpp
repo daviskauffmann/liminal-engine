@@ -10,9 +10,7 @@ namespace liminal
     public:
         audio_listener();
 
-        void set_position(
-            const glm::vec3 &position,
-            const glm::vec3 &rotation);
+        void set_position(const glm::vec3 &position, const glm::vec3 &rotation);
 
     private:
         glm::vec3 last_position = {};

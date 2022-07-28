@@ -31,17 +31,20 @@ liminal::program::~program()
 void liminal::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
-    // would need some way to update texture samplers, but only the renderer knows that information right now
-    //      perhaps add another method, sorta like set_int (set_sampler_id?)
-    //      this would call set_int, but additionally add the name/value pair to a map
-    //      and then when reloading, just go through the map and call set_int on all the registered samplers
-    //      the renderer would still be the one to set up the initial samplers when it creates the programs
-    //      but after that the renderer would no longer be needed to do shader reloads
     const auto new_program_id = create_program();
     if (new_program_id)
     {
         glDeleteProgram(program_id);
         program_id = new_program_id;
+
+        uniforms.clear();
+
+        bind();
+        for (const auto [name, value] : samplers)
+        {
+            set_int(name, value);
+        }
+        unbind();
     }
 }
 
@@ -88,6 +91,24 @@ void liminal::program::set_mat4(const std::string &name, const glm::mat4 &mat4) 
 void liminal::program::set_mat4_vector(const std::string &name, const std::vector<glm::mat4> &mat4_vector) const
 {
     glUniformMatrix4fv(get_location(name), (GLsizei)mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
+}
+
+void liminal::program::set_sampler(const std::string &name, const GLint value) const
+{
+    if (samplers.find(name) == samplers.end())
+    {
+        samplers[name] = value;
+    }
+
+    set_int(name, value);
+}
+
+void liminal::program::set_samplers(const std::vector<std::pair<std::string, GLint>> &sampler_pairs) const
+{
+    for (const auto [name, value] : sampler_pairs)
+    {
+        set_sampler(name, value);
+    }
 }
 
 GLuint liminal::program::create_program() const
@@ -213,5 +234,5 @@ GLint liminal::program::get_location(const std::string &name) const
         uniforms[name] = glGetUniformLocation(program_id, name.c_str());
     }
 
-    return uniforms[name];
+    return uniforms.at(name);
 }

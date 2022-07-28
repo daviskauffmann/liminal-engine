@@ -20,7 +20,7 @@ namespace liminal
         std::array<unsigned int, num_bones> bone_ids;
         std::array<float, num_bones> bone_weights;
 
-        void add_bone_data(const unsigned int id, const float weight);
+        void add_bone_data(unsigned int id, float weight);
     };
 }
 

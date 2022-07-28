@@ -12,8 +12,8 @@ namespace liminal
         void run();
         void stop();
 
-        virtual void update(const unsigned int current_time, const float delta_time);
-        virtual void resize(const int width, const int height);
+        virtual void update(unsigned int current_time, float delta_time);
+        virtual void resize(int width, int height);
 
     private:
         int window_width;

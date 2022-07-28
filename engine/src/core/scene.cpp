@@ -160,12 +160,12 @@ liminal::entity liminal::scene::create_entity()
     return liminal::entity(id, this);
 }
 
-liminal::entity liminal::scene::get_entity(entt::entity id)
+liminal::entity liminal::scene::get_entity(const entt::entity id)
 {
     return liminal::entity(id, this);
 }
 
-void liminal::scene::delete_entity(liminal::entity entity)
+void liminal::scene::delete_entity(const liminal::entity entity)
 {
     registry.destroy(entity);
 }

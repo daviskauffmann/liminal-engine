@@ -19,11 +19,11 @@ namespace liminal
         bool render_to_texture;
         mutable GLuint render_texture_id;
 
-        camera(const float fov = 90, const bool render_to_texture = false);
+        camera(float fov = 90, bool render_to_texture = false);
 
         glm::vec3 calc_front(const liminal::transform &transform) const;
         glm::vec3 calc_right(const liminal::transform &transform) const;
-        glm::mat4 calc_projection(const float aspect) const;
+        glm::mat4 calc_projection(float aspect) const;
         glm::mat4 calc_view(const liminal::transform &transform) const;
     };
 }

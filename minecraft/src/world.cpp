@@ -7,7 +7,7 @@
 #include "blocks/stone_block.hpp"
 #include "chunk.hpp"
 
-minecraft::world::world(liminal::scene *scene)
+minecraft::world::world(liminal::scene *const scene)
     : scene(scene),
       tiles_texture(std::make_unique<liminal::texture>("assets/images/tiles.png", false, false))
 {
@@ -17,7 +17,10 @@ minecraft::world::world(liminal::scene *scene)
         {
             for (int z = -4; z < 4; z++)
             {
-                create_chunk(x * minecraft::chunk::size, y * minecraft::chunk::size, z * minecraft::chunk::size);
+                create_chunk(
+                    (int)(x * (int)minecraft::chunk::size),
+                    (int)(y * (int)minecraft::chunk::size),
+                    (int)(z * (int)minecraft::chunk::size));
             }
         }
     }
@@ -25,9 +28,8 @@ minecraft::world::world(liminal::scene *scene)
 
 void minecraft::world::update() const
 {
-    for (const auto &it : chunk_entities)
+    for (const auto &[chunk_position, entity] : chunk_entities)
     {
-        const auto entity = it.second;
         auto &chunk = entity.get_component<minecraft::chunk>();
         if (chunk.update)
         {

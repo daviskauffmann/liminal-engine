@@ -9,8 +9,8 @@ liminal::assets::assets()
 
 liminal::assets::~assets()
 {
-    for (auto it = cache.begin(); it != cache.end(); it++)
+    for (const auto &pair : cache)
     {
-        delete it->second;
+        delete pair.second;
     }
 }

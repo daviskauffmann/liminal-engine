@@ -108,7 +108,7 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
     // textures[aiTextureType_HEIGHT].push_back(liminal::assets::instance->load<liminal::texture>(""));
     // textures[aiTextureType_HEIGHT].push_back(liminal::assets::instance->load<liminal::texture>(""));
 
-    mesh = new liminal::mesh(vertices, indices, textures);
+    mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
 
     btTransform transform;
     transform.setIdentity();
@@ -116,18 +116,15 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
     const auto motion_state = new btDefaultMotionState(transform);
     const auto collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
     const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape);
-    rigidbody = new btRigidBody(construction_info);
-    world->addRigidBody(rigidbody);
+    rigidbody = std::make_unique<btRigidBody>(construction_info);
+    world->addRigidBody(rigidbody.get());
 }
 
 liminal::terrain::~terrain()
 {
-    delete mesh;
-
     delete rigidbody->getMotionState();
     delete rigidbody->getCollisionShape();
-    world->removeRigidBody(rigidbody);
-    delete rigidbody;
+    world->removeRigidBody(rigidbody.get());
 }
 
 glm::mat4 liminal::terrain::get_model_matrix() const
@@ -145,15 +142,15 @@ float liminal::terrain::get_height(const SDL_Surface *const surface, const int x
 
     const union pixel_t
     {
-        unsigned int pixel;
+        // unsigned int pixel;
         struct color_t
         {
             unsigned char r;
             unsigned char g;
             unsigned char b;
-            unsigned char a;
+            // unsigned char a;
         } color;
-    } pixel = *(pixel_t *)((unsigned char *)surface->pixels + z * surface->pitch + x * surface->format->BytesPerPixel);
+    } pixel = *reinterpret_cast<pixel_t *>(reinterpret_cast<unsigned char *>(surface->pixels) + z * surface->pitch + x * surface->format->BytesPerPixel);
 
     auto height = (float)((pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b));
     height -= 0xffffff / 2;

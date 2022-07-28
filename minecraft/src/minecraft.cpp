@@ -9,6 +9,7 @@
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
+#include <memory>
 #include <unordered_map>
 
 namespace minecraft
@@ -21,7 +22,7 @@ namespace minecraft
         {
             liminal::platform::instance->set_relative_mouse_mode(true);
 
-            scene = new liminal::scene();
+            scene = std::make_unique<liminal::scene>();
             scene->start();
             scene->skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_Env.hdr");
 
@@ -38,20 +39,17 @@ namespace minecraft
             player_entity.add_component<liminal::transform>("Player");
             player_entity.add_component<liminal::camera>(45.0f);
 
-            world = new minecraft::world(scene);
+            world = std::make_unique<minecraft::world>(scene.get());
         }
 
         ~app() override
         {
-            delete world;
-
             scene->stop();
-            delete scene;
         }
 
         void update(const unsigned int current_time, const float delta_time) override
         {
-            auto &io = ImGui::GetIO();
+            const auto &io = ImGui::GetIO();
 
             if (liminal::input::key_down(liminal::KEYCODE_TAB))
             {
@@ -135,6 +133,17 @@ namespace minecraft
                         camera.fov = 120;
                     }
                 }
+
+                if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
+                {
+                    for (float i = 0; i < 10; i += 0.1f)
+                    {
+                        auto x = (int)glm::round(transform.position.x + (camera.calc_front(transform).x * i));
+                        auto y = (int)glm::round(transform.position.y + (camera.calc_front(transform).y * i));
+                        auto z = (int)glm::round(transform.position.z + (camera.calc_front(transform).z * i));
+                        world->set_block(x, y, z, new minecraft::air_block());
+                    }
+                }
             }
 
             world->update();
@@ -143,11 +152,11 @@ namespace minecraft
         }
 
     private:
-        liminal::scene *scene;
+        std::unique_ptr<liminal::scene> scene;
 
         liminal::entity player_entity;
 
-        minecraft::world *world;
+        std::unique_ptr<minecraft::world> world;
     };
 }
 

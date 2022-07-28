@@ -85,7 +85,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
         glBindBuffer(GL_ARRAY_BUFFER, capture_vbo_id);
         glBufferData(GL_ARRAY_BUFFER, capture_vertices_size, capture_vertices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(0 * sizeof(GLfloat)));
 
         glEnableVertexAttribArray(0);
     }
@@ -221,7 +221,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                equirectangular_to_cubemap_program->set_mat4("mvp_matrix", capture_mvps[i]);
+                equirectangular_to_cubemap_program->set_mat4("mvp_matrix", capture_mvps.at(i));
 
                 glBindVertexArray(capture_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, capture_vertices_size);
@@ -307,7 +307,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
 
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                irradiance_convolution_program->set_mat4("mvp_matrix", capture_mvps[i]);
+                irradiance_convolution_program->set_mat4("mvp_matrix", capture_mvps.at(i));
 
                 glBindVertexArray(capture_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, capture_vertices_size);
@@ -392,7 +392,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
 
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    prefilter_convolution_program->set_mat4("mvp_matrix", capture_mvps[i]);
+                    prefilter_convolution_program->set_mat4("mvp_matrix", capture_mvps.at(i));
 
                     glBindVertexArray(capture_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, capture_vertices_size);

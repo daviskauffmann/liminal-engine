@@ -282,7 +282,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::transform>())
                         {
-                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::transform).hash_code(), flags, "Transform");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::transform).hash_code()), flags, "Transform");
 
                             if (opened)
                             {
@@ -308,7 +308,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::mesh_renderer>())
                         {
-                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::mesh_renderer).hash_code(), flags, "Mesh Renderer");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::mesh_renderer).hash_code()), flags, "Mesh Renderer");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -338,6 +338,8 @@ namespace editor
                                     }
                                 }
 
+                                ImGui::DragFloat3("Color", glm::value_ptr(mesh_renderer.color), 0.1f);
+
                                 ImGui::TreePop();
                             }
 
@@ -349,7 +351,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::directional_light>())
                         {
-                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::directional_light).hash_code(), flags, "Directional Light");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::directional_light).hash_code()), flags, "Directional Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -368,9 +370,9 @@ namespace editor
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(directional_light.color), 0.1f);
 
-                                for (std::size_t i = 0; i < liminal::directional_light::num_cascades; i++)
+                                for (const auto depth_map_texture_id : directional_light.depth_map_texture_ids)
                                 {
-                                    ImGui::Image((ImTextureID)(long long)directional_light.depth_map_texture_ids[i], ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+                                    ImGui::Image((ImTextureID)(long long)depth_map_texture_id, ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
                                 }
 
                                 ImGui::TreePop();
@@ -384,7 +386,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::point_light>())
                         {
-                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::point_light).hash_code(), flags, "Point Light");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::point_light).hash_code()), flags, "Point Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -414,7 +416,7 @@ namespace editor
 
                         if (selected_entity.has_components<liminal::spot_light>())
                         {
-                            const auto opened = ImGui::TreeNodeEx((void *)typeid(liminal::spot_light).hash_code(), flags, "Spot Light");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::spot_light).hash_code()), flags, "Spot Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -483,7 +485,7 @@ namespace editor
                         }
                     }
 
-                    for (auto &directory_entry : std::filesystem::directory_iterator(current_asset_directory))
+                    for (const auto &directory_entry : std::filesystem::directory_iterator(current_asset_directory))
                     {
                         const auto path = directory_entry.path();
                         const auto filename = path.filename();
@@ -572,7 +574,7 @@ namespace editor
             load_scene();
         }
 
-        void delete_entity(liminal::entity entity, const liminal::transform &transform)
+        void delete_entity(const liminal::entity entity, const liminal::transform &transform)
         {
             for (const auto [child_id, child_transform] : scene->get_entities_with<const liminal::transform>().each())
             {
@@ -590,14 +592,14 @@ namespace editor
             }
         }
 
-        void draw_entity_node(liminal::entity entity, const liminal::transform &transform)
+        void draw_entity_node(const liminal::entity entity, const liminal::transform &transform)
         {
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
             if (entity == selected_entity)
             {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
-            const auto opened = ImGui::TreeNodeEx((void *)(uint64_t)entity, flags, transform.name.c_str());
+            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>((uint64_t)entity), flags, transform.name.c_str());
 
             if (ImGui::IsItemClicked())
             {

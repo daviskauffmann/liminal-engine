@@ -283,32 +283,32 @@ namespace liminal
         inline static int mouse_wheel_x;
         inline static int mouse_wheel_y;
 
-        inline static bool key(liminal::keycode keycode)
+        inline static bool key(const liminal::keycode keycode)
         {
             return keys[keycode];
         }
 
-        inline static bool key_down(liminal::keycode keycode)
+        inline static bool key_down(const liminal::keycode keycode)
         {
             return keys[keycode] && !last_keys[keycode];
         }
 
-        inline static bool key_up(liminal::keycode keycode)
+        inline static bool key_up(const liminal::keycode keycode)
         {
             return !keys[keycode] && last_keys[keycode];
         }
 
-        inline static bool mouse_button(liminal::mouse_button button)
+        inline static bool mouse_button(const liminal::mouse_button button)
         {
             return mouse_buttons[button];
         }
 
-        inline static bool mouse_button_down(liminal::mouse_button button)
+        inline static bool mouse_button_down(const liminal::mouse_button button)
         {
             return mouse_buttons[button] && !last_mouse_buttons[button];
         }
 
-        inline static bool mouse_button_up(liminal::mouse_button button)
+        inline static bool mouse_button_up(const liminal::mouse_button button)
         {
             return !mouse_buttons[button] && last_mouse_buttons[button];
         }

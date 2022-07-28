@@ -2,12 +2,8 @@
 #define LIMINAL_COMPONENTS_SCRIPT_HPP
 
 #include <entt/entt.hpp>
+#include <sol/sol.hpp>
 #include <string>
-
-namespace sol
-{
-    class state;
-}
 
 namespace liminal
 {
@@ -17,15 +13,20 @@ namespace liminal
     class script
     {
     public:
-        // TODO: support multiple script instances in a single script component?
-        // because we can't have multiple of the same component on an entity
-        sol::state *lua;
-
-        script(const std::string &filename, liminal::scene *const scene, const entt::entity id);
-        ~script();
+        script(const std::string &filename, liminal::scene *scene, entt::entity id);
+        script(script &&other) = default;
+        script(const script &other) = default;
+        script &operator=(script &&other) = default;
+        script &operator=(const script &other) = default;
+        ~script() = default;
 
         void init() const;
-        void update(const float delta_time) const;
+        void update(float delta_time) const;
+
+    private:
+        // TODO: support multiple script instances in a single script component?
+        // because we can't have multiple of the same component on an entity
+        sol::state lua;
     };
 }
 

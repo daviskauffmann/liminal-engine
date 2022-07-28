@@ -45,9 +45,9 @@ liminal::model::model(const std::string &filename, const bool flip_uvs)
 
 liminal::model::~model()
 {
-    for (std::size_t i = 0; i < meshes.size(); i++)
+    for (const auto mesh : meshes)
     {
-        delete meshes[i];
+        delete mesh;
     }
 }
 
@@ -72,39 +72,40 @@ void liminal::model::update_bone_transformations(const unsigned int animation_in
 
     if (scene && scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
-        auto time_in_ticks = ticks_per_second * (current_time / 1000.0f);
-        auto animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
+        const auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
+        const auto time_in_ticks = ticks_per_second * (current_time / 1000.0f);
+        const auto animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
 
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
 
         bone_transformations.resize(num_bones);
-        for (std::size_t i = 0; i < num_bones; i++)
+        for (std::size_t bone_index = 0; bone_index < num_bones; bone_index++)
         {
-            bone_transformations[i] = bones[i].transformation;
+            bone_transformations.at(bone_index) = bones.at(bone_index).transformation;
         }
     }
 }
 
 void liminal::model::draw_meshes(const liminal::program &program) const
 {
-    for (std::size_t i = 0; i < meshes.size(); i++)
+    for (const auto mesh : meshes)
     {
-        meshes[i]->draw(program);
+        mesh->draw(program);
     }
 }
 
 void liminal::model::process_node_meshes(const aiNode *const node)
 {
-    for (std::size_t i = 0; i < node->mNumMeshes; i++)
+    for (std::size_t mesh_index = 0; mesh_index < node->mNumMeshes; mesh_index++)
     {
-        auto scene_mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(create_mesh(scene_mesh));
+        const auto scene_mesh = scene->mMeshes[node->mMeshes[mesh_index]];
+        const auto mesh = create_mesh(scene_mesh);
+        meshes.push_back(mesh);
     }
 
-    for (std::size_t i = 0; i < node->mNumChildren; i++)
+    for (std::size_t child_index = 0; child_index < node->mNumChildren; child_index++)
     {
-        process_node_meshes(node->mChildren[i]);
+        process_node_meshes(node->mChildren[child_index]);
     }
 }
 
@@ -115,35 +116,35 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
     std::vector<std::vector<liminal::texture *>> textures;
 
     // process vertices
-    for (std::size_t i = 0; i < scene_mesh->mNumVertices; i++)
+    for (std::size_t vertex_index = 0; vertex_index < scene_mesh->mNumVertices; vertex_index++)
     {
         liminal::vertex vertex;
 
         if (scene_mesh->HasPositions())
         {
-            vertex.position = vec3_cast(scene_mesh->mVertices[i]);
+            vertex.position = vec3_cast(scene_mesh->mVertices[vertex_index]);
         }
 
         if (scene_mesh->HasNormals())
         {
-            vertex.normal = vec3_cast(scene_mesh->mNormals[i]);
+            vertex.normal = vec3_cast(scene_mesh->mNormals[vertex_index]);
         }
 
         if (scene_mesh->HasTextureCoords(0))
         {
-            vertex.uv = vec2_cast(scene_mesh->mTextureCoords[0][i]);
+            vertex.uv = vec2_cast(scene_mesh->mTextureCoords[0][vertex_index]);
         }
 
         if (scene_mesh->HasTangentsAndBitangents())
         {
-            vertex.tangent = vec3_cast(scene_mesh->mTangents[i]);
-            vertex.bitangent = vec3_cast(scene_mesh->mBitangents[i]);
+            vertex.tangent = vec3_cast(scene_mesh->mTangents[vertex_index]);
+            vertex.bitangent = vec3_cast(scene_mesh->mBitangents[vertex_index]);
         }
 
-        for (std::size_t j = 0; j < liminal::vertex::num_bones; j++)
+        for (std::size_t bone_index = 0; bone_index < liminal::vertex::num_bones; bone_index++)
         {
-            vertex.bone_ids[j] = liminal::vertex::num_bones;
-            vertex.bone_weights[j] = 0;
+            vertex.bone_ids.at(bone_index) = liminal::vertex::num_bones;
+            vertex.bone_weights.at(bone_index) = 0;
         }
 
         vertices.push_back(vertex);
@@ -152,30 +153,30 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
     // process bones
     if (scene_mesh->HasBones())
     {
-        for (std::size_t i = 0; i < scene_mesh->mNumBones; i++)
+        for (std::size_t bone_index = 0; bone_index < scene_mesh->mNumBones; bone_index++)
         {
-            unsigned int bone_index;
-            std::string bone_name(scene_mesh->mBones[i]->mName.data);
+            unsigned int id;
+            const std::string bone_name(scene_mesh->mBones[bone_index]->mName.data);
             if (bone_indices.find(bone_name) == bone_indices.end())
             {
-                bone_index = num_bones++;
-                bone_indices[bone_name] = bone_index;
+                id = num_bones++;
+                bone_indices[bone_name] = id;
 
                 liminal::bone bone;
-                bone.offset = mat4_cast(scene_mesh->mBones[i]->mOffsetMatrix);
+                bone.offset = mat4_cast(scene_mesh->mBones[bone_index]->mOffsetMatrix);
 
                 bones.push_back(bone);
             }
             else
             {
-                bone_index = bone_indices[bone_name];
+                id = bone_indices[bone_name];
             }
 
-            for (std::size_t j = 0; j < scene_mesh->mBones[i]->mNumWeights; j++)
+            for (std::size_t weight_index = 0; weight_index < scene_mesh->mBones[bone_index]->mNumWeights; weight_index++)
             {
-                auto vertex_id = scene_mesh->mBones[i]->mWeights[j].mVertexId;
-                auto weight = scene_mesh->mBones[i]->mWeights[j].mWeight;
-                vertices[vertex_id].add_bone_data(bone_index, weight);
+                const auto vertex_id = scene_mesh->mBones[bone_index]->mWeights[weight_index].mVertexId;
+                const auto weight = scene_mesh->mBones[bone_index]->mWeights[weight_index].mWeight;
+                vertices[vertex_id].add_bone_data(id, weight);
             }
         }
     }
@@ -183,12 +184,12 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
     // process indices
     if (scene_mesh->HasFaces())
     {
-        for (std::size_t i = 0; i < scene_mesh->mNumFaces; i++)
+        for (std::size_t face_index = 0; face_index < scene_mesh->mNumFaces; face_index++)
         {
-            auto face = scene_mesh->mFaces[i];
-            for (std::size_t j = 0; j < face.mNumIndices; j++)
+            const auto face = scene_mesh->mFaces[face_index];
+            for (std::size_t index_index = 0; index_index < face.mNumIndices; index_index++)
             {
-                indices.push_back(face.mIndices[j]);
+                indices.push_back(face.mIndices[index_index]);
             }
         }
     }
@@ -201,11 +202,11 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
         {
             std::vector<liminal::texture *> material_textures;
 
-            for (unsigned int i = 0; i < scene_material->GetTextureCount(type); i++)
+            for (unsigned int texture_index = 0; texture_index < scene_material->GetTextureCount(type); texture_index++)
             {
                 aiString path;
-                scene_material->GetTexture(type, i, &path);
-                auto filename = directory + "/" + path.C_Str();
+                scene_material->GetTexture(type, texture_index, &path);
+                const auto filename = directory + "/" + path.C_Str();
                 material_textures.push_back(liminal::assets::instance->load<liminal::texture>(filename));
             }
 
@@ -256,21 +257,21 @@ void liminal::model::process_node_animations(const unsigned int animation_index,
 
     if (bone_indices.find(node_name) != bone_indices.end())
     {
-        auto bone_index = bone_indices[node_name];
+        const auto bone_index = bone_indices.at(node_name);
         bones[bone_index].transformation = global_inverse_transform * global_transformation * bones[bone_index].offset;
     }
 
-    for (std::size_t i = 0; i < node->mNumChildren; i++)
+    for (std::size_t child_index = 0; child_index < node->mNumChildren; child_index++)
     {
-        process_node_animations(animation_index, animation_time, node->mChildren[i], global_transformation);
+        process_node_animations(animation_index, animation_time, node->mChildren[child_index], global_transformation);
     }
 }
 
-const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *const scene_animation, const std::string &node_name)
+const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *const scene_animation, const std::string &node_name) const
 {
-    for (std::size_t i = 0; i < scene_animation->mNumChannels; i++)
+    for (std::size_t channel_index = 0; channel_index < scene_animation->mNumChannels; channel_index++)
     {
-        const auto node_animation = scene_animation->mChannels[i];
+        const auto node_animation = scene_animation->mChannels[channel_index];
 
         if (std::string(node_animation->mNodeName.data) == node_name)
         {
@@ -281,7 +282,7 @@ const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *const s
     return nullptr;
 }
 
-void liminal::model::calc_interpolated_position(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation)
+void liminal::model::calc_interpolated_position(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation) const
 {
     if (node_animation->mNumPositionKeys == 1)
     {
@@ -302,7 +303,7 @@ void liminal::model::calc_interpolated_position(aiVector3D &out, const float ani
     out = start + factor * delta;
 }
 
-unsigned int liminal::model::find_position_index(const float animation_time, const aiNodeAnim *const node_animation)
+unsigned int liminal::model::find_position_index(const float animation_time, const aiNodeAnim *const node_animation) const
 {
     for (unsigned int i = 0; i < node_animation->mNumPositionKeys - 1; i++)
     {
@@ -317,7 +318,7 @@ unsigned int liminal::model::find_position_index(const float animation_time, con
     return 0;
 }
 
-void liminal::model::calc_interpolated_rotation(aiQuaternion &out, const float animation_time, const aiNodeAnim *const node_animation)
+void liminal::model::calc_interpolated_rotation(aiQuaternion &out, const float animation_time, const aiNodeAnim *const node_animation) const
 {
     if (node_animation->mNumRotationKeys == 1)
     {
@@ -338,7 +339,7 @@ void liminal::model::calc_interpolated_rotation(aiQuaternion &out, const float a
     out = out.Normalize();
 }
 
-unsigned int liminal::model::find_rotation_index(const float animation_time, const aiNodeAnim *const node_animation)
+unsigned int liminal::model::find_rotation_index(const float animation_time, const aiNodeAnim *const node_animation) const
 {
     for (unsigned int i = 0; i < node_animation->mNumRotationKeys - 1; i++)
     {
@@ -353,7 +354,7 @@ unsigned int liminal::model::find_rotation_index(const float animation_time, con
     return 0;
 }
 
-void liminal::model::calc_interpolated_scale(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation)
+void liminal::model::calc_interpolated_scale(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation) const
 {
     if (node_animation->mNumScalingKeys == 1)
     {
@@ -374,7 +375,7 @@ void liminal::model::calc_interpolated_scale(aiVector3D &out, const float animat
     out = start + factor * delta;
 }
 
-unsigned int liminal::model::find_scale_index(const float animation_time, const aiNodeAnim *const node_animation)
+unsigned int liminal::model::find_scale_index(const float animation_time, const aiNodeAnim *const node_animation) const
 {
     for (unsigned int i = 0; i < node_animation->mNumScalingKeys - 1; i++)
     {

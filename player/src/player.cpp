@@ -3,6 +3,7 @@
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
+#include <memory>
 
 namespace player
 {
@@ -20,7 +21,7 @@ namespace player
             shoot_sound = liminal::assets::instance->load<liminal::sound>("assets/audio/shoot.wav");
             grass_texture = liminal::assets::instance->load<liminal::texture>("assets/images/grass_sprite.png");
 
-            scene = new liminal::scene();
+            scene = std::make_unique<liminal::scene>();
             scene->load("assets/scenes/demo.json");
             scene->start();
 
@@ -51,11 +52,7 @@ namespace player
 
         ~app() override
         {
-            if (scene)
-            {
-                scene->stop();
-                delete scene;
-            }
+            scene->stop();
         }
 
         void update(const unsigned int current_time, const float delta_time) override
@@ -73,11 +70,11 @@ namespace player
             auto camera_right = camera.calc_right(transform);
 
             static auto velocity = glm::vec3(0, 0, 0);
+            static auto jumping = false;
             auto acceleration = glm::vec3(0, 0, 0);
             constexpr auto speed = 50.0f;
             constexpr auto drag = 10.0f;
             auto sprint = false;
-            auto jumping = false;
             if (!io.WantCaptureKeyboard)
             {
                 if (liminal::input::key(liminal::keycode::KEYCODE_W))
@@ -205,7 +202,7 @@ namespace player
         }
 
     private:
-        liminal::scene *scene;
+        std::unique_ptr<liminal::scene> scene;
 
         liminal::entity player_entity;
 

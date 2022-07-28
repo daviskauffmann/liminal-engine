@@ -15,6 +15,7 @@ layout (location = 4) out int id_map;
 
 uniform struct Material
 {
+    vec3 color;
     sampler2D albedo_map;
     bool has_normal_map;
     sampler2D normal_map;
@@ -51,7 +52,7 @@ void main()
 {
     position_map = vertex.position;
     normal_map = material.has_normal_map ? calc_normal() : normalize(vertex.normal);
-    albedo_map = texture(material.albedo_map, vertex.uv).rgb;
+    albedo_map = texture(material.albedo_map, vertex.uv).rgb * material.color;
     material_map.r = material.has_metallic_map ? texture(material.metallic_map, vertex.uv).r : 0;
     material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : 1;
     material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1;

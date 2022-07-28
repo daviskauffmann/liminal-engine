@@ -4,12 +4,12 @@
 
 void liminal::vertex::add_bone_data(const unsigned int id, const float weight)
 {
-    for (std::size_t i = 0; i < num_bones; i++)
+    for (std::size_t bone_index = 0; bone_index < num_bones; bone_index++)
     {
-        if (bone_ids[i] == num_bones)
+        if (bone_ids.at(bone_index) == num_bones)
         {
-            bone_ids[i] = id;
-            bone_weights[i] = weight;
+            bone_ids.at(bone_index) = id;
+            bone_weights.at(bone_index) = weight;
             return;
         }
     }

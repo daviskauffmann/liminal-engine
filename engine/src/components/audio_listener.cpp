@@ -8,9 +8,7 @@ liminal::audio_listener::audio_listener()
     alListenerfv(AL_POSITION, glm::value_ptr(last_position));
 }
 
-void liminal::audio_listener::set_position(
-    const glm::vec3 &position,
-    const glm::vec3 &rotation)
+void liminal::audio_listener::set_position(const glm::vec3 &position, const glm::vec3 &rotation)
 {
     alListenerfv(AL_POSITION, glm::value_ptr(position));
 

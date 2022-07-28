@@ -9,6 +9,7 @@ namespace liminal
     {
     public:
         liminal::model *model = nullptr;
+        glm::vec3 color = {1, 1, 1};
     };
 }
 

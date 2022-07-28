@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace liminal
@@ -26,13 +27,15 @@ namespace liminal
         void bind() const;
         void unbind() const;
 
-        void set_int(const std::string &name, const GLint value) const;
-        void set_unsigned_int(const std::string &name, const GLuint value) const;
-        void set_float(const std::string &name, const GLfloat value) const;
+        void set_int(const std::string &name, GLint value) const;
+        void set_unsigned_int(const std::string &name, GLuint value) const;
+        void set_float(const std::string &name, GLfloat value) const;
         void set_vec3(const std::string &name, const glm::vec3 &vec3) const;
         void set_vec4(const std::string &name, const glm::vec4 &vec4) const;
         void set_mat4(const std::string &name, const glm::mat4 &mat4) const;
         void set_mat4_vector(const std::string &name, const std::vector<glm::mat4> &mat4_vector) const;
+        void set_sampler(const std::string &name, GLint value) const;
+        void set_samplers(const std::vector<std::pair<std::string, GLint>> &sampler_pairs) const;
 
     private:
         const std::string vertex_filename;
@@ -42,9 +45,10 @@ namespace liminal
         GLuint program_id;
 
         mutable std::unordered_map<std::string, GLint> uniforms;
+        mutable std::unordered_map<std::string, GLint> samplers;
 
         GLuint create_program() const;
-        GLuint create_shader(const GLenum type, const std::string &filename) const;
+        GLuint create_shader(GLenum type, const std::string &filename) const;
 
         GLint get_location(const std::string &name) const;
     };

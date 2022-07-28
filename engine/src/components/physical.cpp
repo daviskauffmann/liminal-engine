@@ -11,14 +11,13 @@ liminal::physical::physical(btDiscreteDynamicsWorld *const world, const float ma
     btVector3 local_inertia;
     collision_shape->calculateLocalInertia(mass, local_inertia);
     const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(mass, motion_state, collision_shape, local_inertia);
-    rigidbody = new btRigidBody(construction_info);
-    world->addRigidBody(rigidbody);
+    rigidbody = std::make_unique<btRigidBody>(construction_info);
+    world->addRigidBody(rigidbody.get());
 }
 
 liminal::physical::~physical()
 {
     delete rigidbody->getMotionState();
     delete rigidbody->getCollisionShape();
-    world->removeRigidBody(rigidbody);
-    delete rigidbody;
+    world->removeRigidBody(rigidbody.get());
 }

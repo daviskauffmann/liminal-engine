@@ -207,12 +207,26 @@ void liminal::app::run()
                     else if (command == "wireframe")
                     {
                         liminal::renderer::instance->wireframe = !liminal::renderer::instance->wireframe;
-                        messages.push_back("Wireframe " + liminal::renderer::instance->wireframe ? "on" : "off");
+                        if (liminal::renderer::instance->wireframe)
+                        {
+                            messages.push_back("Wireframe on");
+                        }
+                        else
+                        {
+                            messages.push_back("Wireframe off");
+                        }
                     }
                     else if (command == "greyscale")
                     {
                         liminal::renderer::instance->greyscale = !liminal::renderer::instance->greyscale;
-                        messages.push_back("Greyscale " + liminal::renderer::instance->greyscale ? "on" : "off");
+                        if (liminal::renderer::instance->greyscale)
+                        {
+                            messages.push_back("Greyscale on");
+                        }
+                        else
+                        {
+                            messages.push_back("Greyscale off");
+                        }
                     }
                     else if (command == "reload")
                     {
@@ -259,7 +273,7 @@ void liminal::app::run()
 
                 if (ImGui::BeginChild(""))
                 {
-                    for (auto &message : messages)
+                    for (const auto &message : messages)
                     {
                         ImGui::Text(message.c_str());
                     }

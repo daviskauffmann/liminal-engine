@@ -11,9 +11,9 @@ liminal::camera::camera(const float fov, const bool render_to_texture)
 glm::vec3 liminal::camera::calc_front(const liminal::transform &transform) const
 {
     const auto front = glm::vec3(
-        cosf(glm::radians(transform.rotation.y)) * cosf(glm::radians(transform.rotation.x)),
-        sinf(glm::radians(transform.rotation.x)),
-        sinf(glm::radians(transform.rotation.y)) * cosf(glm::radians(transform.rotation.x)));
+        glm::cos(glm::radians(transform.rotation.y)) * glm::cos(glm::radians(transform.rotation.x)),
+        glm::sin(glm::radians(transform.rotation.x)),
+        glm::sin(glm::radians(transform.rotation.y)) * glm::cos(glm::radians(transform.rotation.x)));
     return glm::normalize(front);
 }
 

@@ -4,7 +4,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 #include <iostream>
-#include <liminal/components/directional_light.hpp>
 #include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/spot_light.hpp>
@@ -43,13 +42,13 @@ liminal::renderer::renderer(
     const GLsizei spot_light_depth_map_size,
     const GLsizei water_reflection_width, const GLsizei water_reflection_height,
     const GLsizei water_refraction_width, const GLsizei water_refraction_height)
+    : target_width(target_width),
+      target_height(target_height),
+      render_scale(render_scale)
 {
     instance = this;
 
     // setup fbos
-    this->target_width = target_width;
-    this->target_height = target_height;
-    this->render_scale = render_scale;
     calc_render_size();
     set_directional_light_depth_map_size(directional_light_depth_map_size);
     set_point_light_depth_cubemap_size(point_light_depth_cubemap_size);
@@ -84,7 +83,7 @@ liminal::renderer::renderer(
         glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
         glBufferData(GL_ARRAY_BUFFER, water_vertices_size, water_vertices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(0 * sizeof(GLfloat)));
 
         glEnableVertexAttribArray(0);
     }
@@ -142,7 +141,7 @@ liminal::renderer::renderer(
         glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
         glBufferData(GL_ARRAY_BUFFER, skybox_vertices_size, skybox_vertices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(0 * sizeof(GLfloat)));
 
         glEnableVertexAttribArray(0);
     }
@@ -166,8 +165,8 @@ liminal::renderer::renderer(
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
         glBufferData(GL_ARRAY_BUFFER, sprite_vertices_size, sprite_vertices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(0 * sizeof(GLfloat)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(2 * sizeof(GLfloat)));
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -192,8 +191,8 @@ liminal::renderer::renderer(
         glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
         glBufferData(GL_ARRAY_BUFFER, screen_vertices_size, screen_vertices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(0 * sizeof(GLfloat)));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(0 * sizeof(GLfloat)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid *>(2 * sizeof(GLfloat)));
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -290,62 +289,164 @@ liminal::renderer::renderer(
         glDeleteRenderbuffers(1, &capture_rbo_id);
     }
 
-    // create shader programs
+    // create shader programs and setup samplers
     depth_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_mesh.vs",
         "assets/shaders/depth.fs");
+
     depth_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_skinned_mesh.vs",
         "assets/shaders/depth.fs");
+
     depth_cube_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_cube_mesh.vs",
         "assets/shaders/depth_cube.gs",
         "assets/shaders/depth_cube.fs");
+
     depth_cube_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/depth_cube_skinned_mesh.vs",
         "assets/shaders/depth_cube.gs",
         "assets/shaders/depth_cube.fs");
+
     color_program = std::make_unique<liminal::program>(
         "assets/shaders/color.vs",
         "assets/shaders/color.fs");
+
     geometry_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_mesh.fs");
+    geometry_mesh_program->bind();
+    geometry_mesh_program->set_samplers(
+        {{"material.albedo_map", 0},
+         {"material.normal_map", 1},
+         {"material.metallic_map", 2},
+         {"material.roughness_map", 3},
+         {"material.occlusion_map", 4},
+         {"material.height_map", 5}});
+    geometry_mesh_program->unbind();
+
     geometry_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_skinned_mesh.vs",
         "assets/shaders/geometry_mesh.fs");
+    geometry_skinned_mesh_program->bind();
+    geometry_skinned_mesh_program->set_samplers(
+        {{"material.albedo_map", 0},
+         {"material.normal_map", 1},
+         {"material.metallic_map", 2},
+         {"material.roughness_map", 3},
+         {"material.occlusion_map", 4},
+         {"material.height_map", 5}});
+    geometry_skinned_mesh_program->unbind();
+
     geometry_terrain_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_mesh.vs",
         "assets/shaders/geometry_terrain.fs");
+    geometry_terrain_program->bind();
+    geometry_terrain_program->set_samplers(
+        {{"materials[0].albedo_map", 0},
+         {"materials[0].normal_map", 1},
+         {"materials[0].metallic_map", 2},
+         {"materials[0].roughness_map", 3},
+         {"materials[0].occlusion_map", 4},
+         {"materials[0].height_map", 5}});
+    geometry_terrain_program->unbind();
+
     deferred_ambient_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_ambient.fs");
+    deferred_ambient_program->bind();
+    deferred_ambient_program->set_samplers(
+        {{"geometry.position_map", 0},
+         {"geometry.normal_map", 1},
+         {"geometry.albedo_map", 2},
+         {"geometry.material_map", 3},
+         {"skybox.irradiance_cubemap", 4},
+         {"skybox.prefilter_cubemap", 5},
+         {"brdf_map", 6}});
+    deferred_ambient_program->unbind();
+
     deferred_directional_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_directional.fs");
+    deferred_directional_program->bind();
+    deferred_directional_program->set_samplers(
+        {{"geometry.position_map", 0},
+         {"geometry.normal_map", 1},
+         {"geometry.albedo_map", 2},
+         {"geometry.material_map", 3},
+         {"light.depth_map[0]", 4},
+         {"light.depth_map[1]", 5},
+         {"light.depth_map[2]", 6}});
+    deferred_directional_program->unbind();
+
     deferred_point_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_point.fs");
+    deferred_point_program->bind();
+    deferred_point_program->set_samplers(
+        {{"geometry.position_map", 0},
+         {"geometry.normal_map", 1},
+         {"geometry.albedo_map", 2},
+         {"geometry.material_map", 3},
+         {"light.depth_cubemap", 4}});
+    deferred_point_program->unbind();
+
     deferred_spot_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
         "assets/shaders/deferred_spot.fs");
+    deferred_spot_program->bind();
+    deferred_spot_program->set_samplers(
+        {{"geometry.position_map", 0},
+         {"geometry.normal_map", 1},
+         {"geometry.albedo_map", 2},
+         {"geometry.material_map", 3},
+         {"light.depth_map", 4}});
+    deferred_spot_program->unbind();
+
     skybox_program = std::make_unique<liminal::program>(
         "assets/shaders/skybox.vs",
         "assets/shaders/skybox.fs");
+    skybox_program->bind();
+    skybox_program->set_samplers(
+        {{"skybox.environment_cubemap", 0}});
+    skybox_program->unbind();
+
     water_program = std::make_unique<liminal::program>(
         "assets/shaders/water.vs",
         "assets/shaders/water.fs");
+    water_program->bind();
+    water_program->set_samplers(
+        {{"water.reflection_map", 0},
+         {"water.refraction_map", 1},
+         {"water.depth_map", 2},
+         {"water.dudv_map", 3},
+         {"water.normal_map", 4}});
+    water_program->unbind();
+
     sprite_program = std::make_unique<liminal::program>(
         "assets/shaders/sprite.vs",
         "assets/shaders/sprite.fs");
+    sprite_program->bind();
+    sprite_program->set_samplers(
+        {{"sprite.texture", 0}});
+    sprite_program->unbind();
+
     gaussian_program = std::make_unique<liminal::program>(
         "assets/shaders/gaussian.vs",
         "assets/shaders/gaussian.fs");
+    gaussian_program->bind();
+    gaussian_program->set_samplers(
+        {{"image", 0}});
+    gaussian_program->unbind();
+
     postprocess_program = std::make_unique<liminal::program>(
         "assets/shaders/postprocess.vs",
         "assets/shaders/postprocess.fs");
-
-    setup_samplers();
+    postprocess_program->bind();
+    postprocess_program->set_samplers(
+        {{"hdr_map", 0},
+         {"bloom_map", 1}});
+    postprocess_program->unbind();
 
     // create water textures
     water_dudv_texture = std::make_unique<liminal::texture>("assets/images/water_dudv.png");
@@ -361,42 +462,42 @@ liminal::renderer::renderer(
         constexpr auto length_inv = 1 / radius;
         constexpr auto sector_step = 2 * 3.14f / sector_count;
         constexpr auto stack_step = 3.14f / stack_count;
-        for (std::size_t i = 0; i <= stack_count; i++)
+        for (std::size_t stack = 0; stack <= stack_count; stack++)
         {
-            const auto stack_angle = 3.14f / 2 - i * stack_step;
-            const auto xy = radius * cosf(stack_angle);
-            const auto z = radius * sinf(stack_angle);
-            for (std::size_t j = 0; j <= sector_count; j++)
+            const auto stack_angle = 3.14f / 2 - stack * stack_step;
+            const auto xy = radius * glm::cos(stack_angle);
+            const auto z = radius * glm::sin(stack_angle);
+            for (std::size_t sector = 0; sector <= sector_count; sector++)
             {
-                const float sector_angle = j * sector_step;
+                const float sector_angle = sector * sector_step;
 
                 liminal::vertex vertex;
-                vertex.position.x = xy * cosf(sector_angle);
-                vertex.position.y = xy * sinf(sector_angle);
+                vertex.position.x = xy * glm::cos(sector_angle);
+                vertex.position.y = xy * glm::sin(sector_angle);
                 vertex.position.z = z;
                 vertex.normal.x = vertex.position.x * length_inv;
                 vertex.normal.y = vertex.position.y * length_inv;
                 vertex.normal.z = vertex.position.z * length_inv;
-                vertex.uv.s = (float)j / sector_count;
-                vertex.uv.t = (float)i / stack_count;
+                vertex.uv.s = (float)sector / sector_count;
+                vertex.uv.t = (float)stack / stack_count;
                 vertices.push_back(vertex);
             }
         }
 
         std::vector<unsigned int> indices;
-        for (std::size_t i = 0; i < stack_count; i++)
+        for (std::size_t stack = 0; stack < stack_count; stack++)
         {
-            unsigned int k1 = (unsigned int)(i * (sector_count + 1));
+            unsigned int k1 = (unsigned int)(stack * (sector_count + 1));
             unsigned int k2 = k1 + (unsigned int)(sector_count + 1);
-            for (std::size_t j = 0; j < sector_count; j++, k1++, k2++)
+            for (std::size_t sector = 0; sector < sector_count; sector++, k1++, k2++)
             {
-                if (i != 0)
+                if (stack != 0)
                 {
                     indices.push_back(k1);
                     indices.push_back(k2);
                     indices.push_back(k1 + 1);
                 }
-                if (i != stack_count - 1)
+                if (stack != stack_count - 1)
                 {
                     indices.push_back(k1 + 1);
                     indices.push_back(k2);
@@ -429,9 +530,9 @@ liminal::renderer::~renderer()
     glDeleteTextures(1, &final_texture_id);
 
     glDeleteFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-    for (std::size_t i = 0; i < num_directional_light_shadows; i++)
+    for (const auto &directional_light_depth_map_texture_id : directional_light_depth_map_texture_ids)
     {
-        glDeleteTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_ids[i].data());
+        glDeleteTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_id.data());
     }
 
     glDeleteFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
@@ -700,7 +801,7 @@ void liminal::renderer::calc_render_size()
             glGenTextures(2, hdr_texture_ids.data());
             for (GLenum i = 0; i < 2; i++)
             {
-                glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[i]);
+                glBindTexture(GL_TEXTURE_2D, hdr_texture_ids.at(i));
                 {
                     glTexImage2D(
                         GL_TEXTURE_2D,
@@ -723,7 +824,7 @@ void liminal::renderer::calc_render_size()
                     GL_FRAMEBUFFER,
                     GL_COLOR_ATTACHMENT0 + i,
                     GL_TEXTURE_2D,
-                    hdr_texture_ids[i],
+                    hdr_texture_ids.at(i),
                     0);
             }
         }
@@ -765,12 +866,12 @@ void liminal::renderer::calc_render_size()
     // setup bloom fbo
     glGenFramebuffers(2, bloom_fbo_ids.data());
     glGenTextures(2, bloom_texture_ids.data());
-    for (std::size_t i = 0; i < 2; i++)
+    for (std::size_t bloom_index = 0; bloom_index < 2; bloom_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at(bloom_index));
         {
             {
-                glBindTexture(GL_TEXTURE_2D, bloom_texture_ids[i]);
+                glBindTexture(GL_TEXTURE_2D, bloom_texture_ids.at(bloom_index));
                 {
                     glTexImage2D(
                         GL_TEXTURE_2D,
@@ -793,7 +894,7 @@ void liminal::renderer::calc_render_size()
                     GL_FRAMEBUFFER,
                     GL_COLOR_ATTACHMENT0,
                     GL_TEXTURE_2D,
-                    bloom_texture_ids[i],
+                    bloom_texture_ids.at(bloom_index),
                     0);
             }
 
@@ -857,23 +958,23 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
     directional_light_depth_map_size = size;
 
     glDeleteFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-    for (std::size_t i = 0; i < num_directional_light_shadows; i++)
+    for (const auto &directional_light_depth_map_texture_id : directional_light_depth_map_texture_ids)
     {
-        glDeleteTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_ids[i].data());
+        glDeleteTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_id.data());
     }
 
     glGenFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-    for (std::size_t i = 0; i < num_directional_light_shadows; i++)
+    for (std::size_t shadow_index = 0; shadow_index < num_directional_light_shadows; shadow_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids.at(shadow_index));
         {
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
 
-            glGenTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_ids[i].data());
-            for (std::size_t j = 0; j < liminal::directional_light::num_cascades; j++)
+            glGenTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_ids.at(shadow_index).data());
+            for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
             {
-                glBindTexture(GL_TEXTURE_2D, directional_light_depth_map_texture_ids[i][j]);
+                glBindTexture(GL_TEXTURE_2D, directional_light_depth_map_texture_ids.at(shadow_index).at(cascade_index));
                 {
                     glTexImage2D(
                         GL_TEXTURE_2D,
@@ -901,7 +1002,7 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
                 GL_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,
                 GL_TEXTURE_2D,
-                directional_light_depth_map_texture_ids[i][0],
+                directional_light_depth_map_texture_ids.at(shadow_index).at(0),
                 0);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -923,20 +1024,20 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
 
     glGenFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
     glGenTextures(num_point_light_shadows, point_light_depth_cubemap_texture_ids.data());
-    for (std::size_t i = 0; i < num_point_light_shadows; i++)
+    for (std::size_t shadow_index = 0; shadow_index < num_point_light_shadows; shadow_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids.at(shadow_index));
         {
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
 
             {
-                glBindTexture(GL_TEXTURE_CUBE_MAP, point_light_depth_cubemap_texture_ids[i]);
+                glBindTexture(GL_TEXTURE_CUBE_MAP, point_light_depth_cubemap_texture_ids.at(shadow_index));
                 {
-                    for (GLenum j = 0; j < 6; j++)
+                    for (GLenum face = 0; face < 6; face++)
                     {
                         glTexImage2D(
-                            GL_TEXTURE_CUBE_MAP_POSITIVE_X + j,
+                            GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
                             0,
                             GL_DEPTH_COMPONENT,
                             size,
@@ -958,7 +1059,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
                 glFramebufferTexture(
                     GL_FRAMEBUFFER,
                     GL_DEPTH_ATTACHMENT,
-                    point_light_depth_cubemap_texture_ids[i],
+                    point_light_depth_cubemap_texture_ids.at(shadow_index),
                     0);
             }
 
@@ -981,15 +1082,15 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
 
     glGenFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
     glGenTextures(num_spot_light_shadows, spot_light_depth_map_texture_ids.data());
-    for (std::size_t i = 0; i < num_spot_light_shadows; i++)
+    for (std::size_t shadow_index = 0; shadow_index < num_spot_light_shadows; shadow_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids.at(shadow_index));
         {
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
 
             {
-                glBindTexture(GL_TEXTURE_2D, spot_light_depth_map_texture_ids[i]);
+                glBindTexture(GL_TEXTURE_2D, spot_light_depth_map_texture_ids.at(shadow_index));
                 {
                     glTexImage2D(
                         GL_TEXTURE_2D,
@@ -1016,7 +1117,7 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
                     GL_FRAMEBUFFER,
                     GL_DEPTH_ATTACHMENT,
                     GL_TEXTURE_2D,
-                    spot_light_depth_map_texture_ids[i],
+                    spot_light_depth_map_texture_ids.at(shadow_index),
                     0);
             }
 
@@ -1198,123 +1299,6 @@ void liminal::renderer::reload_programs()
     sprite_program->reload();
     gaussian_program->reload();
     postprocess_program->reload();
-
-    setup_samplers();
-}
-
-void liminal::renderer::setup_samplers() const
-{
-    geometry_mesh_program->bind();
-    {
-        geometry_mesh_program->set_int("material.albedo_map", 0);
-        geometry_mesh_program->set_int("material.normal_map", 1);
-        geometry_mesh_program->set_int("material.metallic_map", 2);
-        geometry_mesh_program->set_int("material.roughness_map", 3);
-        geometry_mesh_program->set_int("material.occlusion_map", 4);
-        geometry_mesh_program->set_int("material.height_map", 5);
-    }
-    geometry_mesh_program->unbind();
-
-    geometry_skinned_mesh_program->bind();
-    {
-        geometry_skinned_mesh_program->set_int("material.albedo_map", 0);
-        geometry_skinned_mesh_program->set_int("material.normal_map", 1);
-        geometry_skinned_mesh_program->set_int("material.metallic_map", 2);
-        geometry_skinned_mesh_program->set_int("material.roughness_map", 3);
-        geometry_skinned_mesh_program->set_int("material.occlusion_map", 4);
-        geometry_skinned_mesh_program->set_int("material.height_map", 5);
-    }
-    geometry_skinned_mesh_program->unbind();
-
-    geometry_terrain_program->bind();
-    {
-        geometry_terrain_program->set_int("materials[0].albedo_map", 0);
-        geometry_terrain_program->set_int("materials[0].normal_map", 1);
-        geometry_terrain_program->set_int("materials[0].metallic_map", 2);
-        geometry_terrain_program->set_int("materials[0].roughness_map", 3);
-        geometry_terrain_program->set_int("materials[0].occlusion_map", 4);
-        geometry_terrain_program->set_int("materials[0].height_map", 5);
-    }
-    geometry_terrain_program->unbind();
-
-    deferred_ambient_program->bind();
-    {
-        deferred_ambient_program->set_int("geometry.position_map", 0);
-        deferred_ambient_program->set_int("geometry.normal_map", 1);
-        deferred_ambient_program->set_int("geometry.albedo_map", 2);
-        deferred_ambient_program->set_int("geometry.material_map", 3);
-        deferred_ambient_program->set_int("skybox.irradiance_cubemap", 4);
-        deferred_ambient_program->set_int("skybox.prefilter_cubemap", 5);
-        deferred_ambient_program->set_int("brdf_map", 6);
-    }
-    deferred_ambient_program->unbind();
-
-    deferred_directional_program->bind();
-    {
-        deferred_directional_program->set_int("geometry.position_map", 0);
-        deferred_directional_program->set_int("geometry.normal_map", 1);
-        deferred_directional_program->set_int("geometry.albedo_map", 2);
-        deferred_directional_program->set_int("geometry.material_map", 3);
-        deferred_directional_program->set_int("light.depth_map[0]", 4);
-        deferred_directional_program->set_int("light.depth_map[1]", 5);
-        deferred_directional_program->set_int("light.depth_map[2]", 6);
-    }
-    deferred_directional_program->unbind();
-
-    deferred_point_program->bind();
-    {
-        deferred_point_program->set_int("geometry.position_map", 0);
-        deferred_point_program->set_int("geometry.normal_map", 1);
-        deferred_point_program->set_int("geometry.albedo_map", 2);
-        deferred_point_program->set_int("geometry.material_map", 3);
-        deferred_point_program->set_int("light.depth_cubemap", 4);
-    }
-    deferred_point_program->unbind();
-
-    deferred_spot_program->bind();
-    {
-        deferred_spot_program->set_int("geometry.position_map", 0);
-        deferred_spot_program->set_int("geometry.normal_map", 1);
-        deferred_spot_program->set_int("geometry.albedo_map", 2);
-        deferred_spot_program->set_int("geometry.material_map", 3);
-        deferred_spot_program->set_int("light.depth_map", 4);
-    }
-    deferred_spot_program->unbind();
-
-    skybox_program->bind();
-    {
-        skybox_program->set_int("skybox.environment_cubemap", 0);
-    }
-    skybox_program->unbind();
-
-    water_program->bind();
-    {
-        water_program->set_int("water.reflection_map", 0);
-        water_program->set_int("water.refraction_map", 1);
-        water_program->set_int("water.depth_map", 2);
-        water_program->set_int("water.dudv_map", 3);
-        water_program->set_int("water.normal_map", 4);
-    }
-    water_program->unbind();
-
-    sprite_program->bind();
-    {
-        sprite_program->set_int("sprite.texture", 0);
-    }
-    sprite_program->unbind();
-
-    gaussian_program->bind();
-    {
-        gaussian_program->set_int("image", 0);
-    }
-    gaussian_program->unbind();
-
-    postprocess_program->bind();
-    {
-        postprocess_program->set_int("hdr_map", 0);
-        postprocess_program->set_int("bloom_map", 1);
-    }
-    postprocess_program->unbind();
 }
 
 // TODO: mouse picking doesn't work if water is present in the scene
@@ -1350,7 +1334,7 @@ void liminal::renderer::render_all(
     liminal::scene &scene,
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
-    unsigned int current_time) const
+    const unsigned int current_time) const
 {
     render_shadows(scene, camera_transform);
     render_objects(scene, camera, camera_transform, hdr_fbo_id, render_width, render_height);
@@ -1363,31 +1347,30 @@ void liminal::renderer::render_shadows(
     liminal::scene &scene,
     const liminal::transform &camera_transform) const
 {
-    std::size_t i = 0;
-    for (const auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, const liminal::transform>().each())
+    for (std::size_t shadow_index = 0; const auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, const liminal::transform>().each())
     {
-        for (std::size_t j = 0; j < liminal::directional_light::num_cascades; j++)
+        for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
         {
-            directional_light.view_projection_matrices[j] = glm::identity<glm::mat4>();
-            directional_light.depth_map_texture_ids[j] = 0;
+            directional_light.view_projection_matrices.at(cascade_index) = glm::identity<glm::mat4>();
+            directional_light.depth_map_texture_ids.at(cascade_index) = 0;
         }
 
-        if (i >= num_directional_light_shadows)
+        if (shadow_index >= num_directional_light_shadows)
         {
             continue;
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids.at(shadow_index));
         {
             glViewport(0, 0, directional_light_depth_map_size, directional_light_depth_map_size);
             glEnable(GL_CULL_FACE);
 
             // const auto aspect_ratio = get_aspect_ratio();
-            // const auto tan_half_h_fov = tanf(glm::radians(90.0f / 2.0f));
-            // const auto tan_half_v_fov = tanf(glm::radians((90.0f * aspect_ratio) / 2.0f));
+            // const auto tan_half_h_fov = glm::tan(glm::radians(90.0f / 2.0f));
+            // const auto tan_half_v_fov = glm::tan(glm::radians((90.0f * aspect_ratio) / 2.0f));
             // const float cascade_end[] = {1.0f, 25.0f, 90.0f, 200.0f};
 
-            for (std::size_t j = 0; j < liminal::directional_light::num_cascades; j++)
+            for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
             {
                 // const auto xn = cascade_end[j] * tan_half_h_fov;
                 // const auto xf = cascade_end[j + 1] * tan_half_h_fov;
@@ -1431,14 +1414,14 @@ void liminal::renderer::render_shadows(
                     camera_transform.position - transform.rotation,
                     camera_transform.position,
                     {0, 1, 0});
-                directional_light.view_projection_matrices[j] = projection * view;
-                directional_light.depth_map_texture_ids[j] = directional_light_depth_map_texture_ids[i][j];
+                directional_light.view_projection_matrices.at(cascade_index) = projection * view;
+                directional_light.depth_map_texture_ids.at(cascade_index) = directional_light_depth_map_texture_ids.at(shadow_index).at(cascade_index);
 
                 glFramebufferTexture2D(
                     GL_FRAMEBUFFER,
                     GL_DEPTH_ATTACHMENT,
                     GL_TEXTURE_2D,
-                    directional_light_depth_map_texture_ids[i][j],
+                    directional_light_depth_map_texture_ids.at(shadow_index).at(cascade_index),
                     0);
 
                 glClear(GL_DEPTH_BUFFER_BIT);
@@ -1452,7 +1435,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_skinned_mesh_program->bind();
                             {
-                                depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices[j] * model_matrix);
+                                depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
                                 depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
 
                                 _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
@@ -1463,7 +1446,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->bind();
                             {
-                                depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices[j] * model_matrix);
+                                depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
 
                                 _mesh_renderer.model->draw_meshes(*depth_mesh_program);
                             }
@@ -1478,7 +1461,7 @@ void liminal::renderer::render_shadows(
                     {
                         const auto model_matrix = _terrain.get_model_matrix();
 
-                        depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices[j] * model_matrix);
+                        depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
 
                         _terrain.mesh->draw(*depth_mesh_program);
                     }
@@ -1490,19 +1473,15 @@ void liminal::renderer::render_shadows(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        i++;
+        shadow_index++;
     }
 
-    i = 0;
-    for (const auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, const liminal::transform>().each())
+    for (std::size_t shadow_index = 0; const auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, const liminal::transform>().each())
     {
-        for (std::size_t j = 0; j < 6; j++)
-        {
-            point_light.view_projection_matrices[j] = glm::identity<glm::mat4>();
-        }
+        point_light.view_projection_matrices.fill(glm::identity<glm::mat4>());
         point_light.depth_cubemap_texture_id = 0;
 
-        if (i >= num_point_light_shadows)
+        if (shadow_index >= num_point_light_shadows)
         {
             continue;
         }
@@ -1512,15 +1491,15 @@ void liminal::renderer::render_shadows(
             1.0f,
             point_light_near_plane,
             point_light_far_plane);
-        point_light.view_projection_matrices[0] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
-        point_light.view_projection_matrices[1] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0));
-        point_light.view_projection_matrices[2] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
-        point_light.view_projection_matrices[3] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
-        point_light.view_projection_matrices[4] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
-        point_light.view_projection_matrices[5] = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
-        point_light.depth_cubemap_texture_id = point_light_depth_cubemap_texture_ids[i];
+        point_light.view_projection_matrices.at(0) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
+        point_light.view_projection_matrices.at(1) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0));
+        point_light.view_projection_matrices.at(2) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+        point_light.view_projection_matrices.at(3) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
+        point_light.view_projection_matrices.at(4) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
+        point_light.view_projection_matrices.at(5) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
+        point_light.depth_cubemap_texture_id = point_light_depth_cubemap_texture_ids.at(shadow_index);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids.at(shadow_index));
         {
             glViewport(0, 0, point_light_depth_cubemap_size, point_light_depth_cubemap_size);
             glEnable(GL_CULL_FACE);
@@ -1539,9 +1518,9 @@ void liminal::renderer::render_shadows(
                             depth_cube_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                             depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
 
-                            for (std::size_t j = 0; j < 6; j++)
+                            for (std::size_t face_index = 0; face_index < 6; face_index++)
                             {
-                                depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(j) + "]", point_light.view_projection_matrices[j]);
+                                depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(face_index) + "]", point_light.view_projection_matrices.at(face_index));
                             }
 
                             depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light_far_plane);
@@ -1557,9 +1536,9 @@ void liminal::renderer::render_shadows(
                         {
                             depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
-                            for (std::size_t j = 0; j < 6; j++)
+                            for (std::size_t face_index = 0; face_index < 6; face_index++)
                             {
-                                depth_cube_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(j) + "]", point_light.view_projection_matrices[j]);
+                                depth_cube_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(face_index) + "]", point_light.view_projection_matrices.at(face_index));
                             }
 
                             depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
@@ -1575,9 +1554,9 @@ void liminal::renderer::render_shadows(
             // TODO: point light shadows disabled on terrain for now due to performance; investigate this
             // depth_cube_mesh_program->bind();
             // {
-            //     for (std::size_t j = 0; j < 6; j++)
+            //     for (std::size_t face_index = 0; face_index < 6; face_index++)
             //     {
-            //         depth_cube_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(j) + "]", point_light.view_projection_matrices[j]);
+            //         depth_cube_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(face_index) + "]", point_light.view_projection_matrices.at(face_index));
             //     }
 
             //     depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
@@ -1598,16 +1577,15 @@ void liminal::renderer::render_shadows(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        i++;
+        shadow_index++;
     }
 
-    i = 0;
-    for (const auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, const liminal::transform>().each())
+    for (std::size_t shadow_index = 0; const auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, const liminal::transform>().each())
     {
         spot_light.view_projection_matrix = glm::identity<glm::mat4>();
         spot_light.depth_map_texture_id = 0;
 
-        if (i >= num_spot_light_shadows)
+        if (shadow_index >= num_spot_light_shadows)
         {
             continue;
         }
@@ -1622,9 +1600,9 @@ void liminal::renderer::render_shadows(
         constexpr auto up = glm::vec3(0, 1, 0);
         const auto view = glm::lookAt(transform.position, target, up);
         spot_light.view_projection_matrix = projection * view;
-        spot_light.depth_map_texture_id = spot_light_depth_map_texture_ids[i];
+        spot_light.depth_map_texture_id = spot_light_depth_map_texture_ids.at(shadow_index);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids.at(shadow_index));
         {
             glViewport(0, 0, spot_light_depth_map_size, spot_light_depth_map_size);
             glEnable(GL_CULL_FACE);
@@ -1677,7 +1655,7 @@ void liminal::renderer::render_shadows(
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        i++;
+        shadow_index++;
     }
 }
 
@@ -1719,6 +1697,7 @@ void liminal::renderer::render_objects(
                         geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
                         geometry_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
+                        geometry_skinned_mesh_program->set_vec3("material.color", mesh_renderer.color);
                         geometry_skinned_mesh_program->set_int("id", (int)id);
 
                         mesh_renderer.model->draw_meshes(*geometry_skinned_mesh_program);
@@ -1732,6 +1711,7 @@ void liminal::renderer::render_objects(
                         geometry_mesh_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                         geometry_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
+                        geometry_mesh_program->set_vec3("material.color", mesh_renderer.color);
                         geometry_mesh_program->set_int("id", (int)id);
 
                         mesh_renderer.model->draw_meshes(*geometry_mesh_program);
@@ -1837,21 +1817,21 @@ void liminal::renderer::render_objects(
                 {
                     deferred_directional_program->set_vec3("light.direction", transform.rotation);
                     deferred_directional_program->set_vec3("light.color", directional_light.color);
-                    for (std::size_t j = 0; j < liminal::directional_light::num_cascades; j++)
+                    for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                     {
-                        deferred_directional_program->set_mat4("light.view_projection_matrices[" + std::to_string(j) + "]", directional_light.view_projection_matrices[j]);
+                        deferred_directional_program->set_mat4("light.view_projection_matrices[" + std::to_string(cascade_index) + "]", directional_light.view_projection_matrices.at(cascade_index));
 
-                        glActiveTexture(GL_TEXTURE4 + (GLenum)j);
-                        glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids[j]);
+                        glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
+                        glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids.at(cascade_index));
                     }
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    for (std::size_t j = 0; j < liminal::directional_light::num_cascades; j++)
+                    for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                     {
-                        glActiveTexture(GL_TEXTURE4 + (GLenum)j);
+                        glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
                         glBindTexture(GL_TEXTURE_2D, 0);
                     }
                 }
@@ -2013,7 +1993,7 @@ void liminal::renderer::render_objects(
                 {
                     auto model_matrix = glm::identity<glm::mat4>();
                     model_matrix = glm::translate(model_matrix, transform.position);
-                    model_matrix = glm::scale(model_matrix, {.25f, .25f, .25f});
+                    model_matrix = glm::scale(model_matrix, {0.25f, 0.25f, 0.25f});
 
                     color_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                     color_program->set_mat4("model_matrix", model_matrix);
@@ -2037,7 +2017,7 @@ void liminal::renderer::render_waters(
     liminal::scene &scene,
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
-    unsigned int current_time) const
+    const unsigned int current_time) const
 {
     for (const auto [id, transform, water] : scene.get_entities_with<const liminal::transform, const liminal::water>().each())
     {
@@ -2183,7 +2163,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
         gaussian_program->bind();
         {
             bool first_iteration = true;
-            for (std::size_t i = 0; i < 10; i++)
+            for (std::size_t pass = 0; pass < 10; pass++)
             {
                 glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[horizontal]);
                 {

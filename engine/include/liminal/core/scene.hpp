@@ -33,11 +33,12 @@ namespace liminal
         void delete_entity(liminal::entity entity);
 
         void start();
-        void update(const unsigned int current_time, const float delta_time);
+        void update(unsigned int current_time, float delta_time);
         void stop();
 
         void reload_scripts();
 
+        // TODO: is there any way to make this const?
         template <typename... Components>
         auto get_entities_with()
         {

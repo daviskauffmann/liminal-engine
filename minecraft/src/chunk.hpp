@@ -22,13 +22,13 @@ namespace minecraft
         chunk(minecraft::world *world, const glm::ivec3 &position);
         ~chunk();
 
-        minecraft::block *get_block(const int x, const int y, const int z) const;
-        void set_block(const int x, const int y, const int z, minecraft::block *const block);
+        minecraft::block *get_block(int x, int y, int z) const;
+        void set_block(int x, int y, int z, minecraft::block *block);
 
-        liminal::mesh *create_mesh(liminal::texture *const tiles_texture) const;
+        liminal::mesh *create_mesh(liminal::texture *tiles_texture) const;
 
     private:
-        inline bool in_range(const int x, const int y, const int z) const;
+        inline bool in_range(int x, int y, int z) const;
     };
 }
 
