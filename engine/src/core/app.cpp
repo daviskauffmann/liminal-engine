@@ -58,6 +58,7 @@ liminal::app::app(int argc, char *argv[])
     }
 
     // init subsystems
+    // TODO: dont really like the whole global singleton thing, should find a better solution
     new liminal::assets();
     new liminal::platform(window_title, window_width, window_height);
     new liminal::renderer(
