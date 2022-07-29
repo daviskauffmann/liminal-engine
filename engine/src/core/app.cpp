@@ -25,11 +25,11 @@ liminal::app::app(int argc, char *argv[])
         cxxopts::Options options(argv[0]);
 
         auto option_adder = options.add_options();
+        option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
         option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
-        option_adder("h,help", "Print usage");
         option_adder("scale", "Set render scale", cxxopts::value<float>()->default_value("1.0"));
         option_adder("v,version", "Print version");
-        option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
+        option_adder("h,help", "Print usage");
 
         const auto result = options.parse(argc, argv);
 
