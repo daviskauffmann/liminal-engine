@@ -1,14 +1,15 @@
 #ifndef LIMINAL_CORE_ASSETS_HPP
 #define LIMINAL_CORE_ASSETS_HPP
 
-#include <liminal/audio/sound.hpp>
-#include <liminal/graphics/model.hpp>
-#include <liminal/graphics/skybox.hpp>
-#include <liminal/graphics/texture.hpp>
 #include <unordered_map>
 
 namespace liminal
 {
+    class sound;
+    class model;
+    class skybox;
+    class texture;
+
     class assets
     {
     public:
@@ -17,21 +18,16 @@ namespace liminal
         assets();
         ~assets();
 
-        template <typename Resource, typename... Args>
-        Resource *load(const std::string &filename, Args &&...args)
-        {
-            if (cache.find(filename) == cache.end())
-            {
-                cache[filename] = new Resource(filename, std::forward<Args>(args)...);
-            }
-
-            return (Resource *)cache[filename];
-        }
+        liminal::sound *load_sound(const char *filename);
+        liminal::model *load_model(const char *filename, bool flip_uvs = false);
+        liminal::skybox *load_skybox(const char *filename);
+        liminal::texture *load_texture(const std::string &filename);
 
     private:
-        // TODO: void * cannot be properly deleted
-        // perhaps make this entire class a template and have multiple instances for each type of asset?
-        std::unordered_map<std::string, void *> cache;
+        std::unordered_map<const char *, liminal::sound *> sounds;
+        std::unordered_map<const char *, liminal::model *> models;
+        std::unordered_map<const char *, liminal::skybox *> skyboxes;
+        std::unordered_map<std::string, liminal::texture *> textures;
     };
 }
 

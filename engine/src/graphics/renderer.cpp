@@ -1517,12 +1517,12 @@ void liminal::renderer::render_shadows(
                         {
                             depth_cube_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                             depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
-
-                            for (std::size_t face_index = 0; face_index < 6; face_index++)
-                            {
-                                depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(face_index) + "]", point_light.view_projection_matrices.at(face_index));
-                            }
-
+                            depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[0]", point_light.view_projection_matrices.at(0));
+                            depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[1]", point_light.view_projection_matrices.at(1));
+                            depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[2]", point_light.view_projection_matrices.at(2));
+                            depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[3]", point_light.view_projection_matrices.at(3));
+                            depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[4]", point_light.view_projection_matrices.at(4));
+                            depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[5]", point_light.view_projection_matrices.at(5));
                             depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_skinned_mesh_program->set_vec3("light.position", transform.position);
 
@@ -1536,10 +1536,12 @@ void liminal::renderer::render_shadows(
                         {
                             depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
-                            for (std::size_t face_index = 0; face_index < 6; face_index++)
-                            {
-                                depth_cube_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(face_index) + "]", point_light.view_projection_matrices.at(face_index));
-                            }
+                            depth_cube_mesh_program->set_mat4("light.view_projection_matrices[0]", point_light.view_projection_matrices.at(0));
+                            depth_cube_mesh_program->set_mat4("light.view_projection_matrices[1]", point_light.view_projection_matrices.at(1));
+                            depth_cube_mesh_program->set_mat4("light.view_projection_matrices[2]", point_light.view_projection_matrices.at(2));
+                            depth_cube_mesh_program->set_mat4("light.view_projection_matrices[3]", point_light.view_projection_matrices.at(3));
+                            depth_cube_mesh_program->set_mat4("light.view_projection_matrices[4]", point_light.view_projection_matrices.at(4));
+                            depth_cube_mesh_program->set_mat4("light.view_projection_matrices[5]", point_light.view_projection_matrices.at(5));
 
                             depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_mesh_program->set_vec3("light.position", transform.position);
@@ -1819,7 +1821,7 @@ void liminal::renderer::render_objects(
                     deferred_directional_program->set_vec3("light.color", directional_light.color);
                     for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                     {
-                        deferred_directional_program->set_mat4("light.view_projection_matrices[" + std::to_string(cascade_index) + "]", directional_light.view_projection_matrices.at(cascade_index));
+                        deferred_directional_program->set_mat4(("light.view_projection_matrices[" + std::to_string(cascade_index) + "]").c_str(), directional_light.view_projection_matrices.at(cascade_index));
 
                         glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
                         glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids.at(cascade_index));
@@ -2165,12 +2167,12 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
             bool first_iteration = true;
             for (std::size_t pass = 0; pass < 10; pass++)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids[horizontal]);
+                glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at((std::size_t)horizontal));
                 {
                     gaussian_program->set_int("horizontal", horizontal);
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids[1] : bloom_texture_ids[!horizontal]);
+                    glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids.at(1) : bloom_texture_ids.at((std::size_t)!horizontal));
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -2202,9 +2204,9 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
             postprocess_program->set_unsigned_int("greyscale", greyscale);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, hdr_texture_ids[0]);
+            glBindTexture(GL_TEXTURE_2D, hdr_texture_ids.at(0));
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, bloom_texture_ids[!horizontal]);
+            glBindTexture(GL_TEXTURE_2D, bloom_texture_ids.at((std::size_t)!horizontal));
 
             glBindVertexArray(screen_vao_id);
             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -2225,33 +2227,4 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
     {
         camera.render_texture_id = final_texture_id;
     }
-
-    // DEBUG: draw fbos
-    // ImGui::Begin("HDR");
-    // ImGui::Image((ImTextureID)hdr_texture_ids[0], ImVec2(320, 200), ImVec2(0, 1), ImVec2(1, 0));
-    // ImGui::End();
-
-    // ImGui::Begin("Brightness");
-    // ImGui::Image((ImTextureID)hdr_texture_ids[1], ImGui::GetWindowSize());
-    // ImGui::End();
-
-    // ImGui::Begin("Bloom");
-    // ImGui::Image((ImTextureID)bloom_texture_ids[horizontal], ImGui::GetWindowSize());
-    // ImGui::End();
-
-    // ImGui::Begin("Position");
-    // ImGui::Image((ImTextureID)geometry_position_texture_id, ImGui::GetWindowSize());
-    // ImGui::End();
-
-    // ImGui::Begin("Normal");
-    // ImGui::Image((ImTextureID)geometry_normal_texture_id, ImGui::GetWindowSize());
-    // ImGui::End();
-
-    // ImGui::Begin("Albedo");
-    // ImGui::Image((ImTextureID)geometry_albedo_texture_id, ImGui::GetWindowSize());
-    // ImGui::End();
-
-    // ImGui::Begin("Material");
-    // ImGui::Image((ImTextureID)geometry_material_texture_id, ImGui::GetWindowSize());
-    // ImGui::End();
 }

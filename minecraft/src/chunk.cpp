@@ -78,7 +78,7 @@ liminal::mesh *minecraft::chunk::create_mesh(liminal::texture *const tiles_textu
         std::vector<liminal::texture *> textures_for_type;
         textures.push_back(textures_for_type);
     }
-    textures[aiTextureType_DIFFUSE].push_back(tiles_texture);
+    textures.at(aiTextureType_DIFFUSE).push_back(tiles_texture);
 
     return new liminal::mesh(mesh_data.vertices, mesh_data.indices, textures);
 }

@@ -16,10 +16,10 @@ namespace player
             liminal::platform::instance->set_relative_mouse_mode(true);
 
             // load assets
-            ambient_sound = liminal::assets::instance->load<liminal::sound>("assets/audio/ambient.wav");
-            bounce_sound = liminal::assets::instance->load<liminal::sound>("assets/audio/bounce.wav");
-            shoot_sound = liminal::assets::instance->load<liminal::sound>("assets/audio/shoot.wav");
-            grass_texture = liminal::assets::instance->load<liminal::texture>("assets/images/grass_sprite.png");
+            ambient_sound = liminal::assets::instance->load_sound("assets/audio/ambient.wav");
+            bounce_sound = liminal::assets::instance->load_sound("assets/audio/bounce.wav");
+            shoot_sound = liminal::assets::instance->load_sound("assets/audio/shoot.wav");
+            grass_texture = liminal::assets::instance->load_texture("assets/images/grass_sprite.png");
 
             scene = std::make_unique<liminal::scene>();
             scene->load("assets/scenes/demo.json");

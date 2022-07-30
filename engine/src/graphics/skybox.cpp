@@ -7,13 +7,12 @@
 #include <liminal/graphics/program.hpp>
 #include <memory>
 #include <stb_image.h>
-#include <vector>
 
 constexpr GLsizei environment_size = 4096;
 constexpr GLsizei irradiance_size = 32;
 constexpr GLsizei prefilter_size = 128;
 
-liminal::skybox::skybox(const std::string &filename)
+liminal::skybox::skybox(const char *const filename)
 {
     set_cubemap(filename);
 }
@@ -25,7 +24,7 @@ liminal::skybox::~skybox()
     glDeleteTextures(1, &prefilter_cubemap_id);
 }
 
-void liminal::skybox::set_cubemap(const std::string &filename)
+void liminal::skybox::set_cubemap(const char *const filename)
 {
     glDeleteTextures(1, &environment_cubemap_id);
     glDeleteTextures(1, &irradiance_cubemap_id);
@@ -143,7 +142,7 @@ void liminal::skybox::set_cubemap(const std::string &filename)
     {
         stbi_set_flip_vertically_on_load(true);
         int width, height, num_components;
-        const auto image = stbi_loadf(filename.c_str(), &width, &height, &num_components, 0);
+        const auto image = stbi_loadf(filename, &width, &height, &num_components, 0);
         if (!image)
         {
             std::cerr << "Error: Failed to load skybox texture: " << stbi_failure_reason() << std::endl;

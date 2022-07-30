@@ -59,7 +59,7 @@ void liminal::scene::load(const std::string &filename)
     {
         if (key == "skybox")
         {
-            skybox = liminal::assets::instance->load<liminal::skybox>(json["skybox"]);
+            skybox = liminal::assets::instance->load_skybox(((std::string)json["skybox"]).c_str());
         }
 
         if (key == "entities")
@@ -117,8 +117,8 @@ void liminal::scene::load(const std::string &filename)
                     if (component_key == "mesh_renderer")
                     {
                         entity.add_component<liminal::mesh_renderer>(
-                            liminal::assets::instance->load<liminal::model>(
-                                component_value["filename"],
+                            liminal::assets::instance->load_model(
+                                ((std::string)component_value["filename"]).c_str(),
                                 component_value["flip_uvs"]));
                     }
 

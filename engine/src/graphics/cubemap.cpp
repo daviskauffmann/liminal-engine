@@ -4,14 +4,14 @@
 #include <SDL2/SDL_image.h>
 #include <iostream>
 
-liminal::cubemap::cubemap(const std::vector<std::string> &filenames)
+liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
 {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
     {
-        for (GLenum i = 0; i < 6; i++)
+        for (GLenum side_index = 0; side_index < num_sides; side_index++)
         {
-            const auto surface = IMG_Load(filenames.at(i).c_str());
+            const auto surface = IMG_Load(filenames.at(side_index).c_str());
             if (!surface)
             {
                 std::cerr << "Error: Failed to load cubemap: " << IMG_GetError() << std::endl;
@@ -19,7 +19,7 @@ liminal::cubemap::cubemap(const std::vector<std::string> &filenames)
             }
 
             glTexImage2D(
-                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + side_index,
                 0,
                 surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB,
                 surface->w,

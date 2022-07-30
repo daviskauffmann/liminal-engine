@@ -61,10 +61,10 @@ void minecraft::block::add_face_up(const int x, const int y, const int z, minecr
 {
     const auto uvs = get_face_uvs(minecraft::direction::UP);
 
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 1, 0), uvs[0]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 1, 0), uvs[1]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 1, 0), uvs[2]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 1, 0), uvs[3]});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 1, 0), uvs.at(0)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 1, 0), uvs.at(1)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 1, 0), uvs.at(2)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 1, 0), uvs.at(3)});
 
     mesh_data->add_quad_indices();
 }
@@ -73,10 +73,10 @@ void minecraft::block::add_face_down(const int x, const int y, const int z, mine
 {
     const auto uvs = get_face_uvs(minecraft::direction::DOWN);
 
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, -1, 0), uvs[0]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, -1, 0), uvs[1]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, -1, 0), uvs[2]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, -1, 0), uvs[3]});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, -1, 0), uvs.at(0)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, -1, 0), uvs.at(1)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, -1, 0), uvs.at(2)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, -1, 0), uvs.at(3)});
 
     mesh_data->add_quad_indices();
 }
@@ -85,10 +85,10 @@ void minecraft::block::add_face_north(const int x, const int y, const int z, min
 {
     const auto uvs = get_face_uvs(minecraft::direction::NORTH);
 
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs[0]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs[1]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs[2]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs[3]});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs.at(0)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs.at(1)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs.at(2)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f), glm::vec3(0, 0, 1), uvs.at(3)});
 
     mesh_data->add_quad_indices();
 }
@@ -97,10 +97,10 @@ void minecraft::block::add_face_east(const int x, const int y, const int z, mine
 {
     const auto uvs = get_face_uvs(minecraft::direction::EAST);
 
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f), glm::vec3(1, 0, 0), uvs[0]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f), glm::vec3(1, 0, 0), uvs[1]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f), glm::vec3(1, 0, 0), uvs[2]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f), glm::vec3(1, 0, 0), uvs[3]});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f), glm::vec3(1, 0, 0), uvs.at(0)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f), glm::vec3(1, 0, 0), uvs.at(1)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f), glm::vec3(1, 0, 0), uvs.at(2)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f), glm::vec3(1, 0, 0), uvs.at(3)});
 
     mesh_data->add_quad_indices();
 }
@@ -109,10 +109,10 @@ void minecraft::block::add_face_south(const int x, const int y, const int z, min
 {
     const auto uvs = get_face_uvs(minecraft::direction::SOUTH);
 
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs[0]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs[1]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs[2]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs[3]});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs.at(0)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs.at(1)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs.at(2)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f), glm::vec3(0, 0, -1), uvs.at(3)});
 
     mesh_data->add_quad_indices();
 }
@@ -121,24 +121,23 @@ void minecraft::block::add_face_west(const int x, const int y, const int z, mine
 {
     const auto uvs = get_face_uvs(minecraft::direction::WEST);
 
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f), glm::vec3(-1, 0, 0), uvs[0]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f), glm::vec3(-1, 0, 0), uvs[1]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f), glm::vec3(-1, 0, 0), uvs[2]});
-    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f), glm::vec3(-1, 0, 0), uvs[3]});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f), glm::vec3(-1, 0, 0), uvs.at(0)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f), glm::vec3(-1, 0, 0), uvs.at(1)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f), glm::vec3(-1, 0, 0), uvs.at(2)});
+    mesh_data->vertices.push_back(liminal::vertex{glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f), glm::vec3(-1, 0, 0), uvs.at(3)});
 
     mesh_data->add_quad_indices();
 }
 
-std::vector<glm::vec2> minecraft::block::get_face_uvs(minecraft::direction direction) const
+std::array<glm::vec2, 4> minecraft::block::get_face_uvs(minecraft::direction direction) const
 {
-    std::vector<glm::vec2> uvs;
     const auto tile = get_tile(direction);
     const auto tile_size = 0.25f;
-    uvs.push_back(glm::vec2(tile_size * tile.x + tile_size, tile_size * tile.y));
-    uvs.push_back(glm::vec2(tile_size * tile.x + tile_size, tile_size * tile.y + tile_size));
-    uvs.push_back(glm::vec2(tile_size * tile.x, tile_size * tile.y + tile_size));
-    uvs.push_back(glm::vec2(tile_size * tile.x, tile_size * tile.y));
-    return uvs;
+    return {
+        glm::vec2(tile_size * tile.x + tile_size, tile_size * tile.y),
+        glm::vec2(tile_size * tile.x + tile_size, tile_size * tile.y + tile_size),
+        glm::vec2(tile_size * tile.x, tile_size * tile.y + tile_size),
+        glm::vec2(tile_size * tile.x, tile_size * tile.y)};
 }
 
 glm::ivec2 minecraft::block::get_tile(minecraft::direction) const

@@ -2,8 +2,8 @@
 #define LIMINAL_GRAPHICS_CUBEMAP_HPP
 
 #include <GL/glew.h>
+#include <array>
 #include <string>
-#include <vector>
 
 namespace liminal
 {
@@ -11,9 +11,11 @@ namespace liminal
     class cubemap
     {
     public:
+        static constexpr std::size_t num_sides = 6;
+
         GLuint texture_id;
 
-        cubemap(const std::vector<std::string> &filenames);
+        cubemap(const std::array<std::string, num_sides> &filenames);
         ~cubemap();
     };
 }

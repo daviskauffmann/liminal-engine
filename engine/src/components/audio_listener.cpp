@@ -1,6 +1,7 @@
 #include <liminal/components/audio_listener.hpp>
 
 #include <AL/al.h>
+#include <array>
 #include <glm/gtc/type_ptr.hpp>
 
 liminal::audio_listener::audio_listener()
@@ -15,10 +16,10 @@ void liminal::audio_listener::set_position(const glm::vec3 &position, const glm:
     const glm::vec3 velocity = last_position - position;
     alListenerfv(AL_VELOCITY, glm::value_ptr(velocity));
 
-    const float orientation[] = {
+    const std::array<float, 6> orientation{
         rotation.x, rotation.y, rotation.z,
         0, 1, 0};
-    alListenerfv(AL_ORIENTATION, orientation);
+    alListenerfv(AL_ORIENTATION, orientation.data());
 
     last_position = position;
 }

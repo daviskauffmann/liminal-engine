@@ -3,7 +3,6 @@
 
 #include <AL/alc.h>
 #include <SDL2/SDL.h>
-#include <string>
 
 namespace liminal
 {
@@ -12,10 +11,10 @@ namespace liminal
     public:
         static platform *instance;
 
-        platform(const std::string &window_title, int window_width, int window_height);
+        platform(const char *window_title, int window_width, int window_height);
         ~platform();
 
-        void set_window_title(const std::string &title) const;
+        void set_window_title(const char *title) const;
         void set_window_size(int width, int height) const;
         void toggle_fullscreen() const;
         void toggle_vsync() const;

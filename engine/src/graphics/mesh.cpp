@@ -92,9 +92,9 @@ void liminal::mesh::draw(const liminal::program &program) const
 {
     // TODO: support multiple textures per type in the shader?
 
-    if (textures.size() > 0 && textures[aiTextureType_DIFFUSE].size() > 0)
+    if (textures.size() > 0 && textures.at(aiTextureType_DIFFUSE).size() > 0)
     {
-        textures[aiTextureType_DIFFUSE][0]->bind(0);
+        textures.at(aiTextureType_DIFFUSE).at(0)->bind(0);
     }
     else
     {
@@ -102,10 +102,10 @@ void liminal::mesh::draw(const liminal::program &program) const
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    if (textures.size() > 0 && textures[aiTextureType_NORMALS].size() > 0)
+    if (textures.size() > 0 && textures.at(aiTextureType_NORMALS).size() > 0)
     {
         program.set_int("material.has_normal_map", 1);
-        textures[aiTextureType_NORMALS][0]->bind(1);
+        textures.at(aiTextureType_NORMALS).at(0)->bind(1);
     }
     else
     {
@@ -114,10 +114,10 @@ void liminal::mesh::draw(const liminal::program &program) const
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    if (textures.size() > 0 && textures[aiTextureType_SHININESS].size() > 0)
+    if (textures.size() > 0 && textures.at(aiTextureType_SHININESS).size() > 0)
     {
         program.set_int("material.has_metallic_map", 1);
-        textures[aiTextureType_SHININESS][0]->bind(2);
+        textures.at(aiTextureType_SHININESS).at(0)->bind(2);
     }
     else
     {
@@ -126,10 +126,10 @@ void liminal::mesh::draw(const liminal::program &program) const
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    if (textures.size() > 0 && textures[aiTextureType_OPACITY].size() > 0)
+    if (textures.size() > 0 && textures.at(aiTextureType_OPACITY).size() > 0)
     {
         program.set_int("material.has_roughness_map", 1);
-        textures[aiTextureType_OPACITY][0]->bind(3);
+        textures.at(aiTextureType_OPACITY).at(0)->bind(3);
     }
     else
     {
@@ -138,10 +138,10 @@ void liminal::mesh::draw(const liminal::program &program) const
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    if (textures.size() > 0 && textures[aiTextureType_AMBIENT].size() > 0)
+    if (textures.size() > 0 && textures.at(aiTextureType_AMBIENT).size() > 0)
     {
         program.set_int("material.has_occlusion_map", 1);
-        textures[aiTextureType_AMBIENT][0]->bind(4);
+        textures.at(aiTextureType_AMBIENT).at(0)->bind(4);
     }
     else
     {
@@ -150,10 +150,10 @@ void liminal::mesh::draw(const liminal::program &program) const
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    if (textures.size() > 0 && textures[aiTextureType_HEIGHT].size() > 0)
+    if (textures.size() > 0 && textures.at(aiTextureType_HEIGHT).size() > 0)
     {
         program.set_int("material.has_height_map", 1);
-        textures[aiTextureType_HEIGHT][0]->bind(5);
+        textures.at(aiTextureType_HEIGHT).at(0)->bind(5);
     }
     else
     {

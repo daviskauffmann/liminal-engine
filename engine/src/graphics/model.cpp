@@ -19,7 +19,7 @@ liminal::model::model(liminal::mesh *mesh)
     meshes.push_back(mesh);
 }
 
-liminal::model::model(const std::string &filename, const bool flip_uvs)
+liminal::model::model(const char *const filename, const bool flip_uvs)
     : directory(std::filesystem::path(filename).parent_path().string())
 {
     unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_GenSmoothNormals;
@@ -27,7 +27,6 @@ liminal::model::model(const std::string &filename, const bool flip_uvs)
     {
         flags |= aiProcess_FlipUVs;
     }
-
     scene = importer.ReadFile(filename, flags);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -36,7 +35,6 @@ liminal::model::model(const std::string &filename, const bool flip_uvs)
     }
 
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
-    num_bones = 0;
 
     process_node_meshes(scene->mRootNode);
 
@@ -155,28 +153,22 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
     {
         for (std::size_t bone_index = 0; bone_index < scene_mesh->mNumBones; bone_index++)
         {
-            unsigned int id;
             const std::string bone_name(scene_mesh->mBones[bone_index]->mName.data);
-            if (bone_indices.find(bone_name) == bone_indices.end())
+
+            if (bone_ids.find(bone_name) == bone_ids.end())
             {
-                id = num_bones++;
-                bone_indices[bone_name] = id;
+                bone_ids.insert({bone_name, num_bones++});
 
                 liminal::bone bone;
                 bone.offset = mat4_cast(scene_mesh->mBones[bone_index]->mOffsetMatrix);
-
                 bones.push_back(bone);
-            }
-            else
-            {
-                id = bone_indices[bone_name];
             }
 
             for (std::size_t weight_index = 0; weight_index < scene_mesh->mBones[bone_index]->mNumWeights; weight_index++)
             {
                 const auto vertex_id = scene_mesh->mBones[bone_index]->mWeights[weight_index].mVertexId;
                 const auto weight = scene_mesh->mBones[bone_index]->mWeights[weight_index].mWeight;
-                vertices[vertex_id].add_bone_data(id, weight);
+                vertices.at(vertex_id).add_bone_data(bone_ids.at(bone_name), weight);
             }
         }
     }
@@ -207,7 +199,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
                 aiString path;
                 scene_material->GetTexture(type, texture_index, &path);
                 const auto filename = directory + "/" + path.C_Str();
-                material_textures.push_back(liminal::assets::instance->load<liminal::texture>(filename));
+                material_textures.push_back(liminal::assets::instance->load_texture(filename.c_str()));
             }
 
             textures.push_back(material_textures);
@@ -234,20 +226,17 @@ void liminal::model::process_node_animations(const unsigned int animation_index,
         const auto node_animation = find_node_animation(scene_animation, node_name);
         if (node_animation)
         {
-            aiVector3D interpolated_position;
-            calc_interpolated_position(interpolated_position, animation_time, node_animation);
-            auto position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
-            auto position = glm::translate(glm::identity<glm::mat4>(), position_vector);
+            const auto interpolated_position = calc_interpolated_position(animation_time, node_animation);
+            const auto position_vector = glm::vec3(interpolated_position.x, interpolated_position.y, interpolated_position.z);
+            const auto position = glm::translate(glm::identity<glm::mat4>(), position_vector);
 
-            aiQuaternion interpolated_rotation;
-            calc_interpolated_rotation(interpolated_rotation, animation_time, node_animation);
-            auto rotation_vector = quat_cast(interpolated_rotation);
-            auto rotation = glm::toMat4(rotation_vector);
+            const auto interpolated_rotation = calc_interpolated_rotation(animation_time, node_animation);
+            const auto rotation_vector = quat_cast(interpolated_rotation);
+            const auto rotation = glm::toMat4(rotation_vector);
 
-            aiVector3D interpolated_scale;
-            calc_interpolated_scale(interpolated_scale, animation_time, node_animation);
-            auto scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
-            auto scale = glm::scale(glm::identity<glm::mat4>(), scale_vector);
+            const auto interpolated_scale = calc_interpolated_scale(animation_time, node_animation);
+            const auto scale_vector = glm::vec3(interpolated_scale.x, interpolated_scale.y, interpolated_scale.z);
+            const auto scale = glm::scale(glm::identity<glm::mat4>(), scale_vector);
 
             node_transformation = position * rotation * scale;
         }
@@ -255,10 +244,10 @@ void liminal::model::process_node_animations(const unsigned int animation_index,
 
     const auto global_transformation = parent_transformation * node_transformation;
 
-    if (bone_indices.find(node_name) != bone_indices.end())
+    if (bone_ids.find(node_name) != bone_ids.end())
     {
-        const auto bone_index = bone_indices.at(node_name);
-        bones[bone_index].transformation = global_inverse_transform * global_transformation * bones[bone_index].offset;
+        const auto bone_id = bone_ids.at(node_name);
+        bones.at(bone_id).transformation = global_inverse_transform * global_transformation * bones.at(bone_id).offset;
     }
 
     for (std::size_t child_index = 0; child_index < node->mNumChildren; child_index++)
@@ -282,12 +271,11 @@ const aiNodeAnim *liminal::model::find_node_animation(const aiAnimation *const s
     return nullptr;
 }
 
-void liminal::model::calc_interpolated_position(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation) const
+aiVector3D liminal::model::calc_interpolated_position(const float animation_time, const aiNodeAnim *const node_animation) const
 {
     if (node_animation->mNumPositionKeys == 1)
     {
-        out = node_animation->mPositionKeys[0].mValue;
-        return;
+        return node_animation->mPositionKeys[0].mValue;
     }
 
     const auto position_index = find_position_index(animation_time, node_animation);
@@ -300,7 +288,7 @@ void liminal::model::calc_interpolated_position(aiVector3D &out, const float ani
     const auto &end = node_animation->mPositionKeys[next_position_index].mValue;
     const auto delta = end - start;
 
-    out = start + factor * delta;
+    return start + factor * delta;
 }
 
 unsigned int liminal::model::find_position_index(const float animation_time, const aiNodeAnim *const node_animation) const
@@ -318,12 +306,11 @@ unsigned int liminal::model::find_position_index(const float animation_time, con
     return 0;
 }
 
-void liminal::model::calc_interpolated_rotation(aiQuaternion &out, const float animation_time, const aiNodeAnim *const node_animation) const
+aiQuaternion liminal::model::calc_interpolated_rotation(const float animation_time, const aiNodeAnim *const node_animation) const
 {
     if (node_animation->mNumRotationKeys == 1)
     {
-        out = node_animation->mRotationKeys[0].mValue;
-        return;
+        return node_animation->mRotationKeys[0].mValue;
     }
 
     const auto rotation_index = find_rotation_index(animation_time, node_animation);
@@ -334,9 +321,11 @@ void liminal::model::calc_interpolated_rotation(aiQuaternion &out, const float a
 
     const auto &start = node_animation->mRotationKeys[rotation_index].mValue;
     const auto &end = node_animation->mRotationKeys[next_rotation_index].mValue;
-    aiQuaternion::Interpolate(out, start, end, factor);
 
-    out = out.Normalize();
+    aiQuaternion interpolated_rotation;
+    aiQuaternion::Interpolate(interpolated_rotation, start, end, factor);
+
+    return interpolated_rotation.Normalize();
 }
 
 unsigned int liminal::model::find_rotation_index(const float animation_time, const aiNodeAnim *const node_animation) const
@@ -354,12 +343,11 @@ unsigned int liminal::model::find_rotation_index(const float animation_time, con
     return 0;
 }
 
-void liminal::model::calc_interpolated_scale(aiVector3D &out, const float animation_time, const aiNodeAnim *const node_animation) const
+aiVector3D liminal::model::calc_interpolated_scale(const float animation_time, const aiNodeAnim *const node_animation) const
 {
     if (node_animation->mNumScalingKeys == 1)
     {
-        out = node_animation->mScalingKeys[0].mValue;
-        return;
+        return node_animation->mScalingKeys[0].mValue;
     }
 
     const auto scale_index = find_scale_index(animation_time, node_animation);
@@ -372,7 +360,7 @@ void liminal::model::calc_interpolated_scale(aiVector3D &out, const float animat
     const auto &end = node_animation->mScalingKeys[next_scale_index].mValue;
     const auto delta = end - start;
 
-    out = start + factor * delta;
+    return start + factor * delta;
 }
 
 unsigned int liminal::model::find_scale_index(const float animation_time, const aiNodeAnim *const node_animation) const

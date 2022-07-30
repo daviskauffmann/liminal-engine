@@ -26,7 +26,7 @@ namespace liminal
         std::vector<glm::mat4> bone_transformations;
 
         model(liminal::mesh *mesh);
-        model(const std::string &filename, bool flip_uvs = false);
+        model(const char *filename, bool flip_uvs = false);
         ~model();
 
         bool has_animations() const;
@@ -44,20 +44,20 @@ namespace liminal
         std::vector<liminal::mesh *> meshes;
 
         glm::mat4 global_inverse_transform;
-        unsigned int num_bones;
+        unsigned int num_bones = 0;
         std::vector<bone> bones;
-        std::unordered_map<std::string, unsigned int> bone_indices;
+        std::unordered_map<std::string, unsigned int> bone_ids;
 
         void process_node_meshes(const aiNode *node);
         liminal::mesh *create_mesh(const aiMesh *mesh);
 
         void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string &node_name) const;
-        void calc_interpolated_position(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation) const;
+        aiVector3D calc_interpolated_position(float animation_time, const aiNodeAnim *node_animation) const;
         unsigned int find_position_index(float animation_time, const aiNodeAnim *node_animation) const;
-        void calc_interpolated_rotation(aiQuaternion &out, float animation_time, const aiNodeAnim *node_animation) const;
+        aiQuaternion calc_interpolated_rotation(float animation_time, const aiNodeAnim *node_animation) const;
         unsigned int find_rotation_index(float animation_time, const aiNodeAnim *node_animation) const;
-        void calc_interpolated_scale(aiVector3D &out, float animation_time, const aiNodeAnim *node_animation) const;
+        aiVector3D calc_interpolated_scale(float animation_time, const aiNodeAnim *node_animation) const;
         unsigned int find_scale_index(float animation_time, const aiNodeAnim *node_animation) const;
     };
 }

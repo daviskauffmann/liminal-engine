@@ -13,7 +13,7 @@
 
 liminal::platform *liminal::platform::instance = nullptr;
 
-liminal::platform::platform(const std::string &window_title, const int window_width, const int window_height)
+liminal::platform::platform(const char *const window_title, const int window_width, const int window_height)
 {
     instance = this;
 
@@ -40,7 +40,7 @@ liminal::platform::platform(const std::string &window_title, const int window_wi
 
     // create window
     window = SDL_CreateWindow(
-        window_title.c_str(),
+        window_title,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         window_width,
@@ -132,9 +132,9 @@ liminal::platform::~platform()
     SDL_Quit();
 }
 
-void liminal::platform::set_window_title(const std::string &title) const
+void liminal::platform::set_window_title(const char *const title) const
 {
-    SDL_SetWindowTitle(window, title.c_str());
+    SDL_SetWindowTitle(window, title);
 }
 
 void liminal::platform::set_window_size(const int width, const int height) const

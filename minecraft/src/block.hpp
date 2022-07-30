@@ -1,8 +1,8 @@
 #ifndef MINECRAFT_BLOCK_HPP
 #define MINECRAFT_BLOCK_HPP
 
+#include <array>
 #include <glm/vec2.hpp>
-#include <vector>
 
 namespace minecraft
 {
@@ -32,7 +32,7 @@ namespace minecraft
         virtual void add_face_east(int x, int y, int z, minecraft::mesh_data *mesh_data) const;
         virtual void add_face_south(int x, int y, int z, minecraft::mesh_data *mesh_data) const;
         virtual void add_face_west(int x, int y, int z, minecraft::mesh_data *mesh_data) const;
-        virtual std::vector<glm::vec2> get_face_uvs(minecraft::direction direction) const;
+        virtual std::array<glm::vec2, 4> get_face_uvs(minecraft::direction direction) const;
         virtual glm::ivec2 get_tile(minecraft::direction direction) const;
     };
 }

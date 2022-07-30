@@ -2,7 +2,6 @@
 #define LIMINAL_GRAPHICS_SKYBOX_HPP
 
 #include <GL/glew.h>
-#include <string>
 
 namespace liminal
 {
@@ -13,10 +12,10 @@ namespace liminal
         GLuint irradiance_cubemap_id = 0;
         GLuint prefilter_cubemap_id = 0;
 
-        skybox(const std::string &filename);
+        skybox(const char *filename);
         ~skybox();
 
-        void set_cubemap(const std::string &filename);
+        void set_cubemap(const char *filename);
     };
 }
 
