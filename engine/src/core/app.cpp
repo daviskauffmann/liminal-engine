@@ -158,19 +158,19 @@ void liminal::app::run()
 
         if (!ImGui::GetIO().WantCaptureKeyboard)
         {
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_RETURN) &&
-                liminal::input::key(liminal::keycode::KEYCODE_LALT))
+            if (liminal::input::key_down(liminal::keycode::RETURN) &&
+                liminal::input::key(liminal::keycode::LALT))
             {
                 liminal::platform::instance->toggle_fullscreen();
             }
 
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_GRAVE))
+            if (liminal::input::key_down(liminal::keycode::GRAVE))
             {
                 console_open = !console_open;
             }
 
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_F4) &&
-                liminal::input::key(liminal::keycode::KEYCODE_LALT))
+            if (liminal::input::key_down(liminal::keycode::F4) &&
+                liminal::input::key(liminal::keycode::LALT))
             {
                 stop();
             }

@@ -14,7 +14,7 @@ namespace liminal
         void bind(unsigned int index) const;
 
     private:
-        GLuint texture_id;
+        GLuint texture_id = 0;
     };
 }
 

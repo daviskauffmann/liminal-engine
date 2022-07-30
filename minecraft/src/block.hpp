@@ -6,7 +6,7 @@
 
 namespace minecraft
 {
-    enum direction
+    enum class direction
     {
         NORTH,
         EAST,

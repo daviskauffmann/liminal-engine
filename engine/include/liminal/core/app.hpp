@@ -16,9 +16,9 @@ namespace liminal
         virtual void resize(int width, int height);
 
     private:
-        int window_width;
-        int window_height;
-        float render_scale;
+        int window_width = 1280;
+        int window_height = 720;
+        float render_scale = 1;
         bool running = true;
         float time_scale = 1;
         bool console_open = false;

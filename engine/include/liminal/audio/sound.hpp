@@ -14,7 +14,7 @@ namespace liminal
         ALuint get_buffer_id() const;
 
     private:
-        ALuint buffer_id;
+        ALuint buffer_id = 0;
     };
 }
 

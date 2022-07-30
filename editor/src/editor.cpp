@@ -33,27 +33,27 @@ namespace editor
 
             ImGuizmo::BeginFrame();
 
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_N))
+            if (liminal::input::key_down(liminal::keycode::N))
             {
-                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+                if (liminal::input::key(liminal::keycode::LCTRL))
                 {
                     new_scene();
                 }
             }
 
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_O))
+            if (liminal::input::key_down(liminal::keycode::O))
             {
-                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+                if (liminal::input::key(liminal::keycode::LCTRL))
                 {
                     load_scene();
                 }
             }
 
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_S))
+            if (liminal::input::key_down(liminal::keycode::S))
             {
-                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+                if (liminal::input::key(liminal::keycode::LCTRL))
                 {
-                    if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+                    if (liminal::input::key(liminal::keycode::LSHIFT))
                     {
                         save_scene();
                     }
@@ -64,9 +64,9 @@ namespace editor
                 }
             }
 
-            if (liminal::input::key_down(liminal::keycode::KEYCODE_F5))
+            if (liminal::input::key_down(liminal::keycode::F5))
             {
-                if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+                if (liminal::input::key(liminal::keycode::LSHIFT))
                 {
                     stop();
                 }
@@ -171,7 +171,7 @@ namespace editor
                         const auto camera_front = camera.calc_front(camera_transform);
                         const auto camera_right = camera.calc_right(camera_transform);
 
-                        if (liminal::input::mouse_button_down(liminal::mouse_button::MOUSE_BUTTON_LEFT))
+                        if (liminal::input::mouse_button_down(liminal::mouse_button::LEFT))
                         {
                             const auto mouse_position = ImGui::GetMousePos();
                             const auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
@@ -183,7 +183,7 @@ namespace editor
                         }
 
                         const auto sensitivity = 0.1f;
-                        if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_RIGHT))
+                        if (liminal::input::mouse_button(liminal::mouse_button::RIGHT))
                         {
                             camera_transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
                             camera_transform.rotation.x += liminal::input::mouse_dy * sensitivity;
@@ -197,7 +197,7 @@ namespace editor
                             }
                         }
 
-                        if (liminal::input::mouse_button(liminal::mouse_button::MOUSE_BUTTON_MIDDLE))
+                        if (liminal::input::mouse_button(liminal::mouse_button::MIDDLE))
                         {
                             camera_transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
                             camera_transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
@@ -248,7 +248,7 @@ namespace editor
 
                 if (ImGui::Begin("Hierarchy"))
                 {
-                    for (const auto [id, transform] : scene->get_entities_with<const liminal::transform>().each())
+                    for (const auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
                     {
                         if (!transform.parent)
                         {
@@ -487,7 +487,7 @@ namespace editor
 
                     for (const auto &directory_entry : std::filesystem::directory_iterator(current_asset_directory))
                     {
-                        const auto path = directory_entry.path();
+                        const auto &path = directory_entry.path();
                         const auto filename = path.filename();
                         const auto filename_string = filename.string();
                         if (ImGui::Button(filename_string.c_str()))
@@ -592,7 +592,7 @@ namespace editor
             }
         }
 
-        void draw_entity_node(const liminal::entity entity, const liminal::transform &transform)
+        void draw_entity_node(const liminal::entity entity, liminal::transform &transform)
         {
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
             if (entity == selected_entity)
@@ -613,7 +613,7 @@ namespace editor
                 {
                     auto child = selected_entity = scene->create_entity();
                     auto &child_transform = child.add_component<liminal::transform>();
-                    child_transform.parent = const_cast<liminal::transform *>(&transform);
+                    child_transform.parent = &transform;
                 }
 
                 if (ImGui::MenuItem("Delete"))
@@ -626,7 +626,7 @@ namespace editor
 
             if (opened)
             {
-                for (const auto [child_id, child_transform] : scene->get_entities_with<const liminal::transform>().each())
+                for (const auto [child_id, child_transform] : scene->get_entities_with<liminal::transform>().each())
                 {
                     if (child_transform.parent == &transform)
                     {

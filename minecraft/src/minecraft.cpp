@@ -51,7 +51,7 @@ namespace minecraft
         {
             const auto &io = ImGui::GetIO();
 
-            if (liminal::input::key_down(liminal::KEYCODE_TAB))
+            if (liminal::input::key_down(liminal::keycode::TAB))
             {
                 liminal::platform::instance->set_relative_mouse_mode(!liminal::platform::instance->get_relative_mouse_mode());
             }
@@ -68,31 +68,31 @@ namespace minecraft
             bool sprint = false;
             if (!io.WantCaptureKeyboard)
             {
-                if (liminal::input::key(liminal::keycode::KEYCODE_W))
+                if (liminal::input::key(liminal::keycode::W))
                 {
                     acceleration += camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_A))
+                if (liminal::input::key(liminal::keycode::A))
                 {
                     acceleration -= camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_S))
+                if (liminal::input::key(liminal::keycode::S))
                 {
                     acceleration -= camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_D))
+                if (liminal::input::key(liminal::keycode::D))
                 {
                     acceleration += camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_SPACE))
+                if (liminal::input::key(liminal::keycode::SPACE))
                 {
                     acceleration.y = 1;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL))
+                if (liminal::input::key(liminal::keycode::LCTRL))
                 {
                     acceleration.y = -1;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+                if (liminal::input::key(liminal::keycode::LSHIFT))
                 {
                     sprint = true;
                 }
@@ -134,7 +134,7 @@ namespace minecraft
                     }
                 }
 
-                if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
+                if (liminal::input::mouse_button(liminal::mouse_button::LEFT))
                 {
                     for (float i = 0; i < 10; i += 0.1f)
                     {

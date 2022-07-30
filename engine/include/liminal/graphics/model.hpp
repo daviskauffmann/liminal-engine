@@ -43,7 +43,7 @@ namespace liminal
 
         std::vector<liminal::mesh *> meshes;
 
-        glm::mat4 global_inverse_transform;
+        glm::mat4 global_inverse_transform = {};
         unsigned int num_bones = 0;
         std::vector<bone> bones;
         std::unordered_map<std::string, unsigned int> bone_ids;

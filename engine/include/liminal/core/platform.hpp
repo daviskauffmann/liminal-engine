@@ -27,10 +27,10 @@ namespace liminal
         void end_frame() const;
 
     private:
-        SDL_Window *window;
-        SDL_GLContext context;
-        ALCdevice *al_device;
-        ALCcontext *al_context;
+        SDL_Window *window = nullptr;
+        SDL_GLContext context = nullptr;
+        ALCdevice *al_device = nullptr;
+        ALCcontext *al_context = nullptr;
     };
 }
 

@@ -17,7 +17,7 @@ namespace liminal
         float fov;
 
         bool render_to_texture;
-        mutable GLuint render_texture_id;
+        mutable GLuint render_texture_id = 0;
 
         camera(float fov = 90, bool render_to_texture = false);
 

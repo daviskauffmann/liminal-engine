@@ -59,7 +59,7 @@ namespace player
         {
             const auto &io = ImGui::GetIO();
 
-            if (liminal::input::key_down(liminal::KEYCODE_TAB))
+            if (liminal::input::key_down(liminal::keycode::TAB))
             {
                 liminal::platform::instance->set_relative_mouse_mode(!liminal::platform::instance->get_relative_mouse_mode());
             }
@@ -77,40 +77,40 @@ namespace player
             auto sprint = false;
             if (!io.WantCaptureKeyboard)
             {
-                if (liminal::input::key(liminal::keycode::KEYCODE_W))
+                if (liminal::input::key(liminal::keycode::W))
                 {
                     acceleration += camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_A))
+                if (liminal::input::key(liminal::keycode::A))
                 {
                     acceleration -= camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_S))
+                if (liminal::input::key(liminal::keycode::S))
                 {
                     acceleration -= camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_D))
+                if (liminal::input::key(liminal::keycode::D))
                 {
                     acceleration += camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_SPACE) && noclip)
+                if (liminal::input::key(liminal::keycode::SPACE) && noclip)
                 {
                     acceleration.y = 1;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_LCTRL) && noclip)
+                if (liminal::input::key(liminal::keycode::LCTRL) && noclip)
                 {
                     acceleration.y = -1;
                 }
-                if (liminal::input::key(liminal::keycode::KEYCODE_LSHIFT))
+                if (liminal::input::key(liminal::keycode::LSHIFT))
                 {
                     sprint = true;
                 }
-                if (liminal::input::key_down(liminal::keycode::KEYCODE_SPACE) && !jumping && !noclip)
+                if (liminal::input::key_down(liminal::keycode::SPACE) && !jumping && !noclip)
                 {
                     velocity.y = 10;
                     jumping = true;
                 }
-                if (liminal::input::key_down(liminal::keycode::KEYCODE_V))
+                if (liminal::input::key_down(liminal::keycode::V))
                 {
                     noclip = !noclip;
                 }
@@ -175,7 +175,7 @@ namespace player
 
             if (!io.WantCaptureMouse)
             {
-                if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_LEFT))
+                if (liminal::input::mouse_button(liminal::mouse_button::LEFT))
                 {
                     auto &weapon_audio_source = weapon_entity.get_component<liminal::audio_source>();
                     if (!weapon_audio_source.is_playing())
@@ -184,7 +184,7 @@ namespace player
                     }
                 }
 
-                if (liminal::input::mouse_button(liminal::MOUSE_BUTTON_RIGHT))
+                if (liminal::input::mouse_button(liminal::mouse_button::RIGHT))
                 {
                     auto &bounce_audio_source = bounce_entity.get_component<liminal::audio_source>();
                     if (!bounce_audio_source.is_playing())
