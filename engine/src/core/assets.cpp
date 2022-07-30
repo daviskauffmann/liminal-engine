@@ -35,31 +35,31 @@ liminal::assets::~assets()
     }
 }
 
-liminal::sound *liminal::assets::load_sound(const char *const filename)
+liminal::sound *liminal::assets::load_sound(const std::string &filename)
 {
     if (sounds.find(filename) == sounds.end())
     {
-        sounds.insert({filename, new liminal::sound(filename)});
+        sounds.insert({filename, new liminal::sound(filename.c_str())});
     }
 
     return sounds.at(filename);
 }
 
-liminal::model *liminal::assets::load_model(const char *const filename, const bool flip_uvs)
+liminal::model *liminal::assets::load_model(const std::string &filename, const bool flip_uvs)
 {
     if (models.find(filename) == models.end())
     {
-        models.insert({filename, new liminal::model(filename, flip_uvs)});
+        models.insert({filename, new liminal::model(filename.c_str(), flip_uvs)});
     }
 
     return models.at(filename);
 }
 
-liminal::skybox *liminal::assets::load_skybox(const char *const filename)
+liminal::skybox *liminal::assets::load_skybox(const std::string &filename)
 {
     if (skyboxes.find(filename) == skyboxes.end())
     {
-        skyboxes.insert({filename, new liminal::skybox(filename)});
+        skyboxes.insert({filename, new liminal::skybox(filename.c_str())});
     }
 
     return skyboxes.at(filename);
@@ -69,7 +69,7 @@ liminal::texture *liminal::assets::load_texture(const std::string &filename)
 {
     if (textures.find(filename) == textures.end())
     {
-        textures.insert({filename, new liminal::texture(filename)});
+        textures.insert({filename, new liminal::texture(filename.c_str())});
     }
 
     return textures.at(filename);

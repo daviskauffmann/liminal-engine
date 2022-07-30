@@ -14,7 +14,7 @@ static inline glm::quat quat_cast(const aiQuaternion &q) { return {q.w, q.x, q.y
 static inline glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
-liminal::model::model(liminal::mesh *mesh)
+liminal::model::model(liminal::mesh *const mesh)
 {
     meshes.push_back(mesh);
 }
@@ -199,7 +199,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
                 aiString path;
                 scene_material->GetTexture(type, texture_index, &path);
                 const auto filename = directory + "/" + path.C_Str();
-                material_textures.push_back(liminal::assets::instance->load_texture(filename.c_str()));
+                material_textures.push_back(liminal::assets::instance->load_texture(filename));
             }
 
             textures.push_back(material_textures);

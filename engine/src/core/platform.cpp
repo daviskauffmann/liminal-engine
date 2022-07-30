@@ -94,7 +94,7 @@ liminal::platform::platform(const char *const window_title, const int window_wid
         return;
     }
 
-    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) != 0)
     {
         std::cerr << "Error: Failed to initialize the mixer API: " << Mix_GetError() << std::endl;
         return;

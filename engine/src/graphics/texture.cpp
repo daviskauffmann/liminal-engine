@@ -4,11 +4,11 @@
 #include <iostream>
 #include <stb_image.h>
 
-liminal::texture::texture(const std::string &filename, const bool srgb, const bool filter)
+liminal::texture::texture(const char *const filename, const bool srgb, const bool filter)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, num_components;
-    const auto image = stbi_load(filename.c_str(), &width, &height, &num_components, 0);
+    const auto image = stbi_load(filename, &width, &height, &num_components, 0);
     if (!image)
     {
         std::cerr << "Error: Failed to load texture: " << stbi_failure_reason() << std::endl;
