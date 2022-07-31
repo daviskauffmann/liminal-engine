@@ -243,8 +243,8 @@ void liminal::scene::stop()
 
 void liminal::scene::reload_scripts()
 {
-    for (const auto [id, script] : get_entities_with<const liminal::script>().each())
-    {
-        // TODO:
-    }
+    // TODO:
+    // for (const auto [id, script] : get_entities_with<const liminal::script>().each())
+    // {
+    // }
 }

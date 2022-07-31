@@ -21,9 +21,9 @@ namespace liminal
 
         terrain(btDiscreteDynamicsWorld *const world, const std::string &filename, const glm::vec3 &position, float size, float height_scale);
         terrain(terrain &&other) = default;
-        terrain(const terrain &other) = default;
+        terrain(const terrain &other) = delete;
         terrain &operator=(terrain &&other) = default;
-        terrain &operator=(const terrain &other) = default;
+        terrain &operator=(const terrain &other) = delete;
         ~terrain();
 
         glm::mat4 get_model_matrix() const;

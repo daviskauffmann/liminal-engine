@@ -1,7 +1,7 @@
 #ifndef LIMINAL_GRAPHICS_MESH_HPP
 #define LIMINAL_GRAPHICS_MESH_HPP
 
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <liminal/graphics/program.hpp>

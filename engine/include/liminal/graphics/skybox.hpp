@@ -1,7 +1,7 @@
 #ifndef LIMINAL_GRAPHICS_SKYBOX_HPP
 #define LIMINAL_GRAPHICS_SKYBOX_HPP
 
-#include <GL/glew.h>
+#include <gl/glew.h>
 
 namespace liminal
 {

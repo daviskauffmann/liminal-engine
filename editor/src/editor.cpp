@@ -2,11 +2,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
-#include <imguizmo.h>
 #include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
 #include <nfd.h>
+
+#include <ImGuizmo.h>
 
 namespace editor
 {
@@ -599,7 +600,7 @@ namespace editor
             {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
-            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>((uint64_t)entity), flags, transform.name.c_str());
+            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>((uint64_t)entity), flags, "%s", transform.name.c_str());
 
             if (ImGui::IsItemClicked())
             {

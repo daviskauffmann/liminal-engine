@@ -1,8 +1,8 @@
 #ifndef LIMINAL_COMPONENTS_DIRECTIONAL_LIGHT_HPP
 #define LIMINAL_COMPONENTS_DIRECTIONAL_LIGHT_HPP
 
-#include <GL/glew.h>
 #include <array>
+#include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 

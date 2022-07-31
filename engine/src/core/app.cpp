@@ -66,13 +66,6 @@ liminal::app::app(int argc, char *argv[])
         4096, 512, 1024,
         window_width, window_height,
         window_width, window_height);
-
-    // init input
-    std::fill(liminal::input::keys.begin(), liminal::input::keys.end(), false);
-    std::fill(liminal::input::last_keys.begin(), liminal::input::last_keys.end(), false);
-
-    std::fill(liminal::input::mouse_buttons.begin(), liminal::input::mouse_buttons.end(), false);
-    std::fill(liminal::input::last_mouse_buttons.begin(), liminal::input::last_mouse_buttons.end(), false);
 }
 
 liminal::app::~app()
@@ -97,14 +90,14 @@ void liminal::app::run()
         const auto keys = SDL_GetKeyboardState(nullptr);
         for (std::size_t scancode = 0; scancode < liminal::input::keys.size(); scancode++)
         {
-            liminal::input::keys[scancode] = keys[scancode];
+            liminal::input::keys.at(scancode) = keys[scancode];
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
         const auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
         for (std::size_t button = 0; button < liminal::input::mouse_buttons.size(); button++)
         {
-            liminal::input::mouse_buttons[button] = mouse_buttons & SDL_BUTTON(button);
+            liminal::input::mouse_buttons.at(button) = mouse_buttons & SDL_BUTTON(button);
         }
 
         liminal::input::mouse_dx = 0;
@@ -275,7 +268,7 @@ void liminal::app::run()
                 {
                     for (const auto &message : messages)
                     {
-                        ImGui::Text(message.c_str());
+                        ImGui::Text("%s", message.c_str());
                     }
                 }
                 ImGui::EndChild();

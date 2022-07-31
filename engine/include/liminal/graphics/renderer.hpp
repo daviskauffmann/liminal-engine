@@ -1,8 +1,8 @@
 #ifndef LIMINAL_GRAPHICS_RENDERER_HPP
 #define LIMINAL_GRAPHICS_RENDERER_HPP
 
-#include <GL/glew.h>
 #include <array>
+#include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>

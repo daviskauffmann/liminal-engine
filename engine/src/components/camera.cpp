@@ -1,6 +1,7 @@
 #include <liminal/components/camera.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <liminal/components/transform.hpp>
 
 liminal::camera::camera(const float fov, const bool render_to_texture)
     : fov(fov),

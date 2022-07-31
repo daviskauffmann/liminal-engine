@@ -1,7 +1,7 @@
 #ifndef LIMINAL_GRAPHICS_PROGRAM_HPP
 #define LIMINAL_GRAPHICS_PROGRAM_HPP
 
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <utility>

@@ -1,6 +1,7 @@
 #include <liminal/components/audio_source.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
+#include <liminal/audio/sound.hpp>
 
 liminal::audio_source::audio_source()
 {

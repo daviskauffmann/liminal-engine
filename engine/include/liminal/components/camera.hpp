@@ -1,13 +1,14 @@
 #ifndef LIMINAL_COMPONENTS_CAMERA_HPP
 #define LIMINAL_COMPONENTS_CAMERA_HPP
 
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
-#include <liminal/components/transform.hpp>
 
 namespace liminal
 {
+    class transform;
+
     class camera
     {
     public:

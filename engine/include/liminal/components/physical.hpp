@@ -17,9 +17,9 @@ namespace liminal
 
         physical(btDiscreteDynamicsWorld *const world, float mass = 1.0f);
         physical(physical &&other) = default;
-        physical(const physical &other) = default;
+        physical(const physical &other) = delete;
         physical &operator=(physical &&other) = default;
-        physical &operator=(const physical &other) = default;
+        physical &operator=(const physical &other) = delete;
         ~physical();
     };
 }

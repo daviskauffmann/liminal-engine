@@ -3,10 +3,11 @@
 
 #include <AL/al.h>
 #include <glm/vec3.hpp>
-#include <liminal/audio/sound.hpp>
 
 namespace liminal
 {
+    class sound;
+
     class audio_source
     {
     public:

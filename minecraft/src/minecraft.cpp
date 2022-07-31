@@ -136,11 +136,11 @@ namespace minecraft
 
                 if (liminal::input::mouse_button(liminal::mouse_button::LEFT))
                 {
-                    for (float i = 0; i < 10; i += 0.1f)
+                    for (std::size_t i = 0; i < 100; i++)
                     {
-                        auto x = (int)glm::round(transform.position.x + (camera.calc_front(transform).x * i));
-                        auto y = (int)glm::round(transform.position.y + (camera.calc_front(transform).y * i));
-                        auto z = (int)glm::round(transform.position.z + (camera.calc_front(transform).z * i));
+                        auto x = (int)glm::round(transform.position.x + (camera.calc_front(transform).x * (i * 0.1f)));
+                        auto y = (int)glm::round(transform.position.y + (camera.calc_front(transform).y * (i * 0.1f)));
+                        auto z = (int)glm::round(transform.position.z + (camera.calc_front(transform).z * (i * 0.1f)));
                         world->set_block(x, y, z, new minecraft::air_block());
                     }
                 }

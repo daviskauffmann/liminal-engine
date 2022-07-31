@@ -15,9 +15,9 @@ namespace liminal
     public:
         script(const std::string &filename, liminal::scene *scene, entt::entity id);
         script(script &&other) = default;
-        script(const script &other) = default;
+        script(const script &other) = delete;
         script &operator=(script &&other) = default;
-        script &operator=(const script &other) = default;
+        script &operator=(const script &other) = delete;
         ~script() = default;
 
         void init() const;

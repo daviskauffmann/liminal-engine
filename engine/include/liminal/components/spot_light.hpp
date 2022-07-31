@@ -1,6 +1,8 @@
 #ifndef LIMINAL_COMPONENTS_SPOT_LIGHT_HPP
 #define LIMINAL_COMPONENTS_SPOT_LIGHT_HPP
 
+#include <gl/glew.h>
+#include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
 namespace liminal

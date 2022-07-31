@@ -271,17 +271,17 @@ namespace liminal
     class input
     {
     public:
-        inline static std::array<bool, (std::size_t)liminal::keycode::TOTAL> keys;
-        inline static std::array<bool, (std::size_t)liminal::keycode::TOTAL> last_keys;
+        inline static std::array<bool, (std::size_t)liminal::keycode::TOTAL> keys = {};
+        inline static std::array<bool, (std::size_t)liminal::keycode::TOTAL> last_keys = {};
 
-        inline static std::array<bool, (std::size_t)liminal::mouse_button::TOTAL> mouse_buttons;
-        inline static std::array<bool, (std::size_t)liminal::mouse_button::TOTAL> last_mouse_buttons;
-        inline static int mouse_x;
-        inline static int mouse_y;
-        inline static int mouse_dx;
-        inline static int mouse_dy;
-        inline static int mouse_wheel_x;
-        inline static int mouse_wheel_y;
+        inline static std::array<bool, (std::size_t)liminal::mouse_button::TOTAL> mouse_buttons = {};
+        inline static std::array<bool, (std::size_t)liminal::mouse_button::TOTAL> last_mouse_buttons = {};
+        inline static int mouse_x = 0;
+        inline static int mouse_y = 0;
+        inline static int mouse_dx = 0;
+        inline static int mouse_dy = 0;
+        inline static int mouse_wheel_x = 0;
+        inline static int mouse_wheel_y = 0;
 
         inline static bool key(const liminal::keycode keycode)
         {
