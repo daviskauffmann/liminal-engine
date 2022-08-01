@@ -17,6 +17,7 @@ namespace liminal
         glm::vec2 uv;
         glm::vec3 tangent;
         glm::vec3 bitangent;
+        glm::vec3 color = glm::vec3(1, 1, 1);
         std::array<unsigned int, num_bones> bone_ids;
         std::array<float, num_bones> bone_weights;
 

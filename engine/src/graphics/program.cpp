@@ -196,7 +196,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
     char error[256];
     const auto source = stb_include_file(
         const_cast<char *>(filename),
-        NULL,
+        nullptr,
         const_cast<char *>("assets/shaders"),
         error);
     if (!source)

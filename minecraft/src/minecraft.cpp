@@ -24,16 +24,7 @@ namespace minecraft
 
             scene = std::make_unique<liminal::scene>();
             scene->start();
-            scene->skybox = new liminal::skybox("assets/images/GCanyon_C_YumaPoint_Env.hdr");
-
-            auto sun = scene->create_entity();
-            sun.add_component<liminal::transform>(
-                "Sun",
-                nullptr,
-                glm::vec3(0, 0, 0),
-                glm::vec3(0.352286f, -0.547564f, -0.758992f),
-                glm::vec3(1, 1, 1));
-            sun.add_component<liminal::directional_light>(glm::vec3(5, 5, 5));
+            scene->skybox = new liminal::skybox("assets/images/white.png");
 
             player_entity = scene->create_entity();
             player_entity.add_component<liminal::transform>("Player");

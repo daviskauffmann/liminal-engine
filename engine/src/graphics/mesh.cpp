@@ -56,14 +56,21 @@ liminal::mesh::mesh(
             GL_FALSE,
             sizeof(liminal::vertex),
             reinterpret_cast<void *>(offsetof(liminal::vertex, bitangent)));
-        glVertexAttribIPointer(
+        glVertexAttribPointer(
             5,
+            sizeof(liminal::vertex::color) / sizeof(liminal::vertex::color[0]),
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(liminal::vertex),
+            reinterpret_cast<void *>(offsetof(liminal::vertex, color)));
+        glVertexAttribIPointer(
+            6,
             sizeof(liminal::vertex::bone_ids) / sizeof(liminal::vertex::bone_ids[0]),
             GL_UNSIGNED_INT,
             sizeof(liminal ::vertex),
             reinterpret_cast<void *>(offsetof(liminal::vertex, bone_ids)));
         glVertexAttribPointer(
-            6,
+            7,
             sizeof(liminal::vertex::bone_weights) / sizeof(liminal::vertex::bone_weights[0]),
             GL_FLOAT,
             GL_FALSE,
@@ -77,6 +84,7 @@ liminal::mesh::mesh(
         glEnableVertexAttribArray(4);
         glEnableVertexAttribArray(5);
         glEnableVertexAttribArray(6);
+        glEnableVertexAttribArray(7);
     }
     glBindVertexArray(0);
 }

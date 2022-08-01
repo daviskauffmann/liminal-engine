@@ -14,6 +14,7 @@ namespace liminal
         static constexpr std::size_t num_cascades = 1;
 
         glm::vec3 color = {1, 1, 1};
+        bool shadows = true;
 
         std::array<glm::mat4, num_cascades> view_projection_matrices = {};
         std::array<GLuint, num_cascades> depth_map_texture_ids = {};

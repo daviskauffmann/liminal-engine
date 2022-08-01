@@ -5,13 +5,15 @@ in struct Vertex
     vec3 position;
     vec3 normal;
     vec2 uv;
+    vec3 color;
 } vertex;
 
 layout (location = 0) out vec3 position_map;
 layout (location = 1) out vec3 normal_map;
-layout (location = 2) out vec3 albedo_map;
-layout (location = 3) out vec4 material_map;
-layout (location = 4) out int id_map;
+layout (location = 2) out vec3 color_map;
+layout (location = 3) out vec3 albedo_map;
+layout (location = 4) out vec4 material_map;
+layout (location = 5) out int id_map;
 
 uniform struct Material
 {
@@ -46,6 +48,7 @@ void main()
 {
     position_map = vertex.position;
     normal_map = calc_normal();
+    color_map = vertex.color;
     albedo_map = texture(materials[0].albedo_map, vertex.uv).rgb;
     material_map.r = texture(materials[0].metallic_map, vertex.uv).r;
     material_map.g = texture(materials[0].roughness_map, vertex.uv).r;

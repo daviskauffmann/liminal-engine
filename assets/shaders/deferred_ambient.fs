@@ -21,6 +21,7 @@ uniform struct Geometry
 {
     sampler2D position_map;
     sampler2D normal_map;
+    sampler2D color_map;
     sampler2D albedo_map;
     sampler2D material_map;
 } geometry;
@@ -37,6 +38,7 @@ void main()
 {
     vec3 position = texture(geometry.position_map, vertex.uv).rgb;
     vec3 normal = texture(geometry.normal_map, vertex.uv).rgb;
+    vec3 color = texture(geometry.color_map, vertex.uv).rgb;
     vec3 albedo = texture(geometry.albedo_map, vertex.uv).rgb;
     float metallic = texture(geometry.material_map, vertex.uv).r;
     float roughness = texture(geometry.material_map, vertex.uv).g;
@@ -60,14 +62,14 @@ void main()
     vec3 prefilter = textureLod(skybox.prefilter_cubemap, r,  roughness * MAX_REFLECTION_LOD).rgb;    
     vec2 brdf  = texture(brdf_map, vec2(max(dot(n, v), 0), roughness)).rg;
     vec3 specular = prefilter * (f * brdf.x + brdf.y);
-    vec3 color = (kd * diffuse + specular) * ao;
+    vec3 final_color = color * (kd * diffuse + specular) * ao;
 
-    frag_color = vec4(color, 1);
+    frag_color = vec4(final_color, 1);
 
-    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    float brightness = dot(final_color, vec3(0.2126, 0.7152, 0.0722));
     if (brightness > 1)
     {
-        bright_color = vec4(color, 1);
+        bright_color = vec4(final_color, 1);
     }
     else
     {

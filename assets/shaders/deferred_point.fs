@@ -22,6 +22,7 @@ uniform struct Geometry
 {
     sampler2D position_map;
     sampler2D normal_map;
+    sampler2D color_map;
     sampler2D albedo_map;
     sampler2D material_map;
 } geometry;
@@ -47,6 +48,7 @@ void main()
 {
     vec3 position = texture(geometry.position_map, vertex.uv).rgb;
     vec3 normal = texture(geometry.normal_map, vertex.uv).rgb;
+    vec3 color = texture(geometry.color_map, vertex.uv).rgb;
     vec3 albedo = texture(geometry.albedo_map, vertex.uv).rgb;
     float metallic = texture(geometry.material_map, vertex.uv).r;
     float roughness = texture(geometry.material_map, vertex.uv).g;
@@ -77,7 +79,7 @@ void main()
     vec3 kd = vec3(1) - ks;
     kd *= 1 - metallic;
     float n_dot_l = max(dot(n, l), 0);
-    vec3 color = (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
+    vec3 final_color = color * (kd * albedo / PI + specular) * radiance * n_dot_l * ao;
     
     vec3 frag_to_light = position - light.position;
     float current_depth = length(frag_to_light);
@@ -96,14 +98,14 @@ void main()
         }
     }
     shadow /= float(samples);
-    color = (1 - shadow) * color;
+    final_color = (1 - shadow) * final_color;
 
-    frag_color = vec4(color, 1);
+    frag_color = vec4(final_color, 1);
 
-    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    float brightness = dot(final_color, vec3(0.2126, 0.7152, 0.0722));
     if (brightness > 1)
     {
-        bright_color = vec4(color, 1);
+        bright_color = vec4(final_color, 1);
     }
     else
     {

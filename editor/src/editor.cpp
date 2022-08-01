@@ -101,7 +101,7 @@ namespace editor
                 ImGuiWindowFlags_NoMove |
                 ImGuiWindowFlags_NoBringToFrontOnFocus |
                 ImGuiWindowFlags_NoNavFocus;
-            if (ImGui::Begin("Editor", NULL, window_flags))
+            if (ImGui::Begin("Editor", nullptr, window_flags))
             {
                 ImGui::PopStyleVar(3);
 
@@ -331,7 +331,7 @@ namespace editor
                                 {
                                     // TODO: move file dialog to platform?
                                     nfdchar_t *outPath;
-                                    const auto result = NFD_OpenDialog(NULL, NULL, &outPath);
+                                    const auto result = NFD_OpenDialog(nullptr, nullptr, &outPath);
                                     if (result == NFD_OKAY)
                                     {
                                         // TODO: crashes when loading an animated mesh

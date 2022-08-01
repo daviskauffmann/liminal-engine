@@ -71,6 +71,7 @@ namespace liminal
         GLuint geometry_fbo_id = 0;
         GLuint geometry_position_texture_id = 0;
         GLuint geometry_normal_texture_id = 0;
+        GLuint geometry_color_texture_id = 0;
         GLuint geometry_albedo_texture_id = 0;
         GLuint geometry_material_texture_id = 0;
         GLuint geometry_id_texture_id = 0;

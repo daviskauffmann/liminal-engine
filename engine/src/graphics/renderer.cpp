@@ -358,11 +358,12 @@ liminal::renderer::renderer(
     deferred_ambient_program->set_samplers(
         {{"geometry.position_map", 0},
          {"geometry.normal_map", 1},
-         {"geometry.albedo_map", 2},
-         {"geometry.material_map", 3},
-         {"skybox.irradiance_cubemap", 4},
-         {"skybox.prefilter_cubemap", 5},
-         {"brdf_map", 6}});
+         {"geometry.color_map", 2},
+         {"geometry.albedo_map", 3},
+         {"geometry.material_map", 4},
+         {"skybox.irradiance_cubemap", 5},
+         {"skybox.prefilter_cubemap", 6},
+         {"brdf_map", 7}});
     deferred_ambient_program->unbind();
 
     deferred_directional_program = std::make_unique<liminal::program>(
@@ -372,11 +373,13 @@ liminal::renderer::renderer(
     deferred_directional_program->set_samplers(
         {{"geometry.position_map", 0},
          {"geometry.normal_map", 1},
-         {"geometry.albedo_map", 2},
-         {"geometry.material_map", 3},
-         {"light.depth_map[0]", 4},
-         {"light.depth_map[1]", 5},
-         {"light.depth_map[2]", 6}});
+         {"geometry.color_map", 2},
+         {"geometry.albedo_map", 3},
+         {"geometry.material_map", 4}});
+    for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
+    {
+        deferred_directional_program->set_sampler(("light.depth_map[" + std::to_string(cascade_index) + "]").c_str(), 5 + cascade_index);
+    }
     deferred_directional_program->unbind();
 
     deferred_point_program = std::make_unique<liminal::program>(
@@ -386,9 +389,10 @@ liminal::renderer::renderer(
     deferred_point_program->set_samplers(
         {{"geometry.position_map", 0},
          {"geometry.normal_map", 1},
-         {"geometry.albedo_map", 2},
-         {"geometry.material_map", 3},
-         {"light.depth_cubemap", 4}});
+         {"geometry.color_map", 2},
+         {"geometry.albedo_map", 3},
+         {"geometry.material_map", 4},
+         {"light.depth_cubemap", 5}});
     deferred_point_program->unbind();
 
     deferred_spot_program = std::make_unique<liminal::program>(
@@ -398,9 +402,10 @@ liminal::renderer::renderer(
     deferred_spot_program->set_samplers(
         {{"geometry.position_map", 0},
          {"geometry.normal_map", 1},
-         {"geometry.albedo_map", 2},
-         {"geometry.material_map", 3},
-         {"light.depth_map", 4}});
+         {"geometry.color_map", 2},
+         {"geometry.albedo_map", 3},
+         {"geometry.material_map", 4},
+         {"light.depth_map", 5}});
     deferred_spot_program->unbind();
 
     skybox_program = std::make_unique<liminal::program>(
@@ -614,12 +619,14 @@ void liminal::renderer::calc_render_size()
     // gbuffer:
     //      position - rgb16f
     //      normal - rgb16f
+    //      color - rgb16f
     //      albedo - rgb16f
     //      material - rgba16f
     //          metallic - r
     //          roughness - g
     //          occlusion - b
     //          height - a
+    //      id - r32i
     glGenFramebuffers(1, &geometry_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
     {
@@ -678,6 +685,33 @@ void liminal::renderer::calc_render_size()
         }
 
         {
+            glGenTextures(1, &geometry_color_texture_id);
+            glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_RGB16F,
+                    render_width,
+                    render_height,
+                    0,
+                    GL_RGB,
+                    GL_FLOAT,
+                    nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT2,
+                GL_TEXTURE_2D,
+                geometry_color_texture_id,
+                0);
+        }
+
+        {
             glGenTextures(1, &geometry_albedo_texture_id);
             glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
             {
@@ -698,7 +732,7 @@ void liminal::renderer::calc_render_size()
 
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT2,
+                GL_COLOR_ATTACHMENT3,
                 GL_TEXTURE_2D,
                 geometry_albedo_texture_id,
                 0);
@@ -725,7 +759,7 @@ void liminal::renderer::calc_render_size()
 
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT3,
+                GL_COLOR_ATTACHMENT4,
                 GL_TEXTURE_2D,
                 geometry_material_texture_id,
                 0);
@@ -750,7 +784,7 @@ void liminal::renderer::calc_render_size()
 
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT4,
+                GL_COLOR_ATTACHMENT5,
                 GL_TEXTURE_2D,
                 geometry_id_texture_id,
                 0);
@@ -776,12 +810,13 @@ void liminal::renderer::calc_render_size()
         }
 
         {
-            constexpr std::array<GLenum, 5> geometry_color_attachments{
+            constexpr std::array<GLenum, 6> geometry_color_attachments{
                 GL_COLOR_ATTACHMENT0,
                 GL_COLOR_ATTACHMENT1,
                 GL_COLOR_ATTACHMENT2,
                 GL_COLOR_ATTACHMENT3,
-                GL_COLOR_ATTACHMENT4};
+                GL_COLOR_ATTACHMENT4,
+                GL_COLOR_ATTACHMENT5};
             glDrawBuffers((GLsizei)geometry_color_attachments.size(), geometry_color_attachments.data());
         }
 
@@ -882,7 +917,7 @@ void liminal::renderer::calc_render_size()
                         0,
                         GL_RGBA,
                         GL_FLOAT,
-                        NULL);
+                        nullptr);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1310,7 +1345,7 @@ liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene
     entt::entity id;
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
     {
-        glReadBuffer(GL_COLOR_ATTACHMENT4);
+        glReadBuffer(GL_COLOR_ATTACHMENT5);
         glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &id);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1355,7 +1390,7 @@ void liminal::renderer::render_shadows(
             directional_light.depth_map_texture_ids.at(cascade_index) = 0;
         }
 
-        if (shadow_index >= num_directional_light_shadows)
+        if (!directional_light.shadows || shadow_index >= num_directional_light_shadows)
         {
             continue;
         }
@@ -1764,14 +1799,16 @@ void liminal::renderer::render_objects(
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+            glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+            glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
             glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox ? scene.skybox->irradiance_cubemap_id : 0);
+            glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
             glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox ? scene.skybox->prefilter_cubemap_id : 0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox ? scene.skybox->irradiance_cubemap_id : 0);
             glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox ? scene.skybox->prefilter_cubemap_id : 0);
+            glActiveTexture(GL_TEXTURE7);
             glBindTexture(GL_TEXTURE_2D, brdf_texture_id);
 
             glBindVertexArray(screen_vao_id);
@@ -1787,10 +1824,12 @@ void liminal::renderer::render_objects(
             glActiveTexture(GL_TEXTURE3);
             glBindTexture(GL_TEXTURE_2D, 0);
             glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+            glBindTexture(GL_TEXTURE_2D, 0);
             glActiveTexture(GL_TEXTURE5);
             glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
             glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+            glActiveTexture(GL_TEXTURE7);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
         deferred_ambient_program->unbind();
@@ -1811,8 +1850,10 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE1);
                 glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
                 glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
                 glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
                 for (const auto [id, directional_light, transform] : scene.get_entities_with<const liminal::directional_light, const liminal::transform>().each())
@@ -1823,7 +1864,7 @@ void liminal::renderer::render_objects(
                     {
                         deferred_directional_program->set_mat4(("light.view_projection_matrices[" + std::to_string(cascade_index) + "]").c_str(), directional_light.view_projection_matrices.at(cascade_index));
 
-                        glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
+                        glActiveTexture(GL_TEXTURE5 + (GLenum)cascade_index);
                         glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids.at(cascade_index));
                     }
 
@@ -1846,6 +1887,13 @@ void liminal::renderer::render_objects(
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
+                {
+                    glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
             }
             deferred_directional_program->unbind();
 
@@ -1859,8 +1907,10 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE1);
                 glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
                 glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
                 glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
                 for (const auto [id, point_light, transform] : scene.get_entities_with<const liminal::point_light, const liminal::transform>().each())
@@ -1868,14 +1918,14 @@ void liminal::renderer::render_objects(
                     deferred_point_program->set_vec3("light.position", transform.position);
                     deferred_point_program->set_vec3("light.color", point_light.color);
 
-                    glActiveTexture(GL_TEXTURE4);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, point_light.depth_cubemap_texture_id);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    glActiveTexture(GL_TEXTURE4);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
                 }
 
@@ -1886,6 +1936,8 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE2);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
             deferred_point_program->unbind();
@@ -1899,8 +1951,10 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE1);
                 glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
                 glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
                 glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
 
                 for (const auto [id, spot_light, transform] : scene.get_entities_with<const liminal::spot_light, const liminal::transform>().each())
@@ -1912,14 +1966,14 @@ void liminal::renderer::render_objects(
                     deferred_spot_program->set_float("light.outer_cutoff", glm::cos(glm::radians(spot_light.outer_cutoff)));
                     deferred_spot_program->set_mat4("light.view_projection_matrix", spot_light.view_projection_matrix);
 
-                    glActiveTexture(GL_TEXTURE4);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, spot_light.depth_map_texture_id);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    glActiveTexture(GL_TEXTURE4);
+                    glActiveTexture(GL_TEXTURE5);
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }
 
@@ -1930,6 +1984,8 @@ void liminal::renderer::render_objects(
                 glActiveTexture(GL_TEXTURE2);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
             deferred_spot_program->unbind();
