@@ -26,7 +26,7 @@ bool minecraft::block::is_solid(const minecraft::direction direction) const
 
 void minecraft::block::add_to_mesh(const minecraft::chunk *const chunk, const int x, const int y, const int z, minecraft::mesh_data *const mesh_data) const
 {
-    const auto color = glm::vec3((float)std::clamp(light_level, min_light_level, max_light_level) / max_light_level);
+    const auto color = glm::vec3(static_cast<float>(std::clamp(light_level, min_light_level, max_light_level) / max_light_level));
 
     if (!chunk->get_block(x, y + 1, z)->is_solid(minecraft::direction::DOWN))
     {

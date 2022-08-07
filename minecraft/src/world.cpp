@@ -18,9 +18,9 @@ minecraft::world::world(liminal::scene *const scene)
             for (int z = -4; z < 4; z++)
             {
                 create_chunk(
-                    (int)(x * (int)minecraft::chunk::size),
-                    (int)(y * (int)minecraft::chunk::size),
-                    (int)(z * (int)minecraft::chunk::size));
+                    static_cast<int>(x * (int)minecraft::chunk::size),
+                    static_cast<int>(y * (int)minecraft::chunk::size),
+                    static_cast<int>(z * (int)minecraft::chunk::size));
             }
         }
     }
@@ -45,7 +45,7 @@ void minecraft::world::update() const
 int get_noise(const int x, const int y, const int z, const float scale, const int max)
 {
     const auto simplex = SimplexNoise();
-    return (int)(std::floor(simplex.noise(x * scale, y * scale, z * scale) + 1) * (max / 2.0f));
+    return static_cast<int>(std::floor(simplex.noise(x * scale, y * scale, z * scale) + 1) * (max / 2.0f));
 }
 
 void minecraft::world::create_chunk(const int x, const int y, const int z)
@@ -71,9 +71,9 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
 
     chunk_entities.emplace(chunk_position, chunk_entity);
 
-    for (int xi = chunk_position.x; xi < (int)(chunk_position.x + minecraft::chunk::size); xi++)
+    for (int xi = chunk_position.x; xi < static_cast<int>(chunk_position.x + minecraft::chunk::size); xi++)
     {
-        for (int zi = chunk_position.z; zi < (int)(chunk_position.z + minecraft::chunk::size); zi++)
+        for (int zi = chunk_position.z; zi < static_cast<int>(chunk_position.z + minecraft::chunk::size); zi++)
         {
             const auto stone_base_height = -24;
             const auto stone_base_noise = 0.05f;
@@ -100,7 +100,7 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
             auto dirt_height = stone_height + dirt_base_height;
             dirt_height += get_noise(xi, 100, zi, dirt_noise, dirt_noise_height);
 
-            for (int yi = chunk_position.y; yi < (int)(chunk_position.y + minecraft::chunk::size); yi++)
+            for (int yi = chunk_position.y; yi < static_cast<int>(chunk_position.y + minecraft::chunk::size); yi++)
             {
                 if (yi <= stone_height)
                 {
@@ -175,9 +175,9 @@ void minecraft::world::set_block(const int x, const int y, const int z, minecraf
 glm::ivec3 minecraft::world::get_chunk_position(const int x, const int y, const int z) const
 {
     return glm::ivec3(
-        (int)std::floor((float)x / minecraft::chunk::size) * minecraft::chunk::size,
-        (int)std::floor((float)y / minecraft::chunk::size) * minecraft::chunk::size,
-        (int)std::floor((float)z / minecraft::chunk::size) * minecraft::chunk::size);
+        static_cast<int>(std::floor(static_cast<float>(x) / minecraft::chunk::size) * minecraft::chunk::size),
+        static_cast<int>(std::floor(static_cast<float>(y) / minecraft::chunk::size) * minecraft::chunk::size),
+        static_cast<int>(std::floor(static_cast<float>(z) / minecraft::chunk::size) * minecraft::chunk::size));
 }
 
 liminal::entity minecraft::world::get_chunk_entity(const glm::ivec3 &chunk_position) const

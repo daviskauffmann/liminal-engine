@@ -129,9 +129,9 @@ namespace minecraft
                 {
                     for (std::size_t i = 0; i < 100; i++)
                     {
-                        auto x = (int)glm::round(transform.position.x + (camera.calc_front(transform).x * (i * 0.1f)));
-                        auto y = (int)glm::round(transform.position.y + (camera.calc_front(transform).y * (i * 0.1f)));
-                        auto z = (int)glm::round(transform.position.z + (camera.calc_front(transform).z * (i * 0.1f)));
+                        const auto x = static_cast<int>(glm::round(transform.position.x + (camera.calc_front(transform).x * (i * 0.1f))));
+                        const auto y = static_cast<int>(glm::round(transform.position.y + (camera.calc_front(transform).y * (i * 0.1f))));
+                        const auto z = static_cast<int>(glm::round(transform.position.z + (camera.calc_front(transform).z * (i * 0.1f))));
                         world->set_block(x, y, z, new minecraft::air_block());
                     }
                 }

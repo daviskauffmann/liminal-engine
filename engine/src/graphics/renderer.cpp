@@ -77,7 +77,7 @@ liminal::renderer::renderer(
             +1, -1,
             -1, +1,
             +1, +1};
-        water_vertices_size = (GLsizei)(water_vertices.size() * sizeof(GLfloat));
+        water_vertices_size = static_cast<GLsizei>(water_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &water_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, water_vbo_id);
@@ -135,7 +135,7 @@ liminal::renderer::renderer(
             +1, -1, -1,
             -1, -1, +1,
             +1, -1, +1};
-        skybox_vertices_size = (GLsizei)(skybox_vertices.size() * sizeof(GLfloat));
+        skybox_vertices_size = static_cast<GLsizei>(skybox_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &skybox_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo_id);
@@ -159,7 +159,7 @@ liminal::renderer::renderer(
             +0, +1, +0, +1,
             +1, +1, +1, +1,
             +1, +0, +1, +0};
-        sprite_vertices_size = (GLsizei)(sprite_vertices.size() * sizeof(GLfloat));
+        sprite_vertices_size = static_cast<GLsizei>(sprite_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &sprite_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo_id);
@@ -185,7 +185,7 @@ liminal::renderer::renderer(
             +1, -1, +1, +0,
             -1, +1, +0, +1,
             +1, +1, +1, +1};
-        screen_vertices_size = (GLsizei)(screen_vertices.size() * sizeof(GLfloat));
+        screen_vertices_size = static_cast<GLsizei>(screen_vertices.size() * sizeof(GLfloat));
 
         glGenBuffers(1, &screen_vbo_id);
         glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_id);
@@ -378,7 +378,7 @@ liminal::renderer::renderer(
          {"geometry.material_map", 4}});
     for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
     {
-        deferred_directional_program->set_sampler(("light.depth_map[" + std::to_string(cascade_index) + "]").c_str(), 5 + cascade_index);
+        deferred_directional_program->set_sampler(("light.depth_map[" + std::to_string(cascade_index) + "]").c_str(), static_cast<GLint>(5 + cascade_index));
     }
     deferred_directional_program->unbind();
 
@@ -474,7 +474,7 @@ liminal::renderer::renderer(
             const auto z = radius * glm::sin(stack_angle);
             for (std::size_t sector = 0; sector <= sector_count; sector++)
             {
-                const float sector_angle = sector * sector_step;
+                const auto sector_angle = sector * sector_step;
 
                 liminal::vertex vertex;
                 vertex.position.x = xy * glm::cos(sector_angle);
@@ -483,8 +483,8 @@ liminal::renderer::renderer(
                 vertex.normal.x = vertex.position.x * length_inv;
                 vertex.normal.y = vertex.position.y * length_inv;
                 vertex.normal.z = vertex.position.z * length_inv;
-                vertex.uv.s = (float)sector / sector_count;
-                vertex.uv.t = (float)stack / stack_count;
+                vertex.uv.s = static_cast<float>(sector / sector_count);
+                vertex.uv.t = static_cast<float>(stack / stack_count);
                 vertices.push_back(vertex);
             }
         }
@@ -492,8 +492,8 @@ liminal::renderer::renderer(
         std::vector<unsigned int> indices;
         for (std::size_t stack = 0; stack < stack_count; stack++)
         {
-            unsigned int k1 = (unsigned int)(stack * (sector_count + 1));
-            unsigned int k2 = k1 + (unsigned int)(sector_count + 1);
+            unsigned int k1 = static_cast<unsigned int>(stack * (sector_count + 1));
+            unsigned int k2 = k1 + static_cast<unsigned int>(sector_count + 1);
             for (std::size_t sector = 0; sector < sector_count; sector++, k1++, k2++)
             {
                 if (stack != 0)
@@ -574,7 +574,7 @@ liminal::renderer::~renderer()
 
 float liminal::renderer::get_aspect_ratio() const
 {
-    return (float)render_width / (float)render_height;
+    return static_cast<float>(render_width) / static_cast<float>(render_height);
 }
 
 void liminal::renderer::set_target_size(const GLsizei width, const GLsizei height)
@@ -594,8 +594,8 @@ void liminal::renderer::set_render_scale(const float scale)
 
 void liminal::renderer::calc_render_size()
 {
-    render_width = (GLsizei)(target_width * render_scale);
-    render_height = (GLsizei)(target_height * render_scale);
+    render_width = static_cast<GLsizei>(target_width * render_scale);
+    render_height = static_cast<GLsizei>(target_height * render_scale);
 
     glDeleteFramebuffers(1, &geometry_fbo_id);
     glDeleteTextures(1, &geometry_position_texture_id);
@@ -817,7 +817,7 @@ void liminal::renderer::calc_render_size()
                 GL_COLOR_ATTACHMENT3,
                 GL_COLOR_ATTACHMENT4,
                 GL_COLOR_ATTACHMENT5};
-            glDrawBuffers((GLsizei)geometry_color_attachments.size(), geometry_color_attachments.data());
+            glDrawBuffers(static_cast<GLsizei>(geometry_color_attachments.size()), geometry_color_attachments.data());
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -887,7 +887,7 @@ void liminal::renderer::calc_render_size()
             constexpr std::array<GLenum, 2> hdr_color_attachments{
                 GL_COLOR_ATTACHMENT0,
                 GL_COLOR_ATTACHMENT1};
-            glDrawBuffers((GLsizei)hdr_color_attachments.size(), hdr_color_attachments.data());
+            glDrawBuffers(static_cast<GLsizei>(hdr_color_attachments.size()), hdr_color_attachments.data());
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -976,7 +976,7 @@ void liminal::renderer::calc_render_size()
         {
             constexpr std::array<GLenum, 1> final_color_attachments{
                 GL_COLOR_ATTACHMENT0};
-            glDrawBuffers((GLsizei)final_color_attachments.size(), final_color_attachments.data());
+            glDrawBuffers(static_cast<GLsizei>(final_color_attachments.size()), final_color_attachments.data());
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -1735,7 +1735,7 @@ void liminal::renderer::render_objects(
                         geometry_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_skinned_mesh_program->set_vec3("material.color", mesh_renderer.color);
-                        geometry_skinned_mesh_program->set_int("id", (int)id);
+                        geometry_skinned_mesh_program->set_int("id", static_cast<int>(id));
 
                         mesh_renderer.model->draw_meshes(*geometry_skinned_mesh_program);
                     }
@@ -1749,7 +1749,7 @@ void liminal::renderer::render_objects(
                         geometry_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_mesh_program->set_vec3("material.color", mesh_renderer.color);
-                        geometry_mesh_program->set_int("id", (int)id);
+                        geometry_mesh_program->set_int("id", static_cast<int>(id));
 
                         mesh_renderer.model->draw_meshes(*geometry_mesh_program);
                     }
@@ -1864,7 +1864,7 @@ void liminal::renderer::render_objects(
                     {
                         deferred_directional_program->set_mat4(("light.view_projection_matrices[" + std::to_string(cascade_index) + "]").c_str(), directional_light.view_projection_matrices.at(cascade_index));
 
-                        glActiveTexture(GL_TEXTURE5 + (GLenum)cascade_index);
+                        glActiveTexture(GL_TEXTURE5 + static_cast<GLenum>(cascade_index));
                         glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids.at(cascade_index));
                     }
 
@@ -1874,7 +1874,7 @@ void liminal::renderer::render_objects(
 
                     for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                     {
-                        glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
+                        glActiveTexture(GL_TEXTURE4 + static_cast<GLenum>(cascade_index));
                         glBindTexture(GL_TEXTURE_2D, 0);
                     }
                 }
@@ -1891,7 +1891,7 @@ void liminal::renderer::render_objects(
                 glBindTexture(GL_TEXTURE_2D, 0);
                 for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                 {
-                    glActiveTexture(GL_TEXTURE4 + (GLenum)cascade_index);
+                    glActiveTexture(GL_TEXTURE4 + static_cast<GLenum>(cascade_index));
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }
             }
@@ -2223,12 +2223,12 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
             bool first_iteration = true;
             for (std::size_t pass = 0; pass < 10; pass++)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at((std::size_t)horizontal));
+                glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at(static_cast<std::size_t>(horizontal)));
                 {
                     gaussian_program->set_int("horizontal", horizontal);
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids.at(1) : bloom_texture_ids.at((std::size_t)!horizontal));
+                    glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids.at(1) : bloom_texture_ids.at(static_cast<std::size_t>(!horizontal)));
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -2262,7 +2262,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, hdr_texture_ids.at(0));
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, bloom_texture_ids.at((std::size_t)!horizontal));
+            glBindTexture(GL_TEXTURE_2D, bloom_texture_ids.at(static_cast<std::size_t>(!horizontal)));
 
             glBindVertexArray(screen_vao_id);
             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);

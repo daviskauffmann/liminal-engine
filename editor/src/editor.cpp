@@ -90,7 +90,7 @@ namespace editor
             ImGui::SetNextWindowViewport(viewport->ID);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 
             const ImGuiWindowFlags window_flags =
                 ImGuiWindowFlags_MenuBar |
@@ -109,7 +109,7 @@ namespace editor
                 {
                     const auto dockspace_id = ImGui::GetID("Dockspace");
                     constexpr ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-                    ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockspace_flags);
+                    ImGui::DockSpace(dockspace_id, {0, 0}, dockspace_flags);
                 }
 
                 if (ImGui::BeginMenuBar())
@@ -179,7 +179,7 @@ namespace editor
                             const auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
                             if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
                             {
-                                selected_entity = liminal::renderer::instance->pick((int)mouse_x, (int)mouse_y, scene);
+                                selected_entity = liminal::renderer::instance->pick(static_cast<int>(mouse_x), static_cast<int>(mouse_y), scene);
                             }
                         }
 
@@ -204,17 +204,17 @@ namespace editor
                             camera_transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
                         }
 
-                        camera_transform.position += camera_front * (float)liminal::input::mouse_wheel_y;
+                        camera_transform.position += camera_front * static_cast<float>(liminal::input::mouse_wheel_y);
                     }
 
                     scene_region_size = ImGui::GetContentRegionAvail();
                     if (scene_region_size.x != prev_scene_region_size.x || scene_region_size.y != prev_scene_region_size.y)
                     {
-                        liminal::renderer::instance->set_target_size((int)scene_region_size.x, (int)scene_region_size.y);
+                        liminal::renderer::instance->set_target_size(static_cast<int>(scene_region_size.x), static_cast<int>(scene_region_size.y));
                         prev_scene_region_size = scene_region_size;
                     }
 
-                    ImGui::Image((ImTextureID)(long long)camera.render_texture_id, scene_region_size, {0, 1}, {1, 0});
+                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(camera.render_texture_id)), scene_region_size, {0, 1}, {1, 0});
 
                     const auto min_region = ImGui::GetWindowContentRegionMin();
                     const auto max_region = ImGui::GetWindowContentRegionMax();
@@ -373,7 +373,7 @@ namespace editor
 
                                 for (const auto depth_map_texture_id : directional_light.depth_map_texture_ids)
                                 {
-                                    ImGui::Image((ImTextureID)(long long)depth_map_texture_id, ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+                                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(depth_map_texture_id)), {200, 200}, {0, 1}, {1, 0});
                                 }
 
                                 ImGui::TreePop();
@@ -438,7 +438,7 @@ namespace editor
                                 ImGui::DragFloat("Inner Cutoff", &spot_light.inner_cutoff);
                                 ImGui::DragFloat("Outer Cutoff", &spot_light.outer_cutoff);
 
-                                ImGui::Image((ImTextureID)(long long)spot_light.depth_map_texture_id, ImVec2{200, 200}, ImVec2{0, 1}, ImVec2{1, 0});
+                                ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(spot_light.depth_map_texture_id)), {200, 200}, {0, 1}, {1, 0});
 
                                 ImGui::TreePop();
                             }
@@ -600,7 +600,7 @@ namespace editor
             {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
-            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>((uint64_t)entity), flags, "%s", transform.name.c_str());
+            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(static_cast<uint64_t>(entity)), flags, "%s", transform.name.c_str());
 
             if (ImGui::IsItemClicked())
             {

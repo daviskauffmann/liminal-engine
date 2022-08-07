@@ -34,6 +34,8 @@ liminal::app::app(int argc, char *argv[])
         const auto result = options.parse(argc, argv);
 
         window_height = result["height"].as<int>();
+        window_width = result["width"].as<int>();
+        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
 
         if (result.count("help"))
         {
@@ -41,15 +43,12 @@ liminal::app::app(int argc, char *argv[])
             return;
         }
 
-        render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
 
         if (result.count("version"))
         {
             std::cout << version_string << std::endl;
             return;
         }
-
-        window_width = result["width"].as<int>();
     }
     catch (std::exception &e)
     {
@@ -80,7 +79,7 @@ void liminal::app::run()
     while (running)
     {
         // calculate time between frames
-        static unsigned int current_time = 0;
+        static std::uint32_t current_time = 0;
         const auto previous_time = current_time;
         current_time = SDL_GetTicks();
         const auto delta_time = ((current_time - previous_time) / 1000.0f);

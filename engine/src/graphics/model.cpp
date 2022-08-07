@@ -70,9 +70,9 @@ void liminal::model::update_bone_transformations(const unsigned int animation_in
 
     if (scene && scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
-        const auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? (float)scene->mAnimations[animation_index]->mTicksPerSecond : 25.0f;
+        const auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? static_cast<float>(scene->mAnimations[animation_index]->mTicksPerSecond) : 25.0f;
         const auto time_in_ticks = ticks_per_second * (current_time / 1000.0f);
-        const auto animation_time = (float)fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration);
+        const auto animation_time = static_cast<float>(fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration));
 
         process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
 
@@ -281,8 +281,8 @@ aiVector3D liminal::model::calc_interpolated_position(const float animation_time
     const auto position_index = find_position_index(animation_time, node_animation);
     const auto next_position_index = position_index + 1;
 
-    const auto delta_time = (float)(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
-    const auto factor = (animation_time - (float)node_animation->mPositionKeys[position_index].mTime) / delta_time;
+    const auto delta_time = static_cast<float>(node_animation->mPositionKeys[next_position_index].mTime - node_animation->mPositionKeys[position_index].mTime);
+    const auto factor = (animation_time - static_cast<float>(node_animation->mPositionKeys[position_index].mTime) / delta_time);
 
     const auto &start = node_animation->mPositionKeys[position_index].mValue;
     const auto &end = node_animation->mPositionKeys[next_position_index].mValue;
@@ -295,7 +295,7 @@ unsigned int liminal::model::find_position_index(const float animation_time, con
 {
     for (unsigned int i = 0; i < node_animation->mNumPositionKeys - 1; i++)
     {
-        if (animation_time < (float)node_animation->mPositionKeys[i + 1].mTime)
+        if (animation_time < static_cast<float>(node_animation->mPositionKeys[i + 1].mTime))
         {
             return i;
         }
@@ -316,8 +316,8 @@ aiQuaternion liminal::model::calc_interpolated_rotation(const float animation_ti
     const auto rotation_index = find_rotation_index(animation_time, node_animation);
     const auto next_rotation_index = rotation_index + 1;
 
-    const auto delta_time = (float)(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
-    const auto factor = (animation_time - (float)node_animation->mRotationKeys[rotation_index].mTime) / delta_time;
+    const auto delta_time = static_cast<float>(node_animation->mRotationKeys[next_rotation_index].mTime - node_animation->mRotationKeys[rotation_index].mTime);
+    const auto factor = (animation_time - static_cast<float>(node_animation->mRotationKeys[rotation_index].mTime) / delta_time);
 
     const auto &start = node_animation->mRotationKeys[rotation_index].mValue;
     const auto &end = node_animation->mRotationKeys[next_rotation_index].mValue;
@@ -332,7 +332,7 @@ unsigned int liminal::model::find_rotation_index(const float animation_time, con
 {
     for (unsigned int i = 0; i < node_animation->mNumRotationKeys - 1; i++)
     {
-        if (animation_time < (float)node_animation->mRotationKeys[i + 1].mTime)
+        if (animation_time < static_cast<float>(node_animation->mRotationKeys[i + 1].mTime))
         {
             return i;
         }
@@ -353,8 +353,8 @@ aiVector3D liminal::model::calc_interpolated_scale(const float animation_time, c
     const auto scale_index = find_scale_index(animation_time, node_animation);
     const auto next_scale_index = scale_index + 1;
 
-    const auto delta_time = (float)(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
-    const auto factor = (animation_time - (float)node_animation->mScalingKeys[scale_index].mTime) / delta_time;
+    const auto delta_time = static_cast<float>(node_animation->mScalingKeys[next_scale_index].mTime - node_animation->mScalingKeys[scale_index].mTime);
+    const auto factor = (animation_time - static_cast<float>(node_animation->mScalingKeys[scale_index].mTime) / delta_time);
 
     const auto &start = node_animation->mScalingKeys[scale_index].mValue;
     const auto &end = node_animation->mScalingKeys[next_scale_index].mValue;
@@ -367,7 +367,7 @@ unsigned int liminal::model::find_scale_index(const float animation_time, const 
 {
     for (unsigned int i = 0; i < node_animation->mNumScalingKeys - 1; i++)
     {
-        if (animation_time < (float)node_animation->mScalingKeys[i + 1].mTime)
+        if (animation_time < static_cast<float>(node_animation->mScalingKeys[i + 1].mTime))
         {
             return i;
         }

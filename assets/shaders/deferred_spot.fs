@@ -94,7 +94,7 @@ void main()
         }
     }
     shadow /= 9;
-    if (light_space_proj_coords.z > 1) shadow = 0;
+    if (current_depth > 1) shadow = 0;
     final_color = (1 - shadow) * final_color;
 
     frag_color = vec4(final_color, 1);

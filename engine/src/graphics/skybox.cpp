@@ -73,7 +73,7 @@ void liminal::skybox::set_cubemap(const char *const filename)
         +1, -1, -1,
         -1, -1, +1,
         +1, -1, +1};
-    const GLsizei capture_vertices_size = (GLsizei)(capture_vertices.size() * sizeof(float));
+    const auto capture_vertices_size = static_cast<GLsizei>(capture_vertices.size() * sizeof(float));
     GLuint capture_vao_id;
     GLuint capture_vbo_id;
 
@@ -362,8 +362,8 @@ void liminal::skybox::set_cubemap(const char *const filename)
             constexpr GLsizei max_mip_levels = 5;
             for (GLint mip_level = 0; mip_level < max_mip_levels; mip_level++)
             {
-                const auto mip_width = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
-                const auto mip_height = (GLsizei)(prefilter_size * std::pow(0.5f, (float)mip_level));
+                const auto mip_width = static_cast<GLsizei>(prefilter_size * std::pow(0.5f, static_cast<float>(mip_level)));
+                const auto mip_height = static_cast<GLsizei>(prefilter_size * std::pow(0.5f, static_cast<float>(mip_level)));
 
                 glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
                 {
@@ -378,7 +378,7 @@ void liminal::skybox::set_cubemap(const char *const filename)
 
                 glViewport(0, 0, mip_width, mip_height);
 
-                prefilter_convolution_program->set_float("roughness", (float)mip_level / (float)(max_mip_levels - 1));
+                prefilter_convolution_program->set_float("roughness", static_cast<float>(mip_level) / static_cast<float>(max_mip_levels - 1));
 
                 for (GLenum i = 0; i < 6; ++i)
                 {
