@@ -16,9 +16,9 @@ find_package(OpenGL REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2-image CONFIG REQUIRED)
-find_package(SDL2-mixer CONFIG REQUIRED)
+find_package(SDL2_mixer CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
-find_path(STB_INCLUDE_DIRS "stb.h")
+find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 
 add_library(${PROJECT_NAME}
     src/stb_image.cpp
@@ -67,6 +67,6 @@ target_link_libraries(${PROJECT_NAME}
         OpenAL::OpenAL
         SDL2::SDL2 SDL2::SDL2main
         SDL2::SDL2_image
-        SDL2::SDL2_mixer
-        sol2::sol2
+        $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>
+        sol2
 )

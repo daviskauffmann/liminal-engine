@@ -17,6 +17,7 @@ liminal::physical::physical(btDiscreteDynamicsWorld *const world, const float ma
 
 liminal::physical::~physical()
 {
+    // TODO: this causes a crash
     delete rigidbody->getMotionState();
     delete rigidbody->getCollisionShape();
     world->removeRigidBody(rigidbody.get());
