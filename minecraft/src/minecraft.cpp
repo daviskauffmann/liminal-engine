@@ -6,7 +6,6 @@
 #include "world.hpp"
 #include <glm/glm.hpp>
 #include <imgui.h>
-#include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
 #include <memory>

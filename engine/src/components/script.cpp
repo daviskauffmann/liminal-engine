@@ -10,6 +10,7 @@
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <liminal/input/input.hpp>
+#include <spdlog/spdlog.h>
 #include <string>
 
 liminal::script::script(const std::string &filename, liminal::scene *const scene, const entt::entity id)
@@ -18,7 +19,7 @@ liminal::script::script(const std::string &filename, liminal::scene *const scene
     const auto result = lua.script_file(filename);
     if (!result.valid())
     {
-        std::cerr << "Error: Failed to load script: " << filename << std::endl;
+        spdlog::error("Failed to load script {}", filename);
         return;
     }
 

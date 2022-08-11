@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <stb_include.h>
 
 liminal::program::program(
@@ -90,7 +90,7 @@ void liminal::program::set_mat4(const char *name, const glm::mat4 &mat4) const
 
 void liminal::program::set_mat4_vector(const char *name, const std::vector<glm::mat4> &mat4_vector) const
 {
-    glUniformMatrix4fv(get_location(name), (GLsizei)mat4_vector.size(), GL_FALSE, glm::value_ptr(mat4_vector[0]));
+    glUniformMatrix4fv(get_location(name), static_cast<GLsizei>(mat4_vector.size()), GL_FALSE, glm::value_ptr(mat4_vector.at(0)));
 }
 
 void liminal::program::set_sampler(const char *name, const GLint value) const
@@ -152,7 +152,7 @@ GLuint liminal::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(new_program_id, length, &length, info_log.data());
 
-            std::cerr << "Error: Failed to link program: " << info_log.data() << std::endl;
+            spdlog::error("Failed to link program: {}", info_log.data());
             return 0;
         }
     }
@@ -181,7 +181,7 @@ GLuint liminal::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(new_program_id, length, &length, info_log.data());
 
-            std::cerr << "Error: Failed to validate program: " << info_log.data() << std::endl;
+            spdlog::error("Failed to validate program: {}", info_log.data());
             return 0;
         }
     }
@@ -201,7 +201,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
         error);
     if (!source)
     {
-        std::cerr << "Error: Failed to preprocess shader: " << error << std::endl;
+        spdlog::error("Failed to preprocess shader: {}", error);
         return 0;
     }
 
@@ -220,7 +220,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
         std::vector<GLchar> info_log(length);
         glGetShaderInfoLog(shader_id, length, &length, info_log.data());
 
-        std::cerr << "Error: Failed to compile shader: " << info_log.data() << std::endl;
+        spdlog::error("Failed to compile shader: {}", info_log.data());
         return 0;
     }
 

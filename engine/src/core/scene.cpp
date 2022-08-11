@@ -188,12 +188,12 @@ void liminal::scene::update(const unsigned int current_time, const float delta_t
     }
 
     // update animations
-    for (const auto [id, mesh_renderer] : get_entities_with<const liminal::mesh_renderer>().each())
+    for (const auto [id, mesh_renderer] : get_entities_with<liminal::mesh_renderer>().each())
     {
         if (mesh_renderer.model && mesh_renderer.model->has_animations())
         {
             // TODO: put current animation_index on the mesh_renderer component
-            mesh_renderer.model->update_bone_transformations(0, current_time);
+            mesh_renderer.bone_transformations = mesh_renderer.model->calc_bone_transformations(0, current_time);
         }
     }
 

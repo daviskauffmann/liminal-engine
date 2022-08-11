@@ -1,6 +1,5 @@
 #include <glm/glm.hpp>
 #include <imgui.h>
-#include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
 #include <memory>
@@ -206,16 +205,16 @@ namespace player
 
         liminal::entity player_entity;
 
-        liminal::sound *ambient_sound;
+        const liminal::sound *ambient_sound;
         liminal::entity ambience_entity;
 
-        liminal::sound *bounce_sound;
+        const liminal::sound *bounce_sound;
         liminal::entity bounce_entity;
 
-        liminal::sound *shoot_sound;
+        const liminal::sound *shoot_sound;
         liminal::entity weapon_entity;
 
-        liminal::texture *grass_texture;
+        const liminal::texture *grass_texture;
         liminal::entity ui_entity;
 
         bool noclip = false;

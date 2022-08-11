@@ -1,7 +1,9 @@
 #ifndef LIMINAL_COMPONENTS_MESH_RENDERER_HPP
 #define LIMINAL_COMPONENTS_MESH_RENDERER_HPP
 
+#include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
+#include <vector>
 
 namespace liminal
 {
@@ -10,8 +12,11 @@ namespace liminal
     class mesh_renderer
     {
     public:
-        liminal::model *model = nullptr;
-        glm::vec3 color = {1, 1, 1};
+        const liminal::model *model;
+        glm::vec3 color;
+        std::vector<glm::mat4> bone_transformations;
+
+        mesh_renderer(const liminal::model *model = nullptr, const glm::vec3 &color = glm::vec3(1, 1, 1));
     };
 }
 

@@ -12,6 +12,7 @@
 #include <liminal/core/scene.hpp>
 #include <liminal/graphics/renderer.hpp>
 #include <liminal/input/input.hpp>
+#include <spdlog/spdlog.h>
 #include <string>
 
 constexpr const char *version_string = "v0.0.1";
@@ -43,14 +44,13 @@ liminal::app::app(int argc, char *argv[])
             return;
         }
 
-
         if (result.count("version"))
         {
             std::cout << version_string << std::endl;
             return;
         }
     }
-    catch (std::exception &e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
         return;
@@ -127,7 +127,7 @@ void liminal::app::run()
                     window_height = event.window.data2;
                     liminal::platform::instance->set_window_size(window_width, window_height);
                     resize(window_width, window_height);
-                    std::cout << "Window resized to " << window_width << "x" << window_height << std::endl;
+                    spdlog::info("Window resized to {}x{}", window_width, window_height);
                 }
                 break;
                 }
@@ -230,21 +230,21 @@ void liminal::app::run()
                         render_scale = 1;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                        spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "render_scale 0.5")
                     {
                         render_scale = 0.5f;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                        spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "render_scale 0.1")
                     {
                         render_scale = 0.1f;
 
                         liminal::renderer::instance->set_render_scale(render_scale);
-                        std::cout << "Render scale changed to " << render_scale << std::endl;
+                        spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "toggle_slomo")
                     {

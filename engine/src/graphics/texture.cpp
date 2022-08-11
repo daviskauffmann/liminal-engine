@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <spdlog/spdlog.h>
 #include <stb_image.h>
 
 liminal::texture::texture(const char *const filename, const bool srgb, const bool filter)
@@ -11,7 +12,7 @@ liminal::texture::texture(const char *const filename, const bool srgb, const boo
     const auto image = stbi_load(filename, &width, &height, &num_components, 0);
     if (!image)
     {
-        std::cerr << "Error: Failed to load texture: " << stbi_failure_reason() << std::endl;
+        spdlog::error("Failed to load texture: {}", stbi_failure_reason());
         return;
     }
 

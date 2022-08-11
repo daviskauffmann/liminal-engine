@@ -1,6 +1,11 @@
 #ifndef LIMINAL_CORE_ASSETS_HPP
 #define LIMINAL_CORE_ASSETS_HPP
 
+#include "../audio/sound.hpp"
+#include "../graphics/model.hpp"
+#include "../graphics/skybox.hpp"
+#include "../graphics/texture.hpp"
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -17,18 +22,17 @@ namespace liminal
         static assets *instance;
 
         assets();
-        ~assets();
 
-        liminal::sound *load_sound(const std::string &filename);
-        liminal::model *load_model(const std::string &filename, bool flip_uvs = false);
-        liminal::skybox *load_skybox(const std::string &filename);
-        liminal::texture *load_texture(const std::string &filename);
+        const liminal::sound *load_sound(const std::string &filename);
+        const liminal::model *load_model(const std::string &filename, bool flip_uvs = false); 
+        const liminal::skybox *load_skybox(const std::string &filename);
+        const liminal::texture *load_texture(const std::string &filename);
 
     private:
-        std::unordered_map<std::string, liminal::sound *> sounds;
-        std::unordered_map<std::string, liminal::model *> models;
-        std::unordered_map<std::string, liminal::skybox *> skyboxes;
-        std::unordered_map<std::string, liminal::texture *> textures;
+        std::unordered_map<std::string, std::unique_ptr<liminal::sound>> sounds;
+        std::unordered_map<std::string, std::unique_ptr<liminal::model>> models;
+        std::unordered_map<std::string, std::unique_ptr<liminal::skybox>> skyboxes;
+        std::unordered_map<std::string, std::unique_ptr<liminal::texture>> textures;
     };
 }
 

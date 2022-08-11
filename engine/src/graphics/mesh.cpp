@@ -5,7 +5,7 @@
 liminal::mesh::mesh(
     const std::vector<liminal::vertex> &vertices,
     const std::vector<GLuint> &indices,
-    const std::vector<std::vector<liminal::texture *>> &textures)
+    const std::vector<std::vector<const liminal::texture *>> &textures)
     : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)

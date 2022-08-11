@@ -3,9 +3,9 @@
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/matrix.hpp>
-#include <iostream>
 #include <liminal/graphics/program.hpp>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <stb_image.h>
 
 constexpr GLsizei environment_size = 4096;
@@ -128,7 +128,7 @@ void liminal::skybox::set_cubemap(const char *const filename)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "Error: Failed to create skybox capture framebuffer" << std::endl;
+            spdlog::error("Failed to create skybox capture framebuffer");
             return;
         }
     }
@@ -145,7 +145,7 @@ void liminal::skybox::set_cubemap(const char *const filename)
         const auto image = stbi_loadf(filename, &width, &height, &num_components, 0);
         if (!image)
         {
-            std::cerr << "Error: Failed to load skybox texture: " << stbi_failure_reason() << std::endl;
+            spdlog::error("Failed to load skybox texture: {}", stbi_failure_reason());
             return;
         }
 

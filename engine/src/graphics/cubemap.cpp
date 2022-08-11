@@ -2,7 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
 {
@@ -14,7 +14,7 @@ liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
             const auto surface = IMG_Load(filenames.at(side_index).c_str());
             if (!surface)
             {
-                std::cerr << "Error: Failed to load cubemap: " << IMG_GetError() << std::endl;
+                spdlog::error("Failed to load cubemap: {}", IMG_GetError());
                 return;
             }
 

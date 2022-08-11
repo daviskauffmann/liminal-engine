@@ -4,9 +4,9 @@
 #include <assimp/scene.h>
 #include <bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <liminal/core/assets.hpp>
 #include <liminal/graphics/texture.hpp>
+#include <spdlog/spdlog.h>
 
 // TODO: multiple textures w/ blend map
 
@@ -22,7 +22,7 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
     const auto surface = IMG_Load(filename.c_str());
     if (!surface)
     {
-        std::cerr << "Error: Failed to load terrain heightmap texture: " << IMG_GetError() << std::endl;
+        spdlog::error("Failed to load terrain heightmap texture: {}", IMG_GetError());
         return;
     }
 
@@ -71,10 +71,10 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
 
     SDL_FreeSurface(surface);
 
-    std::vector<std::vector<liminal::texture *>> textures;
+    std::vector<std::vector<const liminal::texture *>> textures;
     for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
     {
-        std::vector<liminal::texture *> textures_for_type;
+        std::vector<const liminal::texture *> textures_for_type;
         textures.push_back(textures_for_type);
     }
 

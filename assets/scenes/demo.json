@@ -97,9 +97,6 @@
                     "z": 0.05
                 }
             },
-            "physical": {
-                "mass": 1.0
-            },
             "mesh_renderer": {
                 "filename": "assets/models/boblampclean/boblampclean.md5mesh",
                 "flip_uvs": false
@@ -123,9 +120,6 @@
                     "y": 1,
                     "z": 1
                 }
-            },
-            "physical": {
-                "mass": 1.0
             },
             "mesh_renderer": {
                 "filename": "assets/models/dude/model.dae",

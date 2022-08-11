@@ -19,7 +19,7 @@ namespace liminal
         friend class entity;
 
     public:
-        liminal::skybox *skybox = nullptr;
+        const liminal::skybox *skybox = nullptr;
 
         scene();
         scene(const liminal::scene &other);

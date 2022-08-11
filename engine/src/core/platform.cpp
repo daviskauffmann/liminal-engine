@@ -8,8 +8,8 @@
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl.h>
-#include <iostream>
 #include <sol/sol.hpp>
+#include <spdlog/spdlog.h>
 
 liminal::platform *liminal::platform::instance = nullptr;
 
@@ -20,21 +20,21 @@ liminal::platform::platform(const char *const window_title, const int window_wid
     // init SDL
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
     {
-        std::cerr << "Error: Failed to initialize SDL: " << SDL_GetError() << std::endl;
+        spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
         return;
     }
 
     const int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
     if (IMG_Init(img_flags) != img_flags)
     {
-        std::cerr << "Error: Failed to initialize SDL_image: " << IMG_GetError() << std::endl;
+        spdlog::error("Failed to initialize SDL_image: {}", IMG_GetError());
         return;
     }
 
     const int mix_flags = 0;
     if (Mix_Init(mix_flags) != mix_flags)
     {
-        std::cerr << "Error: Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
+        spdlog::error("Failed to initialize SDL_mixer: {}", Mix_GetError());
         return;
     }
 
@@ -48,7 +48,7 @@ liminal::platform::platform(const char *const window_title, const int window_wid
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window)
     {
-        std::cerr << "Error: Failed to create window: " << SDL_GetError() << std::endl;
+        spdlog::error("Failed to create window: {}", SDL_GetError());
         return;
     }
 
@@ -60,7 +60,7 @@ liminal::platform::platform(const char *const window_title, const int window_wid
     context = SDL_GL_CreateContext(window);
     if (!context)
     {
-        std::cerr << "Error: Failed to create OpenGL context: " << SDL_GetError() << std::endl;
+        spdlog::error("Failed to create OpenGL context: {}", SDL_GetError());
         return;
     }
     SDL_GL_MakeCurrent(window, context);
@@ -69,7 +69,7 @@ liminal::platform::platform(const char *const window_title, const int window_wid
     const auto error = glewInit();
     if (error != GLEW_OK)
     {
-        std::cerr << "Error: Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
+        spdlog::error("Failed to initialize GLEW: {}", reinterpret_cast<const void *>(glewGetErrorString(error)));
         return;
     }
 
@@ -77,26 +77,26 @@ liminal::platform::platform(const char *const window_title, const int window_wid
     al_device = alcOpenDevice(nullptr);
     if (!al_device)
     {
-        std::cerr << "Error: Failed to open device" << std::endl;
+        spdlog::error("Failed to open OpenAL device");
         return;
     }
 
     al_context = alcCreateContext(al_device, nullptr);
     if (!al_context)
     {
-        std::cerr << "Error: Failed to create context" << std::endl;
+        spdlog::error("Failed to create OpenAL context");
         return;
     }
 
     if (!alcMakeContextCurrent(al_context))
     {
-        std::cerr << "Error: Failed to make context current" << std::endl;
+        spdlog::error("Failed to make OpenAL context current");
         return;
     }
 
     if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) != 0)
     {
-        std::cerr << "Error: Failed to initialize the mixer API: " << Mix_GetError() << std::endl;
+        spdlog::error("Failed to initialize the mixer API: {}", Mix_GetError());
         return;
     }
 

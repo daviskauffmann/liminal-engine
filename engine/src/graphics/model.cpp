@@ -5,8 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <iostream>
 #include <liminal/core/assets.hpp>
+#include <spdlog/spdlog.h>
 
 static inline glm::vec3 vec3_cast(const aiVector3D &v) { return {v.x, v.y, v.z}; }
 static inline glm::vec2 vec2_cast(const aiVector3D &v) { return {v.x, v.y}; }
@@ -30,7 +30,7 @@ liminal::model::model(const char *const filename, const bool flip_uvs)
     scene = importer.ReadFile(filename, flags);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cerr << "Error: Failed to load model: " << importer.GetErrorString() << std::endl;
+        spdlog::error("Failed to load model: {}", importer.GetErrorString());
         return;
     }
 
@@ -38,7 +38,7 @@ liminal::model::model(const char *const filename, const bool flip_uvs)
 
     process_node_meshes(scene->mRootNode);
 
-    update_bone_transformations(0, 0);
+    calc_bone_transformations(0, 0);
 }
 
 liminal::model::~model()
@@ -59,29 +59,22 @@ unsigned int liminal::model::num_animations() const
     return scene ? scene->mNumAnimations : 0;
 }
 
-void liminal::model::set_animation(const unsigned int)
+std::vector<glm::mat4> liminal::model::calc_bone_transformations(const unsigned int animation_index, const unsigned int current_time) const
 {
-    // TODO: set stored animation index and remove `animation_index` from other function calls
-}
-
-void liminal::model::update_bone_transformations(const unsigned int animation_index, const unsigned int current_time)
-{
-    bone_transformations.clear();
+    std::vector<glm::mat4> bone_transformations;
 
     if (scene && scene->mNumAnimations > 0 && animation_index >= 0 && animation_index < scene->mNumAnimations)
     {
+        bone_transformations.resize(num_bones);
+
         const auto ticks_per_second = scene->mAnimations[animation_index]->mTicksPerSecond != 0 ? static_cast<float>(scene->mAnimations[animation_index]->mTicksPerSecond) : 25.0f;
         const auto time_in_ticks = ticks_per_second * (current_time / 1000.0f);
         const auto animation_time = static_cast<float>(fmod(time_in_ticks, scene->mAnimations[animation_index]->mDuration));
 
-        process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>());
-
-        bone_transformations.resize(num_bones);
-        for (std::size_t bone_index = 0; bone_index < num_bones; bone_index++)
-        {
-            bone_transformations.at(bone_index) = bones.at(bone_index).transformation;
-        }
+        process_node_animations(animation_index, animation_time, scene->mRootNode, glm::identity<glm::mat4>(), bone_transformations);
     }
+
+    return bone_transformations;
 }
 
 void liminal::model::draw_meshes(const liminal::program &program) const
@@ -111,7 +104,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
 {
     std::vector<liminal::vertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<std::vector<liminal::texture *>> textures;
+    std::vector<std::vector<const liminal::texture *>> textures;
 
     // process vertices
     for (std::size_t vertex_index = 0; vertex_index < scene_mesh->mNumVertices; vertex_index++)
@@ -158,10 +151,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
             if (bone_ids.find(bone_name) == bone_ids.end())
             {
                 bone_ids.insert({bone_name, num_bones++});
-
-                liminal::bone bone;
-                bone.offset = mat4_cast(scene_mesh->mBones[bone_index]->mOffsetMatrix);
-                bones.push_back(bone);
+                bone_offsets.push_back(mat4_cast(scene_mesh->mBones[bone_index]->mOffsetMatrix));
             }
 
             for (std::size_t weight_index = 0; weight_index < scene_mesh->mBones[bone_index]->mNumWeights; weight_index++)
@@ -192,7 +182,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
         auto scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
         for (auto type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
         {
-            std::vector<liminal::texture *> material_textures;
+            std::vector<const liminal::texture *> material_textures;
 
             for (unsigned int texture_index = 0; texture_index < scene_material->GetTextureCount(type); texture_index++)
             {
@@ -215,7 +205,7 @@ liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
     return new liminal::mesh(vertices, indices, textures);
 }
 
-void liminal::model::process_node_animations(const unsigned int animation_index, const float animation_time, const aiNode *const node, const glm::mat4 &parent_transformation)
+void liminal::model::process_node_animations(const unsigned int animation_index, const float animation_time, const aiNode *const node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const
 {
     const std::string node_name(node->mName.data);
     auto node_transformation = mat4_cast(node->mTransformation);
@@ -247,12 +237,12 @@ void liminal::model::process_node_animations(const unsigned int animation_index,
     if (bone_ids.find(node_name) != bone_ids.end())
     {
         const auto bone_id = bone_ids.at(node_name);
-        bones.at(bone_id).transformation = global_inverse_transform * global_transformation * bones.at(bone_id).offset;
+        bone_transformations.at(bone_id) = global_inverse_transform * global_transformation * bone_offsets.at(bone_id);
     }
 
     for (std::size_t child_index = 0; child_index < node->mNumChildren; child_index++)
     {
-        process_node_animations(animation_index, animation_time, node->mChildren[child_index], global_transformation);
+        process_node_animations(animation_index, animation_time, node->mChildren[child_index], global_transformation, bone_transformations);
     }
 }
 
@@ -301,7 +291,7 @@ unsigned int liminal::model::find_position_index(const float animation_time, con
         }
     }
 
-    std::cerr << "Error: Unable to find position index" << std::endl;
+    spdlog::error("Unable to find position index");
 
     return 0;
 }
@@ -338,7 +328,7 @@ unsigned int liminal::model::find_rotation_index(const float animation_time, con
         }
     }
 
-    std::cerr << "Error: Unable to find rotation index" << std::endl;
+    spdlog::error("Unable to find rotation index");
 
     return 0;
 }
@@ -373,7 +363,7 @@ unsigned int liminal::model::find_scale_index(const float animation_time, const 
         }
     }
 
-    std::cerr << "Error: Unable to find scale index" << std::endl;
+    spdlog::error("Unable to find scale index");
 
     return 0;
 }

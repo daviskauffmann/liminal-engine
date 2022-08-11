@@ -3,7 +3,6 @@
 #include <entt/entt.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
-#include <iostream>
 #include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/spot_light.hpp>
@@ -13,6 +12,7 @@
 #include <liminal/core/entity.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <limits>
+#include <spdlog/spdlog.h>
 
 // TODO: create a proper rendering API rather than reading from the entt registry directly
 
@@ -259,7 +259,7 @@ liminal::renderer::renderer(
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cerr << "Error: Failed to create brdf capture framebuffer" << std::endl;
+                spdlog::error("Failed to create brdf capture framebuffer");
                 return;
             }
         }
@@ -511,7 +511,7 @@ liminal::renderer::renderer(
             }
         }
 
-        std::vector<std::vector<liminal::texture *>> textures;
+        std::vector<std::vector<const liminal::texture *>> textures;
 
         DEBUG_sphere_mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
     }
@@ -822,7 +822,7 @@ void liminal::renderer::calc_render_size()
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "Error: Failed to create geometry framebuffer" << std::endl;
+            spdlog::error("Failed to create geometry framebuffer");
             return;
         }
     }
@@ -892,7 +892,7 @@ void liminal::renderer::calc_render_size()
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "Error: Failed to create hdr framebuffer" << std::endl;
+            spdlog::error("Failed to create hdr framebuffer");
             return;
         }
     }
@@ -935,7 +935,7 @@ void liminal::renderer::calc_render_size()
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cerr << "Error: Failed to create bloom framebuffer" << std::endl;
+                spdlog::error("Failed to create bloom framebuffer");
                 return;
             }
         }
@@ -981,7 +981,7 @@ void liminal::renderer::calc_render_size()
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "Error: Failed to create final framebuffer" << std::endl;
+            spdlog::error("Failed to create final framebuffer");
             return;
         }
     }
@@ -1042,7 +1042,7 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cerr << "Error: Failed to create directional light depth map framebuffer" << std::endl;
+                spdlog::error("Failed to create directional light depth map framebuffer");
                 return;
             }
         }
@@ -1100,7 +1100,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cerr << "Error: Failed to create point light depth cubemap framebuffer" << std::endl;
+                spdlog::error("Failed to create point light depth cubemap framebuffer");
                 return;
             }
         }
@@ -1158,7 +1158,7 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                std::cerr << "Error: Failed to create spot light depth map framebuffer" << std::endl;
+                spdlog::error("Failed to create spot light depth map framebuffer");
                 return;
             }
         }
@@ -1228,7 +1228,7 @@ void liminal::renderer::set_reflection_size(const GLsizei wdith, const GLsizei h
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "Error: Failed to create water reflection framebuffer" << std::endl;
+            spdlog::error("Failed to create water reflection framebuffer");
             return;
         }
     }
@@ -1308,7 +1308,7 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "Error: Failed to create water refraction framebuffer" << std::endl;
+            spdlog::error("Failed to create water refraction framebuffer");
             return;
         }
     }
@@ -1471,7 +1471,7 @@ void liminal::renderer::render_shadows(
                             depth_skinned_mesh_program->bind();
                             {
                                 depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
-                                depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
+                                depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
 
                                 _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                             }
@@ -1551,7 +1551,7 @@ void liminal::renderer::render_shadows(
                         depth_cube_skinned_mesh_program->bind();
                         {
                             depth_cube_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
-                            depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
+                            depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
                             depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[0]", point_light.view_projection_matrices.at(0));
                             depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[1]", point_light.view_projection_matrices.at(1));
                             depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[2]", point_light.view_projection_matrices.at(2));
@@ -1656,7 +1656,7 @@ void liminal::renderer::render_shadows(
                         depth_skinned_mesh_program->bind();
                         {
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", spot_light.view_projection_matrix * model_matrix);
-                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.model->bone_transformations);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
 
                             _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
@@ -1731,7 +1731,7 @@ void liminal::renderer::render_objects(
                     geometry_skinned_mesh_program->bind();
                     {
                         geometry_skinned_mesh_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
-                        geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.model->bone_transformations);
+                        geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.bone_transformations);
                         geometry_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_skinned_mesh_program->set_vec3("material.color", mesh_renderer.color);

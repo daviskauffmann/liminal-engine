@@ -12,65 +12,42 @@ liminal::assets::assets()
     instance = this;
 }
 
-liminal::assets::~assets()
-{
-    for (const auto [filename, sound] : sounds)
-    {
-        delete sound;
-    }
-
-    for (const auto [filename, model] : models)
-    {
-        delete model;
-    }
-
-    for (const auto [filename, skybox] : skyboxes)
-    {
-        delete skybox;
-    }
-
-    for (const auto [filename, texture] : textures)
-    {
-        delete texture;
-    }
-}
-
-liminal::sound *liminal::assets::load_sound(const std::string &filename)
+const liminal::sound *liminal::assets::load_sound(const std::string &filename)
 {
     if (sounds.find(filename) == sounds.end())
     {
-        sounds.insert({filename, new liminal::sound(filename.c_str())});
+        sounds.insert({filename, std::make_unique<liminal::sound>(filename.c_str())});
     }
 
-    return sounds.at(filename);
+    return sounds.at(filename).get();
 }
 
-liminal::model *liminal::assets::load_model(const std::string &filename, const bool flip_uvs)
+const liminal::model *liminal::assets::load_model(const std::string &filename, const bool flip_uvs)
 {
     if (models.find(filename) == models.end())
     {
-        models.insert({filename, new liminal::model(filename.c_str(), flip_uvs)});
+        models.insert({filename, std::make_unique<liminal::model>(filename.c_str(), flip_uvs)});
     }
 
-    return models.at(filename);
+    return models.at(filename).get();
 }
 
-liminal::skybox *liminal::assets::load_skybox(const std::string &filename)
+const liminal::skybox *liminal::assets::load_skybox(const std::string &filename)
 {
     if (skyboxes.find(filename) == skyboxes.end())
     {
-        skyboxes.insert({filename, new liminal::skybox(filename.c_str())});
+        skyboxes.insert({filename, std::make_unique<liminal::skybox>(filename.c_str())});
     }
 
-    return skyboxes.at(filename);
+    return skyboxes.at(filename).get();
 }
 
-liminal::texture *liminal::assets::load_texture(const std::string &filename)
+const liminal::texture *liminal::assets::load_texture(const std::string &filename)
 {
     if (textures.find(filename) == textures.end())
     {
-        textures.insert({filename, new liminal::texture(filename.c_str())});
+        textures.insert({filename, std::make_unique<liminal::texture>(filename.c_str())});
     }
 
-    return textures.at(filename);
+    return textures.at(filename).get();
 }

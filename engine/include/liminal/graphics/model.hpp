@@ -13,26 +13,16 @@
 
 namespace liminal
 {
-    class bone
-    {
-    public:
-        glm::mat4 offset;
-        glm::mat4 transformation;
-    };
-
     class model
     {
     public:
-        std::vector<glm::mat4> bone_transformations;
-
         model(liminal::mesh *mesh);
         model(const char *filename, bool flip_uvs = false);
         ~model();
 
         bool has_animations() const;
         unsigned int num_animations() const;
-        void set_animation(unsigned int index);
-        void update_bone_transformations(unsigned int animation_index, unsigned int current_time);
+        std::vector<glm::mat4> calc_bone_transformations(unsigned int animation_index, unsigned int current_time) const;
 
         void draw_meshes(const liminal::program &program) const;
 
@@ -45,13 +35,13 @@ namespace liminal
 
         glm::mat4 global_inverse_transform = {};
         unsigned int num_bones = 0;
-        std::vector<bone> bones;
         std::unordered_map<std::string, unsigned int> bone_ids;
+        std::vector<glm::mat4> bone_offsets;
 
         void process_node_meshes(const aiNode *node);
         liminal::mesh *create_mesh(const aiMesh *mesh);
 
-        void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation);
+        void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const;
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string &node_name) const;
         aiVector3D calc_interpolated_position(float animation_time, const aiNodeAnim *node_animation) const;
         unsigned int find_position_index(float animation_time, const aiNodeAnim *node_animation) const;

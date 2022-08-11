@@ -2,7 +2,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
-#include <iostream>
 #include <liminal/liminal.hpp>
 #include <liminal/main.hpp>
 #include <nfd.h>
@@ -164,13 +163,24 @@ namespace editor
 
                 if (ImGui::Begin("Scene", nullptr))
                 {
-                    auto &camera = *liminal::renderer::instance->default_camera;
-                    auto &camera_transform = *liminal::renderer::instance->default_camera_transform;
+                    liminal::camera *camera;
+                    liminal::transform *camera_transform;
+
+                    if (player)
+                    {
+                        camera = &player.get_component<liminal::camera>();
+                        camera_transform = &player.get_component<liminal::transform>();
+                    }
+                    else
+                    {
+                        camera = liminal::renderer::instance->default_camera;
+                        camera_transform = liminal::renderer::instance->default_camera_transform;
+                    }
 
                     if (ImGui::IsWindowHovered() && !ImGuizmo::IsOver())
                     {
-                        const auto camera_front = camera.calc_front(camera_transform);
-                        const auto camera_right = camera.calc_right(camera_transform);
+                        const auto camera_front = camera->calc_front(*camera_transform);
+                        const auto camera_right = camera->calc_right(*camera_transform);
 
                         if (liminal::input::mouse_button_down(liminal::mouse_button::LEFT))
                         {
@@ -186,25 +196,25 @@ namespace editor
                         const auto sensitivity = 0.1f;
                         if (liminal::input::mouse_button(liminal::mouse_button::RIGHT))
                         {
-                            camera_transform.rotation.y -= liminal::input::mouse_dx * sensitivity;
-                            camera_transform.rotation.x += liminal::input::mouse_dy * sensitivity;
-                            if (camera_transform.rotation.x > 89)
+                            camera_transform->rotation.y -= liminal::input::mouse_dx * sensitivity;
+                            camera_transform->rotation.x += liminal::input::mouse_dy * sensitivity;
+                            if (camera_transform->rotation.x > 89)
                             {
-                                camera_transform.rotation.x = 89;
+                                camera_transform->rotation.x = 89;
                             }
-                            if (camera_transform.rotation.x < -89)
+                            if (camera_transform->rotation.x < -89)
                             {
-                                camera_transform.rotation.x = -89;
+                                camera_transform->rotation.x = -89;
                             }
                         }
 
                         if (liminal::input::mouse_button(liminal::mouse_button::MIDDLE))
                         {
-                            camera_transform.position -= camera_right * (liminal::input::mouse_dx * sensitivity);
-                            camera_transform.position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
+                            camera_transform->position -= camera_right * (liminal::input::mouse_dx * sensitivity);
+                            camera_transform->position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
                         }
 
-                        camera_transform.position += camera_front * static_cast<float>(liminal::input::mouse_wheel_y);
+                        camera_transform->position += camera_front * static_cast<float>(liminal::input::mouse_wheel_y);
                     }
 
                     scene_region_size = ImGui::GetContentRegionAvail();
@@ -214,7 +224,7 @@ namespace editor
                         prev_scene_region_size = scene_region_size;
                     }
 
-                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(camera.render_texture_id)), scene_region_size, {0, 1}, {1, 0});
+                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(camera->render_texture_id)), scene_region_size, {0, 1}, {1, 0});
 
                     const auto min_region = ImGui::GetWindowContentRegionMin();
                     const auto max_region = ImGui::GetWindowContentRegionMax();
@@ -228,8 +238,8 @@ namespace editor
                         ImGuizmo::SetDrawlist();
                         ImGuizmo::SetRect(window_pos.x, window_pos.y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
-                        const auto camera_projection = camera.calc_projection(liminal::renderer::instance->get_aspect_ratio());
-                        const auto camera_view = camera.calc_view(camera_transform);
+                        const auto camera_projection = camera->calc_projection(liminal::renderer::instance->get_aspect_ratio());
+                        const auto camera_view = camera->calc_view(*camera_transform);
 
                         auto &transform = selected_entity.get_component<liminal::transform>();
                         auto matrix = transform.get_model_matrix();
@@ -526,6 +536,9 @@ namespace editor
 
         std::filesystem::path current_asset_directory = "assets";
 
+        // TODO: remove!!!
+        liminal::entity player;
+
         void new_scene()
         {
             if (scene)
@@ -536,6 +549,7 @@ namespace editor
 
             liminal::renderer::instance->default_camera = new liminal::camera(45.f, true);
             liminal::renderer::instance->default_camera_transform = new liminal::transform();
+            player = {};
 
             selected_entity = {};
         }
@@ -557,11 +571,13 @@ namespace editor
             scene->start();
 
             delete liminal::renderer::instance->default_camera;
+            liminal::renderer::instance->default_camera = nullptr;
             delete liminal::renderer::instance->default_camera_transform;
+            liminal::renderer::instance->default_camera_transform = nullptr;
 
             // TODO: remove this, should just come from what is placed in the scene
             // the only caveat is that the camera.render_to_texture needs to be overridden to true when running in the editor, so that the scene can render to the ImGui window
-            auto player = scene->create_entity();
+            player = scene->create_entity();
             player.add_component<liminal::transform>("Player");
             player.add_component<liminal::camera>(45.0f, true);
             player.add_component<liminal::audio_listener>();
