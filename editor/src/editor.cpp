@@ -68,11 +68,11 @@ namespace editor
             {
                 if (liminal::input::key(liminal::keycode::LSHIFT))
                 {
-                    stop();
+                    stop_scene();
                 }
                 else
                 {
-                    play();
+                    play_scene();
                 }
             }
 
@@ -147,12 +147,12 @@ namespace editor
                     {
                         if (ImGui::MenuItem("Play", "F5"))
                         {
-                            play();
+                            play_scene();
                         }
 
                         if (ImGui::MenuItem("Stop", "Shift+F5"))
                         {
-                            stop();
+                            stop_scene();
                         }
 
                         ImGui::EndMenu();
@@ -565,7 +565,7 @@ namespace editor
             scene->save("assets/scenes/demo.json");
         }
 
-        void play()
+        void play_scene()
         {
             playing = true;
             scene->start();
@@ -583,7 +583,7 @@ namespace editor
             player.add_component<liminal::audio_listener>();
         }
 
-        void stop()
+        void stop_scene()
         {
             playing = false;
             scene->stop();
