@@ -39,7 +39,6 @@ namespace liminal
         std::vector<glm::mat4> bone_offsets;
 
         void process_node_meshes(const aiNode *node);
-        liminal::mesh *create_mesh(const aiMesh *mesh);
 
         void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const;
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string &node_name) const;

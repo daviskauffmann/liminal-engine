@@ -511,7 +511,7 @@ liminal::renderer::renderer(
             }
         }
 
-        std::vector<std::vector<const liminal::texture *>> textures;
+        std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
 
         DEBUG_sphere_mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
     }

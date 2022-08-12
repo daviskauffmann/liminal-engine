@@ -8,6 +8,7 @@
 #include <liminal/graphics/texture.hpp>
 #include <liminal/graphics/vertex.hpp>
 #include <vector>
+#include <memory>
 
 namespace liminal
 {
@@ -19,12 +20,12 @@ namespace liminal
         GLuint vao_id;
         GLuint vbo_id;
         GLuint ebo_id;
-        std::vector<std::vector<const liminal::texture *>> textures;
+        std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
 
         mesh(
             const std::vector<liminal::vertex> &vertices,
             const std::vector<unsigned int> &indices,
-            const std::vector<std::vector<const liminal::texture *>> &textures);
+            const std::vector<std::vector<std::shared_ptr<liminal::texture>>> &textures);
         ~mesh();
 
         void draw(const liminal::program &program) const;

@@ -2,7 +2,7 @@
 
 #include <liminal/graphics/model.hpp>
 
-liminal::mesh_renderer::mesh_renderer(const liminal::model *const model, const glm::vec3 &color)
+liminal::mesh_renderer::mesh_renderer(const std::shared_ptr<liminal::model> model, const glm::vec3 &color)
     : model(model),
       color(color)
 {

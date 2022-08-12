@@ -37,8 +37,6 @@ liminal::model::model(const char *const filename, const bool flip_uvs)
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
 
     process_node_meshes(scene->mRootNode);
-
-    calc_bone_transformations(0, 0);
 }
 
 liminal::model::~model()
@@ -89,120 +87,115 @@ void liminal::model::process_node_meshes(const aiNode *const node)
 {
     for (std::size_t mesh_index = 0; mesh_index < node->mNumMeshes; mesh_index++)
     {
-        const auto scene_mesh = scene->mMeshes[node->mMeshes[mesh_index]];
-        const auto mesh = create_mesh(scene_mesh);
-        meshes.push_back(mesh);
+        const auto mesh = scene->mMeshes[node->mMeshes[mesh_index]];
+
+        std::vector<liminal::vertex> vertices;
+        std::vector<unsigned int> indices;
+        std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
+
+        // process vertices
+        for (std::size_t vertex_index = 0; vertex_index < mesh->mNumVertices; vertex_index++)
+        {
+            liminal::vertex vertex;
+
+            if (mesh->HasPositions())
+            {
+                vertex.position = vec3_cast(mesh->mVertices[vertex_index]);
+            }
+
+            if (mesh->HasNormals())
+            {
+                vertex.normal = vec3_cast(mesh->mNormals[vertex_index]);
+            }
+
+            if (mesh->HasTextureCoords(0))
+            {
+                vertex.uv = vec2_cast(mesh->mTextureCoords[0][vertex_index]);
+            }
+
+            if (mesh->HasTangentsAndBitangents())
+            {
+                vertex.tangent = vec3_cast(mesh->mTangents[vertex_index]);
+                vertex.bitangent = vec3_cast(mesh->mBitangents[vertex_index]);
+            }
+
+            for (std::size_t bone_index = 0; bone_index < liminal::vertex::num_bones; bone_index++)
+            {
+                vertex.bone_ids.at(bone_index) = liminal::vertex::num_bones;
+                vertex.bone_weights.at(bone_index) = 0;
+            }
+
+            vertices.push_back(vertex);
+        }
+
+        // process bones
+        if (mesh->HasBones())
+        {
+            for (std::size_t bone_index = 0; bone_index < mesh->mNumBones; bone_index++)
+            {
+                const std::string bone_name(mesh->mBones[bone_index]->mName.data);
+
+                if (bone_ids.find(bone_name) == bone_ids.end())
+                {
+                    bone_ids.insert({bone_name, num_bones++});
+                    bone_offsets.push_back(mat4_cast(mesh->mBones[bone_index]->mOffsetMatrix));
+                }
+
+                for (std::size_t weight_index = 0; weight_index < mesh->mBones[bone_index]->mNumWeights; weight_index++)
+                {
+                    const auto vertex_id = mesh->mBones[bone_index]->mWeights[weight_index].mVertexId;
+                    const auto weight = mesh->mBones[bone_index]->mWeights[weight_index].mWeight;
+                    vertices.at(vertex_id).add_bone_data(bone_ids.at(bone_name), weight);
+                }
+            }
+        }
+
+        // process indices
+        if (mesh->HasFaces())
+        {
+            for (std::size_t face_index = 0; face_index < mesh->mNumFaces; face_index++)
+            {
+                const auto face = mesh->mFaces[face_index];
+                for (std::size_t index_index = 0; index_index < face.mNumIndices; index_index++)
+                {
+                    indices.push_back(face.mIndices[index_index]);
+                }
+            }
+        }
+
+        // process textures
+        if (scene->HasMaterials())
+        {
+            auto scene_material = scene->mMaterials[mesh->mMaterialIndex];
+            for (auto type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
+            {
+                std::vector<std::shared_ptr<liminal::texture>> material_textures;
+
+                for (unsigned int texture_index = 0; texture_index < scene_material->GetTextureCount(type); texture_index++)
+                {
+                    aiString path;
+                    scene_material->GetTexture(type, texture_index, &path);
+                    const auto filename = directory + "/" + path.C_Str();
+                    material_textures.push_back(liminal::assets::instance->load_texture(filename));
+                }
+
+                textures.push_back(material_textures);
+            }
+        }
+
+        // process animations
+        if (scene->HasAnimations())
+        {
+            // TODO: store animations in a map to prevent calls to `find_node_animation` every frame
+        }
+
+        meshes.push_back(new liminal::mesh(vertices, indices, textures));
     }
 
     for (std::size_t child_index = 0; child_index < node->mNumChildren; child_index++)
     {
         process_node_meshes(node->mChildren[child_index]);
     }
-}
-
-liminal::mesh *liminal::model::create_mesh(const aiMesh *const scene_mesh)
-{
-    std::vector<liminal::vertex> vertices;
-    std::vector<unsigned int> indices;
-    std::vector<std::vector<const liminal::texture *>> textures;
-
-    // process vertices
-    for (std::size_t vertex_index = 0; vertex_index < scene_mesh->mNumVertices; vertex_index++)
-    {
-        liminal::vertex vertex;
-
-        if (scene_mesh->HasPositions())
-        {
-            vertex.position = vec3_cast(scene_mesh->mVertices[vertex_index]);
-        }
-
-        if (scene_mesh->HasNormals())
-        {
-            vertex.normal = vec3_cast(scene_mesh->mNormals[vertex_index]);
-        }
-
-        if (scene_mesh->HasTextureCoords(0))
-        {
-            vertex.uv = vec2_cast(scene_mesh->mTextureCoords[0][vertex_index]);
-        }
-
-        if (scene_mesh->HasTangentsAndBitangents())
-        {
-            vertex.tangent = vec3_cast(scene_mesh->mTangents[vertex_index]);
-            vertex.bitangent = vec3_cast(scene_mesh->mBitangents[vertex_index]);
-        }
-
-        for (std::size_t bone_index = 0; bone_index < liminal::vertex::num_bones; bone_index++)
-        {
-            vertex.bone_ids.at(bone_index) = liminal::vertex::num_bones;
-            vertex.bone_weights.at(bone_index) = 0;
-        }
-
-        vertices.push_back(vertex);
-    }
-
-    // process bones
-    if (scene_mesh->HasBones())
-    {
-        for (std::size_t bone_index = 0; bone_index < scene_mesh->mNumBones; bone_index++)
-        {
-            const std::string bone_name(scene_mesh->mBones[bone_index]->mName.data);
-
-            if (bone_ids.find(bone_name) == bone_ids.end())
-            {
-                bone_ids.insert({bone_name, num_bones++});
-                bone_offsets.push_back(mat4_cast(scene_mesh->mBones[bone_index]->mOffsetMatrix));
-            }
-
-            for (std::size_t weight_index = 0; weight_index < scene_mesh->mBones[bone_index]->mNumWeights; weight_index++)
-            {
-                const auto vertex_id = scene_mesh->mBones[bone_index]->mWeights[weight_index].mVertexId;
-                const auto weight = scene_mesh->mBones[bone_index]->mWeights[weight_index].mWeight;
-                vertices.at(vertex_id).add_bone_data(bone_ids.at(bone_name), weight);
-            }
-        }
-    }
-
-    // process indices
-    if (scene_mesh->HasFaces())
-    {
-        for (std::size_t face_index = 0; face_index < scene_mesh->mNumFaces; face_index++)
-        {
-            const auto face = scene_mesh->mFaces[face_index];
-            for (std::size_t index_index = 0; index_index < face.mNumIndices; index_index++)
-            {
-                indices.push_back(face.mIndices[index_index]);
-            }
-        }
-    }
-
-    // process textures
-    if (scene->HasMaterials())
-    {
-        auto scene_material = scene->mMaterials[scene_mesh->mMaterialIndex];
-        for (auto type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
-        {
-            std::vector<const liminal::texture *> material_textures;
-
-            for (unsigned int texture_index = 0; texture_index < scene_material->GetTextureCount(type); texture_index++)
-            {
-                aiString path;
-                scene_material->GetTexture(type, texture_index, &path);
-                const auto filename = directory + "/" + path.C_Str();
-                material_textures.push_back(liminal::assets::instance->load_texture(filename));
-            }
-
-            textures.push_back(material_textures);
-        }
-    }
-
-    // process animations
-    if (scene->HasAnimations())
-    {
-        // TODO: store animations in a map to prevent calls to `find_node_animation` every frame
-    }
-
-    return new liminal::mesh(vertices, indices, textures);
 }
 
 void liminal::model::process_node_animations(const unsigned int animation_index, const float animation_time, const aiNode *const node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const

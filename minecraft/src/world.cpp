@@ -9,7 +9,7 @@
 
 minecraft::world::world(liminal::scene *const scene)
     : scene(scene),
-      tiles_texture(std::make_unique<liminal::texture>("assets/images/tiles.png", false, false))
+      tiles_texture(std::make_shared<liminal::texture>("assets/images/tiles.png", false, false))
 {
     for (int x = -4; x < 4; x++)
     {
@@ -34,8 +34,7 @@ void minecraft::world::update() const
         if (chunk.update)
         {
             auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
-            delete mesh_renderer.model;
-            mesh_renderer.model = new liminal::model(chunk.create_mesh(tiles_texture.get()));
+            mesh_renderer.model = std::make_shared<liminal::model>(chunk.create_mesh(tiles_texture));
 
             chunk.update = false;
         }

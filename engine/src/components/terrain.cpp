@@ -71,10 +71,10 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
 
     SDL_FreeSurface(surface);
 
-    std::vector<std::vector<const liminal::texture *>> textures;
+    std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
     for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
     {
-        std::vector<const liminal::texture *> textures_for_type;
+        std::vector<std::shared_ptr<liminal::texture>> textures_for_type;
         textures.push_back(textures_for_type);
     }
 

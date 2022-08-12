@@ -23,7 +23,7 @@ namespace minecraft
 
             scene = std::make_unique<liminal::scene>();
             scene->start();
-            scene->skybox = new liminal::skybox("assets/images/white.png");
+            scene->skybox = std::make_shared<liminal::skybox>("assets/images/white.png");
 
             player_entity = scene->create_entity();
             player_entity.add_component<liminal::transform>("Player");

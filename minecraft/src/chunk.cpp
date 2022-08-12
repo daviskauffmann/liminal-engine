@@ -57,7 +57,7 @@ void minecraft::chunk::set_block(const int x, const int y, const int z, minecraf
     }
 }
 
-liminal::mesh *minecraft::chunk::create_mesh(liminal::texture *const tiles_texture) const
+liminal::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::texture> tiles_texture) const
 {
     minecraft::mesh_data mesh_data;
 
@@ -72,10 +72,10 @@ liminal::mesh *minecraft::chunk::create_mesh(liminal::texture *const tiles_textu
         }
     }
 
-    std::vector<std::vector<const liminal::texture *>> textures;
+    std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
     for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
     {
-        std::vector<const liminal::texture *> textures_for_type;
+        std::vector<std::shared_ptr<liminal::texture>> textures_for_type;
         textures.push_back(textures_for_type);
     }
     textures.at(aiTextureType_DIFFUSE).push_back(tiles_texture);

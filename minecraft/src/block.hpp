@@ -26,7 +26,7 @@ namespace minecraft
         static constexpr uint8_t min_light_level = 1;
         static constexpr uint8_t max_light_level = 16;
 
-        std::uint8_t light_level = min_light_level;
+        std::uint8_t light_level = max_light_level;
 
         virtual bool is_solid(minecraft::direction direction) const;
         virtual void add_to_mesh(const minecraft::chunk *chunk, int x, int y, int z, minecraft::mesh_data *mesh_data) const;

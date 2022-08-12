@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <liminal/liminal.hpp>
+#include <memory>
 
 namespace minecraft
 {
@@ -25,7 +26,7 @@ namespace minecraft
         minecraft::block *get_block(int x, int y, int z) const;
         void set_block(int x, int y, int z, minecraft::block *block);
 
-        liminal::mesh *create_mesh(liminal::texture *tiles_texture) const;
+        liminal::mesh *create_mesh(std::shared_ptr<liminal::texture> tiles_texture) const;
 
     private:
         inline bool in_range(int x, int y, int z) const;

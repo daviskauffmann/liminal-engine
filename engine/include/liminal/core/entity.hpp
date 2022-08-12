@@ -10,7 +10,7 @@ namespace liminal
     {
     public:
         entity() = default;
-        entity(entt::entity id, liminal::scene *scene)
+        entity(const entt::entity id, liminal::scene *const scene)
             : id(id),
               scene(scene) {}
 

@@ -27,7 +27,7 @@ namespace minecraft
 
     private:
         liminal::scene *scene;
-        std::unique_ptr<liminal::texture> tiles_texture;
+        std::shared_ptr<liminal::texture> tiles_texture;
         std::unordered_map<glm::ivec3, liminal::entity> chunk_entities;
 
         glm::ivec3 get_chunk_position(int x, int y, int z) const;

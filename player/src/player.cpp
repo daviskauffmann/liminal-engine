@@ -205,16 +205,16 @@ namespace player
 
         liminal::entity player_entity;
 
-        const liminal::sound *ambient_sound;
+        std::shared_ptr<liminal::sound> ambient_sound;
         liminal::entity ambience_entity;
 
-        const liminal::sound *bounce_sound;
+        std::shared_ptr<liminal::sound> bounce_sound;
         liminal::entity bounce_entity;
 
-        const liminal::sound *shoot_sound;
+        std::shared_ptr<liminal::sound> shoot_sound;
         liminal::entity weapon_entity;
 
-        const liminal::texture *grass_texture;
+        std::shared_ptr<liminal::texture> grass_texture;
         liminal::entity ui_entity;
 
         bool noclip = false;
