@@ -135,7 +135,7 @@ void liminal::model::process_node_meshes(const aiNode *const node)
             {
                 const std::string bone_name(mesh->mBones[bone_index]->mName.data);
 
-                if (bone_ids.find(bone_name) == bone_ids.end())
+                if (!bone_ids.contains(bone_name))
                 {
                     bone_ids.insert({bone_name, num_bones++});
                     bone_offsets.push_back(mat4_cast(mesh->mBones[bone_index]->mOffsetMatrix));
@@ -227,7 +227,7 @@ void liminal::model::process_node_animations(const unsigned int animation_index,
 
     const auto global_transformation = parent_transformation * node_transformation;
 
-    if (bone_ids.find(node_name) != bone_ids.end())
+    if (bone_ids.contains(node_name))
     {
         const auto bone_id = bone_ids.at(node_name);
         bone_transformations.at(bone_id) = global_inverse_transform * global_transformation * bone_offsets.at(bone_id);

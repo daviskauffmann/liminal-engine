@@ -51,91 +51,89 @@ liminal::scene::~scene()
 
 void liminal::scene::load(const std::string &filename)
 {
-    std::ifstream stream(filename);
-    nlohmann::json json;
-    stream >> json;
+    const auto scene_json = nlohmann::json::parse(std::ifstream(filename));
 
-    for (const auto &[key, value] : json.items())
+    for (const auto &[key, value] : scene_json.items())
     {
         if (key == "skybox")
         {
-            skybox = liminal::assets::instance->load_skybox(json["skybox"]);
+            skybox = liminal::assets::instance->load_skybox(value);
         }
 
         if (key == "entities")
         {
-            for (const auto &element : value)
+            for (const auto &entity_json : value)
             {
                 auto entity = create_entity();
 
-                for (const auto &[component_key, component_value] : element.items())
+                for (const auto &[component_type, component_json] : entity_json.items())
                 {
-                    if (component_key == "directional_light")
+                    if (component_type == "directional_light")
                     {
                         entity.add_component<liminal::directional_light>(
                             glm::vec3(
-                                component_value["color"]["r"],
-                                component_value["color"]["g"],
-                                component_value["color"]["b"]));
+                                component_json.at("color").at("r"),
+                                component_json.at("color").at("g"),
+                                component_json.at("color").at("b")));
                     }
 
-                    if (component_key == "spot_light")
+                    if (component_type == "spot_light")
                     {
                         entity.add_component<liminal::spot_light>(
                             glm::vec3(
-                                component_value["color"]["r"],
-                                component_value["color"]["g"],
-                                component_value["color"]["b"]),
-                            component_value["inner_cutoff"],
-                            component_value["outer_cutoff"]);
+                                component_json.at("color").at("r"),
+                                component_json.at("color").at("g"),
+                                component_json.at("color").at("b")),
+                            component_json.at("inner_cutoff"),
+                            component_json.at("outer_cutoff"));
                     }
 
-                    if (component_key == "transform")
+                    if (component_type == "transform")
                     {
                         entity.add_component<liminal::transform>(
-                            component_value["name"],
+                            component_json.at("name"),
                             nullptr, // TODO: support parenting from JSON file
                             glm::vec3(
-                                component_value["position"]["x"],
-                                component_value["position"]["y"],
-                                component_value["position"]["z"]),
+                                component_json.at("position").at("x"),
+                                component_json.at("position").at("y"),
+                                component_json.at("position").at("z")),
                             glm::vec3(
-                                component_value["rotation"]["x"],
-                                component_value["rotation"]["y"],
-                                component_value["rotation"]["z"]),
+                                component_json.at("rotation").at("x"),
+                                component_json.at("rotation").at("y"),
+                                component_json.at("rotation").at("z")),
                             glm::vec3(
-                                component_value["scale"]["x"],
-                                component_value["scale"]["y"],
-                                component_value["scale"]["z"]));
+                                component_json.at("scale").at("x"),
+                                component_json.at("scale").at("y"),
+                                component_json.at("scale").at("z")));
                     }
 
-                    if (component_key == "physical")
+                    if (component_type == "physical")
                     {
-                        entity.add_component<liminal::physical>(world.get(), component_value["mass"]);
+                        entity.add_component<liminal::physical>(world.get(), component_json.at("mass"));
                     }
 
-                    if (component_key == "mesh_renderer")
+                    if (component_type == "mesh_renderer")
                     {
                         entity.add_component<liminal::mesh_renderer>(
                             liminal::assets::instance->load_model(
-                                component_value["filename"],
-                                component_value["flip_uvs"]));
+                                component_json.at("filename"),
+                                component_json.at("flip_uvs")));
                     }
 
-                    if (component_key == "script")
+                    if (component_type == "script")
                     {
                         entity.add_component<liminal::script>(
-                            component_value["filename"],
+                            component_json.at("filename"),
                             this,
                             (entt::entity)entity);
                     }
 
-                    if (component_key == "water")
+                    if (component_type == "water")
                     {
-                        entity.add_component<liminal::water>(component_value["tiling"]);
+                        entity.add_component<liminal::water>(component_json.at("tiling"));
                     }
 
-                    if (component_key == "terrain")
+                    if (component_type == "terrain")
                     {
                         entity.add_component<liminal::terrain>(
                             world.get(),

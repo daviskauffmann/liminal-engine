@@ -95,7 +95,7 @@ void liminal::program::set_mat4_vector(const char *name, const std::vector<glm::
 
 void liminal::program::set_sampler(const char *name, const GLint value) const
 {
-    if (samplers.find(name) == samplers.end())
+    if (!samplers.contains(name))
     {
         samplers.insert({name, value});
     }
@@ -229,7 +229,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
 
 GLint liminal::program::get_location(const char *name) const
 {
-    if (uniforms.find(name) == uniforms.end())
+    if (!uniforms.contains(name))
     {
         uniforms.insert({name, glGetUniformLocation(program_id, name)});
     }

@@ -181,7 +181,7 @@ glm::ivec3 minecraft::world::get_chunk_position(const int x, const int y, const 
 
 liminal::entity minecraft::world::get_chunk_entity(const glm::ivec3 &chunk_position) const
 {
-    if (chunk_entities.find(chunk_position) == chunk_entities.end())
+    if (!chunk_entities.contains(chunk_position))
     {
         return {};
     }
