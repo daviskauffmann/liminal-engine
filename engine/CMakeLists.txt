@@ -38,7 +38,6 @@ add_library(${PROJECT_NAME}
     src/core/al_device.cpp
     src/core/app.cpp
     src/core/assets.cpp
-    src/core/audio.cpp
     src/core/gl_context.cpp
     src/core/glew.cpp
     src/core/imgui_context.cpp

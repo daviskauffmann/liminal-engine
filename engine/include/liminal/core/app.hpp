@@ -4,7 +4,6 @@
 #include "al_context.hpp"
 #include "al_device.hpp"
 #include "assets.hpp"
-#include "audio.hpp"
 #include "gl_context.hpp"
 #include "glew.hpp"
 #include "imgui_context.hpp"
@@ -37,7 +36,6 @@ namespace liminal
         std::unique_ptr<liminal::sdl> sdl;
         std::unique_ptr<liminal::sdl_image> sdl_image;
         std::unique_ptr<liminal::sdl_mixer> sdl_mixer;
-        std::unique_ptr<liminal::audio> audio;
         std::unique_ptr<liminal::window> window;
         std::unique_ptr<liminal::gl_context> gl_context;
         std::unique_ptr<liminal::glew> glew;
