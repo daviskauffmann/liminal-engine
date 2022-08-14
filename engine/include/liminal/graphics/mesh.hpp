@@ -1,17 +1,18 @@
 #ifndef LIMINAL_GRAPHICS_MESH_HPP
 #define LIMINAL_GRAPHICS_MESH_HPP
 
+#include "vertex.hpp"
 #include <gl/glew.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <liminal/graphics/program.hpp>
-#include <liminal/graphics/texture.hpp>
-#include <liminal/graphics/vertex.hpp>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace liminal
 {
+    class program;
+    class texture;
+
     class mesh
     {
     public:

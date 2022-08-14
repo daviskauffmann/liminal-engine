@@ -1,20 +1,20 @@
 #ifndef LIMINAL_CORE_RENDERER_HPP
 #define LIMINAL_CORE_RENDERER_HPP
 
+#include "../components/camera.hpp"
+#include "../components/directional_light.hpp"
+#include "../components/transform.hpp"
+#include "../entities/scene.hpp"
+#include "../graphics/mesh.hpp"
+#include "../graphics/model.hpp"
+#include "../graphics/program.hpp"
+#include "../graphics/texture.hpp"
 #include <array>
 #include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <imgui.h>
-#include <liminal/components/camera.hpp>
-#include <liminal/components/directional_light.hpp>
-#include <liminal/components/transform.hpp>
-#include <liminal/core/scene.hpp>
-#include <liminal/graphics/mesh.hpp>
-#include <liminal/graphics/model.hpp>
-#include <liminal/graphics/program.hpp>
-#include <liminal/graphics/texture.hpp>
 #include <memory>
 
 namespace liminal

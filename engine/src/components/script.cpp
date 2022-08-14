@@ -5,12 +5,12 @@
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/transform.hpp>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/entity.hpp>
-#include <liminal/core/scene.hpp>
+#include <liminal/entities/entity.hpp>
+#include <liminal/entities/scene.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <liminal/input/input.hpp>
-#include <spdlog/spdlog.h>
+#include <stdexcept>
 #include <string>
 
 liminal::script::script(const std::string &filename, liminal::scene *const scene, const entt::entity id)
@@ -19,8 +19,8 @@ liminal::script::script(const std::string &filename, liminal::scene *const scene
     const auto result = lua.script_file(filename);
     if (!result.valid())
     {
-        spdlog::error("Failed to load script {}", filename);
-        return;
+        sol::error error = result;
+        throw std::runtime_error(error.what());
     }
 
     lua["GetKeyDown"] = [](liminal::keycode keycode) -> bool

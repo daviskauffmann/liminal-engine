@@ -8,7 +8,6 @@
 #include <imgui.h>
 #include <iostream>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/scene.hpp>
 #include <liminal/input/input.hpp>
 #include <spdlog/spdlog.h>
 #include <string>

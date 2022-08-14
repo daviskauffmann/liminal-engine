@@ -2,8 +2,8 @@
 
 #include <SDL2/SDL.h>
 #include <iostream>
-#include <spdlog/spdlog.h>
 #include <stb_image.h>
+#include <stdexcept>
 
 liminal::texture::texture(const char *const filename, const bool srgb, const bool filter)
 {
@@ -12,8 +12,7 @@ liminal::texture::texture(const char *const filename, const bool srgb, const boo
     const auto image = stbi_load(filename, &width, &height, &num_components, 0);
     if (!image)
     {
-        spdlog::error("Failed to load texture: {}", stbi_failure_reason());
-        return;
+        throw std::runtime_error(stbi_failure_reason());
     }
 
     GLenum internal_format;

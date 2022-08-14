@@ -1,18 +1,18 @@
 #ifndef LIMINAL_GRAPHICS_MODEL_HPP
 #define LIMINAL_GRAPHICS_MODEL_HPP
 
+#include "mesh.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <glm/matrix.hpp>
-#include <liminal/graphics/mesh.hpp>
-#include <liminal/graphics/program.hpp>
-#include <liminal/graphics/texture.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace liminal
 {
+    class program;
+
     class model
     {
     public:
@@ -22,7 +22,7 @@ namespace liminal
 
         bool has_animations() const;
         unsigned int num_animations() const;
-        std::vector<glm::mat4> calc_bone_transformations(unsigned int animation_index, unsigned int current_time) const;
+        std::vector<glm::mat4> calc_bone_transformations(unsigned int animation_index, std::uint64_t current_time) const;
 
         void draw_meshes(const liminal::program &program) const;
 

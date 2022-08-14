@@ -6,7 +6,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <liminal/core/assets.hpp>
-#include <spdlog/spdlog.h>
+#include <liminal/graphics/mesh.hpp>
+#include <liminal/graphics/program.hpp>
+#include <liminal/graphics/texture.hpp>
+#include <stdexcept>
 
 static inline glm::vec3 vec3_cast(const aiVector3D &v) { return {v.x, v.y, v.z}; }
 static inline glm::vec2 vec2_cast(const aiVector3D &v) { return {v.x, v.y}; }
@@ -30,8 +33,7 @@ liminal::model::model(const char *const filename, const bool flip_uvs)
     scene = importer.ReadFile(filename, flags);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        spdlog::error("Failed to load model: {}", importer.GetErrorString());
-        return;
+        throw std::runtime_error(importer.GetErrorString());
     }
 
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
@@ -57,7 +59,7 @@ unsigned int liminal::model::num_animations() const
     return scene ? scene->mNumAnimations : 0;
 }
 
-std::vector<glm::mat4> liminal::model::calc_bone_transformations(const unsigned int animation_index, const unsigned int current_time) const
+std::vector<glm::mat4> liminal::model::calc_bone_transformations(const unsigned int animation_index, const std::uint64_t current_time) const
 {
     std::vector<glm::mat4> bone_transformations;
 
@@ -284,9 +286,7 @@ unsigned int liminal::model::find_position_index(const float animation_time, con
         }
     }
 
-    spdlog::error("Unable to find position index");
-
-    return 0;
+    throw std::runtime_error("Could not find position index");
 }
 
 aiQuaternion liminal::model::calc_interpolated_rotation(const float animation_time, const aiNodeAnim *const node_animation) const
@@ -321,9 +321,7 @@ unsigned int liminal::model::find_rotation_index(const float animation_time, con
         }
     }
 
-    spdlog::error("Unable to find rotation index");
-
-    return 0;
+    throw std::runtime_error("Could not find rotation index");
 }
 
 aiVector3D liminal::model::calc_interpolated_scale(const float animation_time, const aiNodeAnim *const node_animation) const
@@ -356,7 +354,5 @@ unsigned int liminal::model::find_scale_index(const float animation_time, const 
         }
     }
 
-    spdlog::error("Unable to find scale index");
-
-    return 0;
+    throw std::runtime_error("Could not find scale index");
 }

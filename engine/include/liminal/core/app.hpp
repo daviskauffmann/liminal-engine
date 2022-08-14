@@ -1,17 +1,17 @@
 #ifndef LIMINAL_CORE_APP_HPP
 #define LIMINAL_CORE_APP_HPP
 
-#include <liminal/core/al_context.hpp>
-#include <liminal/core/al_device.hpp>
-#include <liminal/core/audio.hpp>
-#include <liminal/core/gl_context.hpp>
-#include <liminal/core/glew.hpp>
-#include <liminal/core/imgui_context.hpp>
-#include <liminal/core/renderer.hpp>
-#include <liminal/core/sdl.hpp>
-#include <liminal/core/sdl_image.hpp>
-#include <liminal/core/sdl_mixer.hpp>
-#include <liminal/core/window.hpp>
+#include "al_context.hpp"
+#include "al_device.hpp"
+#include "audio.hpp"
+#include "gl_context.hpp"
+#include "glew.hpp"
+#include "imgui_context.hpp"
+#include "renderer.hpp"
+#include "sdl.hpp"
+#include "sdl_image.hpp"
+#include "sdl_mixer.hpp"
+#include "window.hpp"
 #include <memory>
 
 namespace liminal

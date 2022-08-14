@@ -1,6 +1,8 @@
 #include <liminal/graphics/mesh.hpp>
 
 #include <assimp/scene.h>
+#include <liminal/graphics/program.hpp>
+#include <liminal/graphics/texture.hpp>
 
 liminal::mesh::mesh(
     const std::vector<liminal::vertex> &vertices,

@@ -1,7 +1,5 @@
 #include <liminal/components/physical.hpp>
 
-#include <bullet/btBulletDynamicsCommon.h>
-
 liminal::physical::physical(btDiscreteDynamicsWorld *const world, const float mass)
     : world(world),
       mass(mass)

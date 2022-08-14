@@ -1,5 +1,5 @@
-#ifndef LIMINAL_CORE_SCENE_HPP
-#define LIMINAL_CORE_SCENE_HPP
+#ifndef LIMINAL_ENTITIES_SCENE_HPP
+#define LIMINAL_ENTITIES_SCENE_HPP
 
 #include <entt/entt.hpp>
 #include <imgui.h>

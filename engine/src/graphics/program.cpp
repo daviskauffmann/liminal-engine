@@ -2,8 +2,8 @@
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-#include <spdlog/spdlog.h>
 #include <stb_include.h>
+#include <stdexcept>
 
 liminal::program::program(
     const char *const vertex_filename,
@@ -152,8 +152,7 @@ GLuint liminal::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(new_program_id, length, &length, info_log.data());
 
-            spdlog::error("Failed to link program: {}", info_log.data());
-            return 0;
+            throw std::runtime_error(info_log.data());
         }
     }
 
@@ -181,8 +180,7 @@ GLuint liminal::program::create_program() const
             std::vector<GLchar> info_log(length);
             glGetProgramInfoLog(new_program_id, length, &length, info_log.data());
 
-            spdlog::error("Failed to validate program: {}", info_log.data());
-            return 0;
+            throw std::runtime_error(info_log.data());
         }
     }
 
@@ -201,8 +199,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
         error);
     if (!source)
     {
-        spdlog::error("Failed to preprocess shader: {}", error);
-        return 0;
+        throw std::runtime_error(error);
     }
 
     glShaderSource(shader_id, 1, &source, nullptr);
@@ -220,8 +217,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
         std::vector<GLchar> info_log(length);
         glGetShaderInfoLog(shader_id, length, &length, info_log.data());
 
-        spdlog::error("Failed to compile shader: {}", info_log.data());
-        return 0;
+        throw std::runtime_error(info_log.data());
     }
 
     return shader_id;

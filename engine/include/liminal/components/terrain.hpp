@@ -1,15 +1,19 @@
 #ifndef LIMINAL_COMPONENTS_TERRAIN_HPP
 #define LIMINAL_COMPONENTS_TERRAIN_HPP
 
-#include <SDL2/SDL.h>
 #include <bullet/btBulletDynamicsCommon.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
-#include <liminal/graphics/mesh.hpp>
 #include <memory>
+#include <string>
+#include <vector>
+
+struct SDL_Surface;
 
 namespace liminal
 {
+    class mesh;
+
     class terrain
     {
     public:
@@ -19,7 +23,7 @@ namespace liminal
         std::unique_ptr<liminal::mesh> mesh;
         std::unique_ptr<btRigidBody> rigidbody;
 
-        terrain(btDiscreteDynamicsWorld *const world, const std::string &filename, const glm::vec3 &position, float size, float height_scale);
+        terrain(btDiscreteDynamicsWorld *world, const std::string &filename, const glm::vec3 &position, float size, float height_scale);
         terrain(terrain &&other) = default;
         terrain(const terrain &other) = delete;
         terrain &operator=(terrain &&other) = default;

@@ -1,8 +1,8 @@
-#ifndef LIMINAL_CORE_ENTITY_HPP
-#define LIMINAL_CORE_ENTITY_HPP
+#ifndef LIMINAL_ENTITIES_ENTITY_HPP
+#define LIMINAL_ENTITIES_ENTITY_HPP
 
+#include "scene.hpp"
 #include <entt/entt.hpp>
-#include <liminal/core/scene.hpp>
 
 namespace liminal
 {

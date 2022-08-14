@@ -1,4 +1,4 @@
-#include <liminal/core/scene.hpp>
+#include <liminal/entities/scene.hpp>
 
 #include <bullet/btBulletDynamicsCommon.h>
 #include <fstream>
@@ -16,7 +16,7 @@
 #include <liminal/components/transform.hpp>
 #include <liminal/components/water.hpp>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/entity.hpp>
+#include <liminal/entities/entity.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <nlohmann/json.hpp>

@@ -43,11 +43,11 @@ add_library(${PROJECT_NAME}
     src/core/glew.cpp
     src/core/imgui_context.cpp
     src/core/renderer.cpp
-    src/core/scene.cpp
     src/core/sdl.cpp
     src/core/sdl_image.cpp
     src/core/sdl_mixer.cpp
     src/core/window.cpp
+    src/entities/scene.cpp
     src/graphics/cubemap.cpp
     src/graphics/mesh.cpp
     src/graphics/model.cpp

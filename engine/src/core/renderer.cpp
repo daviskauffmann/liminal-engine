@@ -9,10 +9,10 @@
 #include <liminal/components/sprite.hpp>
 #include <liminal/components/terrain.hpp>
 #include <liminal/components/water.hpp>
-#include <liminal/core/entity.hpp>
+#include <liminal/entities/entity.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <limits>
-#include <spdlog/spdlog.h>
+#include <stdexcept>
 
 // TODO: create a proper rendering API rather than reading from the entt registry directly
 
@@ -255,8 +255,7 @@ liminal::renderer::renderer(
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create brdf capture framebuffer");
-                return;
+                throw std::runtime_error("BRDF capture framebuffer is not complete");
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -818,8 +817,7 @@ void liminal::renderer::calc_render_size()
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create geometry framebuffer");
-            return;
+            throw std::runtime_error("Geometry framebuffer is not complete");
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -888,8 +886,7 @@ void liminal::renderer::calc_render_size()
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create hdr framebuffer");
-            return;
+            throw std::runtime_error("HDR framebuffer is not complete");
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -931,8 +928,7 @@ void liminal::renderer::calc_render_size()
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create bloom framebuffer");
-                return;
+                throw std::runtime_error("Bloom framebuffer is not complete");
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -977,8 +973,7 @@ void liminal::renderer::calc_render_size()
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create final framebuffer");
-            return;
+            throw std::runtime_error("Final framebuffer is not complete");
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1038,8 +1033,7 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create directional light depth map framebuffer");
-                return;
+                throw std::runtime_error("Directional light depth map framebuffer is not complete");
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1096,8 +1090,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create point light depth cubemap framebuffer");
-                return;
+                throw std::runtime_error("Point light depth cubemap framebuffer is not complete");
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1154,8 +1147,7 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
-                spdlog::error("Failed to create spot light depth map framebuffer");
-                return;
+                throw std::runtime_error("Spot light depth map framebuffer is not complete");
             }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1224,8 +1216,7 @@ void liminal::renderer::set_reflection_size(const GLsizei wdith, const GLsizei h
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create water reflection framebuffer");
-            return;
+            throw std::runtime_error("Water reflection framebuffer is not complete");
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1304,8 +1295,7 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            spdlog::error("Failed to create water refraction framebuffer");
-            return;
+            throw std::runtime_error("Water refraction framebuffer is not complete");
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

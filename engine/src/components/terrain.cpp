@@ -1,12 +1,14 @@
 #include <liminal/components/terrain.hpp>
 
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <assimp/scene.h>
 #include <bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <liminal/core/assets.hpp>
+#include <liminal/graphics/mesh.hpp>
 #include <liminal/graphics/texture.hpp>
-#include <spdlog/spdlog.h>
+#include <stdexcept>
 
 // TODO: multiple textures w/ blend map
 
@@ -22,8 +24,7 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
     const auto surface = IMG_Load(filename.c_str());
     if (!surface)
     {
-        spdlog::error("Failed to load terrain heightmap texture: {}", IMG_GetError());
-        return;
+        throw std::runtime_error(IMG_GetError());
     }
 
     std::vector<liminal::vertex> vertices;

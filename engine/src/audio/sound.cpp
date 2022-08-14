@@ -1,15 +1,14 @@
 #include <liminal/audio/sound.hpp>
 
 #include <SDL2/SDL_mixer.h>
-#include <spdlog/spdlog.h>
+#include <stdexcept>
 
 liminal::sound::sound(const char *const filename)
 {
     Mix_Chunk *chunk = Mix_LoadWAV(filename);
     if (!chunk)
     {
-        spdlog::error("Failed to load sound: {}", Mix_GetError());
-        return;
+        throw std::runtime_error(Mix_GetError());
     }
 
     alGenBuffers(1, &buffer_id);

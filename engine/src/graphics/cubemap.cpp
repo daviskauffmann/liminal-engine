@@ -1,8 +1,7 @@
 #include <liminal/graphics/cubemap.hpp>
 
-#include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <spdlog/spdlog.h>
+#include <stdexcept>
 
 liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
 {
@@ -14,8 +13,7 @@ liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
             const auto surface = IMG_Load(filenames.at(side_index).c_str());
             if (!surface)
             {
-                spdlog::error("Failed to load cubemap: {}", IMG_GetError());
-                return;
+                throw std::runtime_error(IMG_GetError());
             }
 
             glTexImage2D(
