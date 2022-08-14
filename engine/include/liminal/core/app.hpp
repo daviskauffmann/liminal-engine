@@ -21,6 +21,10 @@ namespace liminal
     {
     public:
         app(int argc, char *argv[]);
+        app(app &&other) = delete;
+        app(const app &other) = delete;
+        app &operator=(app &&other) = delete;
+        app &operator=(const app &other) = delete;
         virtual ~app() = default;
 
         void run();

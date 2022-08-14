@@ -24,9 +24,6 @@ namespace liminal
         void set_relative_mouse_mode(bool enabled) const;
 
         bool poll_event(SDL_Event &event);
-
-    private:
-        bool running = true;
     };
 }
 

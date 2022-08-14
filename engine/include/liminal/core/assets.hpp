@@ -14,6 +14,11 @@ namespace liminal
     class assets
     {
     public:
+        assets();
+        assets(assets &&other) = delete;
+        assets(const assets &other) = delete;
+        assets &operator=(assets &&other) = delete;
+        assets &operator=(const assets &other) = delete;
         ~assets();
 
         std::shared_ptr<liminal::sound> load_sound(const std::string &filename);

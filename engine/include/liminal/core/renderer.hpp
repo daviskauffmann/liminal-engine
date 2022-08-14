@@ -39,6 +39,10 @@ namespace liminal
             GLsizei spot_light_depth_map_size,
             GLsizei water_reflection_width, GLsizei water_reflection_height,
             GLsizei water_refraction_width, GLsizei water_refraction_height);
+        renderer(renderer &&other) = delete;
+        renderer(const renderer &other) = delete;
+        renderer &operator=(renderer &&other) = delete;
+        renderer &operator=(const renderer &other) = delete;
         ~renderer();
 
         float get_aspect_ratio() const;

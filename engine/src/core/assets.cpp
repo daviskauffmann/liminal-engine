@@ -6,9 +6,17 @@
 #include <liminal/graphics/texture.hpp>
 #include <spdlog/spdlog.h>
 
+liminal::assets::assets()
+{
+}
+
 liminal::assets::~assets()
 {
     spdlog::info("Unloading assets...");
+    spdlog::info("Unloaded {} sounds", sounds.size());
+    spdlog::info("Unloaded {} models", models.size());
+    spdlog::info("Unloaded {} skyboxes", skyboxes.size());
+    spdlog::info("Unloaded {} textures", textures.size());
 }
 
 std::shared_ptr<liminal::sound> liminal::assets::load_sound(const std::string &filename)
