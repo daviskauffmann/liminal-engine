@@ -176,7 +176,7 @@ void liminal::model::process_node_meshes(const aiNode *const node)
                     aiString path;
                     scene_material->GetTexture(type, texture_index, &path);
                     const auto filename = directory + "/" + path.C_Str();
-                    material_textures.push_back(liminal::assets::instance->load_texture(filename));
+                    material_textures.push_back(liminal::assets::load_texture(filename));
                 }
 
                 textures.push_back(material_textures);

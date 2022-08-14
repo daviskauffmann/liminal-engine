@@ -78,35 +78,35 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
         textures.push_back(textures_for_type);
     }
 
-    textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture("assets/images/grass1-albedo3.png"));
-    // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::instance->load_texture(""));
+    textures[aiTextureType_DIFFUSE].push_back(liminal::assets::load_texture("assets/images/grass1-albedo3.png"));
+    // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_DIFFUSE].push_back(liminal::assets::load_texture(""));
 
-    textures[aiTextureType_NORMALS].push_back(liminal::assets::instance->load_texture("assets/images/grass1-normal1-ogl.png"));
-    // textures[aiTextureType_NORMALS].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_NORMALS].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_NORMALS].push_back(liminal::assets::instance->load_texture(""));
+    textures[aiTextureType_NORMALS].push_back(liminal::assets::load_texture("assets/images/grass1-normal1-ogl.png"));
+    // textures[aiTextureType_NORMALS].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_NORMALS].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_NORMALS].push_back(liminal::assets::load_texture(""));
 
-    textures[aiTextureType_SHININESS].push_back(liminal::assets::instance->load_texture("assets/images/grass1-metal.png"));
-    // textures[aiTextureType_SHININESS].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_SHININESS].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_SHININESS].push_back(liminal::assets::instance->load_texture(""));
+    textures[aiTextureType_SHININESS].push_back(liminal::assets::load_texture("assets/images/grass1-metal.png"));
+    // textures[aiTextureType_SHININESS].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_SHININESS].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_SHININESS].push_back(liminal::assets::load_texture(""));
 
-    textures[aiTextureType_OPACITY].push_back(liminal::assets::instance->load_texture("assets/images/grass1-rough.png"));
-    // textures[aiTextureType_OPACITY].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_OPACITY].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_OPACITY].push_back(liminal::assets::instance->load_texture(""));
+    textures[aiTextureType_OPACITY].push_back(liminal::assets::load_texture("assets/images/grass1-rough.png"));
+    // textures[aiTextureType_OPACITY].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_OPACITY].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_OPACITY].push_back(liminal::assets::load_texture(""));
 
-    textures[aiTextureType_AMBIENT].push_back(liminal::assets::instance->load_texture("assets/images/grass1-ao.png"));
-    // textures[aiTextureType_AMBIENT].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_AMBIENT].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_AMBIENT].push_back(liminal::assets::instance->load_texture(""));
+    textures[aiTextureType_AMBIENT].push_back(liminal::assets::load_texture("assets/images/grass1-ao.png"));
+    // textures[aiTextureType_AMBIENT].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_AMBIENT].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_AMBIENT].push_back(liminal::assets::load_texture(""));
 
-    textures[aiTextureType_HEIGHT].push_back(liminal::assets::instance->load_texture("assets/images/grass1-height.png"));
-    // textures[aiTextureType_HEIGHT].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_HEIGHT].push_back(liminal::assets::instance->load_texture(""));
-    // textures[aiTextureType_HEIGHT].push_back(liminal::assets::instance->load_texture(""));
+    textures[aiTextureType_HEIGHT].push_back(liminal::assets::load_texture("assets/images/grass1-height.png"));
+    // textures[aiTextureType_HEIGHT].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_HEIGHT].push_back(liminal::assets::load_texture(""));
+    // textures[aiTextureType_HEIGHT].push_back(liminal::assets::load_texture(""));
 
     mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
 

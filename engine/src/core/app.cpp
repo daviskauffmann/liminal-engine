@@ -8,9 +8,7 @@
 #include <imgui.h>
 #include <iostream>
 #include <liminal/core/assets.hpp>
-#include <liminal/core/platform.hpp>
 #include <liminal/core/scene.hpp>
-#include <liminal/graphics/renderer.hpp>
 #include <liminal/input/input.hpp>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -57,43 +55,45 @@ liminal::app::app(int argc, char *argv[])
     }
 
     // init subsystems
-    // TODO: dont really like the whole global singleton thing, should find a better solution
-    new liminal::assets();
-    new liminal::platform(window_title, window_width, window_height);
-    new liminal::renderer(
+    sdl = std::make_unique<liminal::sdl>();
+    sdl_image = std::make_unique<liminal::sdl_image>();
+    sdl_mixer = std::make_unique<liminal::sdl_mixer>();
+    audio = std::make_unique<liminal::audio>();
+    window = std::make_unique<liminal::window>(window_title, window_width, window_height);
+    gl_context = std::make_unique<liminal::gl_context>(window->get_sdl_window());
+    glew = std::make_unique<liminal::glew>();
+    imgui_context = std::make_unique<liminal::imgui_context>(
+        window->get_sdl_window(),
+        gl_context->get_sdl_gl_context());
+    al_device = std::make_unique<liminal::al_device>();
+    al_context = std::make_unique<liminal::al_context>(al_device->get_alc_device());
+    renderer = std::make_unique<liminal::renderer>(
         window_width, window_height, render_scale,
         4096, 512, 1024,
         window_width, window_height,
         window_width, window_height);
 }
 
-liminal::app::~app()
-{
-    delete liminal::assets::instance;
-    delete liminal::platform::instance;
-    delete liminal::renderer::instance;
-}
-
 void liminal::app::run()
 {
+    std::uint64_t current_time = 0;
     while (running)
     {
         // calculate time between frames
-        static std::uint32_t current_time = 0;
         const auto previous_time = current_time;
-        current_time = SDL_GetTicks();
-        const auto delta_time = ((current_time - previous_time) / 1000.0f);
+        current_time = sdl->get_ticks();
+        const auto delta_time = (current_time - previous_time) / 1000.0f;
 
         // gather input
         liminal::input::last_keys = liminal::input::keys;
-        const auto keys = SDL_GetKeyboardState(nullptr);
+        const auto keys = sdl->get_keys();
         for (std::size_t scancode = 0; scancode < liminal::input::keys.size(); scancode++)
         {
             liminal::input::keys.at(scancode) = keys[scancode];
         }
 
         liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
-        const auto mouse_buttons = SDL_GetMouseState(&liminal::input::mouse_x, &liminal::input::mouse_y);
+        const auto mouse_buttons = sdl->get_mouse_state(&liminal::input::mouse_x, &liminal::input::mouse_y);
         for (std::size_t button = 0; button < liminal::input::mouse_buttons.size(); button++)
         {
             liminal::input::mouse_buttons.at(button) = mouse_buttons & SDL_BUTTON(button);
@@ -106,10 +106,8 @@ void liminal::app::run()
 
         // process events
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (sdl->poll_event(event))
         {
-            liminal::platform::instance->process_event(&event);
-
             switch (event.type)
             {
             case SDL_QUIT:
@@ -125,7 +123,7 @@ void liminal::app::run()
                 {
                     window_width = event.window.data1;
                     window_height = event.window.data2;
-                    liminal::platform::instance->set_window_size(window_width, window_height);
+                    window->set_size(window_width, window_height);
                     resize(window_width, window_height);
                     spdlog::info("Window resized to {}x{}", window_width, window_height);
                 }
@@ -146,6 +144,8 @@ void liminal::app::run()
             }
             break;
             }
+
+            imgui_context->handle_event(event);
         }
 
         if (!ImGui::GetIO().WantCaptureKeyboard)
@@ -153,7 +153,7 @@ void liminal::app::run()
             if (liminal::input::key_down(liminal::keycode::RETURN) &&
                 liminal::input::key(liminal::keycode::LALT))
             {
-                liminal::platform::instance->toggle_fullscreen();
+                window->toggle_fullscreen();
             }
 
             if (liminal::input::key_down(liminal::keycode::GRAVE))
@@ -169,7 +169,7 @@ void liminal::app::run()
         }
 
         // start of frame
-        liminal::platform::instance->begin_frame();
+        imgui_context->begin_frame();
 
         // update app
         update(current_time, delta_time * time_scale);
@@ -198,8 +198,8 @@ void liminal::app::run()
                     }
                     else if (command == "wireframe")
                     {
-                        liminal::renderer::instance->wireframe = !liminal::renderer::instance->wireframe;
-                        if (liminal::renderer::instance->wireframe)
+                        renderer->wireframe = !renderer->wireframe;
+                        if (renderer->wireframe)
                         {
                             messages.push_back("Wireframe on");
                         }
@@ -210,8 +210,8 @@ void liminal::app::run()
                     }
                     else if (command == "greyscale")
                     {
-                        liminal::renderer::instance->greyscale = !liminal::renderer::instance->greyscale;
-                        if (liminal::renderer::instance->greyscale)
+                        renderer->greyscale = !renderer->greyscale;
+                        if (renderer->greyscale)
                         {
                             messages.push_back("Greyscale on");
                         }
@@ -222,28 +222,28 @@ void liminal::app::run()
                     }
                     else if (command == "reload")
                     {
-                        liminal::renderer::instance->reload_programs();
+                        renderer->reload_programs();
                         // TODO: reload lua scripts?
                     }
                     else if (command == "render_scale 1") // TODO: console commands with arguments
                     {
                         render_scale = 1;
 
-                        liminal::renderer::instance->set_render_scale(render_scale);
+                        renderer->set_render_scale(render_scale);
                         spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "render_scale 0.5")
                     {
                         render_scale = 0.5f;
 
-                        liminal::renderer::instance->set_render_scale(render_scale);
+                        renderer->set_render_scale(render_scale);
                         spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "render_scale 0.1")
                     {
                         render_scale = 0.1f;
 
-                        liminal::renderer::instance->set_render_scale(render_scale);
+                        renderer->set_render_scale(render_scale);
                         spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "toggle_slomo")
@@ -276,7 +276,8 @@ void liminal::app::run()
         }
 
         // end of frame
-        liminal::platform::instance->end_frame();
+        imgui_context->end_frame();
+        window->swap();
     }
 }
 
@@ -285,11 +286,11 @@ void liminal::app::stop()
     running = false;
 }
 
-void liminal::app::update(const unsigned int, const float)
+void liminal::app::update(const std::uint64_t, const float)
 {
 }
 
 void liminal::app::resize(const int width, const int height)
 {
-    liminal::renderer::instance->set_target_size(width, height);
+    renderer->set_target_size(width, height);
 }

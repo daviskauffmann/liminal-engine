@@ -1,4 +1,4 @@
-#include <liminal/graphics/renderer.hpp>
+#include <liminal/core/renderer.hpp>
 
 #include <entt/entt.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -33,8 +33,6 @@ constexpr float point_light_far_plane = 25;
 constexpr float spot_light_near_plane = 0.1f;
 constexpr float spot_light_far_plane = 10;
 
-liminal::renderer *liminal::renderer::instance = nullptr;
-
 liminal::renderer::renderer(
     const GLsizei target_width, const GLsizei target_height, const float render_scale,
     const GLsizei directional_light_depth_map_size,
@@ -46,8 +44,6 @@ liminal::renderer::renderer(
       target_height(target_height),
       render_scale(render_scale)
 {
-    instance = this;
-
     // setup fbos
     calc_render_size();
     set_directional_light_depth_map_size(directional_light_depth_map_size);
@@ -1352,7 +1348,7 @@ liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene
     return scene->get_entity(id);
 }
 
-void liminal::renderer::render(liminal::scene &scene, const unsigned int current_time, const float) const
+void liminal::renderer::render(liminal::scene &scene, const std::uint64_t current_time, const float) const
 {
     if (default_camera && default_camera_transform)
     {
@@ -1369,7 +1365,7 @@ void liminal::renderer::render_all(
     liminal::scene &scene,
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
-    const unsigned int current_time) const
+    const std::uint64_t current_time) const
 {
     render_shadows(scene, camera_transform);
     render_objects(scene, camera, camera_transform, hdr_fbo_id, render_width, render_height);
@@ -2075,7 +2071,7 @@ void liminal::renderer::render_waters(
     liminal::scene &scene,
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
-    const unsigned int current_time) const
+    const std::uint64_t current_time) const
 {
     for (const auto [id, transform, water] : scene.get_entities_with<const liminal::transform, const liminal::water>().each())
     {
@@ -2128,7 +2124,7 @@ void liminal::renderer::render_waters(
                     water_program->set_vec3("light.direction", first_directional_light.get_component<liminal::transform>().rotation);
                     water_program->set_vec3("light.color", first_directional_light.get_component<liminal::directional_light>().color);
                 }
-                water_program->set_unsigned_int("current_time", current_time);
+                water_program->set_unsigned_int("current_time", static_cast<unsigned int>(current_time));
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);

@@ -19,7 +19,7 @@ namespace minecraft
         app(int argc, char *argv[])
             : liminal::app(argc, argv)
         {
-            liminal::platform::instance->set_relative_mouse_mode(true);
+            sdl->set_relative_mouse_mode(true);
 
             scene = std::make_unique<liminal::scene>();
             scene->start();
@@ -37,13 +37,13 @@ namespace minecraft
             scene->stop();
         }
 
-        void update(const unsigned int current_time, const float delta_time) override
+        void update(const std::uint64_t current_time, const float delta_time) override
         {
             const auto &io = ImGui::GetIO();
 
             if (liminal::input::key_down(liminal::keycode::TAB))
             {
-                liminal::platform::instance->set_relative_mouse_mode(!liminal::platform::instance->get_relative_mouse_mode());
+                sdl->set_relative_mouse_mode(!sdl->get_relative_mouse_mode());
             }
 
             auto &transform = player_entity.get_component<liminal::transform>();
@@ -99,7 +99,7 @@ namespace minecraft
 
             if (!io.WantCaptureMouse)
             {
-                if (liminal::platform::instance->get_relative_mouse_mode())
+                if (sdl->get_relative_mouse_mode())
                 {
                     constexpr auto sensitivity = 0.1f;
                     transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
@@ -138,7 +138,7 @@ namespace minecraft
 
             world->update();
             scene->update(current_time, delta_time);
-            liminal::renderer::instance->render(*scene, current_time, delta_time);
+            renderer->render(*scene, current_time, delta_time);
         }
 
     private:

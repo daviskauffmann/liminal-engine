@@ -1,19 +1,45 @@
 #ifndef LIMINAL_CORE_APP_HPP
 #define LIMINAL_CORE_APP_HPP
 
+#include <liminal/core/al_context.hpp>
+#include <liminal/core/al_device.hpp>
+#include <liminal/core/audio.hpp>
+#include <liminal/core/gl_context.hpp>
+#include <liminal/core/glew.hpp>
+#include <liminal/core/imgui_context.hpp>
+#include <liminal/core/renderer.hpp>
+#include <liminal/core/sdl.hpp>
+#include <liminal/core/sdl_image.hpp>
+#include <liminal/core/sdl_mixer.hpp>
+#include <liminal/core/window.hpp>
+#include <memory>
+
 namespace liminal
 {
     class app
     {
     public:
         app(int argc, char *argv[]);
-        virtual ~app();
+        virtual ~app() = default;
 
         void run();
         void stop();
 
-        virtual void update(unsigned int current_time, float delta_time);
+        virtual void update(std::uint64_t current_time, float delta_time);
         virtual void resize(int width, int height);
+
+    protected:
+        std::unique_ptr<liminal::sdl> sdl;
+        std::unique_ptr<liminal::sdl_image> sdl_image;
+        std::unique_ptr<liminal::sdl_mixer> sdl_mixer;
+        std::unique_ptr<liminal::audio> audio;
+        std::unique_ptr<liminal::window> window;
+        std::unique_ptr<liminal::gl_context> gl_context;
+        std::unique_ptr<liminal::glew> glew;
+        std::unique_ptr<liminal::imgui_context> imgui_context;
+        std::unique_ptr<liminal::al_device> al_device;
+        std::unique_ptr<liminal::al_context> al_context;
+        std::unique_ptr<liminal::renderer> renderer;
 
     private:
         int window_width = 1280;

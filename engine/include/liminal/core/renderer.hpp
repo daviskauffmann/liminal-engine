@@ -1,5 +1,5 @@
-#ifndef LIMINAL_GRAPHICS_RENDERER_HPP
-#define LIMINAL_GRAPHICS_RENDERER_HPP
+#ifndef LIMINAL_CORE_RENDERER_HPP
+#define LIMINAL_CORE_RENDERER_HPP
 
 #include <array>
 #include <gl/glew.h>
@@ -25,8 +25,6 @@ namespace liminal
         static constexpr std::size_t num_directional_light_shadows = 1;
         static constexpr std::size_t num_point_light_shadows = 4;
         static constexpr std::size_t num_spot_light_shadows = 1;
-
-        static renderer *instance;
 
         liminal::camera *default_camera = nullptr;
         liminal::transform *default_camera_transform = nullptr;
@@ -58,7 +56,7 @@ namespace liminal
 
         liminal::entity pick(int x, int y, liminal::scene *scene) const;
 
-        void render(liminal::scene &scene, unsigned int current_time, float delta_time) const;
+        void render(liminal::scene &scene, std::uint64_t current_time, float delta_time) const;
 
     private:
         GLsizei target_width;
@@ -158,7 +156,7 @@ namespace liminal
             liminal::scene &scene,
             const liminal::camera &camera,
             const liminal::transform &camera_transform,
-            unsigned int current_time) const;
+            std::uint64_t current_time) const;
         void render_shadows(
             liminal::scene &scene,
             const liminal::transform &camera_transform) const;
@@ -173,7 +171,7 @@ namespace liminal
             liminal::scene &scene,
             const liminal::camera &camera,
             const liminal::transform &camera_transform,
-            unsigned int current_time) const;
+            std::uint64_t current_time) const;
         void render_sprites(liminal::scene &scene) const;
         void render_screen(const liminal::camera &camera) const;
     };

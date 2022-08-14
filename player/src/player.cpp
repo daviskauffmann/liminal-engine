@@ -12,13 +12,13 @@ namespace player
         app(int argc, char *argv[])
             : liminal::app(argc, argv)
         {
-            liminal::platform::instance->set_relative_mouse_mode(true);
+            sdl->set_relative_mouse_mode(true);
 
             // load assets
-            ambient_sound = liminal::assets::instance->load_sound("assets/audio/ambient.wav");
-            bounce_sound = liminal::assets::instance->load_sound("assets/audio/bounce.wav");
-            shoot_sound = liminal::assets::instance->load_sound("assets/audio/shoot.wav");
-            grass_texture = liminal::assets::instance->load_texture("assets/images/grass_sprite.png");
+            ambient_sound = liminal::assets::load_sound("assets/audio/ambient.wav");
+            bounce_sound = liminal::assets::load_sound("assets/audio/bounce.wav");
+            shoot_sound = liminal::assets::load_sound("assets/audio/shoot.wav");
+            grass_texture = liminal::assets::load_texture("assets/images/grass_sprite.png");
 
             scene = std::make_unique<liminal::scene>();
             scene->load("assets/scenes/demo.json");
@@ -54,13 +54,13 @@ namespace player
             scene->stop();
         }
 
-        void update(const unsigned int current_time, const float delta_time) override
+        void update(const std::uint64_t current_time, const float delta_time) override
         {
             const auto &io = ImGui::GetIO();
 
             if (liminal::input::key_down(liminal::keycode::TAB))
             {
-                liminal::platform::instance->set_relative_mouse_mode(!liminal::platform::instance->get_relative_mouse_mode());
+                sdl->set_relative_mouse_mode(!sdl->get_relative_mouse_mode());
             }
 
             auto &transform = player_entity.get_component<liminal::transform>();
@@ -135,7 +135,7 @@ namespace player
 
             if (!io.WantCaptureMouse)
             {
-                if (liminal::platform::instance->get_relative_mouse_mode())
+                if (sdl->get_relative_mouse_mode())
                 {
                     const auto sensitivity = 0.1f;
                     transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
@@ -197,7 +197,7 @@ namespace player
             scene->update(current_time, delta_time);
 
             // render scene
-            liminal::renderer::instance->render(*scene, current_time, delta_time);
+            renderer->render(*scene, current_time, delta_time);
         }
 
     private:

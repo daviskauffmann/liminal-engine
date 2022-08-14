@@ -34,15 +34,24 @@ add_library(${PROJECT_NAME}
     src/components/sprite.cpp
     src/components/terrain.cpp
     src/components/transform.cpp
+    src/core/al_context.cpp
+    src/core/al_device.cpp
     src/core/app.cpp
     src/core/assets.cpp
-    src/core/platform.cpp
+    src/core/audio.cpp
+    src/core/gl_context.cpp
+    src/core/glew.cpp
+    src/core/imgui_context.cpp
+    src/core/renderer.cpp
     src/core/scene.cpp
+    src/core/sdl.cpp
+    src/core/sdl_image.cpp
+    src/core/sdl_mixer.cpp
+    src/core/window.cpp
     src/graphics/cubemap.cpp
     src/graphics/mesh.cpp
     src/graphics/model.cpp
     src/graphics/program.cpp
-    src/graphics/renderer.cpp
     src/graphics/skybox.cpp
     src/graphics/texture.cpp
     src/graphics/vertex.cpp

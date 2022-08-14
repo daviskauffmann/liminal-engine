@@ -17,7 +17,6 @@
 #include <liminal/components/water.hpp>
 #include <liminal/core/assets.hpp>
 #include <liminal/core/entity.hpp>
-#include <liminal/core/platform.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <nlohmann/json.hpp>
@@ -57,7 +56,7 @@ void liminal::scene::load(const std::string &filename)
     {
         if (key == "skybox")
         {
-            skybox = liminal::assets::instance->load_skybox(value);
+            skybox = liminal::assets::load_skybox(value);
         }
 
         if (key == "entities")
@@ -115,7 +114,7 @@ void liminal::scene::load(const std::string &filename)
                     if (component_type == "mesh_renderer")
                     {
                         entity.add_component<liminal::mesh_renderer>(
-                            liminal::assets::instance->load_model(
+                            liminal::assets::load_model(
                                 component_json.at("filename"),
                                 component_json.at("flip_uvs")));
                     }
@@ -177,7 +176,7 @@ void liminal::scene::start()
     }
 }
 
-void liminal::scene::update(const unsigned int current_time, const float delta_time)
+void liminal::scene::update(const std::uint64_t current_time, const float delta_time)
 {
     // update scripts
     for (const auto [id, script] : get_entities_with<const liminal::script>().each())
