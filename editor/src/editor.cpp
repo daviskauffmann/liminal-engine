@@ -345,7 +345,7 @@ namespace editor
                                     if (result == NFD_OKAY)
                                     {
                                         // TODO: crashes when loading an animated mesh
-                                        mesh_renderer.model = liminal::assets::load_model(outPath, true);
+                                        mesh_renderer.model = assets->load_model(outPath, assets, true);
                                     }
                                 }
 
@@ -557,7 +557,7 @@ namespace editor
         void load_scene()
         {
             new_scene();
-            scene->load("assets/scenes/demo.json");
+            scene->load("assets/scenes/demo.json", assets);
         }
 
         void save_scene()

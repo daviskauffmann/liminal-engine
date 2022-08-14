@@ -22,7 +22,7 @@ liminal::model::model(liminal::mesh *const mesh)
     meshes.push_back(mesh);
 }
 
-liminal::model::model(const char *const filename, const bool flip_uvs)
+liminal::model::model(const char *const filename, std::shared_ptr<liminal::assets> assets, const bool flip_uvs)
     : directory(std::filesystem::path(filename).parent_path().string())
 {
     unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_GenSmoothNormals;
@@ -38,7 +38,7 @@ liminal::model::model(const char *const filename, const bool flip_uvs)
 
     global_inverse_transform = glm::inverse(mat4_cast(scene->mRootNode->mTransformation));
 
-    process_node_meshes(scene->mRootNode);
+    process_node_meshes(scene->mRootNode, assets);
 }
 
 liminal::model::~model()
@@ -85,7 +85,7 @@ void liminal::model::draw_meshes(const liminal::program &program) const
     }
 }
 
-void liminal::model::process_node_meshes(const aiNode *const node)
+void liminal::model::process_node_meshes(const aiNode *const node, std::shared_ptr<liminal::assets> assets)
 {
     for (std::size_t mesh_index = 0; mesh_index < node->mNumMeshes; mesh_index++)
     {
@@ -178,7 +178,7 @@ void liminal::model::process_node_meshes(const aiNode *const node)
                     aiString path;
                     scene_material->GetTexture(type, texture_index, &path);
                     const auto filename = directory + "/" + path.C_Str();
-                    material_textures.push_back(liminal::assets::load_texture(filename));
+                    material_textures.push_back(assets->load_texture(filename));
                 }
 
                 textures.push_back(material_textures);
@@ -196,7 +196,7 @@ void liminal::model::process_node_meshes(const aiNode *const node)
 
     for (std::size_t child_index = 0; child_index < node->mNumChildren; child_index++)
     {
-        process_node_meshes(node->mChildren[child_index]);
+        process_node_meshes(node->mChildren[child_index], assets);
     }
 }
 

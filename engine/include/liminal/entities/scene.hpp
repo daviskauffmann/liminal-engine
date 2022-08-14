@@ -11,6 +11,7 @@ class btDiscreteDynamicsWorld;
 
 namespace liminal
 {
+    class assets;
     class skybox;
     class entity;
 
@@ -25,7 +26,7 @@ namespace liminal
         scene(const liminal::scene &other);
         ~scene();
 
-        void load(const std::string &filename);
+        void load(const std::string &filename, std::shared_ptr<liminal::assets> assets);
         void save(const std::string &filename);
 
         liminal::entity create_entity();

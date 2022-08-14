@@ -3,6 +3,7 @@
 
 #include "al_context.hpp"
 #include "al_device.hpp"
+#include "assets.hpp"
 #include "audio.hpp"
 #include "gl_context.hpp"
 #include "glew.hpp"
@@ -39,6 +40,7 @@ namespace liminal
         std::unique_ptr<liminal::imgui_context> imgui_context;
         std::unique_ptr<liminal::al_device> al_device;
         std::unique_ptr<liminal::al_context> al_context;
+        std::shared_ptr<liminal::assets> assets;
         std::unique_ptr<liminal::renderer> renderer;
 
     private:

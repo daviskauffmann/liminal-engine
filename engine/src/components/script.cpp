@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <string>
 
-liminal::script::script(const std::string &filename, liminal::scene *const scene, const entt::entity id)
+liminal::script::script(const std::string &filename, liminal::scene *const scene, const entt::entity id, std::shared_ptr<liminal::assets> assets)
 {
     lua.open_libraries(sol::lib::base, sol::lib::math);
     const auto result = lua.script_file(filename);
@@ -27,9 +27,9 @@ liminal::script::script(const std::string &filename, liminal::scene *const scene
     {
         return liminal::input::key_down(keycode);
     };
-    lua["SetSkybox"] = [scene](const std::string &filename) -> void
+    lua["SetSkybox"] = [scene, assets](const std::string &filename) -> void
     {
-        scene->skybox = liminal::assets::load_skybox(filename.c_str());
+        scene->skybox = assets->load_skybox(filename.c_str());
     };
     lua["AddEntity"] = [scene]() -> entt::entity
     {
@@ -99,16 +99,16 @@ liminal::script::script(const std::string &filename, liminal::scene *const scene
         transform.rotation = {rx, ry, rz};
         transform.scale = {sx, sy, sz};
     };
-    lua["AddMeshRenderer"] = [scene](entt::entity id, const std::string &filename, bool flip_uvs) -> void
+    lua["AddMeshRenderer"] = [scene, assets](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::mesh_renderer>(liminal::assets::load_model(filename.c_str(), flip_uvs));
+        entity.add_component<liminal::mesh_renderer>(assets->load_model(filename.c_str(), assets, flip_uvs));
     };
-    lua["UpdateMeshRenderer"] = [scene](entt::entity id, const std::string &filename, bool flip_uvs) -> void
+    lua["UpdateMeshRenderer"] = [scene, assets](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
         auto entity = scene->get_entity(id);
         auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
-        mesh_renderer.model = liminal::assets::load_model(filename.c_str(), flip_uvs);
+        mesh_renderer.model = assets->load_model(filename.c_str(), assets, flip_uvs);
     };
     lua["AddPointLight"] = [scene](entt::entity id, float r, float g, float b) -> void
     {
@@ -142,10 +142,10 @@ liminal::script::script(const std::string &filename, liminal::scene *const scene
         const auto transform = entity.get_component<liminal::transform>();
         return camera.calc_front(transform).z;
     };
-    lua["AddScript"] = [scene](entt::entity id, const std::string &filename) -> void
+    lua["AddScript"] = [scene, assets](entt::entity id, const std::string &filename) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::script>(filename, scene, id);
+        entity.add_component<liminal::script>(filename, scene, id, assets);
     };
 }
 

@@ -12,6 +12,7 @@ struct SDL_Surface;
 
 namespace liminal
 {
+    class assets;
     class mesh;
 
     class terrain
@@ -23,7 +24,7 @@ namespace liminal
         std::unique_ptr<liminal::mesh> mesh;
         std::unique_ptr<btRigidBody> rigidbody;
 
-        terrain(btDiscreteDynamicsWorld *world, const std::string &filename, const glm::vec3 &position, float size, float height_scale);
+        terrain(btDiscreteDynamicsWorld *world, const std::string &filename, const glm::vec3 &position, float size, float height_scale, std::shared_ptr<liminal::assets> assets);
         terrain(terrain &&other) = default;
         terrain(const terrain &other) = delete;
         terrain &operator=(terrain &&other) = default;

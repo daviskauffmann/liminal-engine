@@ -48,7 +48,7 @@ liminal::scene::~scene()
     delete world->getConstraintSolver();
 }
 
-void liminal::scene::load(const std::string &filename)
+void liminal::scene::load(const std::string &filename, std::shared_ptr<liminal::assets> assets)
 {
     const auto scene_json = nlohmann::json::parse(std::ifstream(filename));
 
@@ -56,7 +56,7 @@ void liminal::scene::load(const std::string &filename)
     {
         if (key == "skybox")
         {
-            skybox = liminal::assets::load_skybox(value);
+            skybox = assets->load_skybox(value);
         }
 
         if (key == "entities")
@@ -114,8 +114,9 @@ void liminal::scene::load(const std::string &filename)
                     if (component_type == "mesh_renderer")
                     {
                         entity.add_component<liminal::mesh_renderer>(
-                            liminal::assets::load_model(
+                            assets->load_model(
                                 component_json.at("filename"),
+                                assets,
                                 component_json.at("flip_uvs")));
                     }
 
@@ -124,7 +125,8 @@ void liminal::scene::load(const std::string &filename)
                         entity.add_component<liminal::script>(
                             component_json.at("filename"),
                             this,
-                            (entt::entity)entity);
+                            (entt::entity)entity,
+                            assets);
                     }
 
                     if (component_type == "water")
@@ -139,7 +141,8 @@ void liminal::scene::load(const std::string &filename)
                             "assets/images/heightmap.png",
                             glm::vec3(0, 0, 0),
                             100.0f,
-                            5.0f);
+                            5.0f,
+                            assets);
                     }
                 }
             }

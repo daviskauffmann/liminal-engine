@@ -21,7 +21,7 @@ namespace minecraft
         {
             sdl->set_relative_mouse_mode(true);
 
-            scene = std::make_unique<liminal::scene>();
+            scene = std::make_shared<liminal::scene>();
             scene->start();
             scene->skybox = std::make_shared<liminal::skybox>("assets/images/white.png");
 
@@ -29,7 +29,7 @@ namespace minecraft
             player_entity.add_component<liminal::transform>("Player");
             player_entity.add_component<liminal::camera>(45.0f);
 
-            world = std::make_unique<minecraft::world>(scene.get());
+            world = std::make_unique<minecraft::world>(scene, assets);
         }
 
         ~app() override
@@ -142,7 +142,7 @@ namespace minecraft
         }
 
     private:
-        std::unique_ptr<liminal::scene> scene;
+        std::shared_ptr<liminal::scene> scene;
 
         liminal::entity player_entity;
 

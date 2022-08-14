@@ -5,19 +5,21 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <glm/matrix.hpp>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace liminal
 {
+    class assets;
     class program;
 
     class model
     {
     public:
         model(liminal::mesh *mesh);
-        model(const char *filename, bool flip_uvs = false);
+        model(const char *filename, std::shared_ptr<liminal::assets> assets, bool flip_uvs = false);
         ~model();
 
         bool has_animations() const;
@@ -38,7 +40,7 @@ namespace liminal
         std::unordered_map<std::string, unsigned int> bone_ids;
         std::vector<glm::mat4> bone_offsets;
 
-        void process_node_meshes(const aiNode *node);
+        void process_node_meshes(const aiNode *node, std::shared_ptr<liminal::assets> assets);
 
         void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const;
         const aiNodeAnim *find_node_animation(const aiAnimation *animation, const std::string &node_name) const;

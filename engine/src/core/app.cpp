@@ -66,6 +66,7 @@ liminal::app::app(int argc, char *argv[])
         gl_context->get_sdl_gl_context());
     al_device = std::make_unique<liminal::al_device>();
     al_context = std::make_unique<liminal::al_context>(al_device->get_alc_device());
+    assets = std::make_shared<liminal::assets>();
     renderer = std::make_unique<liminal::renderer>(
         window_width, window_height, render_scale,
         4096, 512, 1024,

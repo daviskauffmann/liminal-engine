@@ -14,7 +14,7 @@ namespace minecraft
     class world
     {
     public:
-        explicit world(liminal::scene *scene);
+        explicit world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<liminal::assets> assets);
 
         void update() const;
 
@@ -26,7 +26,7 @@ namespace minecraft
         void set_block(int x, int y, int z, minecraft::block *block);
 
     private:
-        liminal::scene *scene;
+        std::shared_ptr<liminal::scene> scene;
         std::shared_ptr<liminal::texture> tiles_texture;
         std::unordered_map<glm::ivec3, liminal::entity> chunk_entities;
 

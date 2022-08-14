@@ -6,6 +6,11 @@
 #include <liminal/graphics/texture.hpp>
 #include <spdlog/spdlog.h>
 
+liminal::assets::~assets()
+{
+    spdlog::info("Unloading assets...");
+}
+
 std::shared_ptr<liminal::sound> liminal::assets::load_sound(const std::string &filename)
 {
     if (!sounds.contains(filename))
@@ -17,12 +22,12 @@ std::shared_ptr<liminal::sound> liminal::assets::load_sound(const std::string &f
     return sounds.at(filename);
 }
 
-std::shared_ptr<liminal::model> liminal::assets::load_model(const std::string &filename, const bool flip_uvs)
+std::shared_ptr<liminal::model> liminal::assets::load_model(const std::string &filename, std::shared_ptr<liminal::assets> assets, const bool flip_uvs)
 {
     if (!models.contains(filename))
     {
         spdlog::info("Loading model: {}", filename);
-        models.insert({filename, std::make_shared<liminal::model>(filename.c_str(), flip_uvs)});
+        models.insert({filename, std::make_shared<liminal::model>(filename.c_str(), assets, flip_uvs)});
     }
 
     return models.at(filename);
@@ -39,12 +44,12 @@ std::shared_ptr<liminal::skybox> liminal::assets::load_skybox(const std::string 
     return skyboxes.at(filename);
 }
 
-std::shared_ptr<liminal::texture> liminal::assets::load_texture(const std::string &filename)
+std::shared_ptr<liminal::texture> liminal::assets::load_texture(const std::string &filename, const bool srgb, const bool filter)
 {
     if (!textures.contains(filename))
     {
         spdlog::info("Loading texture: {}", filename);
-        textures.insert({filename, std::make_shared<liminal::texture>(filename.c_str())});
+        textures.insert({filename, std::make_shared<liminal::texture>(filename.c_str(), srgb, filter)});
     }
 
     return textures.at(filename);

@@ -2,18 +2,19 @@
 #define LIMINAL_COMPONENTS_SCRIPT_HPP
 
 #include <entt/entt.hpp>
+#include <memory>
 #include <sol/sol.hpp>
 #include <string>
 
 namespace liminal
 {
+    class assets;
     class scene;
-    class entity;
 
     class script
     {
     public:
-        script(const std::string &filename, liminal::scene *scene, entt::entity id);
+        script(const std::string &filename, liminal::scene *scene, entt::entity id, std::shared_ptr<liminal::assets> assets);
         script(script &&other) = default;
         script(const script &other) = delete;
         script &operator=(script &&other) = default;

@@ -14,16 +14,18 @@ namespace liminal
     class assets
     {
     public:
-        static std::shared_ptr<liminal::sound> load_sound(const std::string &filename);
-        static std::shared_ptr<liminal::model> load_model(const std::string &filename, bool flip_uvs = false); 
-        static std::shared_ptr<liminal::skybox> load_skybox(const std::string &filename);
-        static std::shared_ptr<liminal::texture> load_texture(const std::string &filename);
+        ~assets();
+
+        std::shared_ptr<liminal::sound> load_sound(const std::string &filename);
+        std::shared_ptr<liminal::model> load_model(const std::string &filename, std::shared_ptr<liminal::assets> assets, bool flip_uvs = false);
+        std::shared_ptr<liminal::skybox> load_skybox(const std::string &filename);
+        std::shared_ptr<liminal::texture> load_texture(const std::string &filename, bool srgb = false, bool filter = true);
 
     private:
-        inline static std::unordered_map<std::string, std::shared_ptr<liminal::sound>> sounds;
-        inline static std::unordered_map<std::string, std::shared_ptr<liminal::model>> models;
-        inline static std::unordered_map<std::string, std::shared_ptr<liminal::skybox>> skyboxes;
-        inline static std::unordered_map<std::string, std::shared_ptr<liminal::texture>> textures;
+        std::unordered_map<std::string, std::shared_ptr<liminal::sound>> sounds;
+        std::unordered_map<std::string, std::shared_ptr<liminal::model>> models;
+        std::unordered_map<std::string, std::shared_ptr<liminal::skybox>> skyboxes;
+        std::unordered_map<std::string, std::shared_ptr<liminal::texture>> textures;
     };
 }
 

@@ -7,9 +7,9 @@
 #include "blocks/stone_block.hpp"
 #include "chunk.hpp"
 
-minecraft::world::world(liminal::scene *const scene)
+minecraft::world::world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<liminal::assets> assets)
     : scene(scene),
-      tiles_texture(std::make_shared<liminal::texture>("assets/images/tiles.png", false, false))
+      tiles_texture(assets->load_texture("assets/images/tiles.png", false, false))
 {
     for (int x = -4; x < 4; x++)
     {
