@@ -12,12 +12,15 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
-constexpr const char *version_string = "v0.0.1";
-constexpr const char *window_title = "Liminal Engine";
-
 liminal::app::app(int argc, char *argv[])
 {
     // parse command line options
+    constexpr const char *window_title = "Liminal Engine";
+    constexpr const char *version_string = "v0.0.1";
+    int window_width;
+    int window_height;
+    float render_scale;
+
     try
     {
         cxxopts::Options options(argv[0]);
@@ -31,8 +34,8 @@ liminal::app::app(int argc, char *argv[])
 
         const auto result = options.parse(argc, argv);
 
-        window_height = result["height"].as<int>();
         window_width = result["width"].as<int>();
+        window_height = result["height"].as<int>();
         render_scale = glm::clamp(result["scale"].as<float>(), 0.1f, 1.0f);
 
         if (result.count("help"))
@@ -120,11 +123,11 @@ void liminal::app::run()
                 {
                 case SDL_WINDOWEVENT_RESIZED:
                 {
-                    window_width = event.window.data1;
-                    window_height = event.window.data2;
-                    window->set_size(window_width, window_height);
-                    resize(window_width, window_height);
-                    spdlog::info("Window resized to {}x{}", window_width, window_height);
+                    const auto width = event.window.data1;
+                    const auto height = event.window.data2;
+                    window->set_size(width, height);
+                    resize(width, height);
+                    spdlog::info("Window resized to {}x{}", width, height);
                 }
                 break;
                 }
@@ -226,22 +229,19 @@ void liminal::app::run()
                     }
                     else if (command == "render_scale 1") // TODO: console commands with arguments
                     {
-                        render_scale = 1;
-
+                        const auto render_scale = 1.0f;
                         renderer->set_render_scale(render_scale);
                         spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "render_scale 0.5")
                     {
-                        render_scale = 0.5f;
-
+                        const auto render_scale = 0.5f;
                         renderer->set_render_scale(render_scale);
                         spdlog::info("Render scale changed to {}", render_scale);
                     }
                     else if (command == "render_scale 0.1")
                     {
-                        render_scale = 0.1f;
-
+                        const auto render_scale = 0.1f;
                         renderer->set_render_scale(render_scale);
                         spdlog::info("Render scale changed to {}", render_scale);
                     }

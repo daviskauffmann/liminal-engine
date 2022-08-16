@@ -72,12 +72,7 @@ liminal::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::text
         }
     }
 
-    std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
-    for (aiTextureType type = aiTextureType_NONE; type <= AI_TEXTURE_TYPE_MAX; type = (aiTextureType)(type + 1))
-    {
-        std::vector<std::shared_ptr<liminal::texture>> textures_for_type;
-        textures.push_back(textures_for_type);
-    }
+    std::array<std::vector<std::shared_ptr<liminal::texture>>, liminal::mesh::num_textures> textures;
     textures.at(aiTextureType_DIFFUSE).push_back(tiles_texture);
 
     return new liminal::mesh(mesh_data.vertices, mesh_data.indices, textures);

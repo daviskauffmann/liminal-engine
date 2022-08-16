@@ -381,9 +381,13 @@ namespace editor
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(directional_light.color), 0.1f);
 
-                                for (const auto depth_map_texture_id : directional_light.depth_map_texture_ids)
+                                for (const auto depth_map_texture : directional_light.depth_map_textures)
                                 {
-                                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(depth_map_texture_id)), {200, 200}, {0, 1}, {1, 0});
+                                    const auto directional_light_depth_map_texture = depth_map_texture.lock();
+                                    if (directional_light_depth_map_texture)
+                                    {
+                                        ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(directional_light_depth_map_texture->get_texture_id())), {200, 200}, {0, 1}, {1, 0});
+                                    }
                                 }
 
                                 ImGui::TreePop();
@@ -448,7 +452,11 @@ namespace editor
                                 ImGui::DragFloat("Inner Cutoff", &spot_light.inner_cutoff);
                                 ImGui::DragFloat("Outer Cutoff", &spot_light.outer_cutoff);
 
-                                ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(spot_light.depth_map_texture_id)), {200, 200}, {0, 1}, {1, 0});
+                                const auto spot_light_depth_map_texture = spot_light.depth_map_texture.lock();
+                                if (spot_light_depth_map_texture)
+                                {
+                                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(spot_light_depth_map_texture->get_texture_id())), {200, 200}, {0, 1}, {1, 0});
+                                }
 
                                 ImGui::TreePop();
                             }

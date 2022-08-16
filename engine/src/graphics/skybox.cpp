@@ -408,3 +408,27 @@ void liminal::skybox::set_cubemap(const char *const filename)
     glDeleteVertexArrays(1, &capture_vao_id);
     glDeleteBuffers(1, &capture_vbo_id);
 }
+
+void liminal::skybox::bind_environment_map(const unsigned int index) const
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
+}
+
+void liminal::skybox::bind_irradiance_map(const unsigned int index) const
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
+}
+
+void liminal::skybox::bind_prefilter_map(const unsigned int index) const
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);
+}
+
+void liminal::skybox::unbind(const unsigned int index)
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+}

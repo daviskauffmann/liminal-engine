@@ -51,6 +51,7 @@ add_library(${PROJECT_NAME}
     src/graphics/mesh.cpp
     src/graphics/model.cpp
     src/graphics/program.cpp
+    src/graphics/renderbuffer.cpp
     src/graphics/skybox.cpp
     src/graphics/texture.cpp
     src/graphics/vertex.cpp

@@ -7,7 +7,7 @@
 liminal::mesh::mesh(
     const std::vector<liminal::vertex> &vertices,
     const std::vector<GLuint> &indices,
-    const std::vector<std::vector<std::shared_ptr<liminal::texture>>> &textures)
+    const std::array<std::vector<std::shared_ptr<liminal::texture>>, num_textures> &textures)
     : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)
@@ -102,17 +102,16 @@ void liminal::mesh::draw(const liminal::program &program) const
 {
     // TODO: support multiple textures per type in the shader?
 
-    if (textures.size() > 0 && textures.at(aiTextureType_DIFFUSE).size() > 0)
+    if (textures.at(aiTextureType_DIFFUSE).size() > 0)
     {
         textures.at(aiTextureType_DIFFUSE).at(0)->bind(0);
     }
     else
     {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        liminal::texture::unbind(0);
     }
 
-    if (textures.size() > 0 && textures.at(aiTextureType_NORMALS).size() > 0)
+    if (textures.at(aiTextureType_NORMALS).size() > 0)
     {
         program.set_int("material.has_normal_map", 1);
         textures.at(aiTextureType_NORMALS).at(0)->bind(1);
@@ -120,11 +119,10 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_normal_map", 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        liminal::texture::unbind(1);
     }
 
-    if (textures.size() > 0 && textures.at(aiTextureType_SHININESS).size() > 0)
+    if (textures.at(aiTextureType_SHININESS).size() > 0)
     {
         program.set_int("material.has_metallic_map", 1);
         textures.at(aiTextureType_SHININESS).at(0)->bind(2);
@@ -132,11 +130,10 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_metallic_map", 0);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        liminal::texture::unbind(2);
     }
 
-    if (textures.size() > 0 && textures.at(aiTextureType_OPACITY).size() > 0)
+    if (textures.at(aiTextureType_OPACITY).size() > 0)
     {
         program.set_int("material.has_roughness_map", 1);
         textures.at(aiTextureType_OPACITY).at(0)->bind(3);
@@ -144,11 +141,10 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_roughness_map", 0);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        liminal::texture::unbind(3);
     }
 
-    if (textures.size() > 0 && textures.at(aiTextureType_AMBIENT).size() > 0)
+    if (textures.at(aiTextureType_AMBIENT).size() > 0)
     {
         program.set_int("material.has_occlusion_map", 1);
         textures.at(aiTextureType_AMBIENT).at(0)->bind(4);
@@ -156,11 +152,10 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_occlusion_map", 0);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        liminal::texture::unbind(4);
     }
 
-    if (textures.size() > 0 && textures.at(aiTextureType_HEIGHT).size() > 0)
+    if (textures.at(aiTextureType_HEIGHT).size() > 0)
     {
         program.set_int("material.has_height_map", 1);
         textures.at(aiTextureType_HEIGHT).at(0)->bind(5);
@@ -168,24 +163,17 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_height_map", 0);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        liminal::texture::unbind(5);
     }
 
     glBindVertexArray(vao_id);
     glDrawElements(GL_TRIANGLES, indices_size, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    liminal::texture::unbind(0);
+    liminal::texture::unbind(1);
+    liminal::texture::unbind(2);
+    liminal::texture::unbind(3);
+    liminal::texture::unbind(4);
+    liminal::texture::unbind(5);
 }

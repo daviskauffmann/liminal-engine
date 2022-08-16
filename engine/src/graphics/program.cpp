@@ -5,6 +5,11 @@
 #include <stb_include.h>
 #include <stdexcept>
 
+void liminal::program::unbind()
+{
+    glUseProgram(0);
+}
+
 liminal::program::program(
     const char *const vertex_filename,
     const char *const geometry_filename,
@@ -51,11 +56,6 @@ void liminal::program::reload()
 void liminal::program::bind() const
 {
     glUseProgram(program_id);
-}
-
-void liminal::program::unbind() const
-{
-    glUseProgram(0);
 }
 
 void liminal::program::set_int(const char *name, const GLint value) const

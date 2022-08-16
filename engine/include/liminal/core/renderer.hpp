@@ -5,9 +5,11 @@
 #include "../components/directional_light.hpp"
 #include "../components/transform.hpp"
 #include "../entities/scene.hpp"
+#include "../graphics/cubemap.hpp"
 #include "../graphics/mesh.hpp"
 #include "../graphics/model.hpp"
 #include "../graphics/program.hpp"
+#include "../graphics/renderbuffer.hpp"
 #include "../graphics/texture.hpp"
 #include <array>
 #include <gl/glew.h>
@@ -71,47 +73,47 @@ namespace liminal
         GLsizei render_height;
 
         GLuint geometry_fbo_id = 0;
-        GLuint geometry_position_texture_id = 0;
-        GLuint geometry_normal_texture_id = 0;
-        GLuint geometry_color_texture_id = 0;
-        GLuint geometry_albedo_texture_id = 0;
-        GLuint geometry_material_texture_id = 0;
-        GLuint geometry_id_texture_id = 0;
-        GLuint geometry_rbo_id = 0;
+        std::unique_ptr<liminal::texture> geometry_position_texture;
+        std::unique_ptr<liminal::texture> geometry_normal_texture;
+        std::unique_ptr<liminal::texture> geometry_color_texture;
+        std::unique_ptr<liminal::texture> geometry_albedo_texture;
+        std::unique_ptr<liminal::texture> geometry_material_texture;
+        std::unique_ptr<liminal::texture> geometry_id_texture;
+        std::unique_ptr<liminal::renderbuffer> geometry_depth_renderbuffer;
 
         GLuint hdr_fbo_id = 0;
-        std::array<GLuint, 2> hdr_texture_ids = {};
-        GLuint hdr_rbo_id = 0;
+        std::array<std::unique_ptr<liminal::texture>, 2> hdr_textures;
+        std::unique_ptr<liminal::renderbuffer> hdr_depth_renderbuffer;
 
         GLuint final_fbo_id = 0;
-        GLuint final_texture_id = 0;
+        std::unique_ptr<liminal::texture> final_texture;
 
         GLsizei directional_light_depth_map_size;
         std::array<GLuint, num_directional_light_shadows> directional_light_depth_map_fbo_ids = {};
-        std::array<std::array<GLuint, liminal::directional_light::num_cascades>, num_directional_light_shadows> directional_light_depth_map_texture_ids = {};
+        std::array<std::array<std::shared_ptr<liminal::texture>, liminal::directional_light::num_cascades>, num_directional_light_shadows> directional_light_depth_map_textures;
 
         GLsizei point_light_depth_cubemap_size;
         std::array<GLuint, num_point_light_shadows> point_light_depth_cubemap_fbo_ids = {};
-        std::array<GLuint, num_point_light_shadows> point_light_depth_cubemap_texture_ids = {};
+        std::array<std::shared_ptr<liminal::cubemap>, num_point_light_shadows> point_light_depth_cubemap_textures;
 
         GLsizei spot_light_depth_map_size;
         std::array<GLuint, num_spot_light_shadows> spot_light_depth_map_fbo_ids = {};
-        std::array<GLuint, num_spot_light_shadows> spot_light_depth_map_texture_ids = {};
+        std::array<std::shared_ptr<liminal::texture>, num_spot_light_shadows> spot_light_depth_map_textures;
 
         GLsizei water_reflection_width;
         GLsizei water_reflection_height;
         GLuint water_reflection_fbo_id = 0;
-        GLuint water_reflection_color_texture_id = 0;
-        GLuint water_reflection_rbo_id = 0;
+        std::unique_ptr<liminal::texture> water_reflection_color_texture;
+        std::unique_ptr<liminal::renderbuffer> water_reflection_depth_renderbuffer;
 
         GLsizei water_refraction_width;
         GLsizei water_refraction_height;
         GLuint water_refraction_fbo_id = 0;
-        GLuint water_refraction_color_texture_id = 0;
-        GLuint water_refraction_depth_texture_id = 0;
+        std::unique_ptr<liminal::texture> water_refraction_color_texture;
+        std::unique_ptr<liminal::texture> water_refraction_depth_texture;
 
         std::array<GLuint, 2> bloom_fbo_ids = {};
-        std::array<GLuint, 2> bloom_texture_ids = {};
+        std::array<std::unique_ptr<liminal::texture>, 2> bloom_textures;
 
         GLsizei water_vertices_size;
         GLuint water_vao_id;
@@ -129,7 +131,7 @@ namespace liminal
         GLuint screen_vao_id;
         GLuint screen_vbo_id;
 
-        GLuint brdf_texture_id;
+        std::unique_ptr<liminal::texture> brdf_texture;
 
         std::unique_ptr<liminal::program> depth_mesh_program;
         std::unique_ptr<liminal::program> depth_skinned_mesh_program;

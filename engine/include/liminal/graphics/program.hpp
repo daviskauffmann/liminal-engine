@@ -12,6 +12,8 @@ namespace liminal
     class program
     {
     public:
+        static void unbind();
+
         program(
             const char *vertex_filename,
             const char *geometry_filename,
@@ -24,7 +26,6 @@ namespace liminal
         void reload();
 
         void bind() const;
-        void unbind() const;
 
         void set_int(const char *name, GLint value) const;
         void set_unsigned_int(const char *name, GLuint value) const;

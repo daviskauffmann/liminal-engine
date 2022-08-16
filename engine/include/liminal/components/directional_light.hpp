@@ -1,10 +1,12 @@
 #ifndef LIMINAL_COMPONENTS_DIRECTIONAL_LIGHT_HPP
 #define LIMINAL_COMPONENTS_DIRECTIONAL_LIGHT_HPP
 
+#include "../graphics/texture.hpp"
 #include <array>
 #include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
+#include <memory>
 
 namespace liminal
 {
@@ -17,7 +19,7 @@ namespace liminal
         bool shadows = true;
 
         std::array<glm::mat4, num_cascades> view_projection_matrices = {};
-        std::array<GLuint, num_cascades> depth_map_texture_ids = {};
+        std::array<std::weak_ptr<liminal::texture>, num_cascades> depth_map_textures;
     };
 }
 

@@ -7,17 +7,17 @@ bool minecraft::block::is_solid(const minecraft::direction direction) const
 {
     switch (direction)
     {
-    case minecraft::direction::NORTH:
+    case minecraft::direction::north:
         return true;
-    case minecraft::direction::EAST:
+    case minecraft::direction::east:
         return true;
-    case minecraft::direction::SOUTH:
+    case minecraft::direction::south:
         return true;
-    case minecraft::direction::WEST:
+    case minecraft::direction::west:
         return true;
-    case minecraft::direction::UP:
+    case minecraft::direction::up:
         return true;
-    case minecraft::direction::DOWN:
+    case minecraft::direction::down:
         return true;
     default:
         return false;
@@ -28,32 +28,32 @@ void minecraft::block::add_to_mesh(const minecraft::chunk *const chunk, const in
 {
     const auto color = glm::vec3(static_cast<float>(std::clamp(light_level, min_light_level, max_light_level) / max_light_level));
 
-    if (!chunk->get_block(x, y + 1, z)->is_solid(minecraft::direction::DOWN))
+    if (!chunk->get_block(x, y + 1, z)->is_solid(minecraft::direction::down))
     {
         add_face_up(x, y, z, color, mesh_data);
     }
 
-    if (!chunk->get_block(x, y - 1, z)->is_solid(minecraft::direction::UP))
+    if (!chunk->get_block(x, y - 1, z)->is_solid(minecraft::direction::up))
     {
         add_face_down(x, y, z, color, mesh_data);
     }
 
-    if (!chunk->get_block(x, y, z + 1)->is_solid(minecraft::direction::SOUTH))
+    if (!chunk->get_block(x, y, z + 1)->is_solid(minecraft::direction::south))
     {
         add_face_north(x, y, z, color, mesh_data);
     }
 
-    if (!chunk->get_block(x, y, z - 1)->is_solid(minecraft::direction::NORTH))
+    if (!chunk->get_block(x, y, z - 1)->is_solid(minecraft::direction::north))
     {
         add_face_south(x, y, z, color, mesh_data);
     }
 
-    if (!chunk->get_block(x + 1, y, z)->is_solid(minecraft::direction::WEST))
+    if (!chunk->get_block(x + 1, y, z)->is_solid(minecraft::direction::west))
     {
         add_face_east(x, y, z, color, mesh_data);
     }
 
-    if (!chunk->get_block(x - 1, y, z)->is_solid(minecraft::direction::EAST))
+    if (!chunk->get_block(x - 1, y, z)->is_solid(minecraft::direction::east))
     {
         add_face_west(x, y, z, color, mesh_data);
     }
@@ -61,7 +61,7 @@ void minecraft::block::add_to_mesh(const minecraft::chunk *const chunk, const in
 
 void minecraft::block::add_face_up(const int x, const int y, const int z, const glm::vec3 &color, minecraft::mesh_data *const mesh_data) const
 {
-    const auto uvs = get_face_uvs(minecraft::direction::UP);
+    const auto uvs = get_face_uvs(minecraft::direction::up);
 
     mesh_data->vertices.push_back(liminal::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
@@ -89,7 +89,7 @@ void minecraft::block::add_face_up(const int x, const int y, const int z, const 
 
 void minecraft::block::add_face_down(const int x, const int y, const int z, const glm::vec3 &color, minecraft::mesh_data *const mesh_data) const
 {
-    const auto uvs = get_face_uvs(minecraft::direction::DOWN);
+    const auto uvs = get_face_uvs(minecraft::direction::down);
 
     mesh_data->vertices.push_back(liminal::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
@@ -117,7 +117,7 @@ void minecraft::block::add_face_down(const int x, const int y, const int z, cons
 
 void minecraft::block::add_face_north(const int x, const int y, const int z, const glm::vec3 &color, minecraft::mesh_data *const mesh_data) const
 {
-    const auto uvs = get_face_uvs(minecraft::direction::NORTH);
+    const auto uvs = get_face_uvs(minecraft::direction::north);
 
     mesh_data->vertices.push_back(liminal::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
@@ -145,7 +145,7 @@ void minecraft::block::add_face_north(const int x, const int y, const int z, con
 
 void minecraft::block::add_face_east(const int x, const int y, const int z, const glm::vec3 &color, minecraft::mesh_data *const mesh_data) const
 {
-    const auto uvs = get_face_uvs(minecraft::direction::EAST);
+    const auto uvs = get_face_uvs(minecraft::direction::east);
 
     mesh_data->vertices.push_back(liminal::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
@@ -173,7 +173,7 @@ void minecraft::block::add_face_east(const int x, const int y, const int z, cons
 
 void minecraft::block::add_face_south(const int x, const int y, const int z, const glm::vec3 &color, minecraft::mesh_data *const mesh_data) const
 {
-    const auto uvs = get_face_uvs(minecraft::direction::SOUTH);
+    const auto uvs = get_face_uvs(minecraft::direction::south);
 
     mesh_data->vertices.push_back(liminal::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
@@ -201,7 +201,7 @@ void minecraft::block::add_face_south(const int x, const int y, const int z, con
 
 void minecraft::block::add_face_west(const int x, const int y, const int z, const glm::vec3 &color, minecraft::mesh_data *const mesh_data) const
 {
-    const auto uvs = get_face_uvs(minecraft::direction::WEST);
+    const auto uvs = get_face_uvs(minecraft::direction::west);
 
     mesh_data->vertices.push_back(liminal::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),

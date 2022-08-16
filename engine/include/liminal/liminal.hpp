@@ -30,6 +30,7 @@
 #include "graphics\mesh.hpp"
 #include "graphics\model.hpp"
 #include "graphics\program.hpp"
+#include "graphics\renderbuffer.hpp"
 #include "graphics\skybox.hpp"
 #include "graphics\texture.hpp"
 #include "graphics\vertex.hpp"

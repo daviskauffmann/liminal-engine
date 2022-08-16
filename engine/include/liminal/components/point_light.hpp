@@ -1,10 +1,12 @@
 #ifndef LIMINAL_COMPONENTS_POINT_LIGHT_HPP
 #define LIMINAL_COMPONENTS_POINT_LIGHT_HPP
 
+#include "../graphics/cubemap.hpp"
 #include <array>
 #include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
+#include <memory>
 
 namespace liminal
 {
@@ -14,7 +16,7 @@ namespace liminal
         glm::vec3 color = {1, 1, 1};
 
         std::array<glm::mat4, 6> view_projection_matrices = {};
-        GLuint depth_cubemap_texture_id = 0;
+        std::weak_ptr<liminal::cubemap> depth_cubemap_texture;
     };
 }
 

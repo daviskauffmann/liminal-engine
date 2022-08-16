@@ -14,15 +14,6 @@
 #include <limits>
 #include <stdexcept>
 
-// TODO: create a proper rendering API rather than reading from the entt registry directly
-
-// TODO: framebuffer helper class
-// should store info about width/height
-// when binding the framebuffer, automatically set viewport to those values
-// and when unbinding, reset the viewport to some default value (probably the display width/height)
-
-// TODO: print more specific errors when framebuffers fail
-
 constexpr float directional_light_shadow_map_size = 10;
 constexpr float directional_light_near_plane = -10;
 constexpr float directional_light_far_plane = 10;
@@ -205,53 +196,38 @@ liminal::renderer::renderer(
         glGenFramebuffers(1, &capture_fbo_id);
         glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
         {
+            brdf_texture = std::make_unique<liminal::texture>(
+                GL_RG16F,
+                brdf_size,
+                brdf_size,
+                GL_RG,
+                GL_FLOAT,
+                liminal::texture_filter::linear,
+                liminal::texture_wrap::clamp_to_edge);
+
+            glGenRenderbuffers(1, &capture_rbo_id);
+            glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
             {
-                glGenTextures(1, &brdf_texture_id);
-                glBindTexture(GL_TEXTURE_2D, brdf_texture_id);
-                {
-                    glTexImage2D(
-                        GL_TEXTURE_2D,
-                        0,
-                        GL_RG16F,
-                        brdf_size,
-                        brdf_size,
-                        0,
-                        GL_RG,
-                        GL_FLOAT,
-                        0);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                }
-                glBindTexture(GL_TEXTURE_2D, 0);
-
-                glFramebufferTexture2D(
-                    GL_FRAMEBUFFER,
-                    GL_COLOR_ATTACHMENT0,
-                    GL_TEXTURE_2D,
-                    brdf_texture_id,
-                    0);
-            }
-
-            {
-                glGenRenderbuffers(1, &capture_rbo_id);
-                glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
-                {
-                    glRenderbufferStorage(
-                        GL_RENDERBUFFER,
-                        GL_DEPTH_COMPONENT24,
-                        brdf_size,
-                        brdf_size);
-                }
-                glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-                glFramebufferRenderbuffer(
-                    GL_FRAMEBUFFER,
-                    GL_DEPTH_ATTACHMENT,
+                glRenderbufferStorage(
                     GL_RENDERBUFFER,
-                    capture_rbo_id);
+                    GL_DEPTH_COMPONENT24,
+                    brdf_size,
+                    brdf_size);
             }
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D,
+                brdf_texture->get_texture_id(),
+                0);
+
+            glFramebufferRenderbuffer(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_RENDERBUFFER,
+                capture_rbo_id);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
@@ -276,7 +252,7 @@ liminal::renderer::renderer(
                 glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                 glBindVertexArray(0);
             }
-            brdf_program->unbind();
+            liminal::program::unbind();
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -318,7 +294,7 @@ liminal::renderer::renderer(
          {"material.roughness_map", 3},
          {"material.occlusion_map", 4},
          {"material.height_map", 5}});
-    geometry_mesh_program->unbind();
+    liminal::program::unbind();
 
     geometry_skinned_mesh_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_skinned_mesh.vs",
@@ -331,7 +307,7 @@ liminal::renderer::renderer(
          {"material.roughness_map", 3},
          {"material.occlusion_map", 4},
          {"material.height_map", 5}});
-    geometry_skinned_mesh_program->unbind();
+    liminal::program::unbind();
 
     geometry_terrain_program = std::make_unique<liminal::program>(
         "assets/shaders/geometry_mesh.vs",
@@ -344,7 +320,7 @@ liminal::renderer::renderer(
          {"materials[0].roughness_map", 3},
          {"materials[0].occlusion_map", 4},
          {"materials[0].height_map", 5}});
-    geometry_terrain_program->unbind();
+    liminal::program::unbind();
 
     deferred_ambient_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
@@ -359,7 +335,7 @@ liminal::renderer::renderer(
          {"skybox.irradiance_cubemap", 5},
          {"skybox.prefilter_cubemap", 6},
          {"brdf_map", 7}});
-    deferred_ambient_program->unbind();
+    liminal::program::unbind();
 
     deferred_directional_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
@@ -375,7 +351,7 @@ liminal::renderer::renderer(
     {
         deferred_directional_program->set_sampler(("light.depth_map[" + std::to_string(cascade_index) + "]").c_str(), static_cast<GLint>(5 + cascade_index));
     }
-    deferred_directional_program->unbind();
+    liminal::program::unbind();
 
     deferred_point_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
@@ -388,7 +364,7 @@ liminal::renderer::renderer(
          {"geometry.albedo_map", 3},
          {"geometry.material_map", 4},
          {"light.depth_cubemap", 5}});
-    deferred_point_program->unbind();
+    liminal::program::unbind();
 
     deferred_spot_program = std::make_unique<liminal::program>(
         "assets/shaders/deferred.vs",
@@ -401,7 +377,7 @@ liminal::renderer::renderer(
          {"geometry.albedo_map", 3},
          {"geometry.material_map", 4},
          {"light.depth_map", 5}});
-    deferred_spot_program->unbind();
+    liminal::program::unbind();
 
     skybox_program = std::make_unique<liminal::program>(
         "assets/shaders/skybox.vs",
@@ -409,7 +385,7 @@ liminal::renderer::renderer(
     skybox_program->bind();
     skybox_program->set_samplers(
         {{"skybox.environment_cubemap", 0}});
-    skybox_program->unbind();
+    liminal::program::unbind();
 
     water_program = std::make_unique<liminal::program>(
         "assets/shaders/water.vs",
@@ -421,7 +397,7 @@ liminal::renderer::renderer(
          {"water.depth_map", 2},
          {"water.dudv_map", 3},
          {"water.normal_map", 4}});
-    water_program->unbind();
+    liminal::program::unbind();
 
     sprite_program = std::make_unique<liminal::program>(
         "assets/shaders/sprite.vs",
@@ -429,7 +405,7 @@ liminal::renderer::renderer(
     sprite_program->bind();
     sprite_program->set_samplers(
         {{"sprite.texture", 0}});
-    sprite_program->unbind();
+    liminal::program::unbind();
 
     gaussian_program = std::make_unique<liminal::program>(
         "assets/shaders/gaussian.vs",
@@ -437,7 +413,7 @@ liminal::renderer::renderer(
     gaussian_program->bind();
     gaussian_program->set_samplers(
         {{"image", 0}});
-    gaussian_program->unbind();
+    liminal::program::unbind();
 
     postprocess_program = std::make_unique<liminal::program>(
         "assets/shaders/postprocess.vs",
@@ -446,7 +422,7 @@ liminal::renderer::renderer(
     postprocess_program->set_samplers(
         {{"hdr_map", 0},
          {"bloom_map", 1}});
-    postprocess_program->unbind();
+    liminal::program::unbind();
 
     // create water textures
     water_dudv_texture = std::make_unique<liminal::texture>("assets/images/water_dudv.png");
@@ -506,7 +482,7 @@ liminal::renderer::renderer(
             }
         }
 
-        std::vector<std::vector<std::shared_ptr<liminal::texture>>> textures;
+        std::array<std::vector<std::shared_ptr<liminal::texture>>, liminal::mesh::num_textures> textures;
 
         DEBUG_sphere_mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
     }
@@ -515,42 +491,22 @@ liminal::renderer::renderer(
 liminal::renderer::~renderer()
 {
     glDeleteFramebuffers(1, &geometry_fbo_id);
-    glDeleteTextures(1, &geometry_position_texture_id);
-    glDeleteTextures(1, &geometry_normal_texture_id);
-    glDeleteTextures(1, &geometry_albedo_texture_id);
-    glDeleteTextures(1, &geometry_material_texture_id);
-    glDeleteTextures(1, &geometry_id_texture_id);
-    glDeleteRenderbuffers(1, &geometry_rbo_id);
 
     glDeleteFramebuffers(1, &hdr_fbo_id);
-    glDeleteTextures(2, hdr_texture_ids.data());
-    glDeleteRenderbuffers(1, &hdr_rbo_id);
 
     glDeleteFramebuffers(1, &final_fbo_id);
-    glDeleteTextures(1, &final_texture_id);
 
     glDeleteFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-    for (const auto &directional_light_depth_map_texture_id : directional_light_depth_map_texture_ids)
-    {
-        glDeleteTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_id.data());
-    }
 
     glDeleteFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
-    glDeleteTextures(num_point_light_shadows, point_light_depth_cubemap_texture_ids.data());
 
     glDeleteFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
-    glDeleteTextures(num_spot_light_shadows, spot_light_depth_map_texture_ids.data());
 
     glDeleteFramebuffers(1, &water_reflection_fbo_id);
-    glDeleteRenderbuffers(1, &water_reflection_rbo_id);
-    glDeleteTextures(1, &water_reflection_color_texture_id);
 
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
-    glDeleteTextures(1, &water_refraction_color_texture_id);
-    glDeleteTextures(1, &water_refraction_depth_texture_id);
 
     glDeleteFramebuffers(2, bloom_fbo_ids.data());
-    glDeleteTextures(2, bloom_texture_ids.data());
 
     glDeleteVertexArrays(1, &water_vao_id);
     glDeleteBuffers(1, &water_vbo_id);
@@ -563,8 +519,6 @@ liminal::renderer::~renderer()
 
     glDeleteVertexArrays(1, &screen_vao_id);
     glDeleteBuffers(1, &screen_vbo_id);
-
-    glDeleteTextures(1, &brdf_texture_id);
 }
 
 float liminal::renderer::get_aspect_ratio() const
@@ -593,22 +547,12 @@ void liminal::renderer::calc_render_size()
     render_height = static_cast<GLsizei>(target_height * render_scale);
 
     glDeleteFramebuffers(1, &geometry_fbo_id);
-    glDeleteTextures(1, &geometry_position_texture_id);
-    glDeleteTextures(1, &geometry_normal_texture_id);
-    glDeleteTextures(1, &geometry_albedo_texture_id);
-    glDeleteTextures(1, &geometry_material_texture_id);
-    glDeleteTextures(1, &geometry_id_texture_id);
-    glDeleteRenderbuffers(1, &geometry_rbo_id);
 
     glDeleteFramebuffers(1, &hdr_fbo_id);
-    glDeleteTextures(2, hdr_texture_ids.data());
-    glDeleteRenderbuffers(1, &hdr_rbo_id);
 
     glDeleteFramebuffers(1, &final_fbo_id);
-    glDeleteTextures(1, &final_texture_id);
 
     glDeleteFramebuffers(2, bloom_fbo_ids.data());
-    glDeleteTextures(2, bloom_texture_ids.data());
 
     // setup geometry fbo
     // gbuffer:
@@ -625,195 +569,97 @@ void liminal::renderer::calc_render_size()
     glGenFramebuffers(1, &geometry_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
     {
-        {
-            glGenTextures(1, &geometry_position_texture_id);
-            glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGB16F,
-                    render_width,
-                    render_height,
-                    0,
-                    GL_RGB,
-                    GL_FLOAT,
-                    nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
+        geometry_position_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            render_width,
+            render_height,
+            GL_RGB,
+            GL_FLOAT);
+        geometry_normal_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            render_width,
+            render_height,
+            GL_RGB,
+            GL_FLOAT);
+        geometry_color_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            render_width,
+            render_height,
+            GL_RGB,
+            GL_FLOAT);
+        geometry_albedo_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            render_width,
+            render_height,
+            GL_RGB,
+            GL_FLOAT);
+        geometry_material_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            render_width,
+            render_height,
+            GL_RGBA,
+            GL_FLOAT);
+        geometry_id_texture = std::make_unique<liminal::texture>(
+            GL_R32I,
+            render_width,
+            render_height,
+            GL_RED_INTEGER,
+            GL_INT);
+        geometry_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
+            GL_DEPTH_COMPONENT24,
+            render_width,
+            render_height);
 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D,
-                geometry_position_texture_id,
-                0);
-        }
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            geometry_position_texture->get_texture_id(),
+            0);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT1,
+            GL_TEXTURE_2D,
+            geometry_normal_texture->get_texture_id(),
+            0);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT2,
+            GL_TEXTURE_2D,
+            geometry_color_texture->get_texture_id(),
+            0);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT3,
+            GL_TEXTURE_2D,
+            geometry_albedo_texture->get_texture_id(),
+            0);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT4,
+            GL_TEXTURE_2D,
+            geometry_material_texture->get_texture_id(),
+            0);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT5,
+            GL_TEXTURE_2D,
+            geometry_id_texture->get_texture_id(),
+            0);
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_RENDERBUFFER,
+            geometry_depth_renderbuffer->get_renderbuffer_id());
 
-        {
-            glGenTextures(1, &geometry_normal_texture_id);
-            glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGB16F,
-                    render_width,
-                    render_height,
-                    0,
-                    GL_RGB,
-                    GL_FLOAT,
-                    nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT1,
-                GL_TEXTURE_2D,
-                geometry_normal_texture_id,
-                0);
-        }
-
-        {
-            glGenTextures(1, &geometry_color_texture_id);
-            glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGB16F,
-                    render_width,
-                    render_height,
-                    0,
-                    GL_RGB,
-                    GL_FLOAT,
-                    nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT2,
-                GL_TEXTURE_2D,
-                geometry_color_texture_id,
-                0);
-        }
-
-        {
-            glGenTextures(1, &geometry_albedo_texture_id);
-            glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGB16F,
-                    render_width,
-                    render_height,
-                    0,
-                    GL_RGB,
-                    GL_FLOAT,
-                    nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT3,
-                GL_TEXTURE_2D,
-                geometry_albedo_texture_id,
-                0);
-        }
-
-        {
-            glGenTextures(1, &geometry_material_texture_id);
-            glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGBA16F,
-                    render_width,
-                    render_height,
-                    0,
-                    GL_RGBA,
-                    GL_FLOAT,
-                    nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT4,
-                GL_TEXTURE_2D,
-                geometry_material_texture_id,
-                0);
-        }
-
-        {
-            glGenTextures(1, &geometry_id_texture_id);
-            glBindTexture(GL_TEXTURE_2D, geometry_id_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_R32I,
-                    render_width,
-                    render_height,
-                    0,
-                    GL_RED_INTEGER,
-                    GL_INT,
-                    nullptr);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT5,
-                GL_TEXTURE_2D,
-                geometry_id_texture_id,
-                0);
-        }
-
-        {
-            glGenRenderbuffers(1, &geometry_rbo_id);
-            glBindRenderbuffer(GL_RENDERBUFFER, geometry_rbo_id);
-            {
-                glRenderbufferStorage(
-                    GL_RENDERBUFFER,
-                    GL_DEPTH_COMPONENT,
-                    render_width,
-                    render_height);
-            }
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-            glFramebufferRenderbuffer(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_RENDERBUFFER,
-                geometry_rbo_id);
-        }
-
-        {
-            constexpr std::array<GLenum, 6> geometry_color_attachments{
-                GL_COLOR_ATTACHMENT0,
-                GL_COLOR_ATTACHMENT1,
-                GL_COLOR_ATTACHMENT2,
-                GL_COLOR_ATTACHMENT3,
-                GL_COLOR_ATTACHMENT4,
-                GL_COLOR_ATTACHMENT5};
-            glDrawBuffers(static_cast<GLsizei>(geometry_color_attachments.size()), geometry_color_attachments.data());
-        }
+        constexpr std::array<GLenum, 6> geometry_color_attachments{
+            GL_COLOR_ATTACHMENT0,
+            GL_COLOR_ATTACHMENT1,
+            GL_COLOR_ATTACHMENT2,
+            GL_COLOR_ATTACHMENT3,
+            GL_COLOR_ATTACHMENT4,
+            GL_COLOR_ATTACHMENT5};
+        glDrawBuffers(static_cast<GLsizei>(geometry_color_attachments.size()), geometry_color_attachments.data());
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -826,63 +672,40 @@ void liminal::renderer::calc_render_size()
     glGenFramebuffers(1, &hdr_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
     {
+        for (GLenum hdr_texture_index = 0; hdr_texture_index < hdr_textures.size(); hdr_texture_index++)
         {
-            glGenTextures(2, hdr_texture_ids.data());
-            for (GLenum i = 0; i < 2; i++)
-            {
-                glBindTexture(GL_TEXTURE_2D, hdr_texture_ids.at(i));
-                {
-                    glTexImage2D(
-                        GL_TEXTURE_2D,
-                        0,
-                        GL_RGBA16F,
-                        render_width,
-                        render_height,
-                        0,
-                        GL_RGBA,
-                        GL_FLOAT,
-                        nullptr);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                }
-                glBindTexture(GL_TEXTURE_2D, 0);
+            hdr_textures.at(hdr_texture_index) = std::make_unique<liminal::texture>(
+                GL_RGBA16F,
+                render_width,
+                render_height,
+                GL_RGB,
+                GL_FLOAT,
+                liminal::texture_filter::linear,
+                liminal::texture_wrap::clamp_to_edge);
 
-                glFramebufferTexture2D(
-                    GL_FRAMEBUFFER,
-                    GL_COLOR_ATTACHMENT0 + i,
-                    GL_TEXTURE_2D,
-                    hdr_texture_ids.at(i),
-                    0);
-            }
-        }
-
-        {
-            glGenRenderbuffers(1, &hdr_rbo_id);
-            glBindRenderbuffer(GL_RENDERBUFFER, hdr_rbo_id);
-            {
-                glRenderbufferStorage(
-                    GL_RENDERBUFFER,
-                    GL_DEPTH_STENCIL,
-                    target_width,
-                    target_height);
-            }
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-            glFramebufferRenderbuffer(
+            glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_RENDERBUFFER,
-                hdr_rbo_id);
+                GL_COLOR_ATTACHMENT0 + hdr_texture_index,
+                GL_TEXTURE_2D,
+                hdr_textures.at(hdr_texture_index)->get_texture_id(),
+                0);
         }
 
-        {
-            constexpr std::array<GLenum, 2> hdr_color_attachments{
-                GL_COLOR_ATTACHMENT0,
-                GL_COLOR_ATTACHMENT1};
-            glDrawBuffers(static_cast<GLsizei>(hdr_color_attachments.size()), hdr_color_attachments.data());
-        }
+        hdr_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
+            GL_DEPTH_STENCIL,
+            target_width,
+            target_height);
+
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_RENDERBUFFER,
+            hdr_depth_renderbuffer->get_renderbuffer_id());
+
+        constexpr std::array<GLenum, 2> hdr_color_attachments{
+            GL_COLOR_ATTACHMENT0,
+            GL_COLOR_ATTACHMENT1};
+        glDrawBuffers(static_cast<GLsizei>(hdr_color_attachments.size()), hdr_color_attachments.data());
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -893,38 +716,25 @@ void liminal::renderer::calc_render_size()
 
     // setup bloom fbo
     glGenFramebuffers(2, bloom_fbo_ids.data());
-    glGenTextures(2, bloom_texture_ids.data());
-    for (std::size_t bloom_index = 0; bloom_index < 2; bloom_index++)
+    for (std::size_t bloom_index = 0; bloom_index < bloom_fbo_ids.size(); bloom_index++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at(bloom_index));
         {
-            {
-                glBindTexture(GL_TEXTURE_2D, bloom_texture_ids.at(bloom_index));
-                {
-                    glTexImage2D(
-                        GL_TEXTURE_2D,
-                        0,
-                        GL_RGBA16F,
-                        target_width / 8,
-                        target_height / 8,
-                        0,
-                        GL_RGBA,
-                        GL_FLOAT,
-                        nullptr);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                }
-                glBindTexture(GL_TEXTURE_2D, 0);
+            bloom_textures.at(bloom_index) = std::make_unique<liminal::texture>(
+                GL_RGBA16F,
+                target_width / 8,
+                target_height / 8,
+                GL_RGBA,
+                GL_FLOAT,
+                liminal::texture_filter::linear,
+                liminal::texture_wrap::clamp_to_edge);
 
-                glFramebufferTexture2D(
-                    GL_FRAMEBUFFER,
-                    GL_COLOR_ATTACHMENT0,
-                    GL_TEXTURE_2D,
-                    bloom_texture_ids.at(bloom_index),
-                    0);
-            }
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D,
+                bloom_textures.at(bloom_index)->get_texture_id(),
+                0);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
@@ -938,32 +748,19 @@ void liminal::renderer::calc_render_size()
     glGenFramebuffers(1, &final_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, final_fbo_id);
     {
-        {
-            glGenTextures(1, &final_texture_id);
-            glBindTexture(GL_TEXTURE_2D, final_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGBA16F,
-                    target_width,
-                    target_height,
-                    0,
-                    GL_RGBA,
-                    GL_FLOAT,
-                    nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
+        final_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            target_width,
+            target_height,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE);
 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D,
-                final_texture_id,
-                0);
-        }
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            final_texture->get_texture_id(),
+            0);
 
         {
             constexpr std::array<GLenum, 1> final_color_attachments{
@@ -984,10 +781,6 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
     directional_light_depth_map_size = size;
 
     glDeleteFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-    for (const auto &directional_light_depth_map_texture_id : directional_light_depth_map_texture_ids)
-    {
-        glDeleteTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_id.data());
-    }
 
     glGenFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
     for (std::size_t shadow_index = 0; shadow_index < num_directional_light_shadows; shadow_index++)
@@ -997,38 +790,25 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
 
-            glGenTextures(liminal::directional_light::num_cascades, directional_light_depth_map_texture_ids.at(shadow_index).data());
             for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
             {
-                glBindTexture(GL_TEXTURE_2D, directional_light_depth_map_texture_ids.at(shadow_index).at(cascade_index));
-                {
-                    glTexImage2D(
-                        GL_TEXTURE_2D,
-                        0,
-                        GL_DEPTH_COMPONENT32,
-                        size,
-                        size,
-                        0,
-                        GL_DEPTH_COMPONENT,
-                        GL_FLOAT,
-                        nullptr);
-
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-                    constexpr std::array<GLfloat, 4> border_color{1, 1, 1, 1};
-                    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
-                }
-                glBindTexture(GL_TEXTURE_2D, 0);
+                constexpr std::array<GLfloat, 4> border_color = {1, 1, 1, 1};
+                directional_light_depth_map_textures.at(shadow_index).at(cascade_index) = std::make_unique<liminal::texture>(
+                    GL_DEPTH_COMPONENT32,
+                    size,
+                    size,
+                    GL_DEPTH_COMPONENT,
+                    GL_FLOAT,
+                    liminal::texture_filter::nearest,
+                    liminal::texture_wrap::clamp_to_border,
+                    border_color);
             }
 
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,
                 GL_TEXTURE_2D,
-                directional_light_depth_map_texture_ids.at(shadow_index).at(0),
+                directional_light_depth_map_textures.at(shadow_index).at(0)->get_texture_id(),
                 0);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -1045,10 +825,8 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
     point_light_depth_cubemap_size = size;
 
     glDeleteFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
-    glDeleteTextures(num_point_light_shadows, point_light_depth_cubemap_texture_ids.data());
 
     glGenFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
-    glGenTextures(num_point_light_shadows, point_light_depth_cubemap_texture_ids.data());
     for (std::size_t shadow_index = 0; shadow_index < num_point_light_shadows; shadow_index++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids.at(shadow_index));
@@ -1056,37 +834,20 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
 
-            {
-                glBindTexture(GL_TEXTURE_CUBE_MAP, point_light_depth_cubemap_texture_ids.at(shadow_index));
-                {
-                    for (GLenum face = 0; face < 6; face++)
-                    {
-                        glTexImage2D(
-                            GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                            0,
-                            GL_DEPTH_COMPONENT,
-                            size,
-                            size,
-                            0,
-                            GL_DEPTH_COMPONENT,
-                            GL_FLOAT,
-                            nullptr);
-                    }
+            point_light_depth_cubemap_textures.at(shadow_index) = std::make_unique<liminal::cubemap>(
+                GL_DEPTH_COMPONENT32,
+                size,
+                size,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                liminal::texture_filter::nearest,
+                liminal::texture_wrap::clamp_to_border);
 
-                    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-                    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-                }
-                glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-                glFramebufferTexture(
-                    GL_FRAMEBUFFER,
-                    GL_DEPTH_ATTACHMENT,
-                    point_light_depth_cubemap_texture_ids.at(shadow_index),
-                    0);
-            }
+            glFramebufferTexture(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                point_light_depth_cubemap_textures.at(shadow_index)->get_texture_id(),
+                0);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
@@ -1102,10 +863,8 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
     spot_light_depth_map_size = size;
 
     glDeleteFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
-    glDeleteTextures(num_spot_light_shadows, spot_light_depth_map_texture_ids.data());
 
     glGenFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
-    glGenTextures(num_spot_light_shadows, spot_light_depth_map_texture_ids.data());
     for (std::size_t shadow_index = 0; shadow_index < num_spot_light_shadows; shadow_index++)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids.at(shadow_index));
@@ -1113,37 +872,23 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
 
-            {
-                glBindTexture(GL_TEXTURE_2D, spot_light_depth_map_texture_ids.at(shadow_index));
-                {
-                    glTexImage2D(
-                        GL_TEXTURE_2D,
-                        0,
-                        GL_DEPTH_COMPONENT,
-                        size,
-                        size,
-                        0,
-                        GL_DEPTH_COMPONENT,
-                        GL_FLOAT,
-                        nullptr);
+            constexpr std::array<GLfloat, 4> border_color{1, 1, 1, 1};
+            spot_light_depth_map_textures.at(shadow_index) = std::make_unique<liminal::texture>(
+                GL_DEPTH_COMPONENT32,
+                size,
+                size,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                liminal::texture_filter::nearest,
+                liminal::texture_wrap::clamp_to_border,
+                border_color);
 
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-                    constexpr std::array<GLfloat, 4> border_color{1, 1, 1, 1};
-                    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
-                }
-                glBindTexture(GL_TEXTURE_2D, 0);
-
-                glFramebufferTexture2D(
-                    GL_FRAMEBUFFER,
-                    GL_DEPTH_ATTACHMENT,
-                    GL_TEXTURE_2D,
-                    spot_light_depth_map_texture_ids.at(shadow_index),
-                    0);
-            }
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_TEXTURE_2D,
+                spot_light_depth_map_textures.at(shadow_index)->get_texture_id(),
+                0);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
@@ -1154,65 +899,40 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
     }
 }
 
-void liminal::renderer::set_reflection_size(const GLsizei wdith, const GLsizei height)
+void liminal::renderer::set_reflection_size(const GLsizei width, const GLsizei height)
 {
-    water_reflection_width = wdith;
+    water_reflection_width = width;
     water_reflection_height = height;
 
     glDeleteFramebuffers(1, &water_reflection_fbo_id);
-    glDeleteTextures(1, &water_reflection_color_texture_id);
-    glDeleteRenderbuffers(1, &water_reflection_rbo_id);
 
     // setup water reflection fbo
     glGenFramebuffers(1, &water_reflection_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, water_reflection_fbo_id);
     {
-        {
-            glGenTextures(1, &water_reflection_color_texture_id);
-            glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGBA16F,
-                    wdith,
-                    height,
-                    0,
-                    GL_RGBA,
-                    GL_FLOAT,
-                    nullptr);
+        water_reflection_color_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            width,
+            height,
+            GL_RGBA,
+            GL_FLOAT,
+            liminal::texture_filter::linear);
+        water_reflection_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
+            GL_DEPTH_COMPONENT24,
+            width,
+            height);
 
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D,
-                water_reflection_color_texture_id,
-                0);
-        }
-
-        {
-            glGenRenderbuffers(1, &water_reflection_rbo_id);
-            glBindRenderbuffer(GL_RENDERBUFFER, water_reflection_rbo_id);
-            {
-                glRenderbufferStorage(
-                    GL_RENDERBUFFER,
-                    GL_DEPTH_COMPONENT,
-                    wdith,
-                    height);
-            }
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-            glFramebufferRenderbuffer(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_RENDERBUFFER,
-                water_reflection_rbo_id);
-        }
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            water_reflection_color_texture->get_texture_id(),
+            0);
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_RENDERBUFFER,
+            water_reflection_depth_renderbuffer->get_renderbuffer_id());
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -1228,70 +948,39 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
     water_refraction_height = height;
 
     glDeleteFramebuffers(1, &water_refraction_fbo_id);
-    glDeleteTextures(1, &water_refraction_color_texture_id);
-    glDeleteTextures(1, &water_refraction_depth_texture_id);
 
     // setup water refraction fbo
     glGenFramebuffers(1, &water_refraction_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
     {
-        {
-            glGenTextures(1, &water_refraction_color_texture_id);
-            glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_RGBA16F,
-                    width,
-                    height,
-                    0,
-                    GL_RGBA,
-                    GL_FLOAT,
-                    nullptr);
+        water_refraction_color_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            width,
+            height,
+            GL_RGBA,
+            GL_FLOAT,
+            liminal::texture_filter::linear,
+            liminal::texture_wrap::clamp_to_edge);
+        water_refraction_depth_texture = std::make_unique<liminal::texture>(
+            GL_DEPTH_COMPONENT32,
+            width,
+            height,
+            GL_DEPTH_COMPONENT,
+            GL_FLOAT,
+            liminal::texture_filter::linear);
 
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D,
-                water_refraction_color_texture_id,
-                0);
-        }
-
-        {
-            glGenTextures(1, &water_refraction_depth_texture_id);
-            glBindTexture(GL_TEXTURE_2D, water_refraction_depth_texture_id);
-            {
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    GL_DEPTH_COMPONENT,
-                    width,
-                    height,
-                    0,
-                    GL_DEPTH_COMPONENT,
-                    GL_FLOAT,
-                    nullptr);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                water_refraction_depth_texture_id,
-                0);
-        }
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            water_refraction_color_texture->get_texture_id(),
+            0);
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_TEXTURE_2D,
+            water_refraction_depth_texture->get_texture_id(),
+            0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -1373,7 +1062,7 @@ void liminal::renderer::render_shadows(
         for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
         {
             directional_light.view_projection_matrices.at(cascade_index) = glm::identity<glm::mat4>();
-            directional_light.depth_map_texture_ids.at(cascade_index) = 0;
+            directional_light.depth_map_textures.at(cascade_index) = {};
         }
 
         if (!directional_light.shadows || shadow_index >= num_directional_light_shadows)
@@ -1436,13 +1125,13 @@ void liminal::renderer::render_shadows(
                     camera_transform.position,
                     {0, 1, 0});
                 directional_light.view_projection_matrices.at(cascade_index) = projection * view;
-                directional_light.depth_map_texture_ids.at(cascade_index) = directional_light_depth_map_texture_ids.at(shadow_index).at(cascade_index);
+                directional_light.depth_map_textures.at(cascade_index) = directional_light_depth_map_textures.at(shadow_index).at(cascade_index);
 
                 glFramebufferTexture2D(
                     GL_FRAMEBUFFER,
                     GL_DEPTH_ATTACHMENT,
                     GL_TEXTURE_2D,
-                    directional_light_depth_map_texture_ids.at(shadow_index).at(cascade_index),
+                    directional_light_depth_map_textures.at(shadow_index).at(cascade_index)->get_texture_id(),
                     0);
 
                 glClear(GL_DEPTH_BUFFER_BIT);
@@ -1461,7 +1150,7 @@ void liminal::renderer::render_shadows(
 
                                 _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                             }
-                            depth_skinned_mesh_program->unbind();
+                            liminal::program::unbind();
                         }
                         else
                         {
@@ -1471,7 +1160,7 @@ void liminal::renderer::render_shadows(
 
                                 _mesh_renderer.model->draw_meshes(*depth_mesh_program);
                             }
-                            depth_mesh_program->unbind();
+                            liminal::program::unbind();
                         }
                     }
                 }
@@ -1487,7 +1176,7 @@ void liminal::renderer::render_shadows(
                         _terrain.mesh->draw(*depth_mesh_program);
                     }
                 }
-                depth_mesh_program->unbind();
+                liminal::program::unbind();
             }
 
             glDisable(GL_CULL_FACE);
@@ -1500,7 +1189,7 @@ void liminal::renderer::render_shadows(
     for (std::size_t shadow_index = 0; const auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, const liminal::transform>().each())
     {
         point_light.view_projection_matrices.fill(glm::identity<glm::mat4>());
-        point_light.depth_cubemap_texture_id = 0;
+        point_light.depth_cubemap_texture = {};
 
         if (shadow_index >= num_point_light_shadows)
         {
@@ -1518,7 +1207,7 @@ void liminal::renderer::render_shadows(
         point_light.view_projection_matrices.at(3) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
         point_light.view_projection_matrices.at(4) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
         point_light.view_projection_matrices.at(5) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
-        point_light.depth_cubemap_texture_id = point_light_depth_cubemap_texture_ids.at(shadow_index);
+        point_light.depth_cubemap_texture = point_light_depth_cubemap_textures.at(shadow_index);
 
         glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids.at(shadow_index));
         {
@@ -1549,7 +1238,7 @@ void liminal::renderer::render_shadows(
 
                             _mesh_renderer.model->draw_meshes(*depth_cube_skinned_mesh_program);
                         }
-                        depth_cube_skinned_mesh_program->unbind();
+                        liminal::program::unbind();
                     }
                     else
                     {
@@ -1569,7 +1258,7 @@ void liminal::renderer::render_shadows(
 
                             _mesh_renderer.model->draw_meshes(*depth_cube_mesh_program);
                         }
-                        depth_cube_mesh_program->unbind();
+                        liminal::program::unbind();
                     }
                 }
             }
@@ -1594,7 +1283,7 @@ void liminal::renderer::render_shadows(
             //         _terrain.mesh->draw(*depth_cube_mesh_program);
             //     }
             // }
-            // depth_cube_mesh_program->unbind();
+            // liminal::program::unbind();
 
             glDisable(GL_CULL_FACE);
         }
@@ -1606,7 +1295,7 @@ void liminal::renderer::render_shadows(
     for (std::size_t shadow_index = 0; const auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, const liminal::transform>().each())
     {
         spot_light.view_projection_matrix = glm::identity<glm::mat4>();
-        spot_light.depth_map_texture_id = 0;
+        spot_light.depth_map_texture = {};
 
         if (shadow_index >= num_spot_light_shadows)
         {
@@ -1623,7 +1312,7 @@ void liminal::renderer::render_shadows(
         constexpr auto up = glm::vec3(0, 1, 0);
         const auto view = glm::lookAt(transform.position, target, up);
         spot_light.view_projection_matrix = projection * view;
-        spot_light.depth_map_texture_id = spot_light_depth_map_texture_ids.at(shadow_index);
+        spot_light.depth_map_texture = spot_light_depth_map_textures.at(shadow_index);
 
         glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids.at(shadow_index));
         {
@@ -1646,7 +1335,7 @@ void liminal::renderer::render_shadows(
 
                             _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
-                        depth_skinned_mesh_program->unbind();
+                        liminal::program::unbind();
                     }
                     else
                     {
@@ -1656,7 +1345,7 @@ void liminal::renderer::render_shadows(
 
                             _mesh_renderer.model->draw_meshes(*depth_mesh_program);
                         }
-                        depth_mesh_program->unbind();
+                        liminal::program::unbind();
                     }
                 }
             }
@@ -1672,7 +1361,7 @@ void liminal::renderer::render_shadows(
                     _terrain.mesh->draw(*depth_mesh_program);
                 }
             }
-            depth_mesh_program->unbind();
+            liminal::program::unbind();
 
             glDisable(GL_CULL_FACE);
         }
@@ -1705,7 +1394,7 @@ void liminal::renderer::render_objects(
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         constexpr auto value = -1;
-        glClearTexImage(geometry_id_texture_id, 0, GL_RED_INTEGER, GL_INT, &value);
+        glClearTexImage(geometry_id_texture->get_texture_id(), 0, GL_RED_INTEGER, GL_INT, &value);
 
         for (const auto [id, transform, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
         {
@@ -1725,7 +1414,7 @@ void liminal::renderer::render_objects(
 
                         mesh_renderer.model->draw_meshes(*geometry_skinned_mesh_program);
                     }
-                    geometry_skinned_mesh_program->unbind();
+                    liminal::program::unbind();
                 }
                 else
                 {
@@ -1739,7 +1428,7 @@ void liminal::renderer::render_objects(
 
                         mesh_renderer.model->draw_meshes(*geometry_mesh_program);
                     }
-                    geometry_mesh_program->unbind();
+                    liminal::program::unbind();
                 }
             }
         }
@@ -1759,7 +1448,7 @@ void liminal::renderer::render_objects(
                 terrain.mesh->draw(*geometry_terrain_program);
             }
         }
-        geometry_terrain_program->unbind();
+        liminal::program::unbind();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDisable(GL_CULL_FACE);
@@ -1780,45 +1469,37 @@ void liminal::renderer::render_objects(
         {
             deferred_ambient_program->set_vec3("camera.position", camera_transform.position);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox ? scene.skybox->irradiance_cubemap_id : 0);
-            glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox ? scene.skybox->prefilter_cubemap_id : 0);
-            glActiveTexture(GL_TEXTURE7);
-            glBindTexture(GL_TEXTURE_2D, brdf_texture_id);
+            geometry_position_texture->bind(0);
+            geometry_normal_texture->bind(1);
+            geometry_color_texture->bind(2);
+            geometry_albedo_texture->bind(3);
+            geometry_material_texture->bind(4);
+            if (scene.skybox)
+            {
+                scene.skybox->bind_irradiance_map(5);
+                scene.skybox->bind_prefilter_map(6);
+            }
+            else
+            {
+                liminal::texture::unbind(5);
+                liminal::texture::unbind(6);
+            }
+            brdf_texture->bind(7);
 
             glBindVertexArray(screen_vao_id);
             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
             glBindVertexArray(0);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-            glActiveTexture(GL_TEXTURE6);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-            glActiveTexture(GL_TEXTURE7);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            liminal::texture::unbind(0);
+            liminal::texture::unbind(1);
+            liminal::texture::unbind(2);
+            liminal::texture::unbind(3);
+            liminal::texture::unbind(4);
+            liminal::texture::unbind(5);
+            liminal::texture::unbind(6);
+            liminal::texture::unbind(7);
         }
-        deferred_ambient_program->unbind();
+        liminal::program::unbind();
 
         // blend the rest of the lights
         {
@@ -1831,27 +1512,30 @@ void liminal::renderer::render_objects(
             {
                 deferred_directional_program->set_vec3("camera.position", camera_transform.position);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+                geometry_position_texture->bind(0);
+                geometry_normal_texture->bind(1);
+                geometry_color_texture->bind(2);
+                geometry_albedo_texture->bind(3);
+                geometry_material_texture->bind(4);
 
                 for (const auto [id, directional_light, transform] : scene.get_entities_with<const liminal::directional_light, const liminal::transform>().each())
                 {
                     deferred_directional_program->set_vec3("light.direction", transform.rotation);
                     deferred_directional_program->set_vec3("light.color", directional_light.color);
+
                     for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                     {
                         deferred_directional_program->set_mat4(("light.view_projection_matrices[" + std::to_string(cascade_index) + "]").c_str(), directional_light.view_projection_matrices.at(cascade_index));
 
-                        glActiveTexture(GL_TEXTURE5 + static_cast<GLenum>(cascade_index));
-                        glBindTexture(GL_TEXTURE_2D, directional_light.depth_map_texture_ids.at(cascade_index));
+                        const auto directional_light_depth_map_texture = directional_light.depth_map_textures.at(cascade_index).lock();
+                        if (directional_light_depth_map_texture)
+                        {
+                            directional_light_depth_map_texture->bind(5 + static_cast<unsigned int>(cascade_index));
+                        }
+                        else
+                        {
+                            liminal::texture::unbind(5 + static_cast<unsigned int>(cascade_index));
+                        }
                     }
 
                     glBindVertexArray(screen_vao_id);
@@ -1860,88 +1544,68 @@ void liminal::renderer::render_objects(
 
                     for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
                     {
-                        glActiveTexture(GL_TEXTURE4 + static_cast<GLenum>(cascade_index));
-                        glBindTexture(GL_TEXTURE_2D, 0);
+                        liminal::texture::unbind(5 + static_cast<unsigned int>(cascade_index));
                     }
                 }
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
-                {
-                    glActiveTexture(GL_TEXTURE4 + static_cast<GLenum>(cascade_index));
-                    glBindTexture(GL_TEXTURE_2D, 0);
-                }
+                liminal::texture::unbind(0);
+                liminal::texture::unbind(1);
+                liminal::texture::unbind(2);
+                liminal::texture::unbind(3);
+                liminal::texture::unbind(4);
             }
-            deferred_directional_program->unbind();
+            liminal::program::unbind();
 
             deferred_point_program->bind();
             {
                 deferred_point_program->set_vec3("camera.position", camera_transform.position);
                 deferred_point_program->set_float("light.far_plane", point_light_far_plane);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+                geometry_position_texture->bind(0);
+                geometry_normal_texture->bind(1);
+                geometry_color_texture->bind(2);
+                geometry_albedo_texture->bind(3);
+                geometry_material_texture->bind(4);
 
                 for (const auto [id, point_light, transform] : scene.get_entities_with<const liminal::point_light, const liminal::transform>().each())
                 {
                     deferred_point_program->set_vec3("light.position", transform.position);
                     deferred_point_program->set_vec3("light.color", point_light.color);
 
-                    glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, point_light.depth_cubemap_texture_id);
+                    const auto point_light_depth_cubemap_texture = point_light.depth_cubemap_texture.lock();
+                    if (point_light_depth_cubemap_texture)
+                    {
+                        point_light_depth_cubemap_texture->bind(5);
+                    }
+                    else
+                    {
+                        liminal::texture::unbind(5);
+                    }
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+                    liminal::cubemap::unbind(5);
                 }
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, 0);
+                liminal::texture::unbind(0);
+                liminal::texture::unbind(1);
+                liminal::texture::unbind(2);
+                liminal::texture::unbind(3);
+                liminal::texture::unbind(4);
             }
-            deferred_point_program->unbind();
+            liminal::program::unbind();
 
             deferred_spot_program->bind();
             {
                 deferred_spot_program->set_vec3("camera.position", camera_transform.position);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, geometry_position_texture_id);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, geometry_normal_texture_id);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, geometry_color_texture_id);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, geometry_albedo_texture_id);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, geometry_material_texture_id);
+                geometry_position_texture->bind(0);
+                geometry_normal_texture->bind(1);
+                geometry_color_texture->bind(2);
+                geometry_albedo_texture->bind(3);
+                geometry_material_texture->bind(4);
 
                 for (const auto [id, spot_light, transform] : scene.get_entities_with<const liminal::spot_light, const liminal::transform>().each())
                 {
@@ -1952,29 +1616,30 @@ void liminal::renderer::render_objects(
                     deferred_spot_program->set_float("light.outer_cutoff", glm::cos(glm::radians(spot_light.outer_cutoff)));
                     deferred_spot_program->set_mat4("light.view_projection_matrix", spot_light.view_projection_matrix);
 
-                    glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, spot_light.depth_map_texture_id);
+                    const auto spot_light_depth_map_texture = spot_light.depth_map_texture.lock();
+                    if (spot_light_depth_map_texture)
+                    {
+                        spot_light_depth_map_texture->bind(5);
+                    }
+                    else
+                    {
+                        liminal::texture::unbind(5);
+                    }
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    glActiveTexture(GL_TEXTURE5);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                    liminal::texture::unbind(5);
                 }
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, 0);
+                liminal::texture::unbind(0);
+                liminal::texture::unbind(1);
+                liminal::texture::unbind(2);
+                liminal::texture::unbind(3);
+                liminal::texture::unbind(4);
             }
-            deferred_spot_program->unbind();
+            liminal::program::unbind();
 
             glDisable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ZERO);
@@ -2012,17 +1677,15 @@ void liminal::renderer::render_objects(
             {
                 skybox_program->set_mat4("mvp_matrix", camera_projection * camera_view_no_translate);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->environment_cubemap_id);
+                scene.skybox->bind_environment_map(0);
 
                 glBindVertexArray(skybox_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
                 glBindVertexArray(0);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+                liminal::texture::unbind(0);
             }
-            skybox_program->unbind();
+            liminal::program::unbind();
 
             glDepthFunc(GL_LESS);
         }
@@ -2046,7 +1709,7 @@ void liminal::renderer::render_objects(
 
                     DEBUG_sphere_mesh->draw(*color_program);
                 }
-                color_program->unbind();
+                liminal::program::unbind();
             }
 
             glDisable(GL_CLIP_DISTANCE0);
@@ -2116,20 +1779,16 @@ void liminal::renderer::render_waters(
                 }
                 water_program->set_unsigned_int("current_time", static_cast<unsigned int>(current_time));
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, water_reflection_color_texture_id);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, water_refraction_color_texture_id);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, water_refraction_depth_texture_id);
+                water_reflection_color_texture->bind(0);
+                water_refraction_color_texture->bind(1);
+                water_refraction_depth_texture->bind(2);
                 if (water_dudv_texture)
                 {
                     water_dudv_texture->bind(3);
                 }
                 else
                 {
-                    glActiveTexture(GL_TEXTURE3);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                    liminal::texture::unbind(3);
                 }
                 if (water_normal_texture)
                 {
@@ -2137,26 +1796,20 @@ void liminal::renderer::render_waters(
                 }
                 else
                 {
-                    glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                    liminal::texture::unbind(4);
                 }
 
                 glBindVertexArray(water_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, water_vertices_size);
                 glBindVertexArray(0);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE3);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, 0);
+                liminal::texture::unbind(0);
+                liminal::texture::unbind(1);
+                liminal::texture::unbind(2);
+                liminal::texture::unbind(3);
+                liminal::texture::unbind(4);
             }
-            water_program->unbind();
+            liminal::program::unbind();
 
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDisable(GL_BLEND);
@@ -2188,11 +1841,10 @@ void liminal::renderer::render_sprites(liminal::scene &scene) const
                 glDrawArrays(GL_TRIANGLES, 0, sprite_vertices_size);
                 glBindVertexArray(0);
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 0);
+                liminal::texture::unbind(0);
             }
         }
-        sprite_program->unbind();
+        liminal::program::unbind();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -2213,15 +1865,20 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
                 {
                     gaussian_program->set_int("horizontal", horizontal);
 
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, first_iteration ? hdr_texture_ids.at(1) : bloom_texture_ids.at(static_cast<std::size_t>(!horizontal)));
+                    if (first_iteration)
+                    {
+                        hdr_textures.at(1)->bind(0);
+                    }
+                    else
+                    {
+                        bloom_textures.at(static_cast<std::size_t>(!horizontal))->bind(0);
+                    }
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                    liminal::texture::unbind(0);
                 }
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -2230,7 +1887,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
                 first_iteration = false;
             }
         }
-        gaussian_program->unbind();
+        liminal::program::unbind();
     }
 
     // final pass
@@ -2245,21 +1902,17 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
         {
             postprocess_program->set_unsigned_int("greyscale", greyscale);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, hdr_texture_ids.at(0));
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, bloom_texture_ids.at(static_cast<std::size_t>(!horizontal)));
+            hdr_textures.at(0)->bind(0);
+            bloom_textures.at(static_cast<std::size_t>(!horizontal))->bind(1);
 
             glBindVertexArray(screen_vao_id);
             glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
             glBindVertexArray(0);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            liminal::texture::unbind(0);
+            liminal::texture::unbind(1);
         }
-        postprocess_program->unbind();
+        liminal::program::unbind();
 
         glEnable(GL_DEPTH_TEST);
     }
@@ -2267,6 +1920,6 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
 
     if (camera.render_to_texture)
     {
-        camera.render_texture_id = final_texture_id;
+        camera.render_texture_id = final_texture->get_texture_id();
     }
 }

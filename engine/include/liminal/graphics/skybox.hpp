@@ -8,14 +8,20 @@ namespace liminal
     class skybox
     {
     public:
-        GLuint environment_cubemap_id = 0;
-        GLuint irradiance_cubemap_id = 0;
-        GLuint prefilter_cubemap_id = 0;
-
         skybox(const char *filename);
         ~skybox();
 
         void set_cubemap(const char *filename);
+
+        void bind_environment_map(unsigned int index) const;
+        void bind_irradiance_map(unsigned int index) const;
+        void bind_prefilter_map(unsigned int index) const;
+        static void unbind(unsigned int index);
+
+    private:
+        GLuint environment_cubemap_id = 0;
+        GLuint irradiance_cubemap_id = 0;
+        GLuint prefilter_cubemap_id = 0;
     };
 }
 

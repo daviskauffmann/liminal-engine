@@ -5,8 +5,8 @@
 
 liminal::sdl_image::sdl_image()
 {
-    constexpr int img_flags = IMG_INIT_PNG;
-    if (IMG_Init(img_flags) != img_flags)
+    constexpr int flags = IMG_INIT_PNG;
+    if (IMG_Init(flags) != flags)
     {
         throw std::runtime_error(IMG_GetError());
     }

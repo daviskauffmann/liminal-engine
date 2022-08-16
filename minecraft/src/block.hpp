@@ -9,12 +9,12 @@ namespace minecraft
 {
     enum class direction
     {
-        NORTH,
-        EAST,
-        SOUTH,
-        WEST,
-        UP,
-        DOWN,
+        north,
+        east,
+        south,
+        west,
+        up,
+        down,
     };
 
     class chunk;

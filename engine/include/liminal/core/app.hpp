@@ -46,9 +46,6 @@ namespace liminal
         std::unique_ptr<liminal::renderer> renderer;
 
     private:
-        int window_width = 1280;
-        int window_height = 720;
-        float render_scale = 1;
         bool running = true;
         float time_scale = 1;
         bool console_open = false;

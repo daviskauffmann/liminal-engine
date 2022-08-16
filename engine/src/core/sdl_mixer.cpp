@@ -5,8 +5,8 @@
 
 liminal::sdl_mixer::sdl_mixer()
 {
-    constexpr int mix_flags = 0;
-    if (Mix_Init(mix_flags) != mix_flags)
+    constexpr int flags = 0;
+    if (Mix_Init(flags) != flags)
     {
         throw std::runtime_error(Mix_GetError());
     }
