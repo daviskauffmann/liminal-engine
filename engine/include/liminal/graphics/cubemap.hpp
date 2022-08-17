@@ -13,6 +13,7 @@ namespace liminal
     public:
         static constexpr std::size_t num_sides = 6;
 
+        static void bind(unsigned int index, GLuint texture_id);
         static void unbind(unsigned int index);
 
         cubemap(
@@ -26,12 +27,12 @@ namespace liminal
         cubemap(const std::array<std::string, num_sides> &filenames);
         ~cubemap();
 
-        GLuint get_texture_id() const;
+        GLuint get_cubemap_id() const;
 
         void bind(unsigned int index) const;
 
     private:
-        GLuint texture_id;
+        GLuint cubemap_id;
     };
 }
 

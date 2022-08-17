@@ -16,7 +16,6 @@ liminal::app::app(int argc, char *argv[])
 {
     // parse command line options
     constexpr const char *window_title = "Liminal Engine";
-    constexpr const char *version_string = "v0.0.1";
     int window_width;
     int window_height;
     float render_scale;
@@ -46,6 +45,7 @@ liminal::app::app(int argc, char *argv[])
 
         if (result.count("version"))
         {
+            constexpr const char *version_string = "v0.0.1";
             std::cout << version_string << std::endl;
             return;
         }

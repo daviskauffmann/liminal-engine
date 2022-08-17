@@ -4,11 +4,24 @@
 #include <liminal/graphics/program.hpp>
 #include <liminal/graphics/texture.hpp>
 
+void liminal::mesh::vertex::add_bone_data(const unsigned int id, const float weight)
+{
+    for (std::size_t bone_index = 0; bone_index < num_bones; bone_index++)
+    {
+        if (bone_ids.at(bone_index) == num_bones)
+        {
+            bone_ids.at(bone_index) = id;
+            bone_weights.at(bone_index) = weight;
+            return;
+        }
+    }
+}
+
 liminal::mesh::mesh(
-    const std::vector<liminal::vertex> &vertices,
+    const std::vector<liminal::mesh::vertex> &vertices,
     const std::vector<GLuint> &indices,
     const std::array<std::vector<std::shared_ptr<liminal::texture>>, num_textures> &textures)
-    : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::vertex))),
+    : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::mesh::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)
 {
@@ -25,59 +38,59 @@ liminal::mesh::mesh(
 
         glVertexAttribPointer(
             0,
-            sizeof(liminal::vertex::position) / sizeof(liminal::vertex::position[0]),
+            sizeof(vertex::position) / sizeof(vertex::position[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, position)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, position)));
         glVertexAttribPointer(
             1,
-            sizeof(liminal::vertex::normal) / sizeof(liminal::vertex::normal[0]),
+            sizeof(vertex::normal) / sizeof(vertex::normal[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, normal)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, normal)));
         glVertexAttribPointer(
             2,
-            sizeof(liminal::vertex::uv) / sizeof(liminal::vertex::uv[0]),
+            sizeof(vertex::uv) / sizeof(vertex::uv[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, uv)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, uv)));
         glVertexAttribPointer(
             3,
-            sizeof(liminal::vertex::tangent) / sizeof(liminal::vertex::tangent[0]),
+            sizeof(vertex::tangent) / sizeof(vertex::tangent[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, tangent)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, tangent)));
         glVertexAttribPointer(
             4,
-            sizeof(liminal::vertex::bitangent) / sizeof(liminal::vertex::bitangent[0]),
+            sizeof(vertex::bitangent) / sizeof(vertex::bitangent[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, bitangent)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, bitangent)));
         glVertexAttribPointer(
             5,
-            sizeof(liminal::vertex::color) / sizeof(liminal::vertex::color[0]),
+            sizeof(vertex::color) / sizeof(vertex::color[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, color)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, color)));
         glVertexAttribIPointer(
             6,
-            sizeof(liminal::vertex::bone_ids) / sizeof(liminal::vertex::bone_ids[0]),
+            sizeof(vertex::bone_ids) / sizeof(vertex::bone_ids[0]),
             GL_UNSIGNED_INT,
-            sizeof(liminal ::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, bone_ids)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, bone_ids)));
         glVertexAttribPointer(
             7,
-            sizeof(liminal::vertex::bone_weights) / sizeof(liminal::vertex::bone_weights[0]),
+            sizeof(vertex::bone_weights) / sizeof(vertex::bone_weights[0]),
             GL_FLOAT,
             GL_FALSE,
-            sizeof(liminal::vertex),
-            reinterpret_cast<void *>(offsetof(liminal::vertex, bone_weights)));
+            sizeof(vertex),
+            reinterpret_cast<void *>(offsetof(vertex, bone_weights)));
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -166,9 +179,18 @@ void liminal::mesh::draw(const liminal::program &program) const
         liminal::texture::unbind(5);
     }
 
-    glBindVertexArray(vao_id);
-    glDrawElements(GL_TRIANGLES, indices_size, GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    if (indices_size)
+    {
+        glBindVertexArray(vao_id);
+        glDrawElements(GL_TRIANGLES, indices_size, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
+    else
+    {
+        glBindVertexArray(vao_id);
+        glDrawArrays(GL_TRIANGLES, 0, vertices_size);
+        glBindVertexArray(0);
+    }
 
     liminal::texture::unbind(0);
     liminal::texture::unbind(1);

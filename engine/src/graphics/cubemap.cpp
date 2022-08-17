@@ -3,6 +3,12 @@
 #include <SDL2/SDL_image.h>
 #include <stdexcept>
 
+void liminal::cubemap::bind(unsigned int index, GLuint texture_id)
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+}
+
 void liminal::cubemap::unbind(unsigned int index)
 {
     glActiveTexture(GL_TEXTURE0 + index);
@@ -18,8 +24,8 @@ liminal::cubemap::cubemap(
     const liminal::texture_filter filter,
     const liminal::texture_wrap wrap)
 {
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    glGenTextures(1, &cubemap_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_id);
     {
         for (GLenum face = 0; face < 6; face++)
         {
@@ -71,8 +77,8 @@ liminal::cubemap::cubemap(
 
 liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
 {
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    glGenTextures(1, &cubemap_id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_id);
     {
         for (GLenum side_index = 0; side_index < num_sides; side_index++)
         {
@@ -107,16 +113,15 @@ liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
 
 liminal::cubemap::~cubemap()
 {
-    glDeleteTextures(1, &texture_id);
+    glDeleteTextures(1, &cubemap_id);
 }
 
-GLuint liminal::cubemap::get_texture_id() const
+GLuint liminal::cubemap::get_cubemap_id() const
 {
-    return texture_id;
+    return cubemap_id;
 }
 
 void liminal::cubemap::bind(const unsigned int index) const
 {
-    glActiveTexture(GL_TEXTURE0 + index);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    bind(index, cubemap_id);
 }

@@ -63,22 +63,22 @@ void minecraft::block::add_face_up(const int x, const int y, const int z, const 
 {
     const auto uvs = get_face_uvs(minecraft::direction::up);
 
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(0),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(1),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(2),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(3),
@@ -91,22 +91,22 @@ void minecraft::block::add_face_down(const int x, const int y, const int z, cons
 {
     const auto uvs = get_face_uvs(minecraft::direction::down);
 
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(0),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(1),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(2),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(3),
@@ -119,22 +119,22 @@ void minecraft::block::add_face_north(const int x, const int y, const int z, con
 {
     const auto uvs = get_face_uvs(minecraft::direction::north);
 
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(0),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(1),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(2),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(3),
@@ -147,22 +147,22 @@ void minecraft::block::add_face_east(const int x, const int y, const int z, cons
 {
     const auto uvs = get_face_uvs(minecraft::direction::east);
 
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(0),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(1),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(2),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(3),
@@ -175,22 +175,22 @@ void minecraft::block::add_face_south(const int x, const int y, const int z, con
 {
     const auto uvs = get_face_uvs(minecraft::direction::south);
 
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(0),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(1),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(2),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(3),
@@ -203,22 +203,22 @@ void minecraft::block::add_face_west(const int x, const int y, const int z, cons
 {
     const auto uvs = get_face_uvs(minecraft::direction::west);
 
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(0),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(1),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(2),
         .color = color});
-    mesh_data->vertices.push_back(liminal::vertex{
+    mesh_data->vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(3),

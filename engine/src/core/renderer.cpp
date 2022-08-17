@@ -190,60 +190,30 @@ liminal::renderer::renderer(
     {
         constexpr GLsizei brdf_size = 512;
 
-        GLuint capture_fbo_id;
-        GLuint capture_rbo_id;
+        brdf_texture = std::make_unique<liminal::texture>(
+            GL_RG16F,
+            brdf_size,
+            brdf_size,
+            GL_RG,
+            GL_FLOAT,
+            liminal::texture_filter::linear,
+            liminal::texture_wrap::clamp_to_edge);
+        const auto brdf_renderbuffer = std::make_unique<liminal::renderbuffer>(
+            GL_DEPTH_COMPONENT24,
+            brdf_size,
+            brdf_size);
 
-        glGenFramebuffers(1, &capture_fbo_id);
-        glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
-        {
-            brdf_texture = std::make_unique<liminal::texture>(
-                GL_RG16F,
-                brdf_size,
-                brdf_size,
-                GL_RG,
-                GL_FLOAT,
-                liminal::texture_filter::linear,
-                liminal::texture_wrap::clamp_to_edge);
-
-            glGenRenderbuffers(1, &capture_rbo_id);
-            glBindRenderbuffer(GL_RENDERBUFFER, capture_rbo_id);
-            {
-                glRenderbufferStorage(
-                    GL_RENDERBUFFER,
-                    GL_DEPTH_COMPONENT24,
-                    brdf_size,
-                    brdf_size);
-            }
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D,
-                brdf_texture->get_texture_id(),
-                0);
-
-            glFramebufferRenderbuffer(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_RENDERBUFFER,
-                capture_rbo_id);
-
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            {
-                throw std::runtime_error("BRDF capture framebuffer is not complete");
-            }
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        const auto brdf_framebuffer = std::make_unique<liminal::framebuffer>(brdf_size, brdf_size);
+        brdf_framebuffer->add_color_texture(brdf_texture->get_texture_id());
+        brdf_framebuffer->add_depth_renderbuffer(brdf_renderbuffer->get_renderbuffer_id());
+        brdf_framebuffer->complete();
 
         const auto brdf_program = std::make_unique<liminal::program>(
             "assets/shaders/brdf.vs",
             "assets/shaders/brdf.fs");
 
-        glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
+        brdf_framebuffer->bind();
         {
-            glViewport(0, 0, brdf_size, brdf_size);
-
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             brdf_program->bind();
@@ -254,10 +224,7 @@ liminal::renderer::renderer(
             }
             liminal::program::unbind();
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        glDeleteFramebuffers(1, &capture_fbo_id);
-        glDeleteRenderbuffers(1, &capture_rbo_id);
+        liminal::framebuffer::unbind();
     }
 
     // create shader programs and setup samplers
@@ -346,11 +313,8 @@ liminal::renderer::renderer(
          {"geometry.normal_map", 1},
          {"geometry.color_map", 2},
          {"geometry.albedo_map", 3},
-         {"geometry.material_map", 4}});
-    for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
-    {
-        deferred_directional_program->set_sampler(("light.depth_map[" + std::to_string(cascade_index) + "]").c_str(), static_cast<GLint>(5 + cascade_index));
-    }
+         {"geometry.material_map", 4},
+         {"light.depth_map", 5}});
     liminal::program::unbind();
 
     deferred_point_program = std::make_unique<liminal::program>(
@@ -431,7 +395,7 @@ liminal::renderer::renderer(
     // DEBUG: create sphere mesh
     // http://www.songho.ca/opengl/gl_sphere.html
     {
-        std::vector<liminal::vertex> vertices;
+        std::vector<liminal::mesh::vertex> vertices;
         constexpr auto radius = 1.0f;
         constexpr std::size_t stack_count = 36;
         constexpr std::size_t sector_count = 18;
@@ -447,7 +411,7 @@ liminal::renderer::renderer(
             {
                 const auto sector_angle = sector * sector_step;
 
-                liminal::vertex vertex;
+                liminal::mesh::vertex vertex;
                 vertex.position.x = xy * glm::cos(sector_angle);
                 vertex.position.y = xy * glm::sin(sector_angle);
                 vertex.position.z = z;
@@ -490,24 +454,6 @@ liminal::renderer::renderer(
 
 liminal::renderer::~renderer()
 {
-    glDeleteFramebuffers(1, &geometry_fbo_id);
-
-    glDeleteFramebuffers(1, &hdr_fbo_id);
-
-    glDeleteFramebuffers(1, &final_fbo_id);
-
-    glDeleteFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-
-    glDeleteFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
-
-    glDeleteFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
-
-    glDeleteFramebuffers(1, &water_reflection_fbo_id);
-
-    glDeleteFramebuffers(1, &water_refraction_fbo_id);
-
-    glDeleteFramebuffers(2, bloom_fbo_ids.data());
-
     glDeleteVertexArrays(1, &water_vao_id);
     glDeleteBuffers(1, &water_vbo_id);
 
@@ -546,14 +492,6 @@ void liminal::renderer::calc_render_size()
     render_width = static_cast<GLsizei>(target_width * render_scale);
     render_height = static_cast<GLsizei>(target_height * render_scale);
 
-    glDeleteFramebuffers(1, &geometry_fbo_id);
-
-    glDeleteFramebuffers(1, &hdr_fbo_id);
-
-    glDeleteFramebuffers(1, &final_fbo_id);
-
-    glDeleteFramebuffers(2, bloom_fbo_ids.data());
-
     // setup geometry fbo
     // gbuffer:
     //      position - rgb16f
@@ -566,428 +504,232 @@ void liminal::renderer::calc_render_size()
     //          occlusion - b
     //          height - a
     //      id - r32i
-    glGenFramebuffers(1, &geometry_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
-    {
-        geometry_position_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            GL_RGB,
-            GL_FLOAT);
-        geometry_normal_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            GL_RGB,
-            GL_FLOAT);
-        geometry_color_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            GL_RGB,
-            GL_FLOAT);
-        geometry_albedo_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            GL_RGB,
-            GL_FLOAT);
-        geometry_material_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            GL_RGBA,
-            GL_FLOAT);
-        geometry_id_texture = std::make_unique<liminal::texture>(
-            GL_R32I,
-            render_width,
-            render_height,
-            GL_RED_INTEGER,
-            GL_INT);
-        geometry_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
-            GL_DEPTH_COMPONENT24,
-            render_width,
-            render_height);
+    geometry_position_texture = std::make_unique<liminal::texture>(
+        GL_RGB16F,
+        render_width,
+        render_height,
+        GL_RGB,
+        GL_FLOAT);
+    geometry_normal_texture = std::make_unique<liminal::texture>(
+        GL_RGB16F,
+        render_width,
+        render_height,
+        GL_RGB,
+        GL_FLOAT);
+    geometry_color_texture = std::make_unique<liminal::texture>(
+        GL_RGB16F,
+        render_width,
+        render_height,
+        GL_RGB,
+        GL_FLOAT);
+    geometry_albedo_texture = std::make_unique<liminal::texture>(
+        GL_RGB16F,
+        render_width,
+        render_height,
+        GL_RGB,
+        GL_FLOAT);
+    geometry_material_texture = std::make_unique<liminal::texture>(
+        GL_RGBA16F,
+        render_width,
+        render_height,
+        GL_RGBA,
+        GL_FLOAT);
+    geometry_id_texture = std::make_unique<liminal::texture>(
+        GL_R32I,
+        render_width,
+        render_height,
+        GL_RED_INTEGER,
+        GL_INT);
+    geometry_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
+        GL_DEPTH_COMPONENT24,
+        render_width,
+        render_height);
 
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            geometry_position_texture->get_texture_id(),
-            0);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT1,
-            GL_TEXTURE_2D,
-            geometry_normal_texture->get_texture_id(),
-            0);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT2,
-            GL_TEXTURE_2D,
-            geometry_color_texture->get_texture_id(),
-            0);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT3,
-            GL_TEXTURE_2D,
-            geometry_albedo_texture->get_texture_id(),
-            0);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT4,
-            GL_TEXTURE_2D,
-            geometry_material_texture->get_texture_id(),
-            0);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT5,
-            GL_TEXTURE_2D,
-            geometry_id_texture->get_texture_id(),
-            0);
-        glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER,
-            GL_DEPTH_ATTACHMENT,
-            GL_RENDERBUFFER,
-            geometry_depth_renderbuffer->get_renderbuffer_id());
-
-        constexpr std::array<GLenum, 6> geometry_color_attachments{
-            GL_COLOR_ATTACHMENT0,
-            GL_COLOR_ATTACHMENT1,
-            GL_COLOR_ATTACHMENT2,
-            GL_COLOR_ATTACHMENT3,
-            GL_COLOR_ATTACHMENT4,
-            GL_COLOR_ATTACHMENT5};
-        glDrawBuffers(static_cast<GLsizei>(geometry_color_attachments.size()), geometry_color_attachments.data());
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            throw std::runtime_error("Geometry framebuffer is not complete");
-        }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    geometry_framebuffer = std::make_unique<liminal::framebuffer>(render_width, render_height);
+    geometry_framebuffer->add_color_texture(geometry_position_texture->get_texture_id());
+    geometry_framebuffer->add_color_texture(geometry_normal_texture->get_texture_id());
+    geometry_framebuffer->add_color_texture(geometry_color_texture->get_texture_id());
+    geometry_framebuffer->add_color_texture(geometry_albedo_texture->get_texture_id());
+    geometry_framebuffer->add_color_texture(geometry_material_texture->get_texture_id());
+    geometry_framebuffer->add_color_texture(geometry_id_texture->get_texture_id());
+    geometry_framebuffer->add_depth_renderbuffer(geometry_depth_renderbuffer->get_renderbuffer_id());
+    geometry_framebuffer->complete();
 
     // setup hdr fbo
-    glGenFramebuffers(1, &hdr_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
+    hdr_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
+        GL_DEPTH_STENCIL,
+        render_width,
+        render_height);
+
+    hdr_framebuffer = std::make_unique<liminal::framebuffer>(render_width, render_height);
+    for (GLenum hdr_texture_index = 0; hdr_texture_index < hdr_textures.size(); hdr_texture_index++)
     {
-        for (GLenum hdr_texture_index = 0; hdr_texture_index < hdr_textures.size(); hdr_texture_index++)
-        {
-            hdr_textures.at(hdr_texture_index) = std::make_unique<liminal::texture>(
-                GL_RGBA16F,
-                render_width,
-                render_height,
-                GL_RGB,
-                GL_FLOAT,
-                liminal::texture_filter::linear,
-                liminal::texture_wrap::clamp_to_edge);
+        hdr_textures.at(hdr_texture_index) = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            render_width,
+            render_height,
+            GL_RGB,
+            GL_FLOAT,
+            liminal::texture_filter::linear,
+            liminal::texture_wrap::clamp_to_edge);
 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0 + hdr_texture_index,
-                GL_TEXTURE_2D,
-                hdr_textures.at(hdr_texture_index)->get_texture_id(),
-                0);
-        }
-
-        hdr_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
-            GL_DEPTH_STENCIL,
-            target_width,
-            target_height);
-
-        glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER,
-            GL_DEPTH_ATTACHMENT,
-            GL_RENDERBUFFER,
-            hdr_depth_renderbuffer->get_renderbuffer_id());
-
-        constexpr std::array<GLenum, 2> hdr_color_attachments{
-            GL_COLOR_ATTACHMENT0,
-            GL_COLOR_ATTACHMENT1};
-        glDrawBuffers(static_cast<GLsizei>(hdr_color_attachments.size()), hdr_color_attachments.data());
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            throw std::runtime_error("HDR framebuffer is not complete");
-        }
+        hdr_framebuffer->add_color_texture(hdr_textures.at(hdr_texture_index)->get_texture_id());
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    hdr_framebuffer->add_depth_renderbuffer(hdr_depth_renderbuffer->get_renderbuffer_id());
+    hdr_framebuffer->complete();
 
     // setup bloom fbo
-    glGenFramebuffers(2, bloom_fbo_ids.data());
-    for (std::size_t bloom_index = 0; bloom_index < bloom_fbo_ids.size(); bloom_index++)
+    const GLsizei bloom_width = target_width / 8;
+    const GLsizei bloom_height = target_height / 8;
+
+    for (std::size_t bloom_index = 0; bloom_index < bloom_framebuffers.size(); bloom_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at(bloom_index));
-        {
-            bloom_textures.at(bloom_index) = std::make_unique<liminal::texture>(
-                GL_RGBA16F,
-                target_width / 8,
-                target_height / 8,
-                GL_RGBA,
-                GL_FLOAT,
-                liminal::texture_filter::linear,
-                liminal::texture_wrap::clamp_to_edge);
+        auto &bloom_texture = bloom_textures.at(bloom_index);
+        auto &bloom_framebuffer = bloom_framebuffers.at(bloom_index);
 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D,
-                bloom_textures.at(bloom_index)->get_texture_id(),
-                0);
+        bloom_texture = std::make_unique<liminal::texture>(
+            GL_RGBA16F,
+            bloom_width,
+            bloom_height,
+            GL_RGBA,
+            GL_FLOAT,
+            liminal::texture_filter::linear,
+            liminal::texture_wrap::clamp_to_edge);
 
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            {
-                throw std::runtime_error("Bloom framebuffer is not complete");
-            }
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        bloom_framebuffer = std::make_unique<liminal::framebuffer>(bloom_width, bloom_height);
+        bloom_framebuffer->add_color_texture(bloom_textures.at(bloom_index)->get_texture_id());
+        bloom_framebuffer->complete();
     }
 
     // setup final fbo
-    glGenFramebuffers(1, &final_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, final_fbo_id);
-    {
-        final_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            target_width,
-            target_height,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE);
+    final_texture = std::make_unique<liminal::texture>(
+        GL_RGB8,
+        target_width,
+        target_height,
+        GL_RGB,
+        GL_UNSIGNED_BYTE);
 
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            final_texture->get_texture_id(),
-            0);
-
-        {
-            constexpr std::array<GLenum, 1> final_color_attachments{
-                GL_COLOR_ATTACHMENT0};
-            glDrawBuffers(static_cast<GLsizei>(final_color_attachments.size()), final_color_attachments.data());
-        }
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            throw std::runtime_error("Final framebuffer is not complete");
-        }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    final_framebuffer = std::make_unique<liminal::framebuffer>(target_width, target_height);
+    final_framebuffer->add_color_texture(final_texture->get_texture_id());
+    final_framebuffer->complete();
 }
 
 void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
 {
-    directional_light_depth_map_size = size;
-
-    glDeleteFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
-
-    glGenFramebuffers(num_directional_light_shadows, directional_light_depth_map_fbo_ids.data());
     for (std::size_t shadow_index = 0; shadow_index < num_directional_light_shadows; shadow_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids.at(shadow_index));
-        {
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
+        auto &directional_light_depth_texture = directional_light_depth_textures.at(shadow_index);
+        auto &directional_light_framebuffer = directional_light_framebuffers.at(shadow_index);
 
-            for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
-            {
-                constexpr std::array<GLfloat, 4> border_color = {1, 1, 1, 1};
-                directional_light_depth_map_textures.at(shadow_index).at(cascade_index) = std::make_unique<liminal::texture>(
-                    GL_DEPTH_COMPONENT32,
-                    size,
-                    size,
-                    GL_DEPTH_COMPONENT,
-                    GL_FLOAT,
-                    liminal::texture_filter::nearest,
-                    liminal::texture_wrap::clamp_to_border,
-                    border_color);
-            }
+        directional_light_depth_texture = std::make_unique<liminal::texture>(
+            GL_DEPTH_COMPONENT32,
+            size,
+            size,
+            GL_DEPTH_COMPONENT,
+            GL_FLOAT,
+            liminal::texture_filter::nearest,
+            liminal::texture_wrap::clamp_to_border,
+            std::array<GLfloat, 4>{1, 1, 1, 1});
 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                directional_light_depth_map_textures.at(shadow_index).at(0)->get_texture_id(),
-                0);
-
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            {
-                throw std::runtime_error("Directional light depth map framebuffer is not complete");
-            }
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        directional_light_framebuffer = std::make_unique<liminal::framebuffer>(size, size);
+        directional_light_framebuffer->set_draw_buffer(GL_NONE);
+        directional_light_framebuffer->set_read_buffer(GL_NONE);
+        directional_light_framebuffer->add_depth_texture(directional_light_depth_textures.at(shadow_index)->get_texture_id());
+        directional_light_framebuffer->complete();
     }
 }
 
 void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
 {
-    point_light_depth_cubemap_size = size;
-
-    glDeleteFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
-
-    glGenFramebuffers(num_point_light_shadows, point_light_depth_cubemap_fbo_ids.data());
     for (std::size_t shadow_index = 0; shadow_index < num_point_light_shadows; shadow_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids.at(shadow_index));
-        {
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
+        auto &point_light_depth_cubemap = point_light_depth_cubemaps.at(shadow_index);
+        auto &point_light_framebuffer = point_light_framebuffers.at(shadow_index);
 
-            point_light_depth_cubemap_textures.at(shadow_index) = std::make_unique<liminal::cubemap>(
-                GL_DEPTH_COMPONENT32,
-                size,
-                size,
-                GL_DEPTH_COMPONENT,
-                GL_FLOAT,
-                liminal::texture_filter::nearest,
-                liminal::texture_wrap::clamp_to_border);
+        point_light_depth_cubemap = std::make_unique<liminal::cubemap>(
+            GL_DEPTH_COMPONENT32,
+            size,
+            size,
+            GL_DEPTH_COMPONENT,
+            GL_FLOAT,
+            liminal::texture_filter::nearest,
+            liminal::texture_wrap::clamp_to_border);
 
-            glFramebufferTexture(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                point_light_depth_cubemap_textures.at(shadow_index)->get_texture_id(),
-                0);
-
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            {
-                throw std::runtime_error("Point light depth cubemap framebuffer is not complete");
-            }
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        point_light_framebuffer = std::make_unique<liminal::framebuffer>(size, size);
+        point_light_framebuffer->set_draw_buffer(GL_NONE);
+        point_light_framebuffer->set_read_buffer(GL_NONE);
+        point_light_framebuffer->add_depth_texture(point_light_depth_cubemaps.at(shadow_index)->get_cubemap_id());
+        point_light_framebuffer->complete();
     }
 }
 
 void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
 {
-    spot_light_depth_map_size = size;
-
-    glDeleteFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
-
-    glGenFramebuffers(num_spot_light_shadows, spot_light_depth_map_fbo_ids.data());
     for (std::size_t shadow_index = 0; shadow_index < num_spot_light_shadows; shadow_index++)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids.at(shadow_index));
-        {
-            glDrawBuffer(GL_NONE);
-            glReadBuffer(GL_NONE);
+        auto &spot_light_depth_texture = spot_light_depth_textures.at(shadow_index);
+        auto &spot_light_framebuffer = spot_light_framebuffers.at(shadow_index);
 
-            constexpr std::array<GLfloat, 4> border_color{1, 1, 1, 1};
-            spot_light_depth_map_textures.at(shadow_index) = std::make_unique<liminal::texture>(
-                GL_DEPTH_COMPONENT32,
-                size,
-                size,
-                GL_DEPTH_COMPONENT,
-                GL_FLOAT,
-                liminal::texture_filter::nearest,
-                liminal::texture_wrap::clamp_to_border,
-                border_color);
+        spot_light_depth_texture = std::make_unique<liminal::texture>(
+            GL_DEPTH_COMPONENT32,
+            size,
+            size,
+            GL_DEPTH_COMPONENT,
+            GL_FLOAT,
+            liminal::texture_filter::nearest,
+            liminal::texture_wrap::clamp_to_border,
+            std::array<GLfloat, 4>{1, 1, 1, 1});
 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER,
-                GL_DEPTH_ATTACHMENT,
-                GL_TEXTURE_2D,
-                spot_light_depth_map_textures.at(shadow_index)->get_texture_id(),
-                0);
-
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            {
-                throw std::runtime_error("Spot light depth map framebuffer is not complete");
-            }
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        spot_light_framebuffer = std::make_unique<liminal::framebuffer>(size, size);
+        spot_light_framebuffer->set_draw_buffer(GL_NONE);
+        spot_light_framebuffer->set_read_buffer(GL_NONE);
+        spot_light_framebuffer->add_depth_texture(spot_light_depth_textures.at(shadow_index)->get_texture_id());
+        spot_light_framebuffer->complete();
     }
 }
 
 void liminal::renderer::set_reflection_size(const GLsizei width, const GLsizei height)
 {
-    water_reflection_width = width;
-    water_reflection_height = height;
+    water_reflection_color_texture = std::make_unique<liminal::texture>(
+        GL_RGBA16F,
+        width,
+        height,
+        GL_RGBA,
+        GL_FLOAT,
+        liminal::texture_filter::linear);
+    water_reflection_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
+        GL_DEPTH_COMPONENT24,
+        width,
+        height);
 
-    glDeleteFramebuffers(1, &water_reflection_fbo_id);
-
-    // setup water reflection fbo
-    glGenFramebuffers(1, &water_reflection_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, water_reflection_fbo_id);
-    {
-        water_reflection_color_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            width,
-            height,
-            GL_RGBA,
-            GL_FLOAT,
-            liminal::texture_filter::linear);
-        water_reflection_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
-            GL_DEPTH_COMPONENT24,
-            width,
-            height);
-
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            water_reflection_color_texture->get_texture_id(),
-            0);
-        glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER,
-            GL_DEPTH_ATTACHMENT,
-            GL_RENDERBUFFER,
-            water_reflection_depth_renderbuffer->get_renderbuffer_id());
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            throw std::runtime_error("Water reflection framebuffer is not complete");
-        }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    water_reflection_framebuffer = std::make_unique<liminal::framebuffer>(width, height);
+    water_reflection_framebuffer->add_color_texture(water_reflection_color_texture->get_texture_id());
+    water_reflection_framebuffer->add_depth_renderbuffer(water_reflection_depth_renderbuffer->get_renderbuffer_id());
+    water_reflection_framebuffer->complete();
 }
 
 void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
 {
-    water_refraction_width = width;
-    water_refraction_height = height;
+    water_refraction_color_texture = std::make_unique<liminal::texture>(
+        GL_RGBA16F,
+        width,
+        height,
+        GL_RGBA,
+        GL_FLOAT,
+        liminal::texture_filter::linear,
+        liminal::texture_wrap::clamp_to_edge);
+    water_refraction_depth_texture = std::make_unique<liminal::texture>(
+        GL_DEPTH_COMPONENT32,
+        width,
+        height,
+        GL_DEPTH_COMPONENT,
+        GL_FLOAT,
+        liminal::texture_filter::linear);
 
-    glDeleteFramebuffers(1, &water_refraction_fbo_id);
-
-    // setup water refraction fbo
-    glGenFramebuffers(1, &water_refraction_fbo_id);
-    glBindFramebuffer(GL_FRAMEBUFFER, water_refraction_fbo_id);
-    {
-        water_refraction_color_texture = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            width,
-            height,
-            GL_RGBA,
-            GL_FLOAT,
-            liminal::texture_filter::linear,
-            liminal::texture_wrap::clamp_to_edge);
-        water_refraction_depth_texture = std::make_unique<liminal::texture>(
-            GL_DEPTH_COMPONENT32,
-            width,
-            height,
-            GL_DEPTH_COMPONENT,
-            GL_FLOAT,
-            liminal::texture_filter::linear);
-
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            water_refraction_color_texture->get_texture_id(),
-            0);
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_DEPTH_ATTACHMENT,
-            GL_TEXTURE_2D,
-            water_refraction_depth_texture->get_texture_id(),
-            0);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            throw std::runtime_error("Water refraction framebuffer is not complete");
-        }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    water_refraction_framebuffer = std::make_unique<liminal::framebuffer>(width, height);
+    water_refraction_framebuffer->add_color_texture(water_refraction_color_texture->get_texture_id());
+    water_refraction_framebuffer->add_depth_texture(water_refraction_depth_texture->get_texture_id());
+    water_refraction_framebuffer->complete();
 }
 
 void liminal::renderer::reload_programs()
@@ -1018,7 +760,7 @@ void liminal::renderer::reload_programs()
 liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene *scene) const
 {
     entt::entity id;
-    glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, geometry_framebuffer->get_framebuffer_id());
     {
         glReadBuffer(GL_COLOR_ATTACHMENT5);
         glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &id);
@@ -1047,7 +789,7 @@ void liminal::renderer::render_all(
     const std::uint64_t current_time) const
 {
     render_shadows(scene, camera_transform);
-    render_objects(scene, camera, camera_transform, hdr_fbo_id, render_width, render_height);
+    render_objects(scene, camera, camera_transform, *hdr_framebuffer);
     render_waters(scene, camera, camera_transform, current_time);
     render_sprites(scene);
     render_screen(camera);
@@ -1057,139 +799,91 @@ void liminal::renderer::render_shadows(
     liminal::scene &scene,
     const liminal::transform &camera_transform) const
 {
+    // directional light shadows
     for (std::size_t shadow_index = 0; const auto [id, directional_light, transform] : scene.get_entities_with<liminal::directional_light, const liminal::transform>().each())
     {
-        for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
-        {
-            directional_light.view_projection_matrices.at(cascade_index) = glm::identity<glm::mat4>();
-            directional_light.depth_map_textures.at(cascade_index) = {};
-        }
+        directional_light.view_projection_matrix = glm::identity<glm::mat4>();
+        directional_light.depth_texture_id = 0;
 
         if (!directional_light.shadows || shadow_index >= num_directional_light_shadows)
         {
             continue;
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, directional_light_depth_map_fbo_ids.at(shadow_index));
+        directional_light_framebuffers.at(shadow_index)->bind();
         {
-            glViewport(0, 0, directional_light_depth_map_size, directional_light_depth_map_size);
             glEnable(GL_CULL_FACE);
 
-            // const auto aspect_ratio = get_aspect_ratio();
-            // const auto tan_half_h_fov = glm::tan(glm::radians(90.0f / 2.0f));
-            // const auto tan_half_v_fov = glm::tan(glm::radians((90.0f * aspect_ratio) / 2.0f));
-            // const float cascade_end[] = {1.0f, 25.0f, 90.0f, 200.0f};
+            const auto projection = glm::ortho(
+                -directional_light_shadow_map_size,
+                directional_light_shadow_map_size,
+                -directional_light_shadow_map_size,
+                directional_light_shadow_map_size,
+                directional_light_near_plane,
+                directional_light_far_plane);
+            const auto view = glm::lookAt(
+                camera_transform.position - transform.rotation,
+                camera_transform.position,
+                {0, 1, 0});
+            directional_light.view_projection_matrix = projection * view;
+            directional_light.depth_texture_id = directional_light_depth_textures.at(shadow_index)->get_texture_id();
 
-            for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            for (const auto [_id, _mesh_renderer, _transform] : scene.get_entities_with<const liminal::mesh_renderer, const liminal::transform>().each())
             {
-                // const auto xn = cascade_end[j] * tan_half_h_fov;
-                // const auto xf = cascade_end[j + 1] * tan_half_h_fov;
-                // const auto yn = cascade_end[j] * tan_half_v_fov;
-                // const auto yf = cascade_end[j + 1] * tan_half_v_fov;
-
-                // const glm::vec4 frustum_corners[] = {
-                //     // near face
-                //     glm::vec4(xn, yn, cascade_end[j], 1.0),
-                //     glm::vec4(-xn, yn, cascade_end[j], 1.0),
-                //     glm::vec4(xn, -yn, cascade_end[j], 1.0),
-                //     glm::vec4(-xn, -yn, cascade_end[j], 1.0),
-
-                //     // far face
-                //     glm::vec4(xf, yf, cascade_end[j + 1], 1.0),
-                //     glm::vec4(-xf, yf, cascade_end[j + 1], 1.0),
-                //     glm::vec4(xf, -yf, cascade_end[j + 1], 1.0),
-                //     glm::vec4(-xf, -yf, cascade_end[j + 1], 1.0)};
-                // glm::vec4 frustum_forners_l[8];
-
-                // const auto min_x = std::numeric_limits<float>::max();
-                // const auto max_x = std::numeric_limits<float>::min();
-                // const auto min_y = std::numeric_limits<float>::max();
-                // const auto max_y = std::numeric_limits<float>::min();
-                // const auto min_z = std::numeric_limits<float>::max();
-                // const auto max_z = std::numeric_limits<float>::min();
-
-                // for (std::size_t k = 0; k < 8; k++)
-                // {
-                //     glm::vec4 vw = ;
-                // }
-
-                const auto projection = glm::ortho(
-                    -directional_light_shadow_map_size,
-                    directional_light_shadow_map_size,
-                    -directional_light_shadow_map_size,
-                    directional_light_shadow_map_size,
-                    directional_light_near_plane,
-                    directional_light_far_plane);
-                const auto view = glm::lookAt(
-                    camera_transform.position - transform.rotation,
-                    camera_transform.position,
-                    {0, 1, 0});
-                directional_light.view_projection_matrices.at(cascade_index) = projection * view;
-                directional_light.depth_map_textures.at(cascade_index) = directional_light_depth_map_textures.at(shadow_index).at(cascade_index);
-
-                glFramebufferTexture2D(
-                    GL_FRAMEBUFFER,
-                    GL_DEPTH_ATTACHMENT,
-                    GL_TEXTURE_2D,
-                    directional_light_depth_map_textures.at(shadow_index).at(cascade_index)->get_texture_id(),
-                    0);
-
-                glClear(GL_DEPTH_BUFFER_BIT);
-
-                for (const auto [_id, _mesh_renderer, _transform] : scene.get_entities_with<const liminal::mesh_renderer, const liminal::transform>().each())
+                if (_mesh_renderer.model)
                 {
-                    if (_mesh_renderer.model)
+                    const auto model_matrix = _transform.get_model_matrix();
+                    if (_mesh_renderer.model->has_animations())
                     {
-                        const auto model_matrix = _transform.get_model_matrix();
-                        if (_mesh_renderer.model->has_animations())
+                        depth_skinned_mesh_program->bind();
                         {
-                            depth_skinned_mesh_program->bind();
-                            {
-                                depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
-                                depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
+                            depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrix * model_matrix);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
 
-                                _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
-                            }
-                            liminal::program::unbind();
+                            _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
                         }
-                        else
+                        liminal::program::unbind();
+                    }
+                    else
+                    {
+                        depth_mesh_program->bind();
                         {
-                            depth_mesh_program->bind();
-                            {
-                                depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
+                            depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrix * model_matrix);
 
-                                _mesh_renderer.model->draw_meshes(*depth_mesh_program);
-                            }
-                            liminal::program::unbind();
+                            _mesh_renderer.model->draw_meshes(*depth_mesh_program);
                         }
+                        liminal::program::unbind();
                     }
                 }
-
-                depth_mesh_program->bind();
-                {
-                    for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>().each())
-                    {
-                        const auto model_matrix = _terrain.get_model_matrix();
-
-                        depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrices.at(cascade_index) * model_matrix);
-
-                        _terrain.mesh->draw(*depth_mesh_program);
-                    }
-                }
-                liminal::program::unbind();
             }
+
+            depth_mesh_program->bind();
+            {
+                for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>().each())
+                {
+                    const auto model_matrix = _terrain.get_model_matrix();
+
+                    depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrix * model_matrix);
+
+                    _terrain.mesh->draw(*depth_mesh_program);
+                }
+            }
+            liminal::program::unbind();
 
             glDisable(GL_CULL_FACE);
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        liminal::framebuffer::unbind();
 
         shadow_index++;
     }
 
+    // point light shadows
     for (std::size_t shadow_index = 0; const auto [id, point_light, transform] : scene.get_entities_with<liminal::point_light, const liminal::transform>().each())
     {
         point_light.view_projection_matrices.fill(glm::identity<glm::mat4>());
-        point_light.depth_cubemap_texture = {};
+        point_light.depth_cubemap_id = 0;
 
         if (shadow_index >= num_point_light_shadows)
         {
@@ -1207,11 +901,10 @@ void liminal::renderer::render_shadows(
         point_light.view_projection_matrices.at(3) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
         point_light.view_projection_matrices.at(4) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
         point_light.view_projection_matrices.at(5) = projection * glm::lookAt(transform.position, transform.position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
-        point_light.depth_cubemap_texture = point_light_depth_cubemap_textures.at(shadow_index);
+        point_light.depth_cubemap_id = point_light_depth_cubemaps.at(shadow_index)->get_cubemap_id();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, point_light_depth_cubemap_fbo_ids.at(shadow_index));
+        point_light_framebuffers.at(shadow_index)->bind();
         {
-            glViewport(0, 0, point_light_depth_cubemap_size, point_light_depth_cubemap_size);
             glEnable(GL_CULL_FACE);
 
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -1287,15 +980,16 @@ void liminal::renderer::render_shadows(
 
             glDisable(GL_CULL_FACE);
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        liminal::framebuffer::unbind();
 
         shadow_index++;
     }
 
+    // spot light shadows
     for (std::size_t shadow_index = 0; const auto [id, spot_light, transform] : scene.get_entities_with<liminal::spot_light, const liminal::transform>().each())
     {
         spot_light.view_projection_matrix = glm::identity<glm::mat4>();
-        spot_light.depth_map_texture = {};
+        spot_light.depth_texture_id = 0;
 
         if (shadow_index >= num_spot_light_shadows)
         {
@@ -1312,11 +1006,10 @@ void liminal::renderer::render_shadows(
         constexpr auto up = glm::vec3(0, 1, 0);
         const auto view = glm::lookAt(transform.position, target, up);
         spot_light.view_projection_matrix = projection * view;
-        spot_light.depth_map_texture = spot_light_depth_map_textures.at(shadow_index);
+        spot_light.depth_texture_id = spot_light_depth_textures.at(shadow_index)->get_texture_id();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, spot_light_depth_map_fbo_ids.at(shadow_index));
+        spot_light_framebuffers.at(shadow_index)->bind();
         {
-            glViewport(0, 0, spot_light_depth_map_size, spot_light_depth_map_size);
             glEnable(GL_CULL_FACE);
 
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -1365,7 +1058,7 @@ void liminal::renderer::render_shadows(
 
             glDisable(GL_CULL_FACE);
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        liminal::framebuffer::unbind();
 
         shadow_index++;
     }
@@ -1375,8 +1068,7 @@ void liminal::renderer::render_objects(
     liminal::scene &scene,
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
-    GLuint fbo_id,
-    GLsizei width, GLsizei height,
+    const liminal::framebuffer &framebuffer,
     const glm::vec4 &clipping_plane) const
 {
     // camera
@@ -1384,9 +1076,8 @@ void liminal::renderer::render_objects(
     const auto camera_view = camera.calc_view(camera_transform);
 
     // draw to gbuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, geometry_fbo_id);
+    geometry_framebuffer->bind();
     {
-        glViewport(0, 0, render_width, render_height);
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
         glEnable(GL_CULL_FACE);
         glEnable(GL_CLIP_DISTANCE0);
@@ -1454,12 +1145,11 @@ void liminal::renderer::render_objects(
         glDisable(GL_CULL_FACE);
         glDisable(GL_CLIP_DISTANCE0);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    liminal::framebuffer::unbind();
 
     // deferred lighting
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+    framebuffer.bind();
     {
-        glViewport(0, 0, width, height);
         glDisable(GL_DEPTH_TEST);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1476,13 +1166,13 @@ void liminal::renderer::render_objects(
             geometry_material_texture->bind(4);
             if (scene.skybox)
             {
-                scene.skybox->bind_irradiance_map(5);
-                scene.skybox->bind_prefilter_map(6);
+                scene.skybox->bind_irradiance_cubemap(5);
+                scene.skybox->bind_prefilter_cubemap(6);
             }
             else
             {
-                liminal::texture::unbind(5);
-                liminal::texture::unbind(6);
+                liminal::cubemap::unbind(5);
+                liminal::cubemap::unbind(6);
             }
             brdf_texture->bind(7);
 
@@ -1495,8 +1185,8 @@ void liminal::renderer::render_objects(
             liminal::texture::unbind(2);
             liminal::texture::unbind(3);
             liminal::texture::unbind(4);
-            liminal::texture::unbind(5);
-            liminal::texture::unbind(6);
+            liminal::cubemap::unbind(5);
+            liminal::cubemap::unbind(6);
             liminal::texture::unbind(7);
         }
         liminal::program::unbind();
@@ -1522,30 +1212,15 @@ void liminal::renderer::render_objects(
                 {
                     deferred_directional_program->set_vec3("light.direction", transform.rotation);
                     deferred_directional_program->set_vec3("light.color", directional_light.color);
+                    deferred_directional_program->set_mat4("light.view_projection_matrix", directional_light.view_projection_matrix);
 
-                    for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
-                    {
-                        deferred_directional_program->set_mat4(("light.view_projection_matrices[" + std::to_string(cascade_index) + "]").c_str(), directional_light.view_projection_matrices.at(cascade_index));
-
-                        const auto directional_light_depth_map_texture = directional_light.depth_map_textures.at(cascade_index).lock();
-                        if (directional_light_depth_map_texture)
-                        {
-                            directional_light_depth_map_texture->bind(5 + static_cast<unsigned int>(cascade_index));
-                        }
-                        else
-                        {
-                            liminal::texture::unbind(5 + static_cast<unsigned int>(cascade_index));
-                        }
-                    }
+                    liminal::texture::bind(5, directional_light.depth_texture_id);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
                     glBindVertexArray(0);
 
-                    for (std::size_t cascade_index = 0; cascade_index < liminal::directional_light::num_cascades; cascade_index++)
-                    {
-                        liminal::texture::unbind(5 + static_cast<unsigned int>(cascade_index));
-                    }
+                    liminal::texture::unbind(5);
                 }
 
                 liminal::texture::unbind(0);
@@ -1572,15 +1247,7 @@ void liminal::renderer::render_objects(
                     deferred_point_program->set_vec3("light.position", transform.position);
                     deferred_point_program->set_vec3("light.color", point_light.color);
 
-                    const auto point_light_depth_cubemap_texture = point_light.depth_cubemap_texture.lock();
-                    if (point_light_depth_cubemap_texture)
-                    {
-                        point_light_depth_cubemap_texture->bind(5);
-                    }
-                    else
-                    {
-                        liminal::texture::unbind(5);
-                    }
+                    liminal::cubemap::bind(5, point_light.depth_cubemap_id);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -1616,15 +1283,7 @@ void liminal::renderer::render_objects(
                     deferred_spot_program->set_float("light.outer_cutoff", glm::cos(glm::radians(spot_light.outer_cutoff)));
                     deferred_spot_program->set_mat4("light.view_projection_matrix", spot_light.view_projection_matrix);
 
-                    const auto spot_light_depth_map_texture = spot_light.depth_map_texture.lock();
-                    if (spot_light_depth_map_texture)
-                    {
-                        spot_light_depth_map_texture->bind(5);
-                    }
-                    else
-                    {
-                        liminal::texture::unbind(5);
-                    }
+                    liminal::texture::bind(5, spot_light.depth_texture_id);
 
                     glBindVertexArray(screen_vao_id);
                     glDrawArrays(GL_TRIANGLES, 0, screen_vertices_size);
@@ -1649,18 +1308,27 @@ void liminal::renderer::render_objects(
 
         glEnable(GL_DEPTH_TEST);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    liminal::framebuffer::unbind();
 
     // copy depth info
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_fbo_id);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_id);
-    glBlitFramebuffer(0, 0, render_width, render_height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_framebuffer->get_framebuffer_id());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer.get_framebuffer_id());
+    glBlitFramebuffer(
+        0,
+        0,
+        geometry_framebuffer->get_width(),
+        geometry_framebuffer->get_height(),
+        0,
+        0,
+        framebuffer.get_width(),
+        framebuffer.get_height(),
+        GL_DEPTH_BUFFER_BIT,
+        GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // forward render everything else
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+    framebuffer.bind();
     {
-        glViewport(0, 0, width, height);
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 
         // draw skybox
@@ -1677,13 +1345,13 @@ void liminal::renderer::render_objects(
             {
                 skybox_program->set_mat4("mvp_matrix", camera_projection * camera_view_no_translate);
 
-                scene.skybox->bind_environment_map(0);
+                scene.skybox->bind_environment_cubemap(0);
 
                 glBindVertexArray(skybox_vao_id);
                 glDrawArrays(GL_TRIANGLES, 0, skybox_vertices_size);
                 glBindVertexArray(0);
 
-                liminal::texture::unbind(0);
+                liminal::cubemap::unbind(0);
             }
             liminal::program::unbind();
 
@@ -1717,7 +1385,7 @@ void liminal::renderer::render_objects(
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    liminal::framebuffer::unbind();
 }
 
 void liminal::renderer::render_waters(
@@ -1738,7 +1406,7 @@ void liminal::renderer::render_waters(
         reflected_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
         reflected_transform.rotation.x = -camera_transform.rotation.x;
         reflected_transform.rotation.z = -camera_transform.rotation.z;
-        render_objects(scene, camera, reflected_transform, water_reflection_fbo_id, water_reflection_width, water_reflection_height, reflection_clipping_plane);
+        render_objects(scene, camera, reflected_transform, *water_reflection_framebuffer, reflection_clipping_plane);
 
         // refraction
         glm::vec4 refraction_clipping_plane(0, -1, 0, transform.position.y);
@@ -1746,12 +1414,11 @@ void liminal::renderer::render_waters(
         {
             refraction_clipping_plane *= -1.0f;
         }
-        render_objects(scene, camera, camera_transform, water_refraction_fbo_id, water_refraction_width, water_refraction_height, refraction_clipping_plane);
+        render_objects(scene, camera, camera_transform, *water_refraction_framebuffer, refraction_clipping_plane);
 
         // draw water meshes
-        glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
+        hdr_framebuffer->bind();
         {
-            glViewport(0, 0, render_width, render_height);
             glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1815,15 +1482,15 @@ void liminal::renderer::render_waters(
             glDisable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ZERO);
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        liminal::framebuffer::unbind();
     }
 }
 
 void liminal::renderer::render_sprites(liminal::scene &scene) const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, hdr_fbo_id);
+    hdr_framebuffer->bind();
     {
-        glViewport(0, 0, target_width, target_height);
+        // glViewport(0, 0, target_width, target_height);
 
         sprite_program->bind();
         {
@@ -1846,7 +1513,7 @@ void liminal::renderer::render_sprites(liminal::scene &scene) const
         }
         liminal::program::unbind();
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    liminal::framebuffer::unbind();
 }
 
 void liminal::renderer::render_screen(const liminal::camera &camera) const
@@ -1854,14 +1521,12 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
     // apply gaussian blur to brightness map
     auto horizontal = true;
     {
-        glViewport(0, 0, target_width / 8, target_height / 8);
-
         gaussian_program->bind();
         {
             bool first_iteration = true;
             for (std::size_t pass = 0; pass < 10; pass++)
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, bloom_fbo_ids.at(static_cast<std::size_t>(horizontal)));
+                bloom_framebuffers.at(static_cast<std::size_t>(horizontal))->bind();
                 {
                     gaussian_program->set_int("horizontal", horizontal);
 
@@ -1880,7 +1545,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
 
                     liminal::texture::unbind(0);
                 }
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                liminal::framebuffer::unbind();
 
                 horizontal = !horizontal;
 
@@ -1891,9 +1556,16 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
     }
 
     // final pass
-    glBindFramebuffer(GL_FRAMEBUFFER, camera.render_to_texture ? final_fbo_id : 0);
+    if (camera.render_to_texture)
     {
+        final_framebuffer->bind();
+    }
+    else
+    {
+        liminal::framebuffer::unbind();
         glViewport(0, 0, target_width, target_height);
+    }
+    {
         glDisable(GL_DEPTH_TEST);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1916,7 +1588,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
 
         glEnable(GL_DEPTH_TEST);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    liminal::framebuffer::unbind();
 
     if (camera.render_to_texture)
     {

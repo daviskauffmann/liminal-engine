@@ -9,7 +9,7 @@ namespace minecraft
     class mesh_data
     {
     public:
-        std::vector<liminal::vertex> vertices;
+        std::vector<liminal::mesh::vertex> vertices;
         std::vector<unsigned int> indices;
 
         void add_quad_indices();

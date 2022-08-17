@@ -5,6 +5,12 @@
 #include <stb_image.h>
 #include <stdexcept>
 
+void liminal::texture::bind(unsigned int index, GLuint texture_id)
+{
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+}
+
 void liminal::texture::unbind(const unsigned int index)
 {
     glActiveTexture(GL_TEXTURE0 + index);
@@ -19,7 +25,8 @@ liminal::texture::texture(
     const GLenum type,
     const liminal::texture_filter filter,
     const liminal::texture_wrap wrap,
-    const std::array<GLfloat, 4> &border_color)
+    const std::array<GLfloat, 4> &border_color,
+    const void *pixels)
 {
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -33,7 +40,7 @@ liminal::texture::texture(
             0,
             format,
             type,
-            nullptr);
+            pixels);
 
         switch (filter)
         {
@@ -131,6 +138,5 @@ GLuint liminal::texture::get_texture_id() const
 
 void liminal::texture::bind(const unsigned int index) const
 {
-    glActiveTexture(GL_TEXTURE0 + index);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+    bind(index, texture_id);
 }

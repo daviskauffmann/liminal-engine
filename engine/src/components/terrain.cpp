@@ -27,12 +27,12 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
         throw std::runtime_error(IMG_GetError());
     }
 
-    std::vector<liminal::vertex> vertices;
+    std::vector<liminal::mesh::vertex> vertices;
     for (int z = 0; z < surface->h; z++)
     {
         for (int x = 0; x < surface->w; x++)
         {
-            liminal::vertex vertex;
+            liminal::mesh::vertex vertex;
             vertex.position = {
                 -(float)x / ((float)surface->w - 1) * size,
                 get_height(surface, x, z),

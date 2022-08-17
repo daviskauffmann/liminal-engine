@@ -13,10 +13,9 @@ namespace liminal
 
         void set_cubemap(const char *filename);
 
-        void bind_environment_map(unsigned int index) const;
-        void bind_irradiance_map(unsigned int index) const;
-        void bind_prefilter_map(unsigned int index) const;
-        static void unbind(unsigned int index);
+        void bind_environment_cubemap(unsigned int index) const;
+        void bind_irradiance_cubemap(unsigned int index) const;
+        void bind_prefilter_cubemap(unsigned int index) const;
 
     private:
         GLuint environment_cubemap_id = 0;

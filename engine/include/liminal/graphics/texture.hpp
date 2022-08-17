@@ -22,6 +22,7 @@ namespace liminal
     class texture
     {
     public:
+        static void bind(unsigned int index, GLuint texture_id);
         static void unbind(unsigned int index);
 
         texture(
@@ -32,7 +33,8 @@ namespace liminal
             GLenum type,
             liminal::texture_filter filter = liminal::texture_filter::nearest,
             liminal::texture_wrap wrap = liminal::texture_wrap::repeat,
-            const std::array<GLfloat, 4> &border_color = {0, 0, 0, 0});
+            const std::array<GLfloat, 4> &border_color = {0, 0, 0, 0},
+            const void *pixels = nullptr);
         texture(const char *filename, bool srgb = false, bool filter = true);
         ~texture();
 

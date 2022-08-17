@@ -46,7 +46,7 @@ namespace player
             weapon_entity.add_component<liminal::audio_source>();
 
             ui_entity = scene->create_entity();
-            // ui_entity.add_component<liminal::sprite>(grass_texture, glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.0f, glm::vec2(1, 1));
+            ui_entity.add_component<liminal::sprite>(grass_texture.get(), glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.0f, glm::vec2(1, 1));
         }
 
         ~app() override

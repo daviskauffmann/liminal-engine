@@ -6,6 +6,7 @@
 #include "../components/transform.hpp"
 #include "../entities/scene.hpp"
 #include "../graphics/cubemap.hpp"
+#include "../graphics/framebuffer.hpp"
 #include "../graphics/mesh.hpp"
 #include "../graphics/model.hpp"
 #include "../graphics/program.hpp"
@@ -72,7 +73,6 @@ namespace liminal
         GLsizei render_width;
         GLsizei render_height;
 
-        GLuint geometry_fbo_id = 0;
         std::unique_ptr<liminal::texture> geometry_position_texture;
         std::unique_ptr<liminal::texture> geometry_normal_texture;
         std::unique_ptr<liminal::texture> geometry_color_texture;
@@ -80,40 +80,34 @@ namespace liminal
         std::unique_ptr<liminal::texture> geometry_material_texture;
         std::unique_ptr<liminal::texture> geometry_id_texture;
         std::unique_ptr<liminal::renderbuffer> geometry_depth_renderbuffer;
+        std::unique_ptr<liminal::framebuffer> geometry_framebuffer;
 
-        GLuint hdr_fbo_id = 0;
         std::array<std::unique_ptr<liminal::texture>, 2> hdr_textures;
         std::unique_ptr<liminal::renderbuffer> hdr_depth_renderbuffer;
+        std::unique_ptr<liminal::framebuffer> hdr_framebuffer;
 
-        GLuint final_fbo_id = 0;
+        std::array<std::unique_ptr<liminal::texture>, 2> bloom_textures;
+        std::array<std::unique_ptr<liminal::framebuffer>, 2> bloom_framebuffers;
+
         std::unique_ptr<liminal::texture> final_texture;
+        std::unique_ptr<liminal::framebuffer> final_framebuffer;
 
-        GLsizei directional_light_depth_map_size;
-        std::array<GLuint, num_directional_light_shadows> directional_light_depth_map_fbo_ids = {};
-        std::array<std::array<std::shared_ptr<liminal::texture>, liminal::directional_light::num_cascades>, num_directional_light_shadows> directional_light_depth_map_textures;
+        std::array<std::shared_ptr<liminal::texture>, num_directional_light_shadows> directional_light_depth_textures;
+        std::array<std::unique_ptr<liminal::framebuffer>, num_directional_light_shadows> directional_light_framebuffers;
 
-        GLsizei point_light_depth_cubemap_size;
-        std::array<GLuint, num_point_light_shadows> point_light_depth_cubemap_fbo_ids = {};
-        std::array<std::shared_ptr<liminal::cubemap>, num_point_light_shadows> point_light_depth_cubemap_textures;
+        std::array<std::unique_ptr<liminal::cubemap>, num_point_light_shadows> point_light_depth_cubemaps;
+        std::array<std::unique_ptr<liminal::framebuffer>, num_point_light_shadows> point_light_framebuffers;
 
-        GLsizei spot_light_depth_map_size;
-        std::array<GLuint, num_spot_light_shadows> spot_light_depth_map_fbo_ids = {};
-        std::array<std::shared_ptr<liminal::texture>, num_spot_light_shadows> spot_light_depth_map_textures;
+        std::array<std::shared_ptr<liminal::texture>, num_spot_light_shadows> spot_light_depth_textures;
+        std::array<std::unique_ptr<liminal::framebuffer>, num_spot_light_shadows> spot_light_framebuffers;
 
-        GLsizei water_reflection_width;
-        GLsizei water_reflection_height;
-        GLuint water_reflection_fbo_id = 0;
         std::unique_ptr<liminal::texture> water_reflection_color_texture;
         std::unique_ptr<liminal::renderbuffer> water_reflection_depth_renderbuffer;
+        std::unique_ptr<liminal::framebuffer> water_reflection_framebuffer;
 
-        GLsizei water_refraction_width;
-        GLsizei water_refraction_height;
-        GLuint water_refraction_fbo_id = 0;
         std::unique_ptr<liminal::texture> water_refraction_color_texture;
         std::unique_ptr<liminal::texture> water_refraction_depth_texture;
-
-        std::array<GLuint, 2> bloom_fbo_ids = {};
-        std::array<std::unique_ptr<liminal::texture>, 2> bloom_textures;
+        std::unique_ptr<liminal::framebuffer> water_refraction_framebuffer;
 
         GLsizei water_vertices_size;
         GLuint water_vao_id;
@@ -170,8 +164,7 @@ namespace liminal
             liminal::scene &scene,
             const liminal::camera &camera,
             const liminal::transform &camera_transform,
-            GLuint fbo_id,
-            GLsizei width, GLsizei height,
+            const liminal::framebuffer &framebuffer,
             const glm::vec4 &clipping_plane = glm::vec4(0)) const;
         void render_waters(
             liminal::scene &scene,

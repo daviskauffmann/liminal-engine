@@ -91,14 +91,14 @@ void liminal::model::process_node_meshes(const aiNode *const ai_node, std::share
     {
         const auto ai_mesh = ai_scene->mMeshes[ai_node->mMeshes[mesh_index]];
 
-        std::vector<liminal::vertex> vertices;
+        std::vector<liminal::mesh::vertex> vertices;
         std::vector<unsigned int> indices;
         std::array<std::vector<std::shared_ptr<liminal::texture>>, liminal::mesh::num_textures> textures;
 
         // process vertices
         for (std::size_t vertex_index = 0; vertex_index < ai_mesh->mNumVertices; vertex_index++)
         {
-            liminal::vertex vertex;
+            liminal::mesh::vertex vertex;
 
             if (ai_mesh->HasPositions())
             {
@@ -121,9 +121,9 @@ void liminal::model::process_node_meshes(const aiNode *const ai_node, std::share
                 vertex.bitangent = vec3_cast(ai_mesh->mBitangents[vertex_index]);
             }
 
-            for (std::size_t bone_index = 0; bone_index < liminal::vertex::num_bones; bone_index++)
+            for (std::size_t bone_index = 0; bone_index < liminal::mesh::vertex::num_bones; bone_index++)
             {
-                vertex.bone_ids.at(bone_index) = liminal::vertex::num_bones;
+                vertex.bone_ids.at(bone_index) = liminal::mesh::vertex::num_bones;
                 vertex.bone_weights.at(bone_index) = 0;
             }
 

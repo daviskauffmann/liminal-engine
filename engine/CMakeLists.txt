@@ -48,13 +48,13 @@ add_library(${PROJECT_NAME}
     src/core/window.cpp
     src/entities/scene.cpp
     src/graphics/cubemap.cpp
+    src/graphics/framebuffer.cpp
     src/graphics/mesh.cpp
     src/graphics/model.cpp
     src/graphics/program.cpp
     src/graphics/renderbuffer.cpp
     src/graphics/skybox.cpp
     src/graphics/texture.cpp
-    src/graphics/vertex.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

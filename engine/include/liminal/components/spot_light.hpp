@@ -1,11 +1,9 @@
 #ifndef LIMINAL_COMPONENTS_SPOT_LIGHT_HPP
 #define LIMINAL_COMPONENTS_SPOT_LIGHT_HPP
 
-#include "../graphics/texture.hpp"
 #include <gl/glew.h>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
-#include <memory>
 
 namespace liminal
 {
@@ -17,7 +15,7 @@ namespace liminal
         float outer_cutoff = 15;
 
         glm::mat4 view_projection_matrix = {};
-        std::weak_ptr<liminal::texture> depth_map_texture;
+        GLuint depth_texture_id = 0;
     };
 }
 

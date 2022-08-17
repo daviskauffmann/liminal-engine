@@ -33,5 +33,4 @@
 #include "graphics\renderbuffer.hpp"
 #include "graphics\skybox.hpp"
 #include "graphics\texture.hpp"
-#include "graphics\vertex.hpp"
 #include "input\input.hpp"
