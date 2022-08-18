@@ -1,31 +1,16 @@
 #ifndef LIMINAL_COMPONENTS_AUDIO_SOURCE_HPP
 #define LIMINAL_COMPONENTS_AUDIO_SOURCE_HPP
 
-#include <AL/al.h>
 #include <glm/vec3.hpp>
+#include <memory>
 
 namespace liminal
 {
-    class sound;
+    class source;
 
-    class audio_source
+    struct audio_source
     {
-    public:
-        audio_source();
-        ~audio_source();
-
-        void set_loop(bool loop) const;
-        void set_gain(float gain) const;
-        void set_pitch(float pitch) const;
-        void set_position(const glm::vec3 &position);
-        bool is_playing() const;
-        void play(const liminal::sound &sound) const;
-        void pause() const;
-        void resume() const;
-        void stop() const;
-
-    private:
-        ALuint source_id;
+        std::shared_ptr<liminal::source> source;
         glm::vec3 last_position = {};
     };
 }

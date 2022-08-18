@@ -82,7 +82,8 @@ namespace liminal
         std::unique_ptr<liminal::renderbuffer> geometry_depth_renderbuffer;
         std::unique_ptr<liminal::framebuffer> geometry_framebuffer;
 
-        std::array<std::unique_ptr<liminal::texture>, 2> hdr_textures;
+        std::unique_ptr<liminal::texture> hdr_color_texture;
+        std::unique_ptr<liminal::texture> hdr_brightness_texture;
         std::unique_ptr<liminal::renderbuffer> hdr_depth_renderbuffer;
         std::unique_ptr<liminal::framebuffer> hdr_framebuffer;
 
@@ -150,7 +151,7 @@ namespace liminal
 
         std::unique_ptr<liminal::mesh> DEBUG_sphere_mesh;
 
-        void calc_render_size();
+        void set_render_size(GLsizei width, GLsizei height, float scale);
 
         void render_all(
             liminal::scene &scene,

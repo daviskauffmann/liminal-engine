@@ -1,7 +1,6 @@
 #include <liminal/graphics/texture.hpp>
 
 #include <SDL2/SDL.h>
-#include <spdlog/spdlog.h>
 #include <stb_image.h>
 #include <stdexcept>
 

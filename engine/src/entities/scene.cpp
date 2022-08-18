@@ -2,7 +2,9 @@
 
 #include <bullet/btBulletDynamicsCommon.h>
 #include <fstream>
+#include <liminal/audio/listener.hpp>
 #include <liminal/audio/sound.hpp>
+#include <liminal/audio/source.hpp>
 #include <liminal/components/audio_listener.hpp>
 #include <liminal/components/audio_source.hpp>
 #include <liminal/components/camera.hpp>
@@ -21,11 +23,15 @@
 #include <liminal/graphics/skybox.hpp>
 #include <nlohmann/json.hpp>
 #include <sol/sol.hpp>
-#include <string>
 
 liminal::scene::scene()
 {
     skybox = nullptr;
+
+    registry.on_construct<liminal::audio_source>().connect<&scene::on_audio_source_construct>(this);
+    registry.on_destroy<liminal::audio_source>().connect<&scene::on_audio_source_destroy>(this);
+    registry.on_construct<liminal::physical>().connect<&scene::on_physical_construct>(this);
+    registry.on_destroy<liminal::physical>().connect<&scene::on_physical_destroy>(this);
 
     const auto collision_configuration = new btDefaultCollisionConfiguration();
     const auto dispatcher = new btCollisionDispatcher(collision_configuration);
@@ -108,7 +114,7 @@ void liminal::scene::load(const std::string &filename, std::shared_ptr<liminal::
 
                     if (component_type == "physical")
                     {
-                        entity.add_component<liminal::physical>(world.get(), component_json.at("mass"));
+                        entity.add_component<liminal::physical>(component_json.at("mass"));
                     }
 
                     if (component_type == "mesh_renderer")
@@ -137,7 +143,6 @@ void liminal::scene::load(const std::string &filename, std::shared_ptr<liminal::
                     if (component_type == "terrain")
                     {
                         entity.add_component<liminal::terrain>(
-                            world.get(),
                             "assets/images/heightmap.png",
                             glm::vec3(0, 0, 0),
                             100.0f,
@@ -200,13 +205,20 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
     // update audio listener positions
     for (const auto [id, audio_listener, camera, transform] : get_entities_with<liminal::audio_listener, const liminal::camera, const liminal::transform>().each())
     {
-        audio_listener.set_position(transform.position, camera.calc_front(transform));
+        liminal::listener::set_position(transform.position);
+        liminal::listener::set_velocity(audio_listener.last_position - transform.position);
+        liminal::listener::set_orientation(camera.calc_front(transform), glm::vec3(0, 1, 0));
+
+        audio_listener.last_position = transform.position;
     }
 
     // update audio source positions
     for (const auto [id, audio_source, transform] : get_entities_with<liminal::audio_source, const liminal::transform>().each())
     {
-        audio_source.set_position(transform.position);
+        audio_source.source->set_position(transform.position);
+        audio_source.source->set_velocity(audio_source.last_position - transform.position);
+
+        audio_source.last_position = transform.position;
     }
 
     // update world transforms in case the transform component changed
@@ -247,4 +259,38 @@ void liminal::scene::reload_scripts()
     // for (const auto [id, script] : get_entities_with<const liminal::script>().each())
     // {
     // }
+}
+
+void liminal::scene::on_audio_source_construct(entt::registry &, entt::entity id)
+{
+    auto &audio_source = get_entity(id).get_component<liminal::audio_source>();
+    audio_source.source = std::make_shared<liminal::source>();
+    sources.push_back(audio_source.source);
+}
+
+void liminal::scene::on_audio_source_destroy(entt::registry &, entt::entity id)
+{
+    auto &audio_source = get_entity(id).get_component<liminal::audio_source>();
+    sources.erase(std::find(sources.begin(), sources.end(), audio_source.source));
+    audio_source.source = {};
+}
+
+void liminal::scene::on_physical_construct(entt::registry &, entt::entity id)
+{
+    auto &physical = get_entity(id).get_component<liminal::physical>();
+
+    const auto motion_state = new btDefaultMotionState();
+    const auto collision_shape = new btBoxShape(btVector3(1, 1, 1));
+    btVector3 local_inertia;
+    collision_shape->calculateLocalInertia(physical.mass, local_inertia);
+    const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(physical.mass, motion_state, collision_shape, local_inertia);
+    physical.rigidbody = std::make_shared<btRigidBody>(construction_info);
+    world->addRigidBody(physical.rigidbody.get());
+}
+
+void liminal::scene::on_physical_destroy(entt::registry &, entt::entity id)
+{
+    auto &physical = get_entity(id).get_component<liminal::physical>();
+    world->removeRigidBody(physical.rigidbody.get());
+    physical.rigidbody = {};
 }

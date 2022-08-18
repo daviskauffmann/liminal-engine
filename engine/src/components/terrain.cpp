@@ -15,9 +15,8 @@
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::string &filename, const glm::vec3 &position, const float size, const float height_scale, std::shared_ptr<liminal::assets> assets)
-    : world(world),
-      position(position),
+liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position, const float size, const float height_scale, std::shared_ptr<liminal::assets> assets)
+    : position(position),
       size(size),
       height_scale(height_scale)
 {
@@ -45,10 +44,6 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
                 (float)x / ((float)surface->w - 1),
                 (float)z / ((float)surface->h - 1)};
             vertices.push_back(vertex);
-
-            heightfield.push_back(vertex.position.x);
-            heightfield.push_back(vertex.position.y);
-            heightfield.push_back(vertex.position.z);
         }
     }
 
@@ -105,22 +100,6 @@ liminal::terrain::terrain(btDiscreteDynamicsWorld *const world, const std::strin
     // textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture(""));
 
     mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
-
-    btTransform transform;
-    transform.setIdentity();
-    transform.setOrigin(btVector3(position.x, position.y, position.z));
-    const auto motion_state = new btDefaultMotionState(transform);
-    const auto collision_shape = new btHeightfieldTerrainShape((int)size, (int)size, heightfield.data(), 1, 0, 100, 1, PHY_FLOAT, true);
-    const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(0, motion_state, collision_shape);
-    rigidbody = std::make_unique<btRigidBody>(construction_info);
-    world->addRigidBody(rigidbody.get());
-}
-
-liminal::terrain::~terrain()
-{
-    delete rigidbody->getMotionState();
-    delete rigidbody->getCollisionShape();
-    world->removeRigidBody(rigidbody.get());
 }
 
 glm::mat4 liminal::terrain::get_model_matrix() const

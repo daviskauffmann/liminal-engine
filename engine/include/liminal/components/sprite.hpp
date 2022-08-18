@@ -11,7 +11,7 @@ namespace liminal
     class sprite
     {
     public:
-        liminal::texture *texture = nullptr;
+        liminal::texture *texture;
         glm::vec3 color = {1, 1, 1};
         glm::vec2 position = {};
         float rotation = 0;

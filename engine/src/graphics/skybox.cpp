@@ -14,7 +14,7 @@ constexpr GLsizei prefilter_size = 128;
 
 liminal::skybox::skybox(const char *const filename)
 {
-    set_cubemap(filename);
+    set_cubemaps(filename);
 }
 
 liminal::skybox::~skybox()
@@ -24,7 +24,7 @@ liminal::skybox::~skybox()
     glDeleteTextures(1, &prefilter_cubemap_id);
 }
 
-void liminal::skybox::set_cubemap(const char *const filename)
+void liminal::skybox::set_cubemaps(const char *const filename)
 {
     glDeleteTextures(1, &environment_cubemap_id);
     glDeleteTextures(1, &irradiance_cubemap_id);

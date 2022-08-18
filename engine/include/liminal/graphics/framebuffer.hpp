@@ -27,7 +27,7 @@ namespace liminal
         void add_depth_renderbuffer(GLuint renderbuffer_id) const;
         void add_depth_texture(GLuint texture_id) const;
 
-        void complete() const;
+        void validate() const;
 
         void bind() const;
 

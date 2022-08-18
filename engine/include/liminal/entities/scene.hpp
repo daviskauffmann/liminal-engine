@@ -2,10 +2,9 @@
 #define LIMINAL_ENTITIES_SCENE_HPP
 
 #include <entt/entt.hpp>
-#include <imgui.h>
 #include <memory>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 class btDiscreteDynamicsWorld;
 
@@ -13,6 +12,7 @@ namespace liminal
 {
     class assets;
     class skybox;
+    class source;
     class entity;
 
     class scene
@@ -48,7 +48,13 @@ namespace liminal
 
     private:
         entt::registry registry;
+        std::vector<std::shared_ptr<liminal::source>> sources;
         std::unique_ptr<btDiscreteDynamicsWorld> world;
+
+        void on_audio_source_construct(entt::registry &registry, entt::entity id);
+        void on_audio_source_destroy(entt::registry &registry, entt::entity id);
+        void on_physical_construct(entt::registry &registry, entt::entity id);
+        void on_physical_destroy(entt::registry &registry, entt::entity id);
     };
 }
 

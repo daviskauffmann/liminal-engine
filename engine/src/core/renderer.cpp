@@ -31,12 +31,9 @@ liminal::renderer::renderer(
     const GLsizei spot_light_depth_map_size,
     const GLsizei water_reflection_width, const GLsizei water_reflection_height,
     const GLsizei water_refraction_width, const GLsizei water_refraction_height)
-    : target_width(target_width),
-      target_height(target_height),
-      render_scale(render_scale)
 {
     // setup fbos
-    calc_render_size();
+    set_render_size(target_width, target_height, render_scale);
     set_directional_light_depth_map_size(directional_light_depth_map_size);
     set_point_light_depth_cubemap_size(point_light_depth_cubemap_size);
     set_spot_light_depth_map_size(spot_light_depth_map_size);
@@ -206,7 +203,7 @@ liminal::renderer::renderer(
         const auto brdf_framebuffer = std::make_unique<liminal::framebuffer>(brdf_size, brdf_size);
         brdf_framebuffer->add_color_texture(brdf_texture->get_texture_id());
         brdf_framebuffer->add_depth_renderbuffer(brdf_renderbuffer->get_renderbuffer_id());
-        brdf_framebuffer->complete();
+        brdf_framebuffer->validate();
 
         const auto brdf_program = std::make_unique<liminal::program>(
             "assets/shaders/brdf.vs",
@@ -474,23 +471,22 @@ float liminal::renderer::get_aspect_ratio() const
 
 void liminal::renderer::set_target_size(const GLsizei width, const GLsizei height)
 {
-    target_width = width;
-    target_height = height;
-
-    calc_render_size();
+    set_render_size(width, height, render_scale);
 }
 
 void liminal::renderer::set_render_scale(const float scale)
 {
-    render_scale = scale;
-
-    calc_render_size();
+    set_render_size(target_width, target_height, scale);
 }
 
-void liminal::renderer::calc_render_size()
+void liminal::renderer::set_render_size(const GLsizei width, const GLsizei height, const float scale)
 {
-    render_width = static_cast<GLsizei>(target_width * render_scale);
-    render_height = static_cast<GLsizei>(target_height * render_scale);
+    target_width = width;
+    target_height = height;
+    render_scale = scale;
+
+    render_width = static_cast<GLsizei>(width * scale);
+    render_height = static_cast<GLsizei>(height * scale);
 
     // setup geometry fbo
     // gbuffer:
@@ -553,30 +549,31 @@ void liminal::renderer::calc_render_size()
     geometry_framebuffer->add_color_texture(geometry_material_texture->get_texture_id());
     geometry_framebuffer->add_color_texture(geometry_id_texture->get_texture_id());
     geometry_framebuffer->add_depth_renderbuffer(geometry_depth_renderbuffer->get_renderbuffer_id());
-    geometry_framebuffer->complete();
+    geometry_framebuffer->validate();
 
     // setup hdr fbo
+    hdr_color_texture = std::make_unique<liminal::texture>(
+        GL_RGBA16F,
+        render_width,
+        render_height,
+        GL_RGBA,
+        GL_FLOAT);
+    hdr_brightness_texture = std::make_unique<liminal::texture>(
+        GL_RGBA16F,
+        render_width,
+        render_height,
+        GL_RGBA,
+        GL_FLOAT);
     hdr_depth_renderbuffer = std::make_unique<liminal::renderbuffer>(
         GL_DEPTH_STENCIL,
         render_width,
         render_height);
 
     hdr_framebuffer = std::make_unique<liminal::framebuffer>(render_width, render_height);
-    for (GLenum hdr_texture_index = 0; hdr_texture_index < hdr_textures.size(); hdr_texture_index++)
-    {
-        hdr_textures.at(hdr_texture_index) = std::make_unique<liminal::texture>(
-            GL_RGBA16F,
-            render_width,
-            render_height,
-            GL_RGB,
-            GL_FLOAT,
-            liminal::texture_filter::linear,
-            liminal::texture_wrap::clamp_to_edge);
-
-        hdr_framebuffer->add_color_texture(hdr_textures.at(hdr_texture_index)->get_texture_id());
-    }
+    hdr_framebuffer->add_color_texture(hdr_color_texture->get_texture_id());
+    hdr_framebuffer->add_color_texture(hdr_brightness_texture->get_texture_id());
     hdr_framebuffer->add_depth_renderbuffer(hdr_depth_renderbuffer->get_renderbuffer_id());
-    hdr_framebuffer->complete();
+    hdr_framebuffer->validate();
 
     // setup bloom fbo
     const GLsizei bloom_width = target_width / 8;
@@ -598,7 +595,7 @@ void liminal::renderer::calc_render_size()
 
         bloom_framebuffer = std::make_unique<liminal::framebuffer>(bloom_width, bloom_height);
         bloom_framebuffer->add_color_texture(bloom_textures.at(bloom_index)->get_texture_id());
-        bloom_framebuffer->complete();
+        bloom_framebuffer->validate();
     }
 
     // setup final fbo
@@ -611,7 +608,7 @@ void liminal::renderer::calc_render_size()
 
     final_framebuffer = std::make_unique<liminal::framebuffer>(target_width, target_height);
     final_framebuffer->add_color_texture(final_texture->get_texture_id());
-    final_framebuffer->complete();
+    final_framebuffer->validate();
 }
 
 void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
@@ -635,7 +632,7 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
         directional_light_framebuffer->set_draw_buffer(GL_NONE);
         directional_light_framebuffer->set_read_buffer(GL_NONE);
         directional_light_framebuffer->add_depth_texture(directional_light_depth_textures.at(shadow_index)->get_texture_id());
-        directional_light_framebuffer->complete();
+        directional_light_framebuffer->validate();
     }
 }
 
@@ -659,7 +656,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
         point_light_framebuffer->set_draw_buffer(GL_NONE);
         point_light_framebuffer->set_read_buffer(GL_NONE);
         point_light_framebuffer->add_depth_texture(point_light_depth_cubemaps.at(shadow_index)->get_cubemap_id());
-        point_light_framebuffer->complete();
+        point_light_framebuffer->validate();
     }
 }
 
@@ -684,7 +681,7 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
         spot_light_framebuffer->set_draw_buffer(GL_NONE);
         spot_light_framebuffer->set_read_buffer(GL_NONE);
         spot_light_framebuffer->add_depth_texture(spot_light_depth_textures.at(shadow_index)->get_texture_id());
-        spot_light_framebuffer->complete();
+        spot_light_framebuffer->validate();
     }
 }
 
@@ -705,7 +702,7 @@ void liminal::renderer::set_reflection_size(const GLsizei width, const GLsizei h
     water_reflection_framebuffer = std::make_unique<liminal::framebuffer>(width, height);
     water_reflection_framebuffer->add_color_texture(water_reflection_color_texture->get_texture_id());
     water_reflection_framebuffer->add_depth_renderbuffer(water_reflection_depth_renderbuffer->get_renderbuffer_id());
-    water_reflection_framebuffer->complete();
+    water_reflection_framebuffer->validate();
 }
 
 void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
@@ -729,7 +726,7 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
     water_refraction_framebuffer = std::make_unique<liminal::framebuffer>(width, height);
     water_refraction_framebuffer->add_color_texture(water_refraction_color_texture->get_texture_id());
     water_refraction_framebuffer->add_depth_texture(water_refraction_depth_texture->get_texture_id());
-    water_refraction_framebuffer->complete();
+    water_refraction_framebuffer->validate();
 }
 
 void liminal::renderer::reload_programs()
@@ -1436,7 +1433,7 @@ void liminal::renderer::render_waters(
                 water_program->set_float("camera.near_plane", liminal::camera::near_plane);
                 water_program->set_float("camera.far_plane", liminal::camera::far_plane);
                 water_program->set_vec3("camera.position", camera_transform.position);
-                auto first_directional_light = scene.get_entity(scene.get_entities_with<const liminal::directional_light>().front());
+                const auto first_directional_light = scene.get_entity(scene.get_entities_with<const liminal::directional_light>().front());
                 if (first_directional_light)
                 {
                     // TODO: specular reflections for all lights?
@@ -1532,7 +1529,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
 
                     if (first_iteration)
                     {
-                        hdr_textures.at(1)->bind(0);
+                        hdr_brightness_texture->bind(0);
                     }
                     else
                     {
@@ -1574,7 +1571,7 @@ void liminal::renderer::render_screen(const liminal::camera &camera) const
         {
             postprocess_program->set_unsigned_int("greyscale", greyscale);
 
-            hdr_textures.at(0)->bind(0);
+            hdr_color_texture->bind(0);
             bloom_textures.at(static_cast<std::size_t>(!horizontal))->bind(1);
 
             glBindVertexArray(screen_vao_id);

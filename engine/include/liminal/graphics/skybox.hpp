@@ -11,7 +11,7 @@ namespace liminal
         skybox(const char *filename);
         ~skybox();
 
-        void set_cubemap(const char *filename);
+        void set_cubemaps(const char *filename);
 
         void bind_environment_cubemap(unsigned int index) const;
         void bind_irradiance_cubemap(unsigned int index) const;

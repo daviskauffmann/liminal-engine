@@ -90,7 +90,7 @@ void liminal::framebuffer::add_depth_texture(const GLuint texture_id) const
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::complete() const
+void liminal::framebuffer::validate() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {

@@ -24,12 +24,11 @@ find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 add_library(${PROJECT_NAME}
     src/stb_image.cpp
     src/stb_include.cpp
+    src/audio/listener.cpp
     src/audio/sound.cpp
-    src/components/audio_listener.cpp
-    src/components/audio_source.cpp
+    src/audio/source.cpp
     src/components/camera.cpp
     src/components/mesh_renderer.cpp
-    src/components/physical.cpp
     src/components/script.cpp
     src/components/sprite.cpp
     src/components/terrain.cpp
