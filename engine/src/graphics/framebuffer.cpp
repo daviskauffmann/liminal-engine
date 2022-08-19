@@ -48,7 +48,7 @@ void liminal::framebuffer::set_read_buffer(const GLenum mode) const
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::add_color_texture(const GLuint texture_id) const
+void liminal::framebuffer::attach_color_texture(const GLuint texture_id) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {
@@ -64,7 +64,7 @@ void liminal::framebuffer::add_color_texture(const GLuint texture_id) const
     color_texture_ids.push_back(texture_id);
 }
 
-void liminal::framebuffer::add_depth_renderbuffer(const GLuint renderbuffer_id) const
+void liminal::framebuffer::attach_depth_renderbuffer(const GLuint renderbuffer_id) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {
@@ -77,7 +77,7 @@ void liminal::framebuffer::add_depth_renderbuffer(const GLuint renderbuffer_id) 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::add_depth_texture(const GLuint texture_id) const
+void liminal::framebuffer::attach_depth_texture(const GLuint texture_id) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {

@@ -159,6 +159,30 @@
             "script": {
                 "filename": "assets/scripts/spinning_lights.lua"
             }
+        },
+        {
+            "transform": {
+                "name": "Terrain",
+                "position": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 100,
+                    "y": 5,
+                    "z": 100
+                }
+            },
+            "terrain": {
+                "filename": "assets/images/heightmap.png",
+                "tiling": 100
+            }
         }
     ]
 }

@@ -10,9 +10,8 @@ namespace liminal
 {
     class model;
 
-    class mesh_renderer
+    struct mesh_renderer
     {
-    public:
         std::shared_ptr<liminal::model> model;
         glm::vec3 color;
         std::vector<glm::mat4> bone_transformations;

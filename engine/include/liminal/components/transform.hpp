@@ -7,9 +7,8 @@
 
 namespace liminal
 {
-    class transform
+    struct transform
     {
-    public:
         std::string name = "New Entity";
         liminal::transform *parent = nullptr;
         glm::vec3 position = {};

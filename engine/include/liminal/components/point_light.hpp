@@ -8,9 +8,8 @@
 
 namespace liminal
 {
-    class point_light
+    struct point_light
     {
-    public:
         glm::vec3 color = {1, 1, 1};
 
         std::array<glm::mat4, 6> view_projection_matrices = {};

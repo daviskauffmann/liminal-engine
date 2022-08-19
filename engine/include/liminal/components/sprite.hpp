@@ -8,9 +8,8 @@
 
 namespace liminal
 {
-    class sprite
+    struct sprite
     {
-    public:
         liminal::texture *texture;
         glm::vec3 color = {1, 1, 1};
         glm::vec2 position = {};

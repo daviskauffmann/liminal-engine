@@ -23,9 +23,9 @@ namespace liminal
         void set_draw_buffer(GLenum mode) const;
         void set_read_buffer(GLenum mode) const;
 
-        void add_color_texture(GLuint texture_id) const;
-        void add_depth_renderbuffer(GLuint renderbuffer_id) const;
-        void add_depth_texture(GLuint texture_id) const;
+        void attach_color_texture(GLuint texture_id) const;
+        void attach_depth_renderbuffer(GLuint renderbuffer_id) const;
+        void attach_depth_texture(GLuint texture_id) const;
 
         void validate() const;
 

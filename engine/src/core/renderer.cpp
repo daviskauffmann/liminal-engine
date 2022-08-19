@@ -201,8 +201,8 @@ liminal::renderer::renderer(
             brdf_size);
 
         const auto brdf_framebuffer = std::make_unique<liminal::framebuffer>(brdf_size, brdf_size);
-        brdf_framebuffer->add_color_texture(brdf_texture->get_texture_id());
-        brdf_framebuffer->add_depth_renderbuffer(brdf_renderbuffer->get_renderbuffer_id());
+        brdf_framebuffer->attach_color_texture(brdf_texture->get_texture_id());
+        brdf_framebuffer->attach_depth_renderbuffer(brdf_renderbuffer->get_renderbuffer_id());
         brdf_framebuffer->validate();
 
         const auto brdf_program = std::make_unique<liminal::program>(
@@ -542,13 +542,13 @@ void liminal::renderer::set_render_size(const GLsizei width, const GLsizei heigh
         render_height);
 
     geometry_framebuffer = std::make_unique<liminal::framebuffer>(render_width, render_height);
-    geometry_framebuffer->add_color_texture(geometry_position_texture->get_texture_id());
-    geometry_framebuffer->add_color_texture(geometry_normal_texture->get_texture_id());
-    geometry_framebuffer->add_color_texture(geometry_color_texture->get_texture_id());
-    geometry_framebuffer->add_color_texture(geometry_albedo_texture->get_texture_id());
-    geometry_framebuffer->add_color_texture(geometry_material_texture->get_texture_id());
-    geometry_framebuffer->add_color_texture(geometry_id_texture->get_texture_id());
-    geometry_framebuffer->add_depth_renderbuffer(geometry_depth_renderbuffer->get_renderbuffer_id());
+    geometry_framebuffer->attach_color_texture(geometry_position_texture->get_texture_id());
+    geometry_framebuffer->attach_color_texture(geometry_normal_texture->get_texture_id());
+    geometry_framebuffer->attach_color_texture(geometry_color_texture->get_texture_id());
+    geometry_framebuffer->attach_color_texture(geometry_albedo_texture->get_texture_id());
+    geometry_framebuffer->attach_color_texture(geometry_material_texture->get_texture_id());
+    geometry_framebuffer->attach_color_texture(geometry_id_texture->get_texture_id());
+    geometry_framebuffer->attach_depth_renderbuffer(geometry_depth_renderbuffer->get_renderbuffer_id());
     geometry_framebuffer->validate();
 
     // setup hdr fbo
@@ -570,9 +570,9 @@ void liminal::renderer::set_render_size(const GLsizei width, const GLsizei heigh
         render_height);
 
     hdr_framebuffer = std::make_unique<liminal::framebuffer>(render_width, render_height);
-    hdr_framebuffer->add_color_texture(hdr_color_texture->get_texture_id());
-    hdr_framebuffer->add_color_texture(hdr_brightness_texture->get_texture_id());
-    hdr_framebuffer->add_depth_renderbuffer(hdr_depth_renderbuffer->get_renderbuffer_id());
+    hdr_framebuffer->attach_color_texture(hdr_color_texture->get_texture_id());
+    hdr_framebuffer->attach_color_texture(hdr_brightness_texture->get_texture_id());
+    hdr_framebuffer->attach_depth_renderbuffer(hdr_depth_renderbuffer->get_renderbuffer_id());
     hdr_framebuffer->validate();
 
     // setup bloom fbo
@@ -594,7 +594,7 @@ void liminal::renderer::set_render_size(const GLsizei width, const GLsizei heigh
             liminal::texture_wrap::clamp_to_edge);
 
         bloom_framebuffer = std::make_unique<liminal::framebuffer>(bloom_width, bloom_height);
-        bloom_framebuffer->add_color_texture(bloom_textures.at(bloom_index)->get_texture_id());
+        bloom_framebuffer->attach_color_texture(bloom_textures.at(bloom_index)->get_texture_id());
         bloom_framebuffer->validate();
     }
 
@@ -607,7 +607,7 @@ void liminal::renderer::set_render_size(const GLsizei width, const GLsizei heigh
         GL_UNSIGNED_BYTE);
 
     final_framebuffer = std::make_unique<liminal::framebuffer>(target_width, target_height);
-    final_framebuffer->add_color_texture(final_texture->get_texture_id());
+    final_framebuffer->attach_color_texture(final_texture->get_texture_id());
     final_framebuffer->validate();
 }
 
@@ -631,7 +631,7 @@ void liminal::renderer::set_directional_light_depth_map_size(const GLsizei size)
         directional_light_framebuffer = std::make_unique<liminal::framebuffer>(size, size);
         directional_light_framebuffer->set_draw_buffer(GL_NONE);
         directional_light_framebuffer->set_read_buffer(GL_NONE);
-        directional_light_framebuffer->add_depth_texture(directional_light_depth_textures.at(shadow_index)->get_texture_id());
+        directional_light_framebuffer->attach_depth_texture(directional_light_depth_textures.at(shadow_index)->get_texture_id());
         directional_light_framebuffer->validate();
     }
 }
@@ -655,7 +655,7 @@ void liminal::renderer::set_point_light_depth_cubemap_size(const GLsizei size)
         point_light_framebuffer = std::make_unique<liminal::framebuffer>(size, size);
         point_light_framebuffer->set_draw_buffer(GL_NONE);
         point_light_framebuffer->set_read_buffer(GL_NONE);
-        point_light_framebuffer->add_depth_texture(point_light_depth_cubemaps.at(shadow_index)->get_cubemap_id());
+        point_light_framebuffer->attach_depth_texture(point_light_depth_cubemaps.at(shadow_index)->get_cubemap_id());
         point_light_framebuffer->validate();
     }
 }
@@ -680,7 +680,7 @@ void liminal::renderer::set_spot_light_depth_map_size(const GLsizei size)
         spot_light_framebuffer = std::make_unique<liminal::framebuffer>(size, size);
         spot_light_framebuffer->set_draw_buffer(GL_NONE);
         spot_light_framebuffer->set_read_buffer(GL_NONE);
-        spot_light_framebuffer->add_depth_texture(spot_light_depth_textures.at(shadow_index)->get_texture_id());
+        spot_light_framebuffer->attach_depth_texture(spot_light_depth_textures.at(shadow_index)->get_texture_id());
         spot_light_framebuffer->validate();
     }
 }
@@ -700,8 +700,8 @@ void liminal::renderer::set_reflection_size(const GLsizei width, const GLsizei h
         height);
 
     water_reflection_framebuffer = std::make_unique<liminal::framebuffer>(width, height);
-    water_reflection_framebuffer->add_color_texture(water_reflection_color_texture->get_texture_id());
-    water_reflection_framebuffer->add_depth_renderbuffer(water_reflection_depth_renderbuffer->get_renderbuffer_id());
+    water_reflection_framebuffer->attach_color_texture(water_reflection_color_texture->get_texture_id());
+    water_reflection_framebuffer->attach_depth_renderbuffer(water_reflection_depth_renderbuffer->get_renderbuffer_id());
     water_reflection_framebuffer->validate();
 }
 
@@ -724,8 +724,8 @@ void liminal::renderer::set_refraction_size(GLsizei width, GLsizei height)
         liminal::texture_filter::linear);
 
     water_refraction_framebuffer = std::make_unique<liminal::framebuffer>(width, height);
-    water_refraction_framebuffer->add_color_texture(water_refraction_color_texture->get_texture_id());
-    water_refraction_framebuffer->add_depth_texture(water_refraction_depth_texture->get_texture_id());
+    water_refraction_framebuffer->attach_color_texture(water_refraction_color_texture->get_texture_id());
+    water_refraction_framebuffer->attach_depth_texture(water_refraction_depth_texture->get_texture_id());
     water_refraction_framebuffer->validate();
 }
 
@@ -855,9 +855,9 @@ void liminal::renderer::render_shadows(
 
             depth_mesh_program->bind();
             {
-                for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>().each())
+                for (const auto [_id, _terrain, _transform] : scene.get_entities_with<const liminal::terrain, const liminal::transform>().each())
                 {
-                    const auto model_matrix = _terrain.get_model_matrix();
+                    const auto model_matrix = _transform.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrix * model_matrix);
 
@@ -933,15 +933,14 @@ void liminal::renderer::render_shadows(
                         {
                             depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
+                            depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
+                            depth_cube_mesh_program->set_vec3("light.position", transform.position);
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[0]", point_light.view_projection_matrices.at(0));
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[1]", point_light.view_projection_matrices.at(1));
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[2]", point_light.view_projection_matrices.at(2));
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[3]", point_light.view_projection_matrices.at(3));
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[4]", point_light.view_projection_matrices.at(4));
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[5]", point_light.view_projection_matrices.at(5));
-
-                            depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
-                            depth_cube_mesh_program->set_vec3("light.position", transform.position);
 
                             _mesh_renderer.model->draw_meshes(*depth_cube_mesh_program);
                         }
@@ -950,20 +949,20 @@ void liminal::renderer::render_shadows(
                 }
             }
 
-            // TODO: point light shadows disabled on terrain for now due to performance; investigate this
             // depth_cube_mesh_program->bind();
             // {
-            //     for (std::size_t face_index = 0; face_index < 6; face_index++)
-            //     {
-            //         depth_cube_mesh_program->set_mat4("light.view_projection_matrices[" + std::to_string(face_index) + "]", point_light.view_projection_matrices.at(face_index));
-            //     }
-
             //     depth_cube_mesh_program->set_float("light.far_plane", point_light_far_plane);
             //     depth_cube_mesh_program->set_vec3("light.position", transform.position);
+            //     depth_cube_mesh_program->set_mat4("light.view_projection_matrices[0]", point_light.view_projection_matrices.at(0));
+            //     depth_cube_mesh_program->set_mat4("light.view_projection_matrices[1]", point_light.view_projection_matrices.at(1));
+            //     depth_cube_mesh_program->set_mat4("light.view_projection_matrices[2]", point_light.view_projection_matrices.at(2));
+            //     depth_cube_mesh_program->set_mat4("light.view_projection_matrices[3]", point_light.view_projection_matrices.at(3));
+            //     depth_cube_mesh_program->set_mat4("light.view_projection_matrices[4]", point_light.view_projection_matrices.at(4));
+            //     depth_cube_mesh_program->set_mat4("light.view_projection_matrices[5]", point_light.view_projection_matrices.at(5));
 
-            //     for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>())
+            //     for (const auto [_id, _terrain, _transform] : scene.get_entities_with<const liminal::terrain, const liminal::transform>().each())
             //     {
-            //         const auto model_matrix = _terrain.get_model_matrix();
+            //         const auto model_matrix = _transform.get_model_matrix();
 
             //         depth_cube_mesh_program->set_mat4("model_matrix", model_matrix);
 
@@ -1039,9 +1038,9 @@ void liminal::renderer::render_shadows(
 
             depth_mesh_program->bind();
             {
-                for (const auto [_id, _terrain] : scene.get_entities_with<const liminal::terrain>().each())
+                for (const auto [_id, _terrain, _transform] : scene.get_entities_with<const liminal::terrain, const liminal::transform>().each())
                 {
-                    const auto model_matrix = _terrain.get_model_matrix();
+                    const auto model_matrix = _transform.get_model_matrix();
 
                     depth_mesh_program->set_mat4("mvp_matrix", spot_light.view_projection_matrix * model_matrix);
 
@@ -1151,13 +1150,14 @@ void liminal::renderer::render_geometry(
         {
             geometry_terrain_program->set_vec4("clipping_plane", clipping_plane);
 
-            for (const auto [id, terrain] : scene.get_entities_with<const liminal::terrain>().each())
+            for (const auto [id, terrain, transform] : scene.get_entities_with<const liminal::terrain, const liminal::transform>().each())
             {
-                const auto model_matrix = terrain.get_model_matrix();
+                const auto model_matrix = transform.get_model_matrix();
 
                 geometry_terrain_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 geometry_terrain_program->set_mat4("model_matrix", model_matrix);
-                geometry_terrain_program->set_float("tiling", terrain.size);
+                geometry_terrain_program->set_float("tiling", terrain.tiling);
+                geometry_terrain_program->set_int("id", static_cast<int>(id));
 
                 terrain.mesh->draw(*geometry_terrain_program);
             }

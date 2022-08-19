@@ -17,9 +17,8 @@ namespace liminal
     class mesh
     {
     public:
-        class vertex
+        struct vertex
         {
-        public:
             static constexpr std::size_t num_bones = 4;
 
             glm::vec3 position;

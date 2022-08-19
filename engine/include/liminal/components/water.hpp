@@ -3,9 +3,8 @@
 
 namespace liminal
 {
-    class water
+    struct water
     {
-    public:
         float tiling = 1;
     };
 }

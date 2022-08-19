@@ -27,6 +27,8 @@ uniform struct Material
 
 uniform sampler2D blend_map;
 
+uniform int id;
+
 vec3 calc_normal()
 {
     vec3 tangent_normal = texture(materials[0].normal_map, vertex.uv).xyz * 2 - 1;
@@ -54,5 +56,5 @@ void main()
     material_map.g = texture(materials[0].roughness_map, vertex.uv).r;
     material_map.b = texture(materials[0].occlusion_map, vertex.uv).r;
     material_map.a = texture(materials[0].height_map, vertex.uv).r;
-    id_map = -1;
+    id_map = id;
 }

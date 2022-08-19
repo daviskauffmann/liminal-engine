@@ -8,9 +8,8 @@
 
 namespace liminal
 {
-    class directional_light
+    struct directional_light
     {
-    public:
         glm::vec3 color = {1, 1, 1};
         bool shadows = true;
 

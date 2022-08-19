@@ -452,7 +452,67 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::directional_light>();
+                                selected_entity.remove_component<liminal::spot_light>();
+                            }
+                        }
+
+                        if (selected_entity.has_components<liminal::terrain>())
+                        {
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::terrain).hash_code()), flags, "Terrain");
+
+                            auto deleted = false;
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Remove"))
+                                {
+                                    deleted = true;
+                                }
+
+                                ImGui::EndPopup();
+                            }
+
+                            if (opened)
+                            {
+                                auto &terrain = selected_entity.get_component<liminal::terrain>();
+
+                                ImGui::DragFloat("Tiling", &terrain.tiling);
+
+                                ImGui::TreePop();
+                            }
+
+                            if (deleted)
+                            {
+                                selected_entity.remove_component<liminal::terrain>();
+                            }
+                        }
+
+                        if (selected_entity.has_components<liminal::water>())
+                        {
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::water).hash_code()), flags, "Water");
+
+                            auto deleted = false;
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Remove"))
+                                {
+                                    deleted = true;
+                                }
+
+                                ImGui::EndPopup();
+                            }
+
+                            if (opened)
+                            {
+                                auto &water = selected_entity.get_component<liminal::water>();
+
+                                ImGui::DragFloat("Tiling", &water.tiling);
+
+                                ImGui::TreePop();
+                            }
+
+                            if (deleted)
+                            {
+                                selected_entity.remove_component<liminal::water>();
                             }
                         }
 

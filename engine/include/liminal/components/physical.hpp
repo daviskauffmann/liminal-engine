@@ -7,9 +7,8 @@ namespace liminal
 {
     class rigidbody;
 
-    class physical
+    struct physical
     {
-    public:
         float mass = 1.0f;
         std::shared_ptr<liminal::rigidbody> rigidbody;
     };

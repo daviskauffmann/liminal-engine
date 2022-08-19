@@ -132,10 +132,8 @@ void liminal::scene::load(const std::string &filename)
                     if (component_type == "terrain")
                     {
                         entity.add_component<liminal::terrain>(
-                            "assets/images/heightmap.png",
-                            glm::vec3(0, 0, 0),
-                            100.0f,
-                            5.0f,
+                            component_json.at("filename"),
+                            component_json.at("tiling"),
                             assets);
                     }
                 }

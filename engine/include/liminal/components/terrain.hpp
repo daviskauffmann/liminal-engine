@@ -17,19 +17,12 @@ namespace liminal
     class assets;
     class mesh;
 
-    class terrain
+    struct terrain
     {
-    public:
-        glm::vec3 position;
-        float size;
         std::unique_ptr<liminal::mesh> mesh;
+        float tiling;
 
-        terrain(const std::string &filename, const glm::vec3 &position, float size, float height_scale, std::shared_ptr<liminal::assets> assets);
-
-        glm::mat4 get_model_matrix() const;
-
-    private:
-        float height_scale;
+        terrain(const std::string &filename, float tiling, std::shared_ptr<liminal::assets> assets);
 
         float get_height(const SDL_Surface *surface, int x, int z) const;
     };

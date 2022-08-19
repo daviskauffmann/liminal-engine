@@ -7,9 +7,8 @@
 
 namespace liminal
 {
-    class spot_light
+    struct spot_light
     {
-    public:
         glm::vec3 color = {1, 1, 1};
         float inner_cutoff = 12.5f;
         float outer_cutoff = 15;

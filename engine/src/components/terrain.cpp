@@ -15,10 +15,8 @@
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position, const float size, const float height_scale, std::shared_ptr<liminal::assets> assets)
-    : position(position),
-      size(size),
-      height_scale(height_scale)
+liminal::terrain::terrain(const std::string &filename, const float tiling, std::shared_ptr<liminal::assets> assets)
+    : tiling(tiling)
 {
     const auto surface = IMG_Load(filename.c_str());
     if (!surface)
@@ -33,9 +31,9 @@ liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position
         {
             liminal::mesh::vertex vertex;
             vertex.position = {
-                -(float)x / ((float)surface->w - 1) * size,
+                -(float)x / ((float)surface->w - 1),
                 get_height(surface, x, z),
-                -(float)z / ((float)surface->h - 1) * size};
+                -(float)z / ((float)surface->h - 1)};
             vertex.normal = glm::normalize(glm::vec3(
                 get_height(surface, x + 1, z) - get_height(surface, x - 1, z),
                 2,
@@ -102,12 +100,6 @@ liminal::terrain::terrain(const std::string &filename, const glm::vec3 &position
     mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
 }
 
-glm::mat4 liminal::terrain::get_model_matrix() const
-{
-    // TODO: remove and use transform component
-    return glm::translate(glm::identity<glm::mat4>(), position);
-}
-
 float liminal::terrain::get_height(const SDL_Surface *const surface, const int x, const int z) const
 {
     if (x < 0 || x >= surface->w || z < 0 || z >= surface->h)
@@ -130,7 +122,6 @@ float liminal::terrain::get_height(const SDL_Surface *const surface, const int x
     auto height = (float)((pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b));
     height -= 0xffffff / 2;
     height /= 0xffffff / 2;
-    height *= height_scale;
 
     return height;
 }

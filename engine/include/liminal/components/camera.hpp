@@ -7,11 +7,10 @@
 
 namespace liminal
 {
-    class transform;
+    struct transform;
 
-    class camera
+    struct camera
     {
-    public:
         static constexpr float near_plane = 0.1f;
         static constexpr float far_plane = 1000;
 
