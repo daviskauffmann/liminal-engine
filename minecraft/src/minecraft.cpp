@@ -21,7 +21,7 @@ namespace minecraft
         {
             sdl->set_relative_mouse_mode(true);
 
-            scene = std::make_shared<liminal::scene>();
+            scene = std::make_shared<liminal::scene>(assets);
             scene->start();
             scene->skybox = std::make_shared<liminal::skybox>("assets/images/white.png");
 

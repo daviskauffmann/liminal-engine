@@ -29,7 +29,6 @@ add_library(${PROJECT_NAME}
     src/audio/source.cpp
     src/components/camera.cpp
     src/components/mesh_renderer.cpp
-    src/components/script.cpp
     src/components/sprite.cpp
     src/components/terrain.cpp
     src/components/transform.cpp
@@ -54,6 +53,9 @@ add_library(${PROJECT_NAME}
     src/graphics/renderbuffer.cpp
     src/graphics/skybox.cpp
     src/graphics/texture.cpp
+    src/physics/rigidbody.cpp
+    src/physics/world.cpp
+    src/scripting/lua_state.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

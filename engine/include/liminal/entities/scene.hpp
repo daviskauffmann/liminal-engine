@@ -6,14 +6,12 @@
 #include <string>
 #include <vector>
 
-class btDiscreteDynamicsWorld;
-
 namespace liminal
 {
     class assets;
-    class skybox;
-    class source;
     class entity;
+    class skybox;
+    class world;
 
     class scene
     {
@@ -22,11 +20,11 @@ namespace liminal
     public:
         std::shared_ptr<liminal::skybox> skybox;
 
-        scene();
+        scene(std::shared_ptr<liminal::assets> assets);
         scene(const liminal::scene &other);
         ~scene();
 
-        void load(const std::string &filename, std::shared_ptr<liminal::assets> assets);
+        void load(const std::string &filename);
         void save(const std::string &filename);
 
         liminal::entity create_entity();
@@ -47,14 +45,14 @@ namespace liminal
         }
 
     private:
+        std::shared_ptr<liminal::assets> assets;
         entt::registry registry;
-        std::vector<std::shared_ptr<liminal::source>> sources;
-        std::unique_ptr<btDiscreteDynamicsWorld> world;
+        std::unique_ptr<liminal::world> world;
 
         void on_audio_source_construct(entt::registry &registry, entt::entity id);
-        void on_audio_source_destroy(entt::registry &registry, entt::entity id);
         void on_physical_construct(entt::registry &registry, entt::entity id);
         void on_physical_destroy(entt::registry &registry, entt::entity id);
+        void on_script_construct(entt::registry &registry, entt::entity id);
     };
 }
 

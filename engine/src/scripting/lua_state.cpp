@@ -1,8 +1,9 @@
-#include <liminal/components/script.hpp>
+#include <liminal/scripting/lua_state.hpp>
 
 #include <liminal/components/camera.hpp>
 #include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/point_light.hpp>
+#include <liminal/components/script.hpp>
 #include <liminal/components/transform.hpp>
 #include <liminal/core/assets.hpp>
 #include <liminal/entities/entity.hpp>
@@ -13,7 +14,11 @@
 #include <stdexcept>
 #include <string>
 
-liminal::script::script(const std::string &filename, liminal::scene *const scene, const entt::entity id, std::shared_ptr<liminal::assets> assets)
+liminal::lua_state::lua_state(
+    const std::string &filename,
+    liminal::scene *const scene,
+    const entt::entity id,
+    std::shared_ptr<liminal::assets> assets)
 {
     lua.open_libraries(sol::lib::base, sol::lib::math);
     const auto result = lua.script_file(filename);
@@ -142,19 +147,19 @@ liminal::script::script(const std::string &filename, liminal::scene *const scene
         const auto transform = entity.get_component<liminal::transform>();
         return camera.calc_front(transform).z;
     };
-    lua["AddScript"] = [scene, assets](entt::entity id, const std::string &filename) -> void
+    lua["AddScript"] = [scene](entt::entity id, const std::string &filename) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::script>(filename, scene, id, assets);
+        entity.add_component<liminal::script>(filename);
     };
 }
 
-void liminal::script::init() const
+void liminal::lua_state::init() const
 {
     lua["Init"]();
 }
 
-void liminal::script::update(const float delta_time) const
+void liminal::lua_state::update(const float delta_time) const
 {
     lua["Update"](delta_time);
 }

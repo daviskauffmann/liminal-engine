@@ -1,16 +1,17 @@
 #ifndef LIMINAL_COMPONENTS_PHYSICAL_HPP
 #define LIMINAL_COMPONENTS_PHYSICAL_HPP
 
-#include <bullet/btBulletDynamicsCommon.h>
 #include <memory>
 
 namespace liminal
 {
+    class rigidbody;
+
     class physical
     {
     public:
         float mass = 1.0f;
-        std::shared_ptr<btRigidBody> rigidbody;
+        std::shared_ptr<liminal::rigidbody> rigidbody;
     };
 }
 

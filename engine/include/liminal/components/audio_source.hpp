@@ -10,8 +10,8 @@ namespace liminal
 
     struct audio_source
     {
-        std::shared_ptr<liminal::source> source;
         glm::vec3 last_position = {};
+        std::shared_ptr<liminal::source> source;
     };
 }
 

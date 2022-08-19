@@ -1,6 +1,5 @@
 #include <liminal/entities/scene.hpp>
 
-#include <bullet/btBulletDynamicsCommon.h>
 #include <fstream>
 #include <liminal/audio/listener.hpp>
 #include <liminal/audio/sound.hpp>
@@ -21,40 +20,34 @@
 #include <liminal/entities/entity.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
+#include <liminal/physics/rigidbody.hpp>
+#include <liminal/physics/world.hpp>
+#include <liminal/scripting/lua_state.hpp>
 #include <nlohmann/json.hpp>
-#include <sol/sol.hpp>
 
-liminal::scene::scene()
+liminal::scene::scene(std::shared_ptr<liminal::assets> assets)
+    : assets(assets)
 {
-    skybox = nullptr;
-
     registry.on_construct<liminal::audio_source>().connect<&scene::on_audio_source_construct>(this);
-    registry.on_destroy<liminal::audio_source>().connect<&scene::on_audio_source_destroy>(this);
     registry.on_construct<liminal::physical>().connect<&scene::on_physical_construct>(this);
     registry.on_destroy<liminal::physical>().connect<&scene::on_physical_destroy>(this);
+    registry.on_construct<liminal::script>().connect<&scene::on_script_construct>(this);
 
-    const auto collision_configuration = new btDefaultCollisionConfiguration();
-    const auto dispatcher = new btCollisionDispatcher(collision_configuration);
-    const auto pair_cache = new btDbvtBroadphase();
-    const auto constraint_solver = new btSequentialImpulseConstraintSolver();
-    world = std::make_unique<btDiscreteDynamicsWorld>(dispatcher, pair_cache, constraint_solver, collision_configuration);
-    world->setGravity(btVector3(0, -9.8f, 0));
+    world = std::make_unique<liminal::world>();
 }
 
 liminal::scene::scene(const liminal::scene &)
 {
+    // TODO: copy all entities to new scene
+    // oh boy
 }
 
 liminal::scene::~scene()
 {
     registry.clear();
-
-    delete world->getDispatcher();
-    delete world->getPairCache();
-    delete world->getConstraintSolver();
 }
 
-void liminal::scene::load(const std::string &filename, std::shared_ptr<liminal::assets> assets)
+void liminal::scene::load(const std::string &filename)
 {
     const auto scene_json = nlohmann::json::parse(std::ifstream(filename));
 
@@ -128,11 +121,7 @@ void liminal::scene::load(const std::string &filename, std::shared_ptr<liminal::
 
                     if (component_type == "script")
                     {
-                        entity.add_component<liminal::script>(
-                            component_json.at("filename"),
-                            this,
-                            (entt::entity)entity,
-                            assets);
+                        entity.add_component<liminal::script>(component_json.at("filename"));
                     }
 
                     if (component_type == "water")
@@ -180,7 +169,7 @@ void liminal::scene::start()
     // init scripts
     for (const auto [id, script] : get_entities_with<const liminal::script>().each())
     {
-        script.init();
+        script.lua_state->init();
     }
 }
 
@@ -189,7 +178,7 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
     // update scripts
     for (const auto [id, script] : get_entities_with<const liminal::script>().each())
     {
-        script.update(delta_time);
+        script.lua_state->update(delta_time);
     }
 
     // update animations
@@ -221,31 +210,25 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
         audio_source.last_position = transform.position;
     }
 
-    // update world transforms in case the transform component changed
-    for (const auto [id, physical, transform] : get_entities_with<const liminal::physical, const liminal::transform>().each())
     {
-        btTransform world_transform;
-        world_transform.setIdentity();
-        world_transform.setOrigin(btVector3(transform.position.x, transform.position.y, transform.position.z));
-        world_transform.setRotation(btQuaternion(transform.rotation.y, transform.rotation.x, transform.rotation.z));
+        const auto physics_entities = get_entities_with<const liminal::physical, liminal::transform>().each();
 
-        physical.rigidbody->setWorldTransform(world_transform);
-    }
+        // update rigidbody in case the transform component changed
+        for (const auto [id, physical, transform] : physics_entities)
+        {
+            physical.rigidbody->set_world_transform(transform.position, transform.rotation);
+        }
 
-    // update physics world
-    world->stepSimulation(delta_time);
+        // update physics world
+        world->update(delta_time);
 
-    // update transforms to respect physics simulation
-    for (const auto [id, physical, transform] : get_entities_with<const liminal::physical, liminal::transform>().each())
-    {
-        btTransform world_transform = physical.rigidbody->getWorldTransform();
-
-        transform.position = {
-            world_transform.getOrigin().x(),
-            world_transform.getOrigin().y(),
-            world_transform.getOrigin().z()};
-
-        world_transform.getRotation().getEulerZYX(transform.rotation.z, transform.rotation.y, transform.rotation.x);
+        // update transforms to respect physics simulation
+        for (const auto [id, physical, transform] : physics_entities)
+        {
+            const auto [position, rotation] = physical.rigidbody->get_world_transform();
+            transform.position = position;
+            transform.rotation = rotation;
+        }
     }
 }
 
@@ -265,32 +248,27 @@ void liminal::scene::on_audio_source_construct(entt::registry &, entt::entity id
 {
     auto &audio_source = get_entity(id).get_component<liminal::audio_source>();
     audio_source.source = std::make_shared<liminal::source>();
-    sources.push_back(audio_source.source);
-}
-
-void liminal::scene::on_audio_source_destroy(entt::registry &, entt::entity id)
-{
-    auto &audio_source = get_entity(id).get_component<liminal::audio_source>();
-    sources.erase(std::find(sources.begin(), sources.end(), audio_source.source));
-    audio_source.source = {};
 }
 
 void liminal::scene::on_physical_construct(entt::registry &, entt::entity id)
 {
     auto &physical = get_entity(id).get_component<liminal::physical>();
-
-    const auto motion_state = new btDefaultMotionState();
-    const auto collision_shape = new btBoxShape(btVector3(1, 1, 1));
-    btVector3 local_inertia;
-    collision_shape->calculateLocalInertia(physical.mass, local_inertia);
-    const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(physical.mass, motion_state, collision_shape, local_inertia);
-    physical.rigidbody = std::make_shared<btRigidBody>(construction_info);
-    world->addRigidBody(physical.rigidbody.get());
+    physical.rigidbody = std::make_shared<liminal::rigidbody>(physical.mass);
+    world->add_rigidbody(physical.rigidbody);
 }
 
 void liminal::scene::on_physical_destroy(entt::registry &, entt::entity id)
 {
     auto &physical = get_entity(id).get_component<liminal::physical>();
-    world->removeRigidBody(physical.rigidbody.get());
-    physical.rigidbody = {};
+    world->remove_rigidbody(physical.rigidbody);
+}
+
+void liminal::scene::on_script_construct(entt::registry &, entt::entity id)
+{
+    auto &script = get_entity(id).get_component<liminal::script>();
+    script.lua_state = std::make_shared<liminal::lua_state>(
+        script.filename,
+        this,
+        id,
+        assets);
 }

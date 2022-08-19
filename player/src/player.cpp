@@ -14,14 +14,14 @@ namespace player
         {
             sdl->set_relative_mouse_mode(true);
 
-            scene = std::make_unique<liminal::scene>();
-            scene->load("assets/scenes/demo.json", assets);
+            scene = std::make_unique<liminal::scene>(assets);
+            scene->load("assets/scenes/demo.json");
             scene->start();
 
-            ambient_sound = assets->load_sound("assets/audio/ambient.wav");
-            bounce_sound = assets->load_sound("assets/audio/bounce.wav");
-            shoot_sound = assets->load_sound("assets/audio/shoot.wav");
-            grass_texture = assets->load_texture("assets/images/grass_sprite.png");
+            // ambient_sound = assets->load_sound("assets/audio/ambient.wav");
+            // bounce_sound = assets->load_sound("assets/audio/bounce.wav");
+            // shoot_sound = assets->load_sound("assets/audio/shoot.wav");
+            // grass_texture = assets->load_texture("assets/images/grass_sprite.png");
 
             // TODO: these entities should come from the JSON file
             player_entity = scene->create_entity();
@@ -29,20 +29,20 @@ namespace player
             player_entity.add_component<liminal::camera>(45.0f);
             player_entity.add_component<liminal::audio_listener>();
 
-            ambience_entity = scene->create_entity();
-            ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            auto &ambience_audio_source = ambience_entity.add_component<liminal::audio_source>();
-            ambience_audio_source.source->set_loop(true);
-            ambience_audio_source.source->set_gain(0.25f);
-            ambience_audio_source.source->play(*ambient_sound);
+            // ambience_entity = scene->create_entity();
+            // ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+            // auto &ambience_audio_source = ambience_entity.add_component<liminal::audio_source>();
+            // ambience_audio_source.source->set_loop(true);
+            // ambience_audio_source.source->set_gain(0.25f);
+            // ambience_audio_source.source->play(*ambient_sound);
 
-            bounce_entity = scene->create_entity();
-            bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            bounce_entity.add_component<liminal::audio_source>();
+            // bounce_entity = scene->create_entity();
+            // bounce_entity.add_component<liminal::transform>("Bounce sound", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+            // bounce_entity.add_component<liminal::audio_source>();
 
-            weapon_entity = scene->create_entity();
-            weapon_entity.add_component<liminal::transform>("Weapon", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            weapon_entity.add_component<liminal::audio_source>();
+            // weapon_entity = scene->create_entity();
+            // weapon_entity.add_component<liminal::transform>("Weapon", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+            // weapon_entity.add_component<liminal::audio_source>();
 
             // ui_entity = scene->create_entity();
             // ui_entity.add_component<liminal::sprite>(grass_texture.get(), glm::vec3(1, 1, 1), glm::vec2(0, 0), 0.0f, glm::vec2(1, 1));
@@ -168,29 +168,29 @@ namespace player
                 }
             }
 
-            ambience_entity.get_component<liminal::transform>().position = transform.position;
-            weapon_entity.get_component<liminal::transform>().position = transform.position;
+            // ambience_entity.get_component<liminal::transform>().position = transform.position;
+            // weapon_entity.get_component<liminal::transform>().position = transform.position;
 
-            if (!io.WantCaptureMouse)
-            {
-                if (liminal::input::mouse_button(liminal::mouse_button::LEFT))
-                {
-                    auto &weapon_audio_source = weapon_entity.get_component<liminal::audio_source>();
-                    if (!weapon_audio_source.source->is_playing())
-                    {
-                        weapon_audio_source.source->play(*shoot_sound);
-                    }
-                }
+            // if (!io.WantCaptureMouse)
+            // {
+            //     if (liminal::input::mouse_button(liminal::mouse_button::LEFT))
+            //     {
+            //         auto &weapon_audio_source = weapon_entity.get_component<liminal::audio_source>();
+            //         if (!weapon_audio_source.source->is_playing())
+            //         {
+            //             weapon_audio_source.source->play(*shoot_sound);
+            //         }
+            //     }
 
-                if (liminal::input::mouse_button(liminal::mouse_button::RIGHT))
-                {
-                    auto &bounce_audio_source = bounce_entity.get_component<liminal::audio_source>();
-                    if (!bounce_audio_source.source->is_playing())
-                    {
-                        bounce_audio_source.source->play(*bounce_sound);
-                    }
-                }
-            }
+            //     if (liminal::input::mouse_button(liminal::mouse_button::RIGHT))
+            //     {
+            //         auto &bounce_audio_source = bounce_entity.get_component<liminal::audio_source>();
+            //         if (!bounce_audio_source.source->is_playing())
+            //         {
+            //             bounce_audio_source.source->play(*bounce_sound);
+            //         }
+            //     }
+            // }
 
             // update scene
             scene->update(current_time, delta_time);
@@ -204,17 +204,17 @@ namespace player
 
         liminal::entity player_entity;
 
-        std::shared_ptr<liminal::sound> ambient_sound;
-        liminal::entity ambience_entity;
+        // std::shared_ptr<liminal::sound> ambient_sound;
+        // liminal::entity ambience_entity;
 
-        std::shared_ptr<liminal::sound> bounce_sound;
-        liminal::entity bounce_entity;
+        // std::shared_ptr<liminal::sound> bounce_sound;
+        // liminal::entity bounce_entity;
 
-        std::shared_ptr<liminal::sound> shoot_sound;
-        liminal::entity weapon_entity;
+        // std::shared_ptr<liminal::sound> shoot_sound;
+        // liminal::entity weapon_entity;
 
-        std::shared_ptr<liminal::texture> grass_texture;
-        liminal::entity ui_entity;
+        // std::shared_ptr<liminal::texture> grass_texture;
+        // liminal::entity ui_entity;
 
         bool noclip = false;
     };

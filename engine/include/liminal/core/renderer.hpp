@@ -161,7 +161,11 @@ namespace liminal
         void render_shadows(
             liminal::scene &scene,
             const liminal::transform &camera_transform) const;
-        void render_objects(
+        void render_reflections_and_refractions(
+            liminal::scene &scene,
+            const liminal::camera &camera,
+            const liminal::transform &camera_transform) const;
+        void render_geometry(
             liminal::scene &scene,
             const liminal::camera &camera,
             const liminal::transform &camera_transform,

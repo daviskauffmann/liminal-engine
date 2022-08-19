@@ -542,7 +542,7 @@ namespace editor
             {
                 delete scene;
             }
-            scene = new liminal::scene();
+            scene = new liminal::scene(assets);
 
             renderer->default_camera = new liminal::camera(45.f, true);
             renderer->default_camera_transform = new liminal::transform();
@@ -554,7 +554,7 @@ namespace editor
         void load_scene()
         {
             new_scene();
-            scene->load("assets/scenes/demo.json", assets);
+            scene->load("assets/scenes/demo.json");
         }
 
         void save_scene()

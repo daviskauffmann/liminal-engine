@@ -750,10 +750,6 @@ void liminal::renderer::reload_programs()
     postprocess_program->reload();
 }
 
-// TODO: mouse picking doesn't work if water is present in the scene
-// this is because the reflection and refraction rendering overwrites the entity ids
-// and because they have clipping planes it doesn't write entity ids back in certain regions
-// interestingly, you can pick an entity when looking at it from underwater
 liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene *scene) const
 {
     entt::entity id;
@@ -786,7 +782,8 @@ void liminal::renderer::render_all(
     const std::uint64_t current_time) const
 {
     render_shadows(scene, camera_transform);
-    render_objects(scene, camera, camera_transform, *hdr_framebuffer);
+    render_reflections_and_refractions(scene, camera, camera_transform);
+    render_geometry(scene, camera, camera_transform, *hdr_framebuffer);
     render_waters(scene, camera, camera_transform, current_time);
     render_sprites(scene);
     render_screen(camera);
@@ -1061,7 +1058,36 @@ void liminal::renderer::render_shadows(
     }
 }
 
-void liminal::renderer::render_objects(
+void liminal::renderer::render_reflections_and_refractions(
+    liminal::scene &scene,
+    const liminal::camera &camera,
+    const liminal::transform &camera_transform) const
+{
+    for (const auto [id, transform, water] : scene.get_entities_with<const liminal::transform, const liminal::water>().each())
+    {
+        // reflection
+        glm::vec4 reflection_clipping_plane(0, 1, 0, -transform.position.y);
+        if (camera_transform.position.y < transform.position.y) // flip reflection clipping plane if under the water
+        {
+            reflection_clipping_plane *= -1.0f;
+        }
+        liminal::transform reflected_transform = camera_transform;
+        reflected_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
+        reflected_transform.rotation.x = -camera_transform.rotation.x;
+        reflected_transform.rotation.z = -camera_transform.rotation.z;
+        render_geometry(scene, camera, reflected_transform, *water_reflection_framebuffer, reflection_clipping_plane);
+
+        // refraction
+        glm::vec4 refraction_clipping_plane(0, -1, 0, transform.position.y);
+        if (camera_transform.position.y < transform.position.y) // flip refraction clipping plane if under the water
+        {
+            refraction_clipping_plane *= -1.0f;
+        }
+        render_geometry(scene, camera, camera_transform, *water_refraction_framebuffer, refraction_clipping_plane);
+    }
+}
+
+void liminal::renderer::render_geometry(
     liminal::scene &scene,
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
@@ -1393,26 +1419,6 @@ void liminal::renderer::render_waters(
 {
     for (const auto [id, transform, water] : scene.get_entities_with<const liminal::transform, const liminal::water>().each())
     {
-        // reflection
-        glm::vec4 reflection_clipping_plane(0, 1, 0, -transform.position.y);
-        if (camera_transform.position.y < transform.position.y) // flip reflection clipping plane if under the water
-        {
-            reflection_clipping_plane *= -1.0f;
-        }
-        liminal::transform reflected_transform = camera_transform;
-        reflected_transform.position.y -= 2 * (camera_transform.position.y - transform.position.y);
-        reflected_transform.rotation.x = -camera_transform.rotation.x;
-        reflected_transform.rotation.z = -camera_transform.rotation.z;
-        render_objects(scene, camera, reflected_transform, *water_reflection_framebuffer, reflection_clipping_plane);
-
-        // refraction
-        glm::vec4 refraction_clipping_plane(0, -1, 0, transform.position.y);
-        if (camera_transform.position.y < transform.position.y) // flip refraction clipping plane if under the water
-        {
-            refraction_clipping_plane *= -1.0f;
-        }
-        render_objects(scene, camera, camera_transform, *water_refraction_framebuffer, refraction_clipping_plane);
-
         // draw water meshes
         hdr_framebuffer->bind();
         {
