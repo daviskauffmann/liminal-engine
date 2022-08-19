@@ -117,7 +117,7 @@ float liminal::terrain::get_height(const SDL_Surface *const surface, const int x
             unsigned char b;
             // unsigned char a;
         } color;
-    } pixel = *reinterpret_cast<pixel_t *>(reinterpret_cast<unsigned char *>(surface->pixels) + z * surface->pitch + x * surface->format->BytesPerPixel);
+    } pixel = *reinterpret_cast<pixel_t *>(static_cast<unsigned char *>(surface->pixels) + z * surface->pitch + x * surface->format->BytesPerPixel);
 
     auto height = (float)((pixel.color.r << 16) | (pixel.color.g << 8) | (pixel.color.b));
     height -= 0xffffff / 2;
