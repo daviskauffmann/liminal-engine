@@ -9,11 +9,11 @@ namespace liminal
     {
     public:
         al_device();
-        al_device(al_device &&other) = delete;
-        al_device(const al_device &other) = delete;
-        al_device &operator=(al_device &&other) = delete;
-        al_device &operator=(const al_device &other) = delete;
         ~al_device();
+        al_device(const al_device &other) = delete;
+        al_device &operator=(const al_device &other) = delete;
+        al_device(al_device &&other) = delete;
+        al_device &operator=(al_device &&other) = delete;
 
         ALCdevice *get_alc_device() const;
 

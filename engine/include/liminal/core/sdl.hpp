@@ -10,11 +10,11 @@ namespace liminal
     {
     public:
         sdl();
-        sdl(sdl &&other) = delete;
-        sdl(const sdl &other) = delete;
-        sdl &operator=(sdl &&other) = delete;
-        sdl &operator=(const sdl &other) = delete;
         ~sdl();
+        sdl(const sdl &other) = delete;
+        sdl &operator=(const sdl &other) = delete;
+        sdl(sdl &&other) = delete;
+        sdl &operator=(sdl &&other) = delete;
 
         std::uint64_t get_ticks() const;
         const std::uint8_t *get_keys() const;

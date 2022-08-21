@@ -21,6 +21,10 @@ namespace liminal
         model(liminal::mesh *mesh);
         model(const char *filename, std::shared_ptr<liminal::assets> assets, bool flip_uvs = false);
         ~model();
+        model(const model &other) = delete;
+        model &operator=(const model &other) = delete;
+        model(model &&other) = delete;
+        model &operator=(model &&other) = delete;
 
         bool has_animations() const;
         unsigned int num_animations() const;

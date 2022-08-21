@@ -47,6 +47,10 @@ namespace liminal
             const std::vector<unsigned int> &indices,
             const std::array<std::vector<std::shared_ptr<liminal::texture>>, num_textures> &textures);
         ~mesh();
+        mesh(const mesh &other) = delete;
+        mesh &operator=(const mesh &other) = delete;
+        mesh(mesh &&other) = delete;
+        mesh &operator=(mesh &&other) = delete;
 
         void draw(const liminal::program &program) const;
     };

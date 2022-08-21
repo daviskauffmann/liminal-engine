@@ -37,6 +37,10 @@ namespace liminal
             const void *pixels = nullptr);
         texture(const char *filename, bool srgb = false, bool filter = true);
         ~texture();
+        texture(const texture &other) = delete;
+        texture &operator=(const texture &other) = delete;
+        texture(texture &&other) = delete;
+        texture &operator=(texture &&other) = delete;
 
         GLuint get_texture_id() const;
 

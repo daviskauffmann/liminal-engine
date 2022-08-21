@@ -9,11 +9,11 @@ namespace liminal
     {
     public:
         gl_context(SDL_Window *sdl_window);
-        gl_context(gl_context &&other) = delete;
-        gl_context(const gl_context &other) = delete;
-        gl_context &operator=(gl_context &&other) = delete;
-        gl_context &operator=(const gl_context &other) = delete;
         ~gl_context();
+        gl_context(const gl_context &other) = delete;
+        gl_context &operator=(const gl_context &other) = delete;
+        gl_context(gl_context &&other) = delete;
+        gl_context &operator=(gl_context &&other) = delete;
 
         SDL_GLContext get_sdl_gl_context() const;
 

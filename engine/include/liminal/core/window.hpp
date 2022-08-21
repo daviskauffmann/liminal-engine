@@ -10,11 +10,11 @@ namespace liminal
     {
     public:
         window(const char *title, int width, int height);
-        window(window &&other) = delete;
-        window(const window &other) = delete;
-        window &operator=(window &&other) = delete;
-        window &operator=(const window &other) = delete;
         ~window();
+        window(const window &other) = delete;
+        window &operator=(const window &other) = delete;
+        window(window &&other) = delete;
+        window &operator=(window &&other) = delete;
 
         SDL_Window *get_sdl_window() const;
 

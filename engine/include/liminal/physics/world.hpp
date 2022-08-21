@@ -13,11 +13,11 @@ namespace liminal
     {
     public:
         world();
-        world(world &&other) = delete;
-        world(const world &other) = delete;
-        world &operator=(world &&other) = delete;
-        world &operator=(const world &other) = delete;
         ~world();
+        world(const world &other) = delete;
+        world &operator=(const world &other) = delete;
+        world(world &&other) = delete;
+        world &operator=(world &&other) = delete;
 
         void add_rigidbody(std::shared_ptr<liminal::rigidbody> rigidbody);
         void remove_rigidbody(std::shared_ptr<liminal::rigidbody> rigidbody);

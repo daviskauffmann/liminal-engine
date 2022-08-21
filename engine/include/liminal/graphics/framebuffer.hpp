@@ -15,6 +15,10 @@ namespace liminal
 
         framebuffer(GLsizei width, GLsizei height);
         ~framebuffer();
+        framebuffer(const framebuffer &other) = delete;
+        framebuffer &operator=(const framebuffer &other) = delete;
+        framebuffer(framebuffer &&other) = delete;
+        framebuffer &operator=(framebuffer &&other) = delete;
 
         GLsizei get_width() const;
         GLsizei get_height() const;

@@ -10,6 +10,10 @@ namespace liminal
     public:
         skybox(const char *filename);
         ~skybox();
+        skybox(const skybox &other) = delete;
+        skybox &operator=(const skybox &other) = delete;
+        skybox(skybox &&other) = delete;
+        skybox &operator=(skybox &&other) = delete;
 
         void set_cubemaps(const char *filename);
 

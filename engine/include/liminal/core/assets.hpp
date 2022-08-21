@@ -15,11 +15,11 @@ namespace liminal
     {
     public:
         assets();
-        assets(assets &&other) = delete;
-        assets(const assets &other) = delete;
-        assets &operator=(assets &&other) = delete;
-        assets &operator=(const assets &other) = delete;
         ~assets();
+        assets(const assets &other) = delete;
+        assets &operator=(const assets &other) = delete;
+        assets(assets &&other) = delete;
+        assets &operator=(assets &&other) = delete;
 
         std::shared_ptr<liminal::sound> load_sound(const std::string &filename);
         std::shared_ptr<liminal::model> load_model(const std::string &filename, std::shared_ptr<liminal::assets> assets, bool flip_uvs = false);

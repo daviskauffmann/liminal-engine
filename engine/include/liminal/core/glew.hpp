@@ -7,6 +7,11 @@ namespace liminal
     {
     public:
         glew();
+        ~glew() = default;
+        glew(const glew &other) = delete;
+        glew &operator=(const glew &other) = delete;
+        glew(glew &&other) = delete;
+        glew &operator=(glew &&other) = delete;
     };
 }
 

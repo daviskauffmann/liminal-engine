@@ -22,6 +22,10 @@ namespace liminal
             const char *vertex_filename,
             const char *fragment_filename);
         ~program();
+        program(const program &other) = delete;
+        program &operator=(const program &other) = delete;
+        program(program &&other) = delete;
+        program &operator=(program &&other) = delete;
 
         void reload();
 

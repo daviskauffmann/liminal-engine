@@ -11,12 +11,12 @@ namespace liminal
     class source
     {
     public:
-        source();        
-        source(source &&other) = delete;
-        source(const source &other) = delete;
-        source &operator=(source &&other) = delete;
-        source &operator=(const source &other) = delete;
+        source();
         ~source();
+        source(const source &other) = delete;
+        source &operator=(const source &other) = delete;
+        source(source &&other) = delete;
+        source &operator=(source &&other) = delete;
 
         void set_loop(bool loop) const;
         void set_gain(float gain) const;

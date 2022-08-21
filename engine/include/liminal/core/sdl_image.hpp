@@ -7,11 +7,11 @@ namespace liminal
     {
     public:
         sdl_image();
-        sdl_image(sdl_image &&other) = delete;
-        sdl_image(const sdl_image &other) = delete;
-        sdl_image &operator=(sdl_image &&other) = delete;
-        sdl_image &operator=(const sdl_image &other) = delete;
         ~sdl_image();
+        sdl_image(const sdl_image &other) = delete;
+        sdl_image &operator=(const sdl_image &other) = delete;
+        sdl_image(sdl_image &&other) = delete;
+        sdl_image &operator=(sdl_image &&other) = delete;
     };
 }
 

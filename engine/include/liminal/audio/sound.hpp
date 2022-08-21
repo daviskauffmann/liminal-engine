@@ -9,11 +9,11 @@ namespace liminal
     {
     public:
         sound(const char *filename);
-        sound(sound &&other) = delete;
-        sound(const sound &other) = delete;
-        sound &operator=(sound &&other) = delete;
-        sound &operator=(const sound &other) = delete;
         ~sound();
+        sound(const sound &other) = delete;
+        sound &operator=(const sound &other) = delete;
+        sound(sound &&other) = delete;
+        sound &operator=(sound &&other) = delete;
 
         ALuint get_buffer_id() const;
 

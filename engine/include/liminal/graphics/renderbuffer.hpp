@@ -10,6 +10,10 @@ namespace liminal
     public:
         renderbuffer(GLenum internal_format, GLsizei width, GLsizei height);
         ~renderbuffer();
+        renderbuffer(const renderbuffer &other) = delete;
+        renderbuffer &operator=(const renderbuffer &other) = delete;
+        renderbuffer(renderbuffer &&other) = delete;
+        renderbuffer &operator=(renderbuffer &&other) = delete;
 
         GLuint get_renderbuffer_id() const;
 

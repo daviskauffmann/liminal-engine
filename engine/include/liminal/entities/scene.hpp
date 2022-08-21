@@ -21,8 +21,11 @@ namespace liminal
         std::shared_ptr<liminal::skybox> skybox;
 
         scene(std::shared_ptr<liminal::assets> assets);
-        scene(const liminal::scene &other);
         ~scene();
+        scene(const scene &other) = delete;
+        scene &operator=(const scene &other) = delete;
+        scene(scene &&other) = delete;
+        scene &operator=(scene &&other) = delete;
 
         void load(const std::string &filename);
         void save(const std::string &filename);

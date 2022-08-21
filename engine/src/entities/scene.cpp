@@ -36,12 +36,6 @@ liminal::scene::scene(std::shared_ptr<liminal::assets> assets)
     world = std::make_unique<liminal::world>();
 }
 
-liminal::scene::scene(const liminal::scene &)
-{
-    // TODO: copy all entities to new scene
-    // oh boy
-}
-
 liminal::scene::~scene()
 {
     registry.clear();

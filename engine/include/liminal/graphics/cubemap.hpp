@@ -26,6 +26,10 @@ namespace liminal
             liminal::texture_wrap wrap = liminal::texture_wrap::repeat);
         cubemap(const std::array<std::string, num_sides> &filenames);
         ~cubemap();
+        cubemap(const cubemap &other) = delete;
+        cubemap &operator=(const cubemap &other) = delete;
+        cubemap(cubemap &&other) = delete;
+        cubemap &operator=(cubemap &&other) = delete;
 
         GLuint get_cubemap_id() const;
 

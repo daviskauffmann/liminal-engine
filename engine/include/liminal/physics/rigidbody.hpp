@@ -12,11 +12,11 @@ namespace liminal
     {
     public:
         rigidbody(float mass);
-        rigidbody(rigidbody &&other) = delete;
-        rigidbody(const rigidbody &other) = delete;
-        rigidbody &operator=(rigidbody &&other) = delete;
-        rigidbody &operator=(const rigidbody &other) = delete;
         ~rigidbody();
+        rigidbody(const rigidbody &other) = delete;
+        rigidbody &operator=(const rigidbody &other) = delete;
+        rigidbody(rigidbody &&other) = delete;
+        rigidbody &operator=(rigidbody &&other) = delete;
 
         btRigidBody *get_bt_rigidbody() const;
 

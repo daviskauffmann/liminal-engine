@@ -9,11 +9,11 @@ namespace liminal
     {
     public:
         imgui_context(SDL_Window *sdl_window, SDL_GLContext sdl_gl_context);
-        imgui_context(imgui_context &&other) = delete;
-        imgui_context(const imgui_context &other) = delete;
-        imgui_context &operator=(imgui_context &&other) = delete;
-        imgui_context &operator=(const imgui_context &other) = delete;
         ~imgui_context();
+        imgui_context(const imgui_context &other) = delete;
+        imgui_context &operator=(const imgui_context &other) = delete;
+        imgui_context(imgui_context &&other) = delete;
+        imgui_context &operator=(imgui_context &&other) = delete;
 
         void handle_event(const SDL_Event &event) const;
 
