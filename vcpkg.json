@@ -1,0 +1,37 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+    "name": "liminal",
+    "version-semver": "0.0.0",
+    "dependencies": [
+        "assimp",
+        "bullet3",
+        "cxxopts",
+        "entt",
+        "glew",
+        "glm",
+        {
+            "name": "imgui",
+            "features": [
+                "docking-experimental",
+                "opengl3-binding",
+                "sdl2-binding"
+            ]
+        },
+        "imguizmo",
+        "lua",
+        "nativefiledialog",
+        "nlohmann-json",
+        "openal-soft",
+        "sdl2",
+        {
+            "name": "sdl2-image",
+            "features": [
+                "libjpeg-turbo"
+            ]
+        },
+        "sdl2-mixer",
+        "sol2",
+        "spdlog",
+        "stb"
+    ]
+  }

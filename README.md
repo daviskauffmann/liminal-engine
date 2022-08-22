@@ -5,32 +5,9 @@
 ### Download
 
 ```sh
-git clone https://github.com/daviskauffmann/liminal-engine.git
+git clone --recurse-submodules https://github.com/daviskauffmann/liminal-engine.git
 cd liminal-engine
-git submodule update --init
 ```
-
-### Install Dependencies
-
-Install the following using the package manager of your choice:
-
-- assimp
-- bullet3
-- cxxopts
-- entt
-- glew
-- glm
-- imgui [docking-experimental,opengl3-binding,sdl2-binding]
-- imguizmo
-- lua
-- nativefiledialog
-- nlohmann-json
-- openal-soft
-- sdl2
-- sdl2-image [libjpeg-turbo]
-- sdl2-mixer
-- sol2
-- stb
 
 ### Build
 
@@ -98,5 +75,3 @@ cmake ..
 [Byungil Jeong - CS594 - Project 2](https://www.evl.uic.edu/bijeong/cs594/proj2)
 
 [Bones animation with OpenGL, ASSIMP and GLM](http://www.xphere.me/2019/05/bones-animation-with-openglassimpglm/)
-
-[A Simple Entity Component System](https://austinmorlan.com/posts/entity_component_system/)
