@@ -1,27 +1,19 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(minecraft)
 
-set(CMAKE_CXX_STANDARD 20)
+project(minecraft LANGUAGES CXX)
+
+file(
+    GLOB_RECURSE SOURCE_FILES
+    SOURCES ${PROJECT_SOURCE_DIR}/**/*.cpp
+)
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
-
-add_executable(${PROJECT_NAME}
-    src/blocks/air_block.cpp
-    src/blocks/dirt_block.cpp
-    src/blocks/grass_block.cpp
-    src/blocks/stone_block.cpp
-    src/block.cpp
-    src/chunk.cpp
-    src/mesh_data.cpp
-    src/minecraft.cpp
-    src/SimplexNoise.cpp
-    src/world.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        glm::glm
-        imgui::imgui
-        liminal_engine
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    glm::glm
+    imgui::imgui
+    liminal_engine
 )
