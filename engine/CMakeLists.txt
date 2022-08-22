@@ -4,14 +4,15 @@ project(liminal_engine LANGUAGES CXX)
 
 file(
     GLOB_RECURSE SOURCE_FILES
-    SOURCES ${PROJECT_SOURCE_DIR}/**/*.cpp
+    CONFIGURE_DEPENDS
+    SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
     PRIVATE
         ${LUA_INCLUDE_DIR}
         ${STB_INCLUDE_DIRS}

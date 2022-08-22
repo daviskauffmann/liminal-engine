@@ -4,7 +4,8 @@ project(minecraft LANGUAGES CXX)
 
 file(
     GLOB_RECURSE SOURCE_FILES
-    SOURCES ${PROJECT_SOURCE_DIR}/**/*.cpp
+    CONFIGURE_DEPENDS
+    SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 

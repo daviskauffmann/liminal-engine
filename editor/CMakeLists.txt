@@ -4,7 +4,8 @@ project(liminal_editor LANGUAGES CXX)
 
 file(
     GLOB_RECURSE SOURCE_FILES
-    SOURCES ${PROJECT_SOURCE_DIR}/**/*.cpp
+    CONFIGURE_DEPENDS
+    SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/appicon.rc")
 add_executable(${PROJECT_NAME} 
