@@ -317,9 +317,9 @@ namespace editor
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::mesh_renderer>())
+                        if (selected_entity.has_components<liminal::renderable>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::mesh_renderer).hash_code()), flags, "Mesh Renderer");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::renderable).hash_code()), flags, "Renderable");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -334,7 +334,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &mesh_renderer = selected_entity.get_component<liminal::mesh_renderer>();
+                                auto &renderable = selected_entity.get_component<liminal::renderable>();
 
                                 // TODO: drag and drop from asset browser
                                 if (ImGui::Button("Load Model"))
@@ -345,18 +345,18 @@ namespace editor
                                     if (result == NFD_OKAY)
                                     {
                                         // TODO: crashes when loading an animated mesh
-                                        mesh_renderer.model = assets->load_model(outPath, assets, true);
+                                        renderable.model = assets->load_model(outPath, assets, true);
                                     }
                                 }
 
-                                ImGui::DragFloat3("Color", glm::value_ptr(mesh_renderer.color), 0.1f);
+                                ImGui::DragFloat3("Color", glm::value_ptr(renderable.color), 0.1f);
 
                                 ImGui::TreePop();
                             }
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::mesh_renderer>();
+                                selected_entity.remove_component<liminal::renderable>();
                             }
                         }
 
@@ -523,9 +523,9 @@ namespace editor
 
                         if (ImGui::BeginPopup("AddComponent"))
                         {
-                            if (!selected_entity.has_components<liminal::mesh_renderer>() && ImGui::MenuItem("Mesh Renderer"))
+                            if (!selected_entity.has_components<liminal::renderable>() && ImGui::MenuItem("Mesh Renderer"))
                             {
-                                selected_entity.add_component<liminal::mesh_renderer>();
+                                selected_entity.add_component<liminal::renderable>();
 
                                 ImGui::CloseCurrentPopup();
                             }

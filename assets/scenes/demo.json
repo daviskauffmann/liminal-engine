@@ -70,7 +70,7 @@
                     "z": 1
                 }
             },
-            "mesh_renderer": {
+            "renderable": {
                 "filename": "assets/models/backpack/backpack.obj",
                 "flip_uvs": true
             }
@@ -94,7 +94,7 @@
                     "z": 0.05
                 }
             },
-            "mesh_renderer": {
+            "renderable": {
                 "filename": "assets/models/boblampclean/boblampclean.md5mesh",
                 "flip_uvs": false
             }
@@ -118,7 +118,7 @@
                     "z": 1
                 }
             },
-            "mesh_renderer": {
+            "renderable": {
                 "filename": "assets/models/dude/model.dae",
                 "flip_uvs": false
             }

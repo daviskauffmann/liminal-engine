@@ -1,8 +1,8 @@
-#include <liminal/components/mesh_renderer.hpp>
+#include <liminal/components/renderable.hpp>
 
 #include <liminal/graphics/model.hpp>
 
-liminal::mesh_renderer::mesh_renderer(const std::shared_ptr<liminal::model> model, const glm::vec3 &color)
+liminal::renderable::renderable(const std::shared_ptr<liminal::model> model, const glm::vec3 &color)
     : model(model),
       color(color)
 {

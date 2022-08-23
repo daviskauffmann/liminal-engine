@@ -3,8 +3,8 @@
 #include <entt/entt.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
-#include <liminal/components/mesh_renderer.hpp>
 #include <liminal/components/point_light.hpp>
+#include <liminal/components/renderable.hpp>
 #include <liminal/components/spot_light.hpp>
 #include <liminal/components/sprite.hpp>
 #include <liminal/components/terrain.hpp>
@@ -823,19 +823,19 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (const auto [_id, _mesh_renderer, _transform] : scene.get_entities_with<const liminal::mesh_renderer, const liminal::transform>().each())
+            for (const auto [_id, _renderable, _transform] : scene.get_entities_with<const liminal::renderable, const liminal::transform>().each())
             {
-                if (_mesh_renderer.model)
+                if (_renderable.model)
                 {
                     const auto model_matrix = _transform.get_model_matrix();
-                    if (_mesh_renderer.model->has_animations())
+                    if (_renderable.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
                         {
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrix * model_matrix);
-                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _renderable.bone_transformations);
 
-                            _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
+                            _renderable.model->draw_meshes(*depth_skinned_mesh_program);
                         }
                         liminal::program::unbind();
                     }
@@ -845,7 +845,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->set_mat4("mvp_matrix", directional_light.view_projection_matrix * model_matrix);
 
-                            _mesh_renderer.model->draw_meshes(*depth_mesh_program);
+                            _renderable.model->draw_meshes(*depth_mesh_program);
                         }
                         liminal::program::unbind();
                     }
@@ -902,17 +902,17 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (const auto [_id, _transform, _mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
+            for (const auto [_id, _transform, _renderable] : scene.get_entities_with<const liminal::transform, const liminal::renderable>().each())
             {
-                if (_mesh_renderer.model)
+                if (_renderable.model)
                 {
                     const auto model_matrix = _transform.get_model_matrix();
-                    if (_mesh_renderer.model->has_animations())
+                    if (_renderable.model->has_animations())
                     {
                         depth_cube_skinned_mesh_program->bind();
                         {
                             depth_cube_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
-                            depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
+                            depth_cube_skinned_mesh_program->set_mat4_vector("bone_transformations", _renderable.bone_transformations);
                             depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[0]", point_light.view_projection_matrices.at(0));
                             depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[1]", point_light.view_projection_matrices.at(1));
                             depth_cube_skinned_mesh_program->set_mat4("light.view_projection_matrices[2]", point_light.view_projection_matrices.at(2));
@@ -922,7 +922,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_skinned_mesh_program->set_float("light.far_plane", point_light_far_plane);
                             depth_cube_skinned_mesh_program->set_vec3("light.position", transform.position);
 
-                            _mesh_renderer.model->draw_meshes(*depth_cube_skinned_mesh_program);
+                            _renderable.model->draw_meshes(*depth_cube_skinned_mesh_program);
                         }
                         liminal::program::unbind();
                     }
@@ -941,7 +941,7 @@ void liminal::renderer::render_shadows(
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[4]", point_light.view_projection_matrices.at(4));
                             depth_cube_mesh_program->set_mat4("light.view_projection_matrices[5]", point_light.view_projection_matrices.at(5));
 
-                            _mesh_renderer.model->draw_meshes(*depth_cube_mesh_program);
+                            _renderable.model->draw_meshes(*depth_cube_mesh_program);
                         }
                         liminal::program::unbind();
                     }
@@ -1006,19 +1006,19 @@ void liminal::renderer::render_shadows(
 
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (const auto [_id, _transform, _mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
+            for (const auto [_id, _transform, _renderable] : scene.get_entities_with<const liminal::transform, const liminal::renderable>().each())
             {
-                if (_mesh_renderer.model)
+                if (_renderable.model)
                 {
                     const auto model_matrix = _transform.get_model_matrix();
-                    if (_mesh_renderer.model->has_animations())
+                    if (_renderable.model->has_animations())
                     {
                         depth_skinned_mesh_program->bind();
                         {
                             depth_skinned_mesh_program->set_mat4("mvp_matrix", spot_light.view_projection_matrix * model_matrix);
-                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _mesh_renderer.bone_transformations);
+                            depth_skinned_mesh_program->set_mat4_vector("bone_transformations", _renderable.bone_transformations);
 
-                            _mesh_renderer.model->draw_meshes(*depth_skinned_mesh_program);
+                            _renderable.model->draw_meshes(*depth_skinned_mesh_program);
                         }
                         liminal::program::unbind();
                     }
@@ -1028,7 +1028,7 @@ void liminal::renderer::render_shadows(
                         {
                             depth_mesh_program->set_mat4("mvp_matrix", spot_light.view_projection_matrix * model_matrix);
 
-                            _mesh_renderer.model->draw_meshes(*depth_mesh_program);
+                            _renderable.model->draw_meshes(*depth_mesh_program);
                         }
                         liminal::program::unbind();
                     }
@@ -1081,23 +1081,23 @@ void liminal::renderer::render_geometry(
         constexpr auto value = -1;
         glClearTexImage(geometry_id_texture->get_texture_id(), 0, GL_RED_INTEGER, GL_INT, &value);
 
-        for (const auto [id, transform, mesh_renderer] : scene.get_entities_with<const liminal::transform, const liminal::mesh_renderer>().each())
+        for (const auto [id, transform, renderable] : scene.get_entities_with<const liminal::transform, const liminal::renderable>().each())
         {
-            if (mesh_renderer.model)
+            if (renderable.model)
             {
                 const auto model_matrix = transform.get_model_matrix();
-                if (mesh_renderer.model->has_animations())
+                if (renderable.model->has_animations())
                 {
                     geometry_skinned_mesh_program->bind();
                     {
                         geometry_skinned_mesh_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
-                        geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", mesh_renderer.bone_transformations);
+                        geometry_skinned_mesh_program->set_mat4_vector("bone_transformations", renderable.bone_transformations);
                         geometry_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
-                        geometry_skinned_mesh_program->set_vec3("material.color", mesh_renderer.color);
+                        geometry_skinned_mesh_program->set_vec3("material.color", renderable.color);
                         geometry_skinned_mesh_program->set_int("id", static_cast<int>(id));
 
-                        mesh_renderer.model->draw_meshes(*geometry_skinned_mesh_program);
+                        renderable.model->draw_meshes(*geometry_skinned_mesh_program);
                     }
                     liminal::program::unbind();
                 }
@@ -1108,10 +1108,10 @@ void liminal::renderer::render_geometry(
                         geometry_mesh_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                         geometry_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
-                        geometry_mesh_program->set_vec3("material.color", mesh_renderer.color);
+                        geometry_mesh_program->set_vec3("material.color", renderable.color);
                         geometry_mesh_program->set_int("id", static_cast<int>(id));
 
-                        mesh_renderer.model->draw_meshes(*geometry_mesh_program);
+                        renderable.model->draw_meshes(*geometry_mesh_program);
                     }
                     liminal::program::unbind();
                 }

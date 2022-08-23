@@ -1,7 +1,7 @@
 #include <liminal/scripting/lua_state.hpp>
 
 #include <liminal/components/camera.hpp>
-#include <liminal/components/mesh_renderer.hpp>
+#include <liminal/components/renderable.hpp>
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/script.hpp>
 #include <liminal/components/transform.hpp>
@@ -107,13 +107,13 @@ liminal::lua_state::lua_state(
     lua["AddMeshRenderer"] = [scene, assets](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
         auto entity = scene->get_entity(id);
-        entity.add_component<liminal::mesh_renderer>(assets->load_model(filename.c_str(), assets, flip_uvs));
+        entity.add_component<liminal::renderable>(assets->load_model(filename.c_str(), assets, flip_uvs));
     };
     lua["UpdateMeshRenderer"] = [scene, assets](entt::entity id, const std::string &filename, bool flip_uvs) -> void
     {
         auto entity = scene->get_entity(id);
-        auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
-        mesh_renderer.model = assets->load_model(filename.c_str(), assets, flip_uvs);
+        auto &renderable = entity.get_component<liminal::renderable>();
+        renderable.model = assets->load_model(filename.c_str(), assets, flip_uvs);
     };
     lua["AddPointLight"] = [scene](entt::entity id, float r, float g, float b) -> void
     {

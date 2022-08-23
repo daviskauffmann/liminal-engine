@@ -38,6 +38,7 @@ find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 target_link_libraries(${PROJECT_NAME} PRIVATE
     assimp::assimp
     BulletSoftBody BulletDynamics BulletCollision Bullet3Common LinearMath
+    cxxopts::cxxopts
     EnTT::EnTT
     GLEW::GLEW
     glm::glm

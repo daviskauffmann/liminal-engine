@@ -33,8 +33,8 @@ void minecraft::world::update() const
         auto &chunk = entity.get_component<minecraft::chunk>();
         if (chunk.update)
         {
-            auto &mesh_renderer = entity.get_component<liminal::mesh_renderer>();
-            mesh_renderer.model = std::make_shared<liminal::model>(chunk.create_mesh(tiles_texture));
+            auto &renderable = entity.get_component<liminal::renderable>();
+            renderable.model = std::make_shared<liminal::model>(chunk.create_mesh(tiles_texture));
 
             chunk.update = false;
         }
@@ -66,7 +66,7 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
     chunk_entity.add_component<minecraft::chunk>(
         this,
         chunk_position);
-    chunk_entity.add_component<liminal::mesh_renderer>();
+    chunk_entity.add_component<liminal::renderable>();
 
     chunk_entities.emplace(chunk_position, chunk_entity);
 

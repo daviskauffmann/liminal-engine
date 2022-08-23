@@ -8,7 +8,7 @@
 #include <liminal/components/audio_source.hpp>
 #include <liminal/components/camera.hpp>
 #include <liminal/components/directional_light.hpp>
-#include <liminal/components/mesh_renderer.hpp>
+#include <liminal/components/renderable.hpp>
 #include <liminal/components/physical.hpp>
 #include <liminal/components/point_light.hpp>
 #include <liminal/components/script.hpp>
@@ -104,9 +104,9 @@ void liminal::scene::load(const std::string &filename)
                         entity.add_component<liminal::physical>(component_json.at("mass"));
                     }
 
-                    if (component_type == "mesh_renderer")
+                    if (component_type == "renderable")
                     {
-                        entity.add_component<liminal::mesh_renderer>(
+                        entity.add_component<liminal::renderable>(
                             assets->load_model(
                                 component_json.at("filename"),
                                 assets,
@@ -174,12 +174,12 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
     }
 
     // update animations
-    for (const auto [id, mesh_renderer] : get_entities_with<liminal::mesh_renderer>().each())
+    for (const auto [id, renderable] : get_entities_with<liminal::renderable>().each())
     {
-        if (mesh_renderer.model && mesh_renderer.model->has_animations())
+        if (renderable.model && renderable.model->has_animations())
         {
-            // TODO: put current animation_index on the mesh_renderer component
-            mesh_renderer.bone_transformations = mesh_renderer.model->calc_bone_transformations(0, current_time);
+            // TODO: put current animation_index on the renderable component
+            renderable.bone_transformations = renderable.model->calc_bone_transformations(0, current_time);
         }
     }
 

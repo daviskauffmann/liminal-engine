@@ -14,6 +14,8 @@
 
 liminal::app::app(int argc, char *argv[])
 {
+    // TODO: support config file
+
     // parse command line options
     constexpr const char *window_title = "Liminal Engine";
     int window_width;
@@ -23,13 +25,12 @@ liminal::app::app(int argc, char *argv[])
     try
     {
         cxxopts::Options options(argv[0]);
-
-        auto option_adder = options.add_options();
-        option_adder("width", "Set window width", cxxopts::value<int>()->default_value("1280"));
-        option_adder("height", "Set window height", cxxopts::value<int>()->default_value("720"));
-        option_adder("scale", "Set render scale", cxxopts::value<float>()->default_value("1.0"));
-        option_adder("v,version", "Print version");
-        option_adder("h,help", "Print usage");
+        options.add_options()(
+            "width", "Set window width", cxxopts::value<int>()->default_value("1280"))(
+            "height", "Set window height", cxxopts::value<int>()->default_value("720"))(
+            "scale", "Set render scale", cxxopts::value<float>()->default_value("1.0"))(
+            "v,version", "Print version")(
+            "h,help", "Print usage");
 
         const auto result = options.parse(argc, argv);
 
