@@ -8,9 +8,9 @@
 #include <liminal/components/audio_source.hpp>
 #include <liminal/components/camera.hpp>
 #include <liminal/components/directional_light.hpp>
-#include <liminal/components/renderable.hpp>
 #include <liminal/components/physical.hpp>
 #include <liminal/components/point_light.hpp>
+#include <liminal/components/renderable.hpp>
 #include <liminal/components/script.hpp>
 #include <liminal/components/spot_light.hpp>
 #include <liminal/components/terrain.hpp>
@@ -101,7 +101,12 @@ void liminal::scene::load(const std::string &filename)
 
                     if (component_type == "physical")
                     {
-                        entity.add_component<liminal::physical>(component_json.at("mass"));
+                        entity.add_component<liminal::physical>(
+                            glm::vec3(
+                                component_json.at("scale").at("x"),
+                                component_json.at("scale").at("y"),
+                                component_json.at("scale").at("z")),
+                            component_json.at("mass"));
                     }
 
                     if (component_type == "renderable")
@@ -245,7 +250,7 @@ void liminal::scene::on_audio_source_construct(entt::registry &, entt::entity id
 void liminal::scene::on_physical_construct(entt::registry &, entt::entity id)
 {
     auto &physical = get_entity(id).get_component<liminal::physical>();
-    physical.rigidbody = std::make_shared<liminal::rigidbody>(physical.mass);
+    physical.rigidbody = std::make_shared<liminal::rigidbody>(physical.scale, physical.mass);
     world->add_rigidbody(physical.rigidbody);
 }
 

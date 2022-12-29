@@ -28,6 +28,7 @@ namespace player
             player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
             player_entity.add_component<liminal::camera>(45.0f);
             player_entity.add_component<liminal::audio_listener>();
+            // player_entity.add_component<liminal::physical>();
 
             // ambience_entity = scene->create_entity();
             // ambience_entity.add_component<liminal::transform>("Ambience", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
@@ -68,7 +69,6 @@ namespace player
             auto camera_right = camera.calc_right(transform);
 
             static auto velocity = glm::vec3(0, 0, 0);
-            static auto jumping = false;
             auto acceleration = glm::vec3(0, 0, 0);
             constexpr auto speed = 50.0f;
             constexpr auto drag = 10.0f;
@@ -91,26 +91,17 @@ namespace player
                 {
                     acceleration += camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::SPACE) && noclip)
+                if (liminal::input::key(liminal::keycode::SPACE))
                 {
                     acceleration.y = 1;
                 }
-                if (liminal::input::key(liminal::keycode::LCTRL) && noclip)
+                if (liminal::input::key(liminal::keycode::LCTRL))
                 {
                     acceleration.y = -1;
                 }
                 if (liminal::input::key(liminal::keycode::LSHIFT))
                 {
                     sprint = true;
-                }
-                if (liminal::input::key_down(liminal::keycode::SPACE) && !jumping && !noclip)
-                {
-                    velocity.y = 10;
-                    jumping = true;
-                }
-                if (liminal::input::key_down(liminal::keycode::V))
-                {
-                    noclip = !noclip;
                 }
             }
             if (glm::length(acceleration) > 1)
@@ -119,16 +110,7 @@ namespace player
             }
             acceleration *= speed * (sprint ? 2 : 1);
             acceleration -= velocity * drag;
-            if (!noclip)
-            {
-                acceleration.y = -9.8f;
-            }
             transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
-            if (transform.position.y < 0 && !noclip)
-            {
-                transform.position.y = 0;
-                jumping = false;
-            }
             velocity = acceleration * delta_time + velocity;
             transform.rotation.z = glm::dot(camera_right, velocity);
 
@@ -215,8 +197,6 @@ namespace player
 
         // std::shared_ptr<liminal::texture> grass_texture;
         // liminal::entity ui_entity;
-
-        bool noclip = false;
     };
 }
 

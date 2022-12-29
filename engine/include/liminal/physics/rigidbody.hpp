@@ -11,7 +11,9 @@ namespace liminal
     class rigidbody
     {
     public:
-        rigidbody(float mass);
+        rigidbody(
+            const glm::vec3 &scale,
+            float mass);
         ~rigidbody();
         rigidbody(const rigidbody &other) = delete;
         rigidbody &operator=(const rigidbody &other) = delete;

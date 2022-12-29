@@ -506,6 +506,10 @@ namespace editor
                                 auto &water = selected_entity.get_component<liminal::water>();
 
                                 ImGui::DragFloat("Tiling", &water.tiling);
+                                ImGui::DragFloat("Speed", &water.speed);
+                                ImGui::DragFloat("Wave Strength", &water.wave_strength);
+                                ImGui::DragFloat("Reflectivity", &water.reflectivity);
+                                ImGui::DragFloat("Shine Damper", &water.shine_damper);
 
                                 ImGui::TreePop();
                             }

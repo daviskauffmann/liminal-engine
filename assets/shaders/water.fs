@@ -25,6 +25,12 @@ uniform struct Water
 	sampler2D depth_map;
 	sampler2D dudv_map;
 	sampler2D normal_map;
+
+    float tiling;
+    float speed;
+    float wave_strength;
+    float reflectivity;
+    float shine_damper;
 } water;
 
 uniform struct Light
@@ -34,11 +40,6 @@ uniform struct Light
 } light;
 
 uniform uint current_time;
-
-const float speed = 0.02;
-const float wave_strength = 0.01;
-const float reflectivity = 0.5;
-const float shine_damper = 100;
 
 void main()
 {
@@ -52,10 +53,10 @@ void main()
 	float distance_to_surface = 2 * camera.near_plane * camera.far_plane / (camera.far_plane + camera.near_plane - (2 * depth_to_surface - 1) * (camera.far_plane - camera.near_plane));
 	float water_depth = distance_to_floor - distance_to_surface;
 
-	float move_factor = float(current_time) / 1000 * speed;
+	float move_factor = float(current_time) / 1000 * water.speed;
 	vec2 distorted_uv = texture(water.dudv_map, vec2(vertex.uv.x + move_factor, vertex.uv.y)).rg * 0.1;
 	distorted_uv += vertex.uv + vec2(distorted_uv.x, distorted_uv.y + move_factor);
-	vec2 distortion = (texture(water.dudv_map, distorted_uv).rg * 2 - 1) * wave_strength * clamp(water_depth / 20, 0, 1);
+	vec2 distortion = (texture(water.dudv_map, distorted_uv).rg * 2 - 1) * water.wave_strength * clamp(water_depth / 20, 0, 1);
 
 	reflection_uv += distortion;
 	reflection_uv.x = clamp(reflection_uv.x, 0.001, 0.999);
@@ -72,12 +73,12 @@ void main()
 	
 	vec3 view_direction = normalize(camera.position - vertex.position);
 	float refractive_factor = dot(abs(view_direction), normal);
-	refractive_factor = pow(refractive_factor, reflectivity);
+	refractive_factor = pow(refractive_factor, water.reflectivity);
 	refractive_factor = clamp(refractive_factor, 0, 1);
 
 	vec3 light_reflection = reflect(normalize(light.direction), normal);
-	float specular_factor = pow(max(dot(light_reflection, view_direction), 0), shine_damper);
-	vec3 specular = light.color * specular_factor * reflectivity * clamp(water_depth / 5, 0, 1);
+	float specular_factor = pow(max(dot(light_reflection, view_direction), 0), water.shine_damper);
+	vec3 specular = light.color * specular_factor * water.reflectivity * clamp(water_depth / 5, 0, 1);
 
 	vec3 color = mix(reflection_color, refraction_color, refractive_factor) + specular;
 

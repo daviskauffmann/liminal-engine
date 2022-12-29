@@ -2,12 +2,14 @@
 
 #include <bullet/btBulletDynamicsCommon.h>
 
-liminal::rigidbody::rigidbody(const float mass)
+liminal::rigidbody::rigidbody(
+    const glm::vec3 &scale,
+    const float mass)
 {
     // TODO: more complex collision shapes
     // at least take into account transform scale for the box shape
     const auto motion_state = new btDefaultMotionState();
-    const auto collision_shape = new btBoxShape(btVector3(1, 1, 1));
+    const auto collision_shape = new btBoxShape(btVector3(scale.x, scale.y, scale.z));
     btVector3 local_inertia;
     collision_shape->calculateLocalInertia(mass, local_inertia);
     const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(mass, motion_state, collision_shape, local_inertia);

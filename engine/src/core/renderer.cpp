@@ -1427,7 +1427,11 @@ void liminal::renderer::render_waters(
 
                 water_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 water_program->set_mat4("model_matrix", model_matrix);
-                water_program->set_float("tiling", water.tiling);
+                water_program->set_float("water.tiling", water.tiling);
+                water_program->set_float("water.speed", water.speed);
+                water_program->set_float("water.wave_strength", water.wave_strength);
+                water_program->set_float("water.reflectivity", water.reflectivity);
+                water_program->set_float("water.shine_damper", water.shine_damper);
                 water_program->set_float("camera.near_plane", liminal::camera::near_plane);
                 water_program->set_float("camera.far_plane", liminal::camera::far_plane);
                 water_program->set_vec3("camera.position", camera_transform.position);
