@@ -4,7 +4,7 @@
 
 liminal::audio::audio(
     const int frequency,
-    const Uint16 format,
+    const std::uint16_t format,
     const int channels,
     const int chunk_size)
 {

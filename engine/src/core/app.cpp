@@ -61,7 +61,7 @@ liminal::app::app(int argc, char *argv[])
     sdl = std::make_unique<liminal::sdl>();
     sdl_image = std::make_unique<liminal::sdl_image>();
     sdl_mixer = std::make_unique<liminal::sdl_mixer>();
-    audio = std::make_unique<liminal::audio>(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096);
+    audio = std::make_unique<liminal::audio>();
     window = std::make_unique<liminal::window>(window_title, window_width, window_height);
     gl_context = std::make_unique<liminal::gl_context>(window->get_sdl_window());
     glew = std::make_unique<liminal::glew>();
