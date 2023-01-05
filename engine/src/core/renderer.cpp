@@ -1095,6 +1095,8 @@ void liminal::renderer::render_geometry(
                         geometry_skinned_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_skinned_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_skinned_mesh_program->set_vec3("material.color", renderable.color);
+                        geometry_skinned_mesh_program->set_float("material.metallic", renderable.metallic);
+                        geometry_skinned_mesh_program->set_float("material.roughness", renderable.roughness);
                         geometry_skinned_mesh_program->set_int("id", static_cast<int>(id));
 
                         renderable.model->draw_meshes(*geometry_skinned_mesh_program);
@@ -1109,6 +1111,8 @@ void liminal::renderer::render_geometry(
                         geometry_mesh_program->set_mat4("model_matrix", model_matrix);
                         geometry_mesh_program->set_vec4("clipping_plane", clipping_plane);
                         geometry_mesh_program->set_vec3("material.color", renderable.color);
+                        geometry_mesh_program->set_float("material.metallic", renderable.metallic);
+                        geometry_mesh_program->set_float("material.roughness", renderable.roughness);
                         geometry_mesh_program->set_int("id", static_cast<int>(id));
 
                         renderable.model->draw_meshes(*geometry_mesh_program);

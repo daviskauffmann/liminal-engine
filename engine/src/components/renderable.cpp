@@ -2,9 +2,8 @@
 
 #include <liminal/graphics/model.hpp>
 
-liminal::renderable::renderable(const std::shared_ptr<liminal::model> model, const glm::vec3 &color)
-    : model(model),
-      color(color)
+liminal::renderable::renderable(const std::shared_ptr<liminal::model> model)
+    : model(model)
 {
     if (model && model->has_animations())
     {

@@ -25,6 +25,11 @@ namespace minecraft
         minecraft::block *get_block(int x, int y, int z) const;
         void set_block(int x, int y, int z, minecraft::block *block);
 
+        unsigned char get_sunlight(int x, int y, int z) const;
+        void set_sunlight(int x, int y, int z, unsigned char value);
+        unsigned char get_torchlight(int x, int y, int z) const;
+        void set_torchlight(int x, int y, int z, unsigned char value);
+
     private:
         std::shared_ptr<liminal::scene> scene;
         std::shared_ptr<liminal::texture> tiles_texture;

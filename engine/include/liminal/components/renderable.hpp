@@ -13,10 +13,12 @@ namespace liminal
     struct renderable
     {
         std::shared_ptr<liminal::model> model;
-        glm::vec3 color;
+        glm::vec3 color = glm::vec3(1, 1, 1);
+        float metallic = 0;
+        float roughness = 1;
         std::vector<glm::mat4> bone_transformations;
 
-        renderable(std::shared_ptr<liminal::model> model = {}, const glm::vec3 &color = glm::vec3(1, 1, 1));
+        renderable(std::shared_ptr<liminal::model> model = {});
     };
 }
 

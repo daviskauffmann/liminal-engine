@@ -18,15 +18,23 @@ layout (location = 5) out int id_map;
 uniform struct Material
 {
     vec3 color;
+
     sampler2D albedo_map;
+
     bool has_normal_map;
     sampler2D normal_map;
+
     bool has_metallic_map;
     sampler2D metallic_map;
+    float metallic;
+
     bool has_roughness_map;
     sampler2D roughness_map;
+    float roughness;
+
     bool has_occlusion_map;
     sampler2D occlusion_map;
+
     bool has_height_map;
     sampler2D height_map;
 } material;
@@ -62,8 +70,8 @@ void main()
     normal_map = material.has_normal_map ? calc_normal() : normalize(vertex.normal);
     color_map = vertex.color * material.color;
     albedo_map = albedo.rgb;
-    material_map.r = material.has_metallic_map ? texture(material.metallic_map, vertex.uv).r : 0;
-    material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : 1;
+    material_map.r = material.has_metallic_map ? texture(material.metallic_map, vertex.uv).r : material.metallic;
+    material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : material.roughness;
     material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1;
     material_map.a = material.has_height_map ? texture(material.height_map, vertex.uv).r : 0;
     id_map = id;

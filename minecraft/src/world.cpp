@@ -171,6 +171,50 @@ void minecraft::world::set_block(const int x, const int y, const int z, minecraf
     }
 }
 
+unsigned char minecraft::world::get_sunlight(const int x, const int y, const int z) const
+{
+    const auto chunk = get_chunk(x, y, z);
+
+    if (chunk)
+    {
+        return chunk->get_sunlight(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z);
+    }
+
+    return 0;
+}
+
+void minecraft::world::set_sunlight(const int x, const int y, const int z, const unsigned char value)
+{
+    const auto chunk = get_chunk(x, y, z);
+
+    if (chunk)
+    {
+        chunk->set_sunlight(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z, value);
+    }
+}
+
+unsigned char minecraft::world::get_torchlight(const int x, const int y, const int z) const
+{
+    const auto chunk = get_chunk(x, y, z);
+
+    if (chunk)
+    {
+        return chunk->get_torchlight(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z);
+    }
+
+    return 0;
+}
+
+void minecraft::world::set_torchlight(const int x, const int y, const int z, const unsigned char value)
+{
+    const auto chunk = get_chunk(x, y, z);
+
+    if (chunk)
+    {
+        chunk->set_torchlight(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z, value);
+    }
+}
+
 glm::ivec3 minecraft::world::get_chunk_position(const int x, const int y, const int z) const
 {
     return glm::ivec3(

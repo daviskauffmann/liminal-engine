@@ -350,6 +350,8 @@ namespace editor
                                 }
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(renderable.color), 0.1f);
+                                ImGui::DragFloat("Metallic", &renderable.metallic, 0.01f, 0, 1);
+                                ImGui::DragFloat("Roughness", &renderable.roughness, 0.01f, 0, 1);
 
                                 ImGui::TreePop();
                             }

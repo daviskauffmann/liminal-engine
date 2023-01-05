@@ -48,14 +48,14 @@ namespace minecraft
 
             auto &transform = player_entity.get_component<liminal::transform>();
             auto &camera = player_entity.get_component<liminal::camera>();
-            glm::vec3 camera_front = camera.calc_front(transform);
-            glm::vec3 camera_right = camera.calc_right(transform);
+            auto camera_front = camera.calc_front(transform);
+            auto camera_right = camera.calc_right(transform);
 
-            static auto velocity = glm::vec3(0, 0, 0);
-            auto acceleration = glm::vec3(0, 0, 0);
+            static glm::vec3 velocity(0, 0, 0);
+            glm::vec3 acceleration(0, 0, 0);
             constexpr auto speed = 50.0f;
             constexpr auto drag = 10.0f;
-            bool sprint = false;
+            auto sprint = false;
             if (!io.WantCaptureKeyboard)
             {
                 if (liminal::input::key(liminal::keycode::W))

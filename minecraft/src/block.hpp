@@ -23,8 +23,8 @@ namespace minecraft
     class block
     {
     public:
-        static constexpr uint8_t min_light_level = 1;
-        static constexpr uint8_t max_light_level = 16;
+        static constexpr uint8_t min_light_level = 0;
+        static constexpr uint8_t max_light_level = 15;
 
         std::uint8_t light_level = max_light_level;
 

@@ -53,9 +53,33 @@
         },
         {
             "transform": {
-                "name": "Backpack",
+                "name": "Cube",
                 "position": {
                     "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            },
+            "renderable": {
+                "filename": "assets/models/cube/cube.obj",
+                "flip_uvs": true
+            }
+        },
+        {
+            "transform": {
+                "name": "Backpack",
+                "position": {
+                    "x": 5,
                     "y": 0,
                     "z": 0
                 },
@@ -79,7 +103,7 @@
             "transform": {
                 "name": "Bob",
                 "position": {
-                    "x": 5,
+                    "x": 10,
                     "y": 0,
                     "z": 0
                 },
@@ -101,9 +125,9 @@
         },
         {
             "transform": {
-                "name": "Dude",
+                "name": "Bunny",
                 "position": {
-                    "x": -5,
+                    "x": 15,
                     "y": 0,
                     "z": 0
                 },
@@ -119,7 +143,55 @@
                 }
             },
             "renderable": {
-                "filename": "assets/models/dude/model.dae",
+                "filename": "assets/models/bunny/bunny.obj",
+                "flip_uvs": false
+            }
+        },
+        {
+            "transform": {
+                "name": "Buddha",
+                "position": {
+                    "x": 20,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            },
+            "renderable": {
+                "filename": "assets/models/buddha/buddha.obj",
+                "flip_uvs": false
+            }
+        },
+        {
+            "transform": {
+                "name": "Dragon",
+                "position": {
+                    "x": 25,
+                    "y": 0,
+                    "z": 0
+                },
+                "rotation": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                }
+            },
+            "renderable": {
+                "filename": "assets/models/dragon/dragon.obj",
                 "flip_uvs": false
             }
         },

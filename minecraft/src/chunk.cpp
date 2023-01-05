@@ -57,6 +57,46 @@ void minecraft::chunk::set_block(const int x, const int y, const int z, minecraf
     }
 }
 
+unsigned char minecraft::chunk::get_sunlight(const int x, const int y, const int z) const
+{
+    if (in_range(x, y, z))
+    {
+        return (light_map[y][z][x] >> 4) & 0xF;
+    }
+
+    return world->get_sunlight(position.x + x, position.y + y, position.z + z);
+}
+
+void minecraft::chunk::set_sunlight(const int x, const int y, const int z, const unsigned char value)
+{
+    if (in_range(x, y, z))
+    {
+        light_map[y][z][x] = (light_map[y][z][x] & 0x0F) | (value << 4);
+    }
+
+    return world->set_sunlight(position.x + x, position.y + y, position.z + z, value);
+}
+
+unsigned char minecraft::chunk::get_torchlight(const int x, const int y, const int z) const
+{
+    if (in_range(x, y, z))
+    {
+        return light_map[y][z][x] & 0xF;
+    }
+
+    return world->get_torchlight(position.x + x, position.y + y, position.z + z);
+}
+
+void minecraft::chunk::set_torchlight(const int x, const int y, const int z, const unsigned char value)
+{
+    if (in_range(x, y, z))
+    {
+        light_map[y][z][x] = (light_map[y][z][x] & 0xF0) | value;
+    }
+
+    return world->set_torchlight(position.x + x, position.y + y, position.z + z, value);
+}
+
 liminal::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::texture> tiles_texture) const
 {
     minecraft::mesh_data mesh_data;
