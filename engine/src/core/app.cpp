@@ -81,6 +81,7 @@ liminal::app::app(int argc, char *argv[])
 void liminal::app::run()
 {
     std::uint64_t current_time = 0;
+
     while (running)
     {
         // calculate time between frames

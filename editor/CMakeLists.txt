@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project(liminal_editor LANGUAGES CXX)
 
+find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
+find_package(unofficial-nativefiledialog CONFIG REQUIRED)
+
 file(
     GLOB_RECURSE SOURCE_FILES
     CONFIGURE_DEPENDS
@@ -15,10 +20,6 @@ add_executable(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-find_package(glm CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-find_package(imguizmo CONFIG REQUIRED)
-find_package(unofficial-nativefiledialog CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     imgui::imgui

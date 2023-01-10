@@ -259,20 +259,12 @@ namespace editor
 
                 if (ImGui::Begin("Hierarchy"))
                 {
-                    for (const auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
-                    {
-                        if (!transform.parent)
-                        {
-                            draw_entity_node(scene->get_entity(id), transform);
-                        }
-                    }
-
                     if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
                     {
                         selected_entity = {};
                     }
 
-                    if (ImGui::BeginPopupContextWindow(0, 1, false))
+                    if (ImGui::BeginPopupContextWindow())
                     {
                         if (ImGui::MenuItem("Create Entity"))
                         {
@@ -281,6 +273,14 @@ namespace editor
                         }
 
                         ImGui::EndPopup();
+                    }
+
+                    for (const auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
+                    {
+                        if (!transform.parent)
+                        {
+                            draw_entity_node(scene->get_entity(id), transform);
+                        }
                     }
                 }
                 ImGui::End();
