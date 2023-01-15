@@ -166,7 +166,8 @@ namespace liminal
             const liminal::camera &camera,
             const liminal::transform &camera_transform,
             const liminal::framebuffer &framebuffer,
-            const glm::vec4 &clipping_plane = glm::vec4(0)) const;
+            const glm::vec4 &clipping_plane = glm::vec4(0),
+            bool write_id = false) const;
         void render_waters(
             liminal::scene &scene,
             const liminal::camera &camera,

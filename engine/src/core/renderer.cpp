@@ -12,6 +12,7 @@
 #include <liminal/entities/entity.hpp>
 #include <liminal/graphics/skybox.hpp>
 #include <limits>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 constexpr float directional_light_shadow_map_size = 10;
@@ -759,6 +760,7 @@ liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene
         glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &id);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    spdlog::info("Picked entity: {}", static_cast<std::uint64_t>(id));
     return scene->get_entity(id);
 }
 
@@ -782,7 +784,7 @@ void liminal::renderer::render_all(
     const std::uint64_t current_time) const
 {
     render_shadows(scene, camera_transform);
-    render_geometry(scene, camera, camera_transform, *hdr_framebuffer);
+    render_geometry(scene, camera, camera_transform, *hdr_framebuffer, glm::vec4(0), true);
     render_waters(scene, camera, camera_transform, current_time);
     render_sprites(scene);
     render_screen(camera);
@@ -1061,7 +1063,8 @@ void liminal::renderer::render_geometry(
     const liminal::camera &camera,
     const liminal::transform &camera_transform,
     const liminal::framebuffer &framebuffer,
-    const glm::vec4 &clipping_plane) const
+    const glm::vec4 &clipping_plane,
+    bool write_id) const
 {
     // camera
     const auto camera_projection = camera.calc_projection(get_aspect_ratio());
@@ -1074,12 +1077,19 @@ void liminal::renderer::render_geometry(
         glEnable(GL_CULL_FACE);
         glEnable(GL_CLIP_DISTANCE0);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        const GLfloat color[] = {0, 0, 0, 0};
+        glClearBufferfv(GL_COLOR, 0, color);
+        glClearBufferfv(GL_COLOR, 1, color);
+        glClearBufferfv(GL_COLOR, 2, color);
+        glClearBufferfv(GL_COLOR, 3, color);
+        glClearBufferfv(GL_COLOR, 4, color);
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-        // TODO: the water reflection/refraction code clobbers these ids, need to disable clearing/overwriting them on those passes
-        // only the ids from the first geometry pass are valid
-        constexpr auto value = -1;
-        glClearTexImage(geometry_id_texture->get_texture_id(), 0, GL_RED_INTEGER, GL_INT, &value);
+        if (write_id)
+        {
+            constexpr auto value = -1;
+            glClearTexImage(geometry_id_texture->get_texture_id(), 0, GL_RED_INTEGER, GL_INT, &value);
+        }
 
         for (const auto [id, transform, renderable] : scene.get_entities_with<const liminal::transform, const liminal::renderable>().each())
         {
@@ -1097,6 +1107,7 @@ void liminal::renderer::render_geometry(
                         geometry_skinned_mesh_program->set_vec3("material.color", renderable.color);
                         geometry_skinned_mesh_program->set_float("material.metallic", renderable.metallic);
                         geometry_skinned_mesh_program->set_float("material.roughness", renderable.roughness);
+                        geometry_skinned_mesh_program->set_int("write_id", write_id);
                         geometry_skinned_mesh_program->set_int("id", static_cast<int>(id));
 
                         renderable.model->draw_meshes(*geometry_skinned_mesh_program);
@@ -1113,6 +1124,7 @@ void liminal::renderer::render_geometry(
                         geometry_mesh_program->set_vec3("material.color", renderable.color);
                         geometry_mesh_program->set_float("material.metallic", renderable.metallic);
                         geometry_mesh_program->set_float("material.roughness", renderable.roughness);
+                        geometry_mesh_program->set_int("write_id", write_id);
                         geometry_mesh_program->set_int("id", static_cast<int>(id));
 
                         renderable.model->draw_meshes(*geometry_mesh_program);
@@ -1133,6 +1145,7 @@ void liminal::renderer::render_geometry(
                 geometry_terrain_program->set_mat4("mvp_matrix", camera_projection * camera_view * model_matrix);
                 geometry_terrain_program->set_mat4("model_matrix", model_matrix);
                 geometry_terrain_program->set_float("tiling", terrain.tiling);
+                geometry_terrain_program->set_int("write_id", write_id);
                 geometry_terrain_program->set_int("id", static_cast<int>(id));
 
                 terrain.mesh->draw(*geometry_terrain_program);

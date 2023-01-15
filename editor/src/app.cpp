@@ -245,14 +245,24 @@ namespace editor
                         auto &transform = selected_entity.get_component<liminal::transform>();
                         auto matrix = transform.get_model_matrix();
 
+                        auto operation = ImGuizmo::OPERATION::TRANSLATE;
+                        if (liminal::input::key(liminal::keycode::LSHIFT))
+                        {
+                            operation = ImGuizmo::OPERATION::ROTATE;
+                        }
+                        else if (liminal::input::key(liminal::keycode::LCTRL))
+                        {
+                            operation = ImGuizmo::OPERATION::SCALE;
+                        }
+
                         if (ImGuizmo::Manipulate(
                                 glm::value_ptr(camera_view),
                                 glm::value_ptr(camera_projection),
-                                ImGuizmo::OPERATION::TRANSLATE,
+                                operation,
                                 ImGuizmo::LOCAL,
                                 glm::value_ptr(matrix)))
                         {
-                            transform.position = glm::vec3(matrix[3]);
+                            transform.set_model_matrix(matrix);
                         }
                     }
                 }
@@ -290,7 +300,7 @@ namespace editor
                 {
                     if (selected_entity)
                     {
-                        const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
+                        const auto flags = ImGuiTreeNodeFlags_DefaultOpen;
 
                         if (selected_entity.has_components<liminal::transform>())
                         {

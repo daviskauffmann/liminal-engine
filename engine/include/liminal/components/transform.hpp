@@ -16,6 +16,7 @@ namespace liminal
         glm::vec3 scale = {1, 1, 1};
 
         glm::mat4 get_model_matrix() const;
+        void set_model_matrix(const glm::mat4 &matrix);
     };
 }
 

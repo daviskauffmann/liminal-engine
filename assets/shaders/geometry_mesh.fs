@@ -39,6 +39,7 @@ uniform struct Material
     sampler2D height_map;
 } material;
 
+uniform int write_id;
 uniform int id;
 
 vec3 calc_normal()
@@ -74,5 +75,8 @@ void main()
     material_map.g = material.has_roughness_map ? texture(material.roughness_map, vertex.uv).r : material.roughness;
     material_map.b = material.has_occlusion_map ? texture(material.occlusion_map, vertex.uv).r : 1;
     material_map.a = material.has_height_map ? texture(material.height_map, vertex.uv).r : 0;
-    id_map = id;
+    if (write_id != 0)
+    {
+        id_map = id;
+    }
 }

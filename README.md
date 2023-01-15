@@ -53,6 +53,7 @@ cmake ..
 ## Screenshots
 
 ![Backpack](screenshots/backpack.png)
+![Bush](screenshots/bush.png)
 
 ## Resources Used
 
