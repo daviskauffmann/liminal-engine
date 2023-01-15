@@ -435,6 +435,36 @@ namespace editor
                             }
                         }
 
+                        if (selected_entity.has_components<liminal::physical>())
+                        {
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::physical).hash_code()), flags, "Physical");
+
+                            auto deleted = false;
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Remove"))
+                                {
+                                    deleted = true;
+                                }
+
+                                ImGui::EndPopup();
+                            }
+
+                            if (opened)
+                            {
+                                auto &physical = selected_entity.get_component<liminal::physical>();
+
+                                ImGui::DragFloat("Mass", &physical.mass);
+
+                                ImGui::TreePop();
+                            }
+
+                            if (deleted)
+                            {
+                                selected_entity.remove_component<liminal::physical>();
+                            }
+                        }
+
                         if (selected_entity.has_components<liminal::spot_light>())
                         {
                             const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::spot_light).hash_code()), flags, "Spot Light");
@@ -543,6 +573,13 @@ namespace editor
                             if (!selected_entity.has_components<liminal::renderable>() && ImGui::MenuItem("Mesh Renderer"))
                             {
                                 selected_entity.add_component<liminal::renderable>();
+
+                                ImGui::CloseCurrentPopup();
+                            }
+
+                            if (!selected_entity.has_components<liminal::physical>() && ImGui::MenuItem("Physical"))
+                            {
+                                selected_entity.add_component<liminal::physical>();
 
                                 ImGui::CloseCurrentPopup();
                             }

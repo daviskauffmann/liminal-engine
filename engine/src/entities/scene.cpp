@@ -213,7 +213,11 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
         // update rigidbody in case the transform component changed
         for (const auto [id, physical, transform] : physics_entities)
         {
-            physical.rigidbody->set_world_transform(transform.position, transform.rotation);
+            physical.rigidbody->set_world_transform(
+                transform.position,
+                transform.rotation,
+                transform.scale,
+                physical.mass);
         }
 
         // update physics world

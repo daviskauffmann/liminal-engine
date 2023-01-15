@@ -760,7 +760,7 @@ liminal::entity liminal::renderer::pick(const int x, const int y, liminal::scene
         glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &id);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    spdlog::info("Picked entity: {}", static_cast<std::uint64_t>(id));
+
     return scene->get_entity(id);
 }
 

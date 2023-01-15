@@ -73,6 +73,14 @@
             "renderable": {
                 "filename": "assets/models/cube/cube.obj",
                 "flip_uvs": true
+            },
+            "physical": {
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                },
+                "mass": 1
             }
         },
         {

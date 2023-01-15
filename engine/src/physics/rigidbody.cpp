@@ -8,18 +8,18 @@ liminal::rigidbody::rigidbody(
 {
     // TODO: more complex collision shapes
     // at least take into account transform scale for the box shape
-    const auto motion_state = new btDefaultMotionState();
-    const auto collision_shape = new btBoxShape(btVector3(scale.x, scale.y, scale.z));
+    bt_motion_state = new btDefaultMotionState();
+    bt_collision_shape = new btBoxShape(btVector3(scale.x, scale.y, scale.z));
     btVector3 local_inertia;
-    collision_shape->calculateLocalInertia(mass, local_inertia);
-    const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(mass, motion_state, collision_shape, local_inertia);
+    bt_collision_shape->calculateLocalInertia(mass, local_inertia);
+    const auto construction_info = btRigidBody::btRigidBodyConstructionInfo(mass, bt_motion_state, bt_collision_shape, local_inertia);
     bt_rigidbody = new btRigidBody(construction_info);
 }
 
 liminal::rigidbody::~rigidbody()
 {
-    delete bt_rigidbody->getMotionState();
-    delete bt_rigidbody->getCollisionShape();
+    delete bt_motion_state;
+    delete bt_collision_shape;
     delete bt_rigidbody;
 }
 
@@ -41,11 +41,19 @@ std::tuple<glm::vec3, glm::vec3> liminal::rigidbody::get_world_transform() const
     return std::make_tuple(position, rotation);
 }
 
-void liminal::rigidbody::set_world_transform(const glm::vec3 &position, const glm::vec3 &rotation) const
+void liminal::rigidbody::set_world_transform(
+    const glm::vec3 &position,
+    const glm::vec3 &rotation,
+    const glm::vec3 &scale,
+    const float mass) const
 {
     btTransform world_transform;
     world_transform.setIdentity();
     world_transform.setOrigin(btVector3(position.x, position.y, position.z));
     world_transform.setRotation(btQuaternion(rotation.y, rotation.x, rotation.z));
     bt_rigidbody->setWorldTransform(world_transform);
+
+    bt_collision_shape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+
+    bt_rigidbody->setMassProps(mass, btVector3(0, 0, 0));
 }
