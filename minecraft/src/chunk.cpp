@@ -1,9 +1,5 @@
 #include "chunk.hpp"
 
-#include "block.hpp"
-#include "blocks/air_block.hpp"
-#include "blocks/grass_block.hpp"
-#include "blocks/stone_block.hpp"
 #include "mesh_data.hpp"
 #include "world.hpp"
 
@@ -17,27 +13,13 @@ minecraft::chunk::chunk(minecraft::world *const world, const glm::ivec3 &positio
         {
             for (int z = 0; z < size; z++)
             {
-                blocks[x][y][z] = new air_block();
+                blocks[x][y][z].type = minecraft::block_type::air;
             }
         }
     }
 }
 
-minecraft::chunk::~chunk()
-{
-    for (int x = 0; x < size; x++)
-    {
-        for (int y = 0; y < size; y++)
-        {
-            for (int z = 0; z < size; z++)
-            {
-                delete blocks[x][y][z];
-            }
-        }
-    }
-}
-
-minecraft::block *minecraft::chunk::get_block(const int x, const int y, const int z) const
+const minecraft::block &minecraft::chunk::get_block(const int x, const int y, const int z) const
 {
     if (in_range(x, y, z))
     {
@@ -47,12 +29,11 @@ minecraft::block *minecraft::chunk::get_block(const int x, const int y, const in
     return world->get_block(position.x + x, position.y + y, position.z + z);
 }
 
-void minecraft::chunk::set_block(const int x, const int y, const int z, minecraft::block *block)
+void minecraft::chunk::set_block(const int x, const int y, const int z, const minecraft::block_type type)
 {
     if (in_range(x, y, z))
     {
-        delete blocks[x][y][z];
-        blocks[x][y][z] = block;
+        blocks[x][y][z].type = type;
         update = true;
     }
 }
@@ -107,7 +88,7 @@ liminal::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::text
         {
             for (int z = 0; z < size; z++)
             {
-                blocks[x][y][z]->add_to_mesh(this, x, y, z, &mesh_data);
+                blocks[x][y][z].add_to_mesh(this, x, y, z, mesh_data);
             }
         }
     }

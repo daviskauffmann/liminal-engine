@@ -1,6 +1,7 @@
 #ifndef MINECRAFT_CHUNK_HPP
 #define MINECRAFT_CHUNK_HPP
 
+#include "block.hpp"
 #include <glm/glm.hpp>
 #include <liminal/liminal.hpp>
 #include <memory>
@@ -17,15 +18,14 @@ namespace minecraft
 
         minecraft::world *world;
         glm::ivec3 position;
-        minecraft::block *blocks[size][size][size];
+        minecraft::block blocks[size][size][size];
         unsigned char light_map[size][size][size] = {};
         bool update = true;
 
         chunk(minecraft::world *world, const glm::ivec3 &position);
-        ~chunk();
 
-        minecraft::block *get_block(int x, int y, int z) const;
-        void set_block(int x, int y, int z, minecraft::block *block);
+        const minecraft::block &get_block(int x, int y, int z) const;
+        void set_block(int x, int y, int z, minecraft::block_type type);
 
         unsigned char get_sunlight(int x, int y, int z) const;
         void set_sunlight(int x, int y, int z, unsigned char value);

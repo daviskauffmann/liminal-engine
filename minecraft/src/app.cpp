@@ -1,6 +1,4 @@
 #include "block.hpp"
-#include "blocks/air_block.hpp"
-#include "blocks/grass_block.hpp"
 #include "chunk.hpp"
 #include "mesh_data.hpp"
 #include "world.hpp"
@@ -131,7 +129,7 @@ namespace minecraft
                         const auto x = static_cast<int>(glm::round(transform.position.x + (camera.calc_front(transform).x * (i * 0.1f))));
                         const auto y = static_cast<int>(glm::round(transform.position.y + (camera.calc_front(transform).y * (i * 0.1f))));
                         const auto z = static_cast<int>(glm::round(transform.position.z + (camera.calc_front(transform).z * (i * 0.1f))));
-                        world->set_block(x, y, z, new minecraft::air_block());
+                        world->set_block(x, y, z, minecraft::block_type::air);
                     }
                 }
             }

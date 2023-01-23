@@ -1,10 +1,5 @@
 #include "world.hpp"
 
-#include "SimplexNoise.h"
-#include "blocks/air_block.hpp"
-#include "blocks/dirt_block.hpp"
-#include "blocks/grass_block.hpp"
-#include "blocks/stone_block.hpp"
 #include "chunk.hpp"
 
 minecraft::world::world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<liminal::assets> assets)
@@ -18,9 +13,9 @@ minecraft::world::world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<l
             for (int z = -4; z < 4; z++)
             {
                 create_chunk(
-                    static_cast<int>(x * (int)minecraft::chunk::size),
-                    static_cast<int>(y * (int)minecraft::chunk::size),
-                    static_cast<int>(z * (int)minecraft::chunk::size));
+                    static_cast<int>(x * minecraft::chunk::size),
+                    static_cast<int>(y * minecraft::chunk::size),
+                    static_cast<int>(z * minecraft::chunk::size));
             }
         }
     }
@@ -41,9 +36,8 @@ void minecraft::world::update() const
     }
 }
 
-int get_noise(const int x, const int y, const int z, const float scale, const int max)
+int minecraft::world::get_noise(const int x, const int y, const int z, const float scale, const int max) const
 {
-    const auto simplex = SimplexNoise();
     return static_cast<int>(std::floor(simplex.noise(x * scale, y * scale, z * scale) + 1) * (max / 2.0f));
 }
 
@@ -70,22 +64,22 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
 
     chunk_entities.emplace(chunk_position, chunk_entity);
 
+    constexpr auto stone_base_height = -24;
+    constexpr auto stone_base_noise = 0.05f;
+    constexpr auto stone_base_noise_height = 4;
+
+    constexpr auto stone_mountain_height = 48;
+    constexpr auto stone_mountain_frequency = 0.008f;
+    constexpr auto stone_min_height = -12;
+
+    constexpr auto dirt_base_height = 1;
+    constexpr auto dirt_noise = 0.04f;
+    constexpr auto dirt_noise_height = 3;
+
     for (int xi = chunk_position.x; xi < static_cast<int>(chunk_position.x + minecraft::chunk::size); xi++)
     {
         for (int zi = chunk_position.z; zi < static_cast<int>(chunk_position.z + minecraft::chunk::size); zi++)
         {
-            const auto stone_base_height = -24;
-            const auto stone_base_noise = 0.05f;
-            const auto stone_base_noise_height = 4;
-
-            const auto stone_mountain_height = 48;
-            const auto stone_mountain_frequency = 0.008f;
-            const auto stone_min_height = -12;
-
-            const auto dirt_base_height = 1;
-            const auto dirt_noise = 0.04f;
-            const auto dirt_noise_height = 3;
-
             auto stone_height = stone_base_height;
             stone_height += get_noise(xi, 0, zi, stone_mountain_frequency, stone_mountain_height);
 
@@ -103,19 +97,19 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
             {
                 if (yi <= stone_height)
                 {
-                    set_block(xi, yi, zi, new minecraft::stone_block());
+                    set_block(xi, yi, zi, minecraft::block_type::stone);
                 }
                 else if (yi < dirt_height)
                 {
-                    set_block(xi, yi, zi, new minecraft::dirt_block());
+                    set_block(xi, yi, zi, minecraft::block_type::dirt);
                 }
                 else if (yi == dirt_height)
                 {
-                    set_block(xi, yi, zi, new minecraft::grass_block());
+                    set_block(xi, yi, zi, minecraft::block_type::grass);
                 }
                 else
                 {
-                    set_block(xi, yi, zi, new minecraft::air_block());
+                    set_block(xi, yi, zi, minecraft::block_type::air);
                 }
             }
         }
@@ -147,27 +141,27 @@ void minecraft::world::destroy_chunk(const int x, const int y, const int z)
     }
 }
 
-minecraft::block *minecraft::world::get_block(const int x, const int y, const int z) const
+const minecraft::block &minecraft::world::get_block(const int x, const int y, const int z) const
 {
     const auto chunk = get_chunk(x, y, z);
 
     if (!chunk)
     {
         // TODO: no
-        static auto air_block = new minecraft::air_block();
+        static minecraft::block air_block = {minecraft::block_type::air};
         return air_block;
     }
 
     return chunk->get_block(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z);
 }
 
-void minecraft::world::set_block(const int x, const int y, const int z, minecraft::block *const block)
+void minecraft::world::set_block(const int x, const int y, const int z, const minecraft::block_type type)
 {
     const auto chunk = get_chunk(x, y, z);
 
     if (chunk)
     {
-        chunk->set_block(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z, block);
+        chunk->set_block(x - chunk->position.x, y - chunk->position.y, z - chunk->position.z, type);
     }
 }
 
