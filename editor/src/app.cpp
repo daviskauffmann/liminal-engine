@@ -668,12 +668,12 @@ namespace editor
         void load_scene()
         {
             new_scene();
-            scene->load("assets/scenes/demo.json");
+            scene->load("data/scenes/demo.json");
         }
 
         void save_scene()
         {
-            scene->save("assets/scenes/demo.json");
+            scene->save("data/scenes/demo.json");
         }
 
         void play_scene()

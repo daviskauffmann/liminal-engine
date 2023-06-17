@@ -15,13 +15,13 @@ namespace player
             sdl->set_relative_mouse_mode(true);
 
             scene = std::make_unique<liminal::scene>(assets);
-            scene->load("assets/scenes/demo.json");
+            scene->load("data/scenes/demo.json");
             scene->start();
 
-            // ambient_sound = assets->load_sound("assets/audio/ambient.wav");
-            // bounce_sound = assets->load_sound("assets/audio/bounce.wav");
-            // shoot_sound = assets->load_sound("assets/audio/shoot.wav");
-            // grass_texture = assets->load_texture("assets/images/grass_sprite.png");
+            // ambient_sound = assets->load_sound("data/audio/ambient.wav");
+            // bounce_sound = assets->load_sound("data/audio/bounce.wav");
+            // shoot_sound = assets->load_sound("data/audio/shoot.wav");
+            // grass_texture = assets->load_texture("data/images/grass_sprite.png");
 
             // TODO: these entities should come from the JSON file
             player_entity = scene->create_entity();

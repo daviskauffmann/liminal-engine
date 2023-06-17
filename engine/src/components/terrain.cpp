@@ -67,32 +67,32 @@ liminal::terrain::terrain(const std::string &filename, const float tiling, std::
 
     std::array<std::vector<std::shared_ptr<liminal::texture>>, liminal::mesh::num_textures> textures;
 
-    textures.at(aiTextureType_DIFFUSE).push_back(assets->load_texture("assets/images/grass1-albedo3.png"));
+    textures.at(aiTextureType_DIFFUSE).push_back(assets->load_texture("data/images/grass1-albedo3.png"));
     // textures.at(aiTextureType_DIFFUSE).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_DIFFUSE).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_DIFFUSE).push_back(assets->load_texture(""));
 
-    textures.at(aiTextureType_NORMALS).push_back(assets->load_texture("assets/images/grass1-normal1-ogl.png"));
+    textures.at(aiTextureType_NORMALS).push_back(assets->load_texture("data/images/grass1-normal1-ogl.png"));
     // textures.at(aiTextureType_NORMALS).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_NORMALS).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_NORMALS).push_back(assets->load_texture(""));
 
-    textures.at(aiTextureType_SHININESS).push_back(assets->load_texture("assets/images/grass1-metal.png"));
+    textures.at(aiTextureType_SHININESS).push_back(assets->load_texture("data/images/grass1-metal.png"));
     // textures.at(aiTextureType_SHININESS).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_SHININESS).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_SHININESS).push_back(assets->load_texture(""));
 
-    textures.at(aiTextureType_OPACITY).push_back(assets->load_texture("assets/images/grass1-rough.png"));
+    textures.at(aiTextureType_OPACITY).push_back(assets->load_texture("data/images/grass1-rough.png"));
     // textures.at(aiTextureType_OPACITY).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_OPACITY).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_OPACITY).push_back(assets->load_texture(""));
 
-    textures.at(aiTextureType_AMBIENT).push_back(assets->load_texture("assets/images/grass1-ao.png"));
+    textures.at(aiTextureType_AMBIENT).push_back(assets->load_texture("data/images/grass1-ao.png"));
     // textures.at(aiTextureType_AMBIENT).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_AMBIENT).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_AMBIENT).push_back(assets->load_texture(""));
 
-    textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture("assets/images/grass1-height.png"));
+    textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture("data/images/grass1-height.png"));
     // textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture(""));

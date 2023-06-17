@@ -193,8 +193,8 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     const auto equirectangular_to_cubemap_program = std::make_unique<liminal::program>(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/equirectangular_to_cubemap.fs");
+        "data/shaders/cubemap.vs",
+        "data/shaders/equirectangular_to_cubemap.fs");
 
     glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     {
@@ -279,8 +279,8 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     const auto irradiance_convolution_program = std::make_unique<liminal::program>(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/irradiance_convolution.fs");
+        "data/shaders/cubemap.vs",
+        "data/shaders/irradiance_convolution.fs");
 
     glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     {
@@ -344,8 +344,8 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     const auto prefilter_convolution_program = std::make_unique<liminal::program>(
-        "assets/shaders/cubemap.vs",
-        "assets/shaders/prefilter_convolution.fs");
+        "data/shaders/cubemap.vs",
+        "data/shaders/prefilter_convolution.fs");
 
     glBindFramebuffer(GL_FRAMEBUFFER, capture_fbo_id);
     {

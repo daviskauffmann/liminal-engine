@@ -14,12 +14,12 @@ namespace liminal
             : id(id),
               scene(scene) {}
 
-        auto operator==(const entity &other)
+        auto operator==(const entity &other) const
         {
             return id == other.id && scene == other.scene;
         }
 
-        auto operator!=(const entity &other)
+        auto operator!=(const entity &other) const
         {
             return !(*this == other);
         }

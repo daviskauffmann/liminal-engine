@@ -4,7 +4,7 @@
 
 minecraft::world::world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<liminal::assets> assets)
     : scene(scene),
-      tiles_texture(assets->load_texture("assets/images/tiles.png", false, false))
+      tiles_texture(assets->load_texture("data/images/tiles.png", false, false))
 {
     for (int x = -4; x < 4; x++)
     {
