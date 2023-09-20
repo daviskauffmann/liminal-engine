@@ -13,7 +13,7 @@ liminal::imgui_context::imgui_context(SDL_Window *const sdl_window, void *const 
 
     auto &io = ImGui::GetIO();
     io.ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
-    io.IniFilename = "data/imgui.ini";
+    io.IniFilename = "engine/data/imgui.ini";
 
     ImGui_ImplSDL2_InitForOpenGL(sdl_window, sdl_gl_context);
     ImGui_ImplOpenGL3_Init("#version 460");

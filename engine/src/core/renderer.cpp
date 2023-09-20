@@ -207,8 +207,8 @@ liminal::renderer::renderer(
         brdf_framebuffer->validate();
 
         const auto brdf_program = std::make_unique<liminal::program>(
-            "data/shaders/brdf.vs",
-            "data/shaders/brdf.fs");
+            "engine/data/shaders/brdf.vs",
+            "engine/data/shaders/brdf.fs");
 
         brdf_framebuffer->bind();
         {
@@ -227,30 +227,30 @@ liminal::renderer::renderer(
 
     // create shader programs and setup samplers
     depth_mesh_program = std::make_unique<liminal::program>(
-        "data/shaders/depth_mesh.vs",
-        "data/shaders/depth.fs");
+        "engine/data/shaders/depth_mesh.vs",
+        "engine/data/shaders/depth.fs");
 
     depth_skinned_mesh_program = std::make_unique<liminal::program>(
-        "data/shaders/depth_skinned_mesh.vs",
-        "data/shaders/depth.fs");
+        "engine/data/shaders/depth_skinned_mesh.vs",
+        "engine/data/shaders/depth.fs");
 
     depth_cube_mesh_program = std::make_unique<liminal::program>(
-        "data/shaders/depth_cube_mesh.vs",
-        "data/shaders/depth_cube.gs",
-        "data/shaders/depth_cube.fs");
+        "engine/data/shaders/depth_cube_mesh.vs",
+        "engine/data/shaders/depth_cube.gs",
+        "engine/data/shaders/depth_cube.fs");
 
     depth_cube_skinned_mesh_program = std::make_unique<liminal::program>(
-        "data/shaders/depth_cube_skinned_mesh.vs",
-        "data/shaders/depth_cube.gs",
-        "data/shaders/depth_cube.fs");
+        "engine/data/shaders/depth_cube_skinned_mesh.vs",
+        "engine/data/shaders/depth_cube.gs",
+        "engine/data/shaders/depth_cube.fs");
 
     color_program = std::make_unique<liminal::program>(
-        "data/shaders/color.vs",
-        "data/shaders/color.fs");
+        "engine/data/shaders/color.vs",
+        "engine/data/shaders/color.fs");
 
     geometry_mesh_program = std::make_unique<liminal::program>(
-        "data/shaders/geometry_mesh.vs",
-        "data/shaders/geometry_mesh.fs");
+        "engine/data/shaders/geometry_mesh.vs",
+        "engine/data/shaders/geometry_mesh.fs");
     geometry_mesh_program->bind();
     geometry_mesh_program->set_samplers(
         {{"material.albedo_map", 0},
@@ -262,8 +262,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     geometry_skinned_mesh_program = std::make_unique<liminal::program>(
-        "data/shaders/geometry_skinned_mesh.vs",
-        "data/shaders/geometry_mesh.fs");
+        "engine/data/shaders/geometry_skinned_mesh.vs",
+        "engine/data/shaders/geometry_mesh.fs");
     geometry_skinned_mesh_program->bind();
     geometry_skinned_mesh_program->set_samplers(
         {{"material.albedo_map", 0},
@@ -275,8 +275,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     geometry_terrain_program = std::make_unique<liminal::program>(
-        "data/shaders/geometry_mesh.vs",
-        "data/shaders/geometry_terrain.fs");
+        "engine/data/shaders/geometry_mesh.vs",
+        "engine/data/shaders/geometry_terrain.fs");
     geometry_terrain_program->bind();
     geometry_terrain_program->set_samplers(
         {{"materials[0].albedo_map", 0},
@@ -288,8 +288,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     deferred_ambient_program = std::make_unique<liminal::program>(
-        "data/shaders/deferred.vs",
-        "data/shaders/deferred_ambient.fs");
+        "engine/data/shaders/deferred.vs",
+        "engine/data/shaders/deferred_ambient.fs");
     deferred_ambient_program->bind();
     deferred_ambient_program->set_samplers(
         {{"geometry.position_map", 0},
@@ -303,8 +303,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     deferred_directional_program = std::make_unique<liminal::program>(
-        "data/shaders/deferred.vs",
-        "data/shaders/deferred_directional.fs");
+        "engine/data/shaders/deferred.vs",
+        "engine/data/shaders/deferred_directional.fs");
     deferred_directional_program->bind();
     deferred_directional_program->set_samplers(
         {{"geometry.position_map", 0},
@@ -316,8 +316,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     deferred_point_program = std::make_unique<liminal::program>(
-        "data/shaders/deferred.vs",
-        "data/shaders/deferred_point.fs");
+        "engine/data/shaders/deferred.vs",
+        "engine/data/shaders/deferred_point.fs");
     deferred_point_program->bind();
     deferred_point_program->set_samplers(
         {{"geometry.position_map", 0},
@@ -329,8 +329,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     deferred_spot_program = std::make_unique<liminal::program>(
-        "data/shaders/deferred.vs",
-        "data/shaders/deferred_spot.fs");
+        "engine/data/shaders/deferred.vs",
+        "engine/data/shaders/deferred_spot.fs");
     deferred_spot_program->bind();
     deferred_spot_program->set_samplers(
         {{"geometry.position_map", 0},
@@ -342,16 +342,16 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     skybox_program = std::make_unique<liminal::program>(
-        "data/shaders/skybox.vs",
-        "data/shaders/skybox.fs");
+        "engine/data/shaders/skybox.vs",
+        "engine/data/shaders/skybox.fs");
     skybox_program->bind();
     skybox_program->set_samplers(
         {{"skybox.environment_cubemap", 0}});
     liminal::program::unbind();
 
     water_program = std::make_unique<liminal::program>(
-        "data/shaders/water.vs",
-        "data/shaders/water.fs");
+        "engine/data/shaders/water.vs",
+        "engine/data/shaders/water.fs");
     water_program->bind();
     water_program->set_samplers(
         {{"water.reflection_map", 0},
@@ -362,24 +362,24 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     sprite_program = std::make_unique<liminal::program>(
-        "data/shaders/sprite.vs",
-        "data/shaders/sprite.fs");
+        "engine/data/shaders/sprite.vs",
+        "engine/data/shaders/sprite.fs");
     sprite_program->bind();
     sprite_program->set_samplers(
         {{"sprite.texture", 0}});
     liminal::program::unbind();
 
     gaussian_program = std::make_unique<liminal::program>(
-        "data/shaders/gaussian.vs",
-        "data/shaders/gaussian.fs");
+        "engine/data/shaders/gaussian.vs",
+        "engine/data/shaders/gaussian.fs");
     gaussian_program->bind();
     gaussian_program->set_samplers(
         {{"image", 0}});
     liminal::program::unbind();
 
     postprocess_program = std::make_unique<liminal::program>(
-        "data/shaders/postprocess.vs",
-        "data/shaders/postprocess.fs");
+        "engine/data/shaders/postprocess.vs",
+        "engine/data/shaders/postprocess.fs");
     postprocess_program->bind();
     postprocess_program->set_samplers(
         {{"hdr_map", 0},
@@ -387,8 +387,8 @@ liminal::renderer::renderer(
     liminal::program::unbind();
 
     // create water textures
-    water_dudv_texture = std::make_unique<liminal::texture>("data/images/water_dudv.png");
-    water_normal_texture = std::make_unique<liminal::texture>("data/images/water_normal.png");
+    water_dudv_texture = std::make_unique<liminal::texture>("engine/data/textures/water_dudv.png");
+    water_normal_texture = std::make_unique<liminal::texture>("engine/data/textures/water_normal.png");
 
     // DEBUG: create sphere mesh
     // http://www.songho.ca/opengl/gl_sphere.html

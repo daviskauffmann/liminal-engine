@@ -645,7 +645,7 @@ namespace editor
 
         liminal::entity selected_entity = {};
 
-        std::filesystem::path current_asset_directory = "assets";
+        std::filesystem::path current_asset_directory = "engine/data";
 
         // TODO: remove!!!
         liminal::entity player;
@@ -668,12 +668,12 @@ namespace editor
         void load_scene()
         {
             new_scene();
-            scene->load("data/scenes/demo.json");
+            scene->load("editor/data/scenes/demo.json");
         }
 
         void save_scene()
         {
-            scene->save("data/scenes/demo.json");
+            scene->save("editor/data/scenes/demo.json");
         }
 
         void play_scene()

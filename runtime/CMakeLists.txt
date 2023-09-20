@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(liminal_player LANGUAGES CXX)
+project(liminal_runtime LANGUAGES CXX)
 
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)

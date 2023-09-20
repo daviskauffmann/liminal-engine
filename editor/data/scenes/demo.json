@@ -1,5 +1,5 @@
 {
-    "skybox": "data/images/GCanyon_C_YumaPoint_8k.jpg",
+    "skybox": "editor/data/skyboxes/gcanyon/GCanyon_C_YumaPoint_8k.jpg",
     "entities": [
         {
             "transform": {
@@ -71,7 +71,7 @@
                 }
             },
             "renderable": {
-                "filename": "data/models/cube/cube.obj",
+                "filename": "editor/data/models/cube/cube.obj",
                 "flip_uvs": true
             },
             "physical": {
@@ -112,12 +112,12 @@
                 "outer_cutoff": 15
             },
             "script": {
-                "filename": "data/scripts/flashlight.lua"
+                "filename": "editor/data/scripts/flashlight.lua"
             }
         },
         {
             "script": {
-                "filename": "data/scripts/spinning_lights.lua"
+                "filename": "editor/data/scripts/spinning_lights.lua"
             }
         },
         {
@@ -140,7 +140,7 @@
                 }
             },
             "terrain": {
-                "filename": "data/images/heightmap.png",
+                "filename": "editor/data/textures/heightmap.png",
                 "tiling": 100
             }
         }
