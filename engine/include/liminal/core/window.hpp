@@ -20,6 +20,7 @@ namespace liminal
 
         void set_title(const char *title) const;
         void set_size(int width, int height) const;
+        void maximize() const;
         void toggle_fullscreen() const;
 
         void swap() const;

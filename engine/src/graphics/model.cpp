@@ -9,6 +9,7 @@
 #include <liminal/graphics/mesh.hpp>
 #include <liminal/graphics/program.hpp>
 #include <liminal/graphics/texture.hpp>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 static inline glm::vec3 vec3_cast(const aiVector3D &v) { return {v.x, v.y, v.z}; }
@@ -177,7 +178,14 @@ void liminal::model::process_node_meshes(const aiNode *const ai_node, std::share
                     ai_material->GetTexture(ai_texture_type, texture_index, &path);
 
                     const auto filename = directory + "/" + path.C_Str();
-                    textures.at(ai_texture_type).push_back(assets->load_texture(filename));
+                    try
+                    {
+                        textures.at(ai_texture_type).push_back(assets->load_texture(filename));
+                    }
+                    catch (const std::exception &e)
+                    {
+                        spdlog::error("Failed to load texture: {}", e.what());
+                    }
                 }
             }
         }

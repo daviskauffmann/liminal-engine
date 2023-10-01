@@ -37,6 +37,11 @@ void liminal::window::set_size(const int width, const int height) const
     SDL_SetWindowSize(sdl_window, width, height);
 }
 
+void liminal::window::maximize() const
+{
+    SDL_MaximizeWindow(sdl_window);
+}
+
 void liminal::window::toggle_fullscreen() const
 {
     const auto flags = SDL_GetWindowFlags(sdl_window);

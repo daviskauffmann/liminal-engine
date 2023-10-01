@@ -16,6 +16,8 @@ namespace editor
         app(int argc, char *argv[])
             : liminal::app(argc, argv)
         {
+            window->maximize();
+
             load_scene();
         }
 
@@ -356,7 +358,7 @@ namespace editor
                                     if (result == NFD_OKAY)
                                     {
                                         // TODO: crashes when loading an animated mesh
-                                        renderable.model = assets->load_model(outPath, assets, true);
+                                        renderable.model = assets->load_model(outPath, assets, false);
                                     }
                                 }
 
