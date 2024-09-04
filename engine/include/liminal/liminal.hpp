@@ -4,6 +4,7 @@
 #include "components\audio_listener.hpp"
 #include "components\audio_source.hpp"
 #include "components\camera.hpp"
+#include "components\character.hpp"
 #include "components\directional_light.hpp"
 #include "components\physical.hpp"
 #include "components\point_light.hpp"

@@ -7,6 +7,7 @@
 #include <liminal/components/audio_listener.hpp>
 #include <liminal/components/audio_source.hpp>
 #include <liminal/components/camera.hpp>
+#include <liminal/components/character.hpp>
 #include <liminal/components/directional_light.hpp>
 #include <liminal/components/physical.hpp>
 #include <liminal/components/point_light.hpp>
@@ -20,6 +21,7 @@
 #include <liminal/entities/entity.hpp>
 #include <liminal/graphics/model.hpp>
 #include <liminal/graphics/skybox.hpp>
+#include <liminal/physics/character_controller.hpp>
 #include <liminal/physics/rigidbody.hpp>
 #include <liminal/physics/world.hpp>
 #include <liminal/scripting/lua_state.hpp>
@@ -29,6 +31,8 @@ liminal::scene::scene(std::shared_ptr<liminal::assets> assets)
     : assets(assets)
 {
     registry.on_construct<liminal::audio_source>().connect<&scene::on_audio_source_construct>(this);
+    registry.on_construct<liminal::character>().connect<&scene::on_character_construct>(this);
+    registry.on_destroy<liminal::character>().connect<&scene::on_character_destroy>(this);
     registry.on_construct<liminal::physical>().connect<&scene::on_physical_construct>(this);
     registry.on_destroy<liminal::physical>().connect<&scene::on_physical_destroy>(this);
     registry.on_construct<liminal::script>().connect<&scene::on_script_construct>(this);
@@ -102,10 +106,6 @@ void liminal::scene::load(const std::string &filename)
                     if (component_type == "physical")
                     {
                         entity.add_component<liminal::physical>(
-                            glm::vec3(
-                                component_json.at("scale").at("x"),
-                                component_json.at("scale").at("y"),
-                                component_json.at("scale").at("z")),
                             component_json.at("mass"));
                     }
 
@@ -248,25 +248,46 @@ void liminal::scene::reload_scripts()
 void liminal::scene::on_audio_source_construct(entt::registry &, entt::entity id)
 {
     auto &audio_source = get_entity(id).get_component<liminal::audio_source>();
+
     audio_source.source = std::make_shared<liminal::source>();
+}
+
+void liminal::scene::on_character_construct(entt::registry &, entt::entity id)
+{
+    auto &character = get_entity(id).get_component<liminal::character>();
+
+    character.character_controller = std::make_shared<liminal::character_controller>();
+
+    world->add_character_controller(character.character_controller);
+}
+
+void liminal::scene::on_character_destroy(entt::registry &, entt::entity id)
+{
+    auto &character = get_entity(id).get_component<liminal::character>();
+
+    world->remove_character_controller(character.character_controller);
 }
 
 void liminal::scene::on_physical_construct(entt::registry &, entt::entity id)
 {
     auto &physical = get_entity(id).get_component<liminal::physical>();
-    physical.rigidbody = std::make_shared<liminal::rigidbody>(physical.scale, physical.mass);
+
+    physical.rigidbody = std::make_shared<liminal::rigidbody>(physical.mass);
+
     world->add_rigidbody(physical.rigidbody);
 }
 
 void liminal::scene::on_physical_destroy(entt::registry &, entt::entity id)
 {
     auto &physical = get_entity(id).get_component<liminal::physical>();
+
     world->remove_rigidbody(physical.rigidbody);
 }
 
 void liminal::scene::on_script_construct(entt::registry &, entt::entity id)
 {
     auto &script = get_entity(id).get_component<liminal::script>();
+
     script.lua_state = std::make_shared<liminal::lua_state>(
         script.filename,
         this,

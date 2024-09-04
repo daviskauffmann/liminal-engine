@@ -5,7 +5,7 @@ project(liminal_editor LANGUAGES CXX)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
-find_package(unofficial-nativefiledialog CONFIG REQUIRED)
+find_package(nfd CONFIG REQUIRED)
 
 file(
     GLOB_RECURSE SOURCE_FILES
@@ -25,5 +25,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     imgui::imgui
     imguizmo::imguizmo
     liminal_engine
-    unofficial::nativefiledialog::nfd
+    nfd::nfd
 )

@@ -53,6 +53,8 @@ namespace liminal
         std::unique_ptr<liminal::world> world;
 
         void on_audio_source_construct(entt::registry &registry, entt::entity id);
+        void on_character_construct(entt::registry &registry, entt::entity id);
+        void on_character_destroy(entt::registry &registry, entt::entity id);
         void on_physical_construct(entt::registry &registry, entt::entity id);
         void on_physical_destroy(entt::registry &registry, entt::entity id);
         void on_script_construct(entt::registry &registry, entt::entity id);

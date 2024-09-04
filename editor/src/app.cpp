@@ -354,7 +354,7 @@ namespace editor
                                 {
                                     // TODO: move file dialog to platform?
                                     nfdchar_t *outPath;
-                                    const auto result = NFD_OpenDialog(nullptr, nullptr, &outPath);
+                                    const auto result = NFD_OpenDialog(&outPath, nullptr, 0, nullptr);
                                     if (result == NFD_OKAY)
                                     {
                                         // TODO: crashes when loading an animated mesh
@@ -658,6 +658,7 @@ namespace editor
             {
                 delete scene;
             }
+
             scene = new liminal::scene(assets);
 
             renderer->default_camera = new liminal::camera(45.f, true);

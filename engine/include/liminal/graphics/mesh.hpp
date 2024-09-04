@@ -33,7 +33,7 @@ namespace liminal
             void add_bone_data(unsigned int id, float weight);
         };
 
-        static constexpr size_t num_textures = AI_TEXTURE_TYPE_MAX + 1;
+        static constexpr std::size_t num_textures = AI_TEXTURE_TYPE_MAX + 1;
 
         GLsizei vertices_size;
         GLsizei indices_size;

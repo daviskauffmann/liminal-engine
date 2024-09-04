@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl2.h>
 #include <stdexcept>
 
 liminal::imgui_context::imgui_context(SDL_Window *const sdl_window, void *const sdl_gl_context)
@@ -34,7 +34,7 @@ void liminal::imgui_context::handle_event(const SDL_Event &event) const
 void liminal::imgui_context::begin_frame() const
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL2_NewFrame(sdl_window);
+    ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 }
 

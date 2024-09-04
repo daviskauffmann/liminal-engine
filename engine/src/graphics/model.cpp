@@ -2,6 +2,7 @@
 
 #include <assimp/postprocess.h>
 #include <filesystem>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>

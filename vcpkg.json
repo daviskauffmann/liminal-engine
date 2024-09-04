@@ -19,7 +19,7 @@
         },
         "imguizmo",
         "lua",
-        "nativefiledialog",
+        "nativefiledialog-extended",
         "nlohmann-json",
         "openal-soft",
         "sdl2",

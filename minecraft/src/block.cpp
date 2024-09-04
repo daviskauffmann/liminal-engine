@@ -77,22 +77,26 @@ void minecraft::block::add_face_up(const int x, const int y, const int z, const 
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(0),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(1),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(2),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 1, 0),
         .uv = uvs.at(3),
-        .color = color});
+        .color = color,
+    });
 
     mesh_data.add_quad_indices();
 }
@@ -105,22 +109,26 @@ void minecraft::block::add_face_down(const int x, const int y, const int z, cons
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(0),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(1),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(2),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, -1, 0),
         .uv = uvs.at(3),
-        .color = color});
+        .color = color,
+    });
 
     mesh_data.add_quad_indices();
 }
@@ -133,22 +141,26 @@ void minecraft::block::add_face_north(const int x, const int y, const int z, con
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(0),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(1),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(2),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(0, 0, 1),
         .uv = uvs.at(3),
-        .color = color});
+        .color = color,
+    });
 
     mesh_data.add_quad_indices();
 }
@@ -161,22 +173,26 @@ void minecraft::block::add_face_east(const int x, const int y, const int z, cons
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(0),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(1),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(2),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(1, 0, 0),
         .uv = uvs.at(3),
-        .color = color});
+        .color = color,
+    });
 
     mesh_data.add_quad_indices();
 }
@@ -189,22 +205,26 @@ void minecraft::block::add_face_south(const int x, const int y, const int z, con
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(0),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(1),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(2),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x + 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(0, 0, -1),
         .uv = uvs.at(3),
-        .color = color});
+        .color = color,
+    });
 
     mesh_data.add_quad_indices();
 }
@@ -217,22 +237,26 @@ void minecraft::block::add_face_west(const int x, const int y, const int z, cons
         .position = glm::vec3(x - 0.5f, y - 0.5f, z + 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(0),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z + 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(1),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y + 0.5f, z - 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(2),
-        .color = color});
+        .color = color,
+    });
     mesh_data.vertices.push_back(liminal::mesh::vertex{
         .position = glm::vec3(x - 0.5f, y - 0.5f, z - 0.5f),
         .normal = glm::vec3(-1, 0, 0),
         .uv = uvs.at(3),
-        .color = color});
+        .color = color,
+    });
 
     mesh_data.add_quad_indices();
 }
