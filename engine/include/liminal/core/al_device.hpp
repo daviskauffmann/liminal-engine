@@ -5,21 +5,24 @@
 
 namespace liminal
 {
-    class al_device
+    namespace core
     {
-    public:
-        al_device();
-        ~al_device();
-        al_device(const al_device &other) = delete;
-        al_device &operator=(const al_device &other) = delete;
-        al_device(al_device &&other) = delete;
-        al_device &operator=(al_device &&other) = delete;
+        class al_device
+        {
+        public:
+            al_device();
+            ~al_device();
+            al_device(const al_device &other) = delete;
+            al_device &operator=(const al_device &other) = delete;
+            al_device(al_device &&other) = delete;
+            al_device &operator=(al_device &&other) = delete;
 
-        ALCdevice *get_alc_device() const;
+            ALCdevice *get_alc_device() const;
 
-    private:
-        ALCdevice *alc_device;
-    };
+        private:
+            ALCdevice *alc_device;
+        };
+    }
 }
 
 #endif

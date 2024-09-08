@@ -5,21 +5,24 @@
 
 namespace liminal
 {
-    class renderbuffer
+    namespace graphics
     {
-    public:
-        renderbuffer(GLenum internal_format, GLsizei width, GLsizei height);
-        ~renderbuffer();
-        renderbuffer(const renderbuffer &other) = delete;
-        renderbuffer &operator=(const renderbuffer &other) = delete;
-        renderbuffer(renderbuffer &&other) = delete;
-        renderbuffer &operator=(renderbuffer &&other) = delete;
+        class renderbuffer
+        {
+        public:
+            renderbuffer(GLenum internal_format, GLsizei width, GLsizei height);
+            ~renderbuffer();
+            renderbuffer(const renderbuffer &other) = delete;
+            renderbuffer &operator=(const renderbuffer &other) = delete;
+            renderbuffer(renderbuffer &&other) = delete;
+            renderbuffer &operator=(renderbuffer &&other) = delete;
 
-        GLuint get_renderbuffer_id() const;
+            GLuint get_renderbuffer_id() const;
 
-    private:
-        GLuint renderbuffer_id;
-    };
+        private:
+            GLuint renderbuffer_id;
+        };
+    }
 }
 
 #endif

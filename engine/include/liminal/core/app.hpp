@@ -17,43 +17,46 @@
 
 namespace liminal
 {
-    class app
+    namespace core
     {
-    public:
-        app(int argc, char *argv[]);
-        virtual ~app() = default;
-        app(const app &other) = delete;
-        app &operator=(const app &other) = delete;
-        app(app &&other) = delete;
-        app &operator=(app &&other) = delete;
+        class app
+        {
+        public:
+            app(int argc, char *argv[]);
+            virtual ~app() = default;
+            app(const app &other) = delete;
+            app &operator=(const app &other) = delete;
+            app(app &&other) = delete;
+            app &operator=(app &&other) = delete;
 
-        void run();
-        void stop();
+            void run();
+            void stop();
 
-        virtual void update(std::uint64_t current_time, float delta_time);
-        virtual void resize(int width, int height);
+            virtual void update(std::uint64_t current_time, float delta_time);
+            virtual void resize(int width, int height);
 
-    protected:
-        std::unique_ptr<liminal::sdl> sdl;
-        std::unique_ptr<liminal::sdl_image> sdl_image;
-        std::unique_ptr<liminal::sdl_mixer> sdl_mixer;
-        std::unique_ptr<liminal::audio> audio;
-        std::unique_ptr<liminal::window> window;
-        std::unique_ptr<liminal::gl_context> gl_context;
-        std::unique_ptr<liminal::glew> glew;
-        std::unique_ptr<liminal::imgui_context> imgui_context;
-        std::unique_ptr<liminal::al_device> al_device;
-        std::unique_ptr<liminal::al_context> al_context;
-        std::shared_ptr<liminal::assets> assets;
-        std::unique_ptr<liminal::renderer> renderer;
+        protected:
+            std::unique_ptr<liminal::core::sdl> sdl;
+            std::unique_ptr<liminal::core::sdl_image> sdl_image;
+            std::unique_ptr<liminal::core::sdl_mixer> sdl_mixer;
+            std::unique_ptr<liminal::core::audio> audio;
+            std::unique_ptr<liminal::core::window> window;
+            std::unique_ptr<liminal::core::gl_context> gl_context;
+            std::unique_ptr<liminal::core::glew> glew;
+            std::unique_ptr<liminal::core::imgui_context> imgui_context;
+            std::unique_ptr<liminal::core::al_device> al_device;
+            std::unique_ptr<liminal::core::al_context> al_context;
+            std::shared_ptr<liminal::core::assets> assets;
+            std::unique_ptr<liminal::core::renderer> renderer;
 
-    private:
-        bool running = true;
-        float time_scale = 1;
-        bool console_open = false;
-    };
+        private:
+            bool running = true;
+            float time_scale = 1;
+            bool console_open = false;
+        };
 
-    liminal::app *create_app(int argc, char *argv[]);
+        liminal::core::app *create_app(int argc, char *argv[]);
+    }
 }
 
 #endif

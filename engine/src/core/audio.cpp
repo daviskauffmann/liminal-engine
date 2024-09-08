@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-liminal::audio::audio(
+liminal::core::audio::audio(
     const int frequency,
     const std::uint16_t format,
     const int channels,
@@ -14,7 +14,7 @@ liminal::audio::audio(
     }
 }
 
-liminal::audio::~audio()
+liminal::core::audio::~audio()
 {
     Mix_CloseAudio();
 }

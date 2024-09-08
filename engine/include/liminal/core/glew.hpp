@@ -3,16 +3,19 @@
 
 namespace liminal
 {
-    class glew
+    namespace core
     {
-    public:
-        glew();
-        ~glew() = default;
-        glew(const glew &other) = delete;
-        glew &operator=(const glew &other) = delete;
-        glew(glew &&other) = delete;
-        glew &operator=(glew &&other) = delete;
-    };
+        class glew
+        {
+        public:
+            glew();
+            ~glew() = default;
+            glew(const glew &other) = delete;
+            glew &operator=(const glew &other) = delete;
+            glew(glew &&other) = delete;
+            glew &operator=(glew &&other) = delete;
+        };
+    }
 }
 
 #endif

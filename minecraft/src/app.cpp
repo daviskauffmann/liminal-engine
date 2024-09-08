@@ -11,21 +11,21 @@
 
 namespace minecraft
 {
-    class app : public liminal::app
+    class app : public liminal::core::app
     {
     public:
         app(int argc, char *argv[])
-            : liminal::app(argc, argv)
+            : liminal::core::app(argc, argv)
         {
             sdl->set_relative_mouse_mode(true);
 
-            scene = std::make_shared<liminal::scene>(assets);
+            scene = std::make_shared<liminal::entities::scene>(assets);
             scene->start();
-            scene->skybox = std::make_shared<liminal::skybox>("minecraft/data/white.png");
+            scene->skybox = assets->load_skybox("minecraft/data/white.png");
 
             player_entity = scene->create_entity();
-            player_entity.add_component<liminal::transform>("Player");
-            player_entity.add_component<liminal::camera>(45.0f);
+            player_transform = &player_entity.add_component<liminal::components::transform>("Player");
+            player_camera = &player_entity.add_component<liminal::components::camera>(45.0f);
 
             world = std::make_unique<minecraft::world>(scene, assets);
         }
@@ -39,15 +39,13 @@ namespace minecraft
         {
             const auto &io = ImGui::GetIO();
 
-            if (liminal::input::key_down(liminal::keycode::TAB))
+            if (liminal::input::input::key_down(liminal::input::keycode::TAB))
             {
                 sdl->set_relative_mouse_mode(!sdl->get_relative_mouse_mode());
             }
 
-            auto &transform = player_entity.get_component<liminal::transform>();
-            auto &camera = player_entity.get_component<liminal::camera>();
-            auto camera_front = camera.calc_front(transform);
-            auto camera_right = camera.calc_right(transform);
+            const auto camera_front = player_camera->calc_front(*player_transform);
+            const auto camera_right = player_camera->calc_right(*player_transform);
 
             static glm::vec3 velocity(0, 0, 0);
             glm::vec3 acceleration(0, 0, 0);
@@ -56,31 +54,31 @@ namespace minecraft
             auto sprint = false;
             if (!io.WantCaptureKeyboard)
             {
-                if (liminal::input::key(liminal::keycode::W))
+                if (liminal::input::input::key(liminal::input::keycode::W))
                 {
                     acceleration += camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::A))
+                if (liminal::input::input::key(liminal::input::keycode::A))
                 {
                     acceleration -= camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::S))
+                if (liminal::input::input::key(liminal::input::keycode::S))
                 {
                     acceleration -= camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::D))
+                if (liminal::input::input::key(liminal::input::keycode::D))
                 {
                     acceleration += camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::SPACE))
+                if (liminal::input::input::key(liminal::input::keycode::SPACE))
                 {
                     acceleration.y = 1;
                 }
-                if (liminal::input::key(liminal::keycode::LCTRL))
+                if (liminal::input::input::key(liminal::input::keycode::LCTRL))
                 {
                     acceleration.y = -1;
                 }
-                if (liminal::input::key(liminal::keycode::LSHIFT))
+                if (liminal::input::input::key(liminal::input::keycode::LSHIFT))
                 {
                     sprint = true;
                 }
@@ -91,44 +89,44 @@ namespace minecraft
             }
             acceleration *= speed * (sprint ? 2 : 1);
             acceleration -= velocity * drag;
-            transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
+            player_transform->position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + player_transform->position;
             velocity = acceleration * delta_time + velocity;
-            transform.rotation.z = glm::dot(camera_right, velocity);
+            player_transform->rotation.z = glm::dot(camera_right, velocity);
 
             if (!io.WantCaptureMouse)
             {
                 if (sdl->get_relative_mouse_mode())
                 {
-                    constexpr auto sensitivity = 0.1f;
-                    transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
-                    transform.rotation.y += liminal::input::mouse_dx * sensitivity;
-                    if (transform.rotation.x > 89)
+                    constexpr auto sensitivity = 0.5f;
+                    player_transform->rotation.x -= liminal::input::input::mouse_dy * sensitivity;
+                    player_transform->rotation.y += liminal::input::input::mouse_dx * sensitivity;
+                    if (player_transform->rotation.x > 89)
                     {
-                        transform.rotation.x = 89;
+                        player_transform->rotation.x = 89;
                     }
-                    if (transform.rotation.x < -89)
+                    if (player_transform->rotation.x < -89)
                     {
-                        transform.rotation.x = -89;
+                        player_transform->rotation.x = -89;
                     }
 
-                    camera.fov -= liminal::input::mouse_wheel_y;
-                    if (camera.fov <= 1)
+                    player_camera->fov -= liminal::input::input::mouse_wheel_y;
+                    if (player_camera->fov <= 1)
                     {
-                        camera.fov = 1;
+                        player_camera->fov = 1;
                     }
-                    if (camera.fov >= 120)
+                    if (player_camera->fov >= 120)
                     {
-                        camera.fov = 120;
+                        player_camera->fov = 120;
                     }
                 }
 
-                if (liminal::input::mouse_button(liminal::mouse_button::LEFT))
+                if (liminal::input::input::mouse_button(liminal::input::mouse_button::LEFT))
                 {
                     for (std::size_t i = 0; i < 100; i++)
                     {
-                        const auto x = static_cast<int>(glm::round(transform.position.x + (camera.calc_front(transform).x * (i * 0.1f))));
-                        const auto y = static_cast<int>(glm::round(transform.position.y + (camera.calc_front(transform).y * (i * 0.1f))));
-                        const auto z = static_cast<int>(glm::round(transform.position.z + (camera.calc_front(transform).z * (i * 0.1f))));
+                        const auto x = static_cast<int>(glm::round(player_transform->position.x + (player_camera->calc_front(*player_transform).x * (i * 0.1f))));
+                        const auto y = static_cast<int>(glm::round(player_transform->position.y + (player_camera->calc_front(*player_transform).y * (i * 0.1f))));
+                        const auto z = static_cast<int>(glm::round(player_transform->position.z + (player_camera->calc_front(*player_transform).z * (i * 0.1f))));
                         world->set_block(x, y, z, minecraft::block_type::air);
                     }
                 }
@@ -136,19 +134,21 @@ namespace minecraft
 
             world->update();
             scene->update(current_time, delta_time);
-            renderer->render(*scene, current_time, delta_time);
+            renderer->render(*scene, *player_camera, *player_transform, current_time, delta_time, false);
         }
 
     private:
-        std::shared_ptr<liminal::scene> scene;
+        std::shared_ptr<liminal::entities::scene> scene;
 
-        liminal::entity player_entity;
+        liminal::entities::entity player_entity;
+        liminal::components::transform *player_transform;
+        liminal::components::camera *player_camera;
 
         std::unique_ptr<minecraft::world> world;
     };
 }
 
-liminal::app *liminal::create_app(int argc, char *argv[])
+liminal::core::app *liminal::core::create_app(int argc, char *argv[])
 {
     return new minecraft::app(argc, argv);
 }

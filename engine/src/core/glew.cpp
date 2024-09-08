@@ -3,7 +3,7 @@
 #include <gl/glew.h>
 #include <stdexcept>
 
-liminal::glew::glew()
+liminal::core::glew::glew()
 {
     const auto error = glewInit();
     if (error != GLEW_OK)

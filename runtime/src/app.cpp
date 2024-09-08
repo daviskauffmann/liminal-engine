@@ -4,17 +4,17 @@
 #include <liminal/main.hpp>
 #include <memory>
 
-namespace player
+namespace runtime
 {
-    class app : public liminal::app
+    class app : public liminal::core::app
     {
     public:
         app(int argc, char *argv[])
-            : liminal::app(argc, argv)
+            : liminal::core::app(argc, argv)
         {
             sdl->set_relative_mouse_mode(true);
 
-            scene = std::make_unique<liminal::scene>(assets);
+            scene = std::make_unique<liminal::entities::scene>(assets);
             scene->load("editor/data/scenes/demo.json");
             scene->start();
 
@@ -23,11 +23,10 @@ namespace player
             // shoot_sound = assets->load_sound("engine/data/audio/shoot.wav");
             // grass_texture = assets->load_texture("engine/data/images/grass_sprite.png");
 
-            // TODO: these entities should come from the JSON file
-            player_entity = scene->create_entity();
-            player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
-            player_entity.add_component<liminal::camera>(45.0f);
-            player_entity.add_component<liminal::audio_listener>();
+            // player_entity = scene->create_entity();
+            // player_entity.add_component<liminal::transform>("Player", nullptr, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
+            // player_entity.add_component<liminal::camera>(45.0f);
+            // player_entity.add_component<liminal::audio_listener>();
             // player_entity.add_component<liminal::physical>();
 
             // ambience_entity = scene->create_entity();
@@ -58,15 +57,24 @@ namespace player
         {
             const auto &io = ImGui::GetIO();
 
-            if (liminal::input::key_down(liminal::keycode::TAB))
+            // TODO: controls should all be script driven
+            if (liminal::input::input::key_down(liminal::input::keycode::TAB))
             {
                 sdl->set_relative_mouse_mode(!sdl->get_relative_mouse_mode());
             }
 
-            auto &transform = player_entity.get_component<liminal::transform>();
-            auto &camera = player_entity.get_component<liminal::camera>();
-            auto camera_front = camera.calc_front(transform);
-            auto camera_right = camera.calc_right(transform);
+            liminal::components::camera *player_camera;
+            liminal::components::transform *player_transform;
+
+            scene->get_entities_with<liminal::components::camera, liminal::components::transform>().each(
+                [&player_camera, &player_transform](liminal::components::camera &c, liminal::components::transform &t)
+                {
+                    player_camera = &c;
+                    player_transform = &t;
+                });
+
+            const auto camera_front = player_camera->calc_front(*player_transform);
+            const auto camera_right = player_camera->calc_right(*player_transform);
 
             static glm::vec3 velocity(0, 0, 0);
             glm::vec3 acceleration(0, 0, 0);
@@ -75,31 +83,31 @@ namespace player
             auto sprint = false;
             if (!io.WantCaptureKeyboard)
             {
-                if (liminal::input::key(liminal::keycode::W))
+                if (liminal::input::input::key(liminal::input::keycode::W))
                 {
                     acceleration += camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::A))
+                if (liminal::input::input::key(liminal::input::keycode::A))
                 {
                     acceleration -= camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::S))
+                if (liminal::input::input::key(liminal::input::keycode::S))
                 {
                     acceleration -= camera_front;
                 }
-                if (liminal::input::key(liminal::keycode::D))
+                if (liminal::input::input::key(liminal::input::keycode::D))
                 {
                     acceleration += camera_right;
                 }
-                if (liminal::input::key(liminal::keycode::SPACE))
+                if (liminal::input::input::key(liminal::input::keycode::SPACE))
                 {
                     acceleration.y = 1;
                 }
-                if (liminal::input::key(liminal::keycode::LCTRL))
+                if (liminal::input::input::key(liminal::input::keycode::LCTRL))
                 {
                     acceleration.y = -1;
                 }
-                if (liminal::input::key(liminal::keycode::LSHIFT))
+                if (liminal::input::input::key(liminal::input::keycode::LSHIFT))
                 {
                     sprint = true;
                 }
@@ -110,42 +118,42 @@ namespace player
             }
             acceleration *= speed * (sprint ? 2 : 1);
             acceleration -= velocity * drag;
-            transform.position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + transform.position;
+            player_transform->position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + player_transform->position;
             velocity = acceleration * delta_time + velocity;
-            transform.rotation.z = glm::dot(camera_right, velocity);
+            player_transform->rotation.z = glm::dot(camera_right, velocity);
 
             if (!io.WantCaptureMouse)
             {
                 if (sdl->get_relative_mouse_mode())
                 {
-                    const auto sensitivity = 0.1f;
-                    transform.rotation.x -= liminal::input::mouse_dy * sensitivity;
-                    transform.rotation.y += liminal::input::mouse_dx * sensitivity;
-                    if (transform.rotation.x > 89)
+                    constexpr auto sensitivity = 0.5f;
+                    player_transform->rotation.x -= liminal::input::input::mouse_dy * sensitivity;
+                    player_transform->rotation.y += liminal::input::input::mouse_dx * sensitivity;
+                    if (player_transform->rotation.x > 89)
                     {
-                        transform.rotation.x = 89;
+                        player_transform->rotation.x = 89;
                     }
-                    if (transform.rotation.x < -89)
+                    if (player_transform->rotation.x < -89)
                     {
-                        transform.rotation.x = -89;
+                        player_transform->rotation.x = -89;
                     }
-                    if (transform.rotation.y < 0)
+                    if (player_transform->rotation.y < 0)
                     {
-                        transform.rotation.y = 360;
+                        player_transform->rotation.y = 360;
                     }
-                    if (transform.rotation.y > 360)
+                    if (player_transform->rotation.y > 360)
                     {
-                        transform.rotation.y = 0;
+                        player_transform->rotation.y = 0;
                     }
 
-                    camera.fov -= liminal::input::mouse_wheel_y;
-                    if (camera.fov <= 1)
+                    player_camera->fov -= liminal::input::input::mouse_wheel_y;
+                    if (player_camera->fov <= 1)
                     {
-                        camera.fov = 1;
+                        player_camera->fov = 1;
                     }
-                    if (camera.fov >= 120)
+                    if (player_camera->fov >= 120)
                     {
-                        camera.fov = 120;
+                        player_camera->fov = 120;
                     }
                 }
             }
@@ -178,13 +186,13 @@ namespace player
             scene->update(current_time, delta_time);
 
             // render scene
-            renderer->render(*scene, current_time, delta_time);
+            renderer->render(*scene, *player_camera, *player_transform, current_time, delta_time, false);
         }
 
     private:
-        std::unique_ptr<liminal::scene> scene;
+        std::unique_ptr<liminal::entities::scene> scene;
 
-        liminal::entity player_entity;
+        // liminal::entity player_entity;
 
         // std::shared_ptr<liminal::sound> ambient_sound;
         // liminal::entity ambience_entity;
@@ -200,7 +208,7 @@ namespace player
     };
 }
 
-liminal::app *liminal::create_app(int argc, char *argv[])
+liminal::core::app *liminal::core::create_app(int argc, char *argv[])
 {
-    return new player::app(argc, argv);
+    return new runtime::app(argc, argv);
 }

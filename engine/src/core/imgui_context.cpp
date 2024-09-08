@@ -5,7 +5,7 @@
 #include <imgui_impl_sdl2.h>
 #include <stdexcept>
 
-liminal::imgui_context::imgui_context(SDL_Window *const sdl_window, void *const sdl_gl_context)
+liminal::core::imgui_context::imgui_context(SDL_Window *const sdl_window, void *const sdl_gl_context)
     : sdl_window(sdl_window),
       sdl_gl_context(sdl_gl_context)
 {
@@ -19,26 +19,26 @@ liminal::imgui_context::imgui_context(SDL_Window *const sdl_window, void *const 
     ImGui_ImplOpenGL3_Init("#version 460");
 }
 
-liminal::imgui_context::~imgui_context()
+liminal::core::imgui_context::~imgui_context()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 }
 
-void liminal::imgui_context::handle_event(const SDL_Event &event) const
+void liminal::core::imgui_context::handle_event(const SDL_Event &event) const
 {
     ImGui_ImplSDL2_ProcessEvent(&event);
 }
 
-void liminal::imgui_context::begin_frame() const
+void liminal::core::imgui_context::begin_frame() const
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 }
 
-void liminal::imgui_context::end_frame() const
+void liminal::core::imgui_context::end_frame() const
 {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

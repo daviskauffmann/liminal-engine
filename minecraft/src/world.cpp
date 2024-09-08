@@ -2,7 +2,7 @@
 
 #include "chunk.hpp"
 
-minecraft::world::world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<liminal::assets> assets)
+minecraft::world::world(std::shared_ptr<liminal::entities::scene> scene, std::shared_ptr<liminal::core::assets> assets)
     : scene(scene),
       tiles_texture(assets->load_texture("minecraft/data/tiles.png", false, false))
 {
@@ -28,8 +28,8 @@ void minecraft::world::update() const
         auto &chunk = entity.get_component<minecraft::chunk>();
         if (chunk.update)
         {
-            auto &renderable = entity.get_component<liminal::renderable>();
-            renderable.model = std::make_shared<liminal::model>(chunk.create_mesh(tiles_texture));
+            auto &renderable = entity.get_component<liminal::components::renderable>();
+            renderable.model = std::make_shared<liminal::graphics::model>(chunk.create_mesh(tiles_texture));
 
             chunk.update = false;
         }
@@ -51,7 +51,7 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
     }
 
     auto chunk_entity = scene->create_entity();
-    chunk_entity.add_component<liminal::transform>(
+    chunk_entity.add_component<liminal::components::transform>(
         "Chunk",
         nullptr,
         chunk_position,
@@ -60,7 +60,7 @@ void minecraft::world::create_chunk(const int x, const int y, const int z)
     chunk_entity.add_component<minecraft::chunk>(
         this,
         chunk_position);
-    chunk_entity.add_component<liminal::renderable>();
+    chunk_entity.add_component<liminal::components::renderable>();
 
     chunk_entities.emplace(chunk_position, chunk_entity);
 
@@ -217,7 +217,7 @@ glm::ivec3 minecraft::world::get_chunk_position(const int x, const int y, const 
         static_cast<int>(std::floor(static_cast<float>(z) / minecraft::chunk::size) * minecraft::chunk::size));
 }
 
-liminal::entity minecraft::world::get_chunk_entity(const glm::ivec3 &chunk_position) const
+liminal::entities::entity minecraft::world::get_chunk_entity(const glm::ivec3 &chunk_position) const
 {
     if (!chunk_entities.contains(chunk_position))
     {

@@ -11,49 +11,53 @@
 
 namespace liminal
 {
-    class program;
-    class texture;
-
-    class mesh
+    namespace graphics
     {
-    public:
-        struct vertex
+        class program;
+        class texture;
+
+        class mesh
         {
-            static constexpr std::size_t num_bones = 4;
+        public:
+            // TODO: move this to a separate file
+            struct vertex
+            {
+                static constexpr std::size_t num_bones = 4;
 
-            glm::vec3 position;
-            glm::vec3 normal;
-            glm::vec2 uv;
-            glm::vec3 tangent;
-            glm::vec3 bitangent;
-            glm::vec3 color = glm::vec3(1, 1, 1);
-            std::array<unsigned int, num_bones> bone_ids;
-            std::array<float, num_bones> bone_weights;
+                glm::vec3 position;
+                glm::vec3 normal;
+                glm::vec2 uv;
+                glm::vec3 tangent;
+                glm::vec3 bitangent;
+                glm::vec3 color = glm::vec3(1, 1, 1);
+                std::array<unsigned int, num_bones> bone_ids;
+                std::array<float, num_bones> bone_weights;
 
-            void add_bone_data(unsigned int id, float weight);
+                void add_bone_data(unsigned int id, float weight);
+            };
+
+            static constexpr std::size_t num_textures = AI_TEXTURE_TYPE_MAX + 1;
+
+            GLsizei vertices_size;
+            GLsizei indices_size;
+            GLuint vao_id;
+            GLuint vbo_id;
+            GLuint ebo_id;
+            std::array<std::vector<std::shared_ptr<liminal::graphics::texture>>, num_textures> textures;
+
+            mesh(
+                const std::vector<liminal::graphics::mesh::vertex> &vertices,
+                const std::vector<unsigned int> &indices,
+                const std::array<std::vector<std::shared_ptr<liminal::graphics::texture>>, num_textures> &textures);
+            ~mesh();
+            mesh(const mesh &other) = delete;
+            mesh &operator=(const mesh &other) = delete;
+            mesh(mesh &&other) = delete;
+            mesh &operator=(mesh &&other) = delete;
+
+            void draw(const liminal::graphics::program &program) const;
         };
-
-        static constexpr std::size_t num_textures = AI_TEXTURE_TYPE_MAX + 1;
-
-        GLsizei vertices_size;
-        GLsizei indices_size;
-        GLuint vao_id;
-        GLuint vbo_id;
-        GLuint ebo_id;
-        std::array<std::vector<std::shared_ptr<liminal::texture>>, num_textures> textures;
-
-        mesh(
-            const std::vector<liminal::mesh::vertex> &vertices,
-            const std::vector<unsigned int> &indices,
-            const std::array<std::vector<std::shared_ptr<liminal::texture>>, num_textures> &textures);
-        ~mesh();
-        mesh(const mesh &other) = delete;
-        mesh &operator=(const mesh &other) = delete;
-        mesh(mesh &&other) = delete;
-        mesh &operator=(mesh &&other) = delete;
-
-        void draw(const liminal::program &program) const;
-    };
+    }
 }
 
 #endif

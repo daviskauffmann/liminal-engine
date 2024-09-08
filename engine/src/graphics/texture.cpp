@@ -4,26 +4,26 @@
 #include <stb_image.h>
 #include <stdexcept>
 
-void liminal::texture::bind(unsigned int index, GLuint texture_id)
+void liminal::graphics::texture::bind(unsigned int index, GLuint texture_id)
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, texture_id);
 }
 
-void liminal::texture::unbind(const unsigned int index)
+void liminal::graphics::texture::unbind(const unsigned int index)
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-liminal::texture::texture(
+liminal::graphics::texture::texture(
     const GLenum internal_format,
     const GLsizei width,
     const GLsizei height,
     const GLenum format,
     const GLenum type,
-    const liminal::texture_filter filter,
-    const liminal::texture_wrap wrap,
+    const liminal::graphics::texture_filter filter,
+    const liminal::graphics::texture_wrap wrap,
     const std::array<GLfloat, 4> &border_color,
     const void *pixels)
 {
@@ -43,11 +43,11 @@ liminal::texture::texture(
 
         switch (filter)
         {
-        case liminal::texture_filter::nearest:
+        case liminal::graphics::texture_filter::nearest:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             break;
-        case liminal::texture_filter::linear:
+        case liminal::graphics::texture_filter::linear:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             break;
@@ -55,15 +55,15 @@ liminal::texture::texture(
 
         switch (wrap)
         {
-        case liminal::texture_wrap::repeat:
+        case liminal::graphics::texture_wrap::repeat:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             break;
-        case liminal::texture_wrap::clamp_to_edge:
+        case liminal::graphics::texture_wrap::clamp_to_edge:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             break;
-        case liminal::texture_wrap::clamp_to_border:
+        case liminal::graphics::texture_wrap::clamp_to_border:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
             break;
@@ -74,7 +74,7 @@ liminal::texture::texture(
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-liminal::texture::texture(const char *const filename, const bool srgb, const bool filter)
+liminal::graphics::texture::texture(const char *const filename, const bool srgb, const bool filter)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, num_components;
@@ -125,17 +125,17 @@ liminal::texture::texture(const char *const filename, const bool srgb, const boo
     stbi_image_free(image);
 }
 
-liminal::texture::~texture()
+liminal::graphics::texture::~texture()
 {
     glDeleteTextures(1, &texture_id);
 }
 
-GLuint liminal::texture::get_texture_id() const
+GLuint liminal::graphics::texture::get_texture_id() const
 {
     return texture_id;
 }
 
-void liminal::texture::bind(const unsigned int index) const
+void liminal::graphics::texture::bind(const unsigned int index) const
 {
     bind(index, texture_id);
 }

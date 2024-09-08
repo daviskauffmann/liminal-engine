@@ -78,7 +78,7 @@ void minecraft::chunk::set_torchlight(const int x, const int y, const int z, con
     return world->set_torchlight(position.x + x, position.y + y, position.z + z, value);
 }
 
-liminal::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::texture> tiles_texture) const
+liminal::graphics::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::graphics::texture> tiles_texture) const
 {
     minecraft::mesh_data mesh_data;
 
@@ -93,10 +93,10 @@ liminal::mesh *minecraft::chunk::create_mesh(const std::shared_ptr<liminal::text
         }
     }
 
-    std::array<std::vector<std::shared_ptr<liminal::texture>>, liminal::mesh::num_textures> textures;
+    std::array<std::vector<std::shared_ptr<liminal::graphics::texture>>, liminal::graphics::mesh::num_textures> textures;
     textures.at(aiTextureType_DIFFUSE).push_back(tiles_texture);
 
-    return new liminal::mesh(mesh_data.vertices, mesh_data.indices, textures);
+    return new liminal::graphics::mesh(mesh_data.vertices, mesh_data.indices, textures);
 }
 
 inline bool minecraft::chunk::in_range(const int x, const int y, const int z) const

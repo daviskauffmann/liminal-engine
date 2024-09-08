@@ -6,13 +6,19 @@
 
 namespace liminal
 {
-    class lua_state;
-
-    struct script
+    namespace scripting
     {
-        std::string filename;
-        std::shared_ptr<lua_state> lua_state;
-    };
+        class lua_state;
+    }
+
+    namespace components
+    {
+        struct script
+        {
+            std::string filename;
+            std::shared_ptr<liminal::scripting::lua_state> lua_state;
+        };
+    }
 }
 
 #endif

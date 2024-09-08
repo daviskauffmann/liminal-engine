@@ -8,18 +8,24 @@
 
 namespace liminal
 {
-    class model;
-
-    struct renderable
+    namespace graphics
     {
-        std::shared_ptr<liminal::model> model;
-        glm::vec3 color = glm::vec3(1, 1, 1);
-        float metallic = 0;
-        float roughness = 1;
-        std::vector<glm::mat4> bone_transformations;
+        class model;
+    }
 
-        renderable(std::shared_ptr<liminal::model> model = {});
-    };
+    namespace components
+    {
+        struct renderable
+        {
+            std::shared_ptr<liminal::graphics::model> model;
+            glm::vec3 color = glm::vec3(1, 1, 1);
+            float metallic = 0;
+            float roughness = 1;
+            std::vector<glm::mat4> bone_transformations;
+
+            renderable(std::shared_ptr<liminal::graphics::model> model = {});
+        };
+    }
 }
 
 #endif

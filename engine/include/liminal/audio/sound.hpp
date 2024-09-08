@@ -5,21 +5,24 @@
 
 namespace liminal
 {
-    class sound
+    namespace audio
     {
-    public:
-        sound(const char *filename);
-        ~sound();
-        sound(const sound &other) = delete;
-        sound &operator=(const sound &other) = delete;
-        sound(sound &&other) = delete;
-        sound &operator=(sound &&other) = delete;
+        class sound
+        {
+        public:
+            sound(const char *filename);
+            ~sound();
+            sound(const sound &other) = delete;
+            sound &operator=(const sound &other) = delete;
+            sound(sound &&other) = delete;
+            sound &operator=(sound &&other) = delete;
 
-        ALuint get_buffer_id() const;
+            ALuint get_buffer_id() const;
 
-    private:
-        ALuint buffer_id;
-    };
+        private:
+            ALuint buffer_id;
+        };
+    }
 }
 
 #endif

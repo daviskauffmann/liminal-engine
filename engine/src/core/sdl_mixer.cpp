@@ -3,7 +3,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <stdexcept>
 
-liminal::sdl_mixer::sdl_mixer()
+liminal::core::sdl_mixer::sdl_mixer()
 {
     constexpr int flags = 0;
     if (Mix_Init(flags) != flags)
@@ -12,7 +12,7 @@ liminal::sdl_mixer::sdl_mixer()
     }
 }
 
-liminal::sdl_mixer::~sdl_mixer()
+liminal::core::sdl_mixer::~sdl_mixer()
 {
     Mix_Quit();
 }

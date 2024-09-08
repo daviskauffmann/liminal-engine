@@ -5,12 +5,12 @@
 #include <stb_include.h>
 #include <stdexcept>
 
-void liminal::program::unbind()
+void liminal::graphics::program::unbind()
 {
     glUseProgram(0);
 }
 
-liminal::program::program(
+liminal::graphics::program::program(
     const char *const vertex_filename,
     const char *const geometry_filename,
     const char *const fragment_filename)
@@ -21,19 +21,19 @@ liminal::program::program(
     program_id = create_program();
 }
 
-liminal::program::program(
+liminal::graphics::program::program(
     const char *const vertex_filename,
     const char *const fragment_filename)
     : program(vertex_filename, nullptr, fragment_filename)
 {
 }
 
-liminal::program::~program()
+liminal::graphics::program::~program()
 {
     glDeleteProgram(program_id);
 }
 
-void liminal::program::reload()
+void liminal::graphics::program::reload()
 {
     // TODO: it'd be cool if this just watched the files and automatically reloaded
     const auto new_program_id = create_program();
@@ -53,47 +53,47 @@ void liminal::program::reload()
     }
 }
 
-void liminal::program::bind() const
+void liminal::graphics::program::bind() const
 {
     glUseProgram(program_id);
 }
 
-void liminal::program::set_int(const char *name, const GLint value) const
+void liminal::graphics::program::set_int(const char *name, const GLint value) const
 {
     glUniform1i(get_location(name), value);
 }
 
-void liminal::program::set_unsigned_int(const char *name, GLuint value) const
+void liminal::graphics::program::set_unsigned_int(const char *name, GLuint value) const
 {
     glUniform1ui(get_location(name), value);
 }
 
-void liminal::program::set_float(const char *name, const GLfloat value) const
+void liminal::graphics::program::set_float(const char *name, const GLfloat value) const
 {
     glUniform1f(get_location(name), value);
 }
 
-void liminal::program::set_vec3(const char *name, const glm::vec3 &vec3) const
+void liminal::graphics::program::set_vec3(const char *name, const glm::vec3 &vec3) const
 {
     glUniform3fv(get_location(name), 1, glm::value_ptr(vec3));
 }
 
-void liminal::program::set_vec4(const char *name, const glm::vec4 &vec4) const
+void liminal::graphics::program::set_vec4(const char *name, const glm::vec4 &vec4) const
 {
     glUniform4fv(get_location(name), 1, glm::value_ptr(vec4));
 }
 
-void liminal::program::set_mat4(const char *name, const glm::mat4 &mat4) const
+void liminal::graphics::program::set_mat4(const char *name, const glm::mat4 &mat4) const
 {
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
-void liminal::program::set_mat4_vector(const char *name, const std::vector<glm::mat4> &mat4_vector) const
+void liminal::graphics::program::set_mat4_vector(const char *name, const std::vector<glm::mat4> &mat4_vector) const
 {
     glUniformMatrix4fv(get_location(name), static_cast<GLsizei>(mat4_vector.size()), GL_FALSE, glm::value_ptr(mat4_vector.at(0)));
 }
 
-void liminal::program::set_sampler(const char *name, const GLint value) const
+void liminal::graphics::program::set_sampler(const char *name, const GLint value) const
 {
     if (!samplers.contains(name))
     {
@@ -103,7 +103,7 @@ void liminal::program::set_sampler(const char *name, const GLint value) const
     set_int(name, value);
 }
 
-void liminal::program::set_samplers(const std::vector<std::pair<const char *, GLint>> &sampler_pairs) const
+void liminal::graphics::program::set_samplers(const std::vector<std::pair<const char *, GLint>> &sampler_pairs) const
 {
     for (const auto [name, value] : sampler_pairs)
     {
@@ -111,7 +111,7 @@ void liminal::program::set_samplers(const std::vector<std::pair<const char *, GL
     }
 }
 
-GLuint liminal::program::create_program() const
+GLuint liminal::graphics::program::create_program() const
 {
     const auto new_program_id = glCreateProgram();
 
@@ -187,7 +187,7 @@ GLuint liminal::program::create_program() const
     return new_program_id;
 }
 
-GLuint liminal::program::create_shader(const GLenum type, const char *const filename) const
+GLuint liminal::graphics::program::create_shader(const GLenum type, const char *const filename) const
 {
     const auto shader_id = glCreateShader(type);
 
@@ -223,7 +223,7 @@ GLuint liminal::program::create_shader(const GLenum type, const char *const file
     return shader_id;
 }
 
-GLint liminal::program::get_location(const char *name) const
+GLint liminal::graphics::program::get_location(const char *name) const
 {
     if (!uniforms.contains(name))
     {

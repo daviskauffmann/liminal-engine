@@ -5,10 +5,13 @@
 
 namespace liminal
 {
-    struct audio_listener
+    namespace components
     {
-        glm::vec3 last_position = {};
-    };
+        struct audio_listener
+        {
+            glm::vec3 last_position = {};
+        };
+    }
 }
 
 #endif

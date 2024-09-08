@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-    const auto app = liminal::create_app(argc, argv);
+    const auto app = liminal::core::create_app(argc, argv);
     app->run();
     delete app;
 

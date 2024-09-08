@@ -3,7 +3,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdexcept>
 
-liminal::sdl_image::sdl_image()
+liminal::core::sdl_image::sdl_image()
 {
     constexpr int flags = IMG_INIT_PNG;
     if (IMG_Init(flags) != flags)
@@ -12,7 +12,7 @@ liminal::sdl_image::sdl_image()
     }
 }
 
-liminal::sdl_image::~sdl_image()
+liminal::core::sdl_image::~sdl_image()
 {
     IMG_Quit();
 }

@@ -27,25 +27,25 @@
 #include <liminal/scripting/lua_state.hpp>
 #include <nlohmann/json.hpp>
 
-liminal::scene::scene(std::shared_ptr<liminal::assets> assets)
+liminal::entities::scene::scene(std::shared_ptr<liminal::core::assets> assets)
     : assets(assets)
 {
-    registry.on_construct<liminal::audio_source>().connect<&scene::on_audio_source_construct>(this);
-    registry.on_construct<liminal::character>().connect<&scene::on_character_construct>(this);
-    registry.on_destroy<liminal::character>().connect<&scene::on_character_destroy>(this);
-    registry.on_construct<liminal::physical>().connect<&scene::on_physical_construct>(this);
-    registry.on_destroy<liminal::physical>().connect<&scene::on_physical_destroy>(this);
-    registry.on_construct<liminal::script>().connect<&scene::on_script_construct>(this);
+    registry.on_construct<liminal::components::audio_source>().connect<&scene::on_audio_source_construct>(this);
+    registry.on_construct<liminal::components::character>().connect<&scene::on_character_construct>(this);
+    registry.on_destroy<liminal::components::character>().connect<&scene::on_character_destroy>(this);
+    registry.on_construct<liminal::components::physical>().connect<&scene::on_physical_construct>(this);
+    registry.on_destroy<liminal::components::physical>().connect<&scene::on_physical_destroy>(this);
+    registry.on_construct<liminal::components::script>().connect<&scene::on_script_construct>(this);
 
-    world = std::make_unique<liminal::world>();
+    world = std::make_unique<liminal::physics::world>();
 }
 
-liminal::scene::~scene()
+liminal::entities::scene::~scene()
 {
     registry.clear();
 }
 
-void liminal::scene::load(const std::string &filename)
+void liminal::entities::scene::load(const std::string &filename)
 {
     const auto scene_json = nlohmann::json::parse(std::ifstream(filename));
 
@@ -64,18 +64,40 @@ void liminal::scene::load(const std::string &filename)
 
                 for (const auto &[component_type, component_json] : entity_json.items())
                 {
+                    if (component_type == "audio_listener")
+                    {
+                        entity.add_component<liminal::components::audio_listener>();
+                    }
+
+                    if (component_type == "camera")
+                    {
+                        entity.add_component<liminal::components::camera>(
+                            component_json.at("fov"));
+                    }
+
                     if (component_type == "directional_light")
                     {
-                        entity.add_component<liminal::directional_light>(
+                        entity.add_component<liminal::components::directional_light>(
                             glm::vec3(
                                 component_json.at("color").at("r"),
                                 component_json.at("color").at("g"),
                                 component_json.at("color").at("b")));
                     }
 
+                    if (component_type == "physical")
+                    {
+                        entity.add_component<liminal::components::physical>(
+                            component_json.at("mass"));
+                    }
+
+                    if (component_type == "script")
+                    {
+                        entity.add_component<liminal::components::script>(component_json.at("filename"));
+                    }
+
                     if (component_type == "spot_light")
                     {
-                        entity.add_component<liminal::spot_light>(
+                        entity.add_component<liminal::components::spot_light>(
                             glm::vec3(
                                 component_json.at("color").at("r"),
                                 component_json.at("color").at("g"),
@@ -84,9 +106,17 @@ void liminal::scene::load(const std::string &filename)
                             component_json.at("outer_cutoff"));
                     }
 
+                    if (component_type == "terrain")
+                    {
+                        entity.add_component<liminal::components::terrain>(
+                            component_json.at("filename"),
+                            component_json.at("tiling"),
+                            assets);
+                    }
+
                     if (component_type == "transform")
                     {
-                        entity.add_component<liminal::transform>(
+                        entity.add_component<liminal::components::transform>(
                             component_json.at("name"),
                             nullptr, // TODO: support parenting from JSON file
                             glm::vec3(
@@ -103,37 +133,18 @@ void liminal::scene::load(const std::string &filename)
                                 component_json.at("scale").at("z")));
                     }
 
-                    if (component_type == "physical")
-                    {
-                        entity.add_component<liminal::physical>(
-                            component_json.at("mass"));
-                    }
-
                     if (component_type == "renderable")
                     {
-                        entity.add_component<liminal::renderable>(
+                        entity.add_component<liminal::components::renderable>(
                             assets->load_model(
                                 component_json.at("filename"),
                                 assets,
                                 component_json.at("flip_uvs")));
                     }
 
-                    if (component_type == "script")
-                    {
-                        entity.add_component<liminal::script>(component_json.at("filename"));
-                    }
-
                     if (component_type == "water")
                     {
-                        entity.add_component<liminal::water>(component_json.at("tiling"));
-                    }
-
-                    if (component_type == "terrain")
-                    {
-                        entity.add_component<liminal::terrain>(
-                            component_json.at("filename"),
-                            component_json.at("tiling"),
-                            assets);
+                        entity.add_component<liminal::components::water>(component_json.at("tiling"));
                     }
                 }
             }
@@ -141,45 +152,45 @@ void liminal::scene::load(const std::string &filename)
     }
 }
 
-void liminal::scene::save(const std::string &)
+void liminal::entities::scene::save(const std::string &)
 {
 }
 
-liminal::entity liminal::scene::create_entity()
+liminal::entities::entity liminal::entities::scene::create_entity()
 {
     const auto id = registry.create();
-    return liminal::entity(id, this);
+    return liminal::entities::entity(id, this);
 }
 
-liminal::entity liminal::scene::get_entity(const entt::entity id)
+liminal::entities::entity liminal::entities::scene::get_entity(const entt::entity id)
 {
-    return liminal::entity(id, this);
+    return liminal::entities::entity(id, this);
 }
 
-void liminal::scene::delete_entity(const liminal::entity entity)
+void liminal::entities::scene::delete_entity(const liminal::entities::entity entity)
 {
     registry.destroy(entity);
 }
 
-void liminal::scene::start()
+void liminal::entities::scene::start()
 {
     // init scripts
-    for (const auto [id, script] : get_entities_with<const liminal::script>().each())
+    for (const auto [id, script] : get_entities_with<const liminal::components::script>().each())
     {
         script.lua_state->init();
     }
 }
 
-void liminal::scene::update(const std::uint64_t current_time, const float delta_time)
+void liminal::entities::scene::update(const std::uint64_t current_time, const float delta_time)
 {
     // update scripts
-    for (const auto [id, script] : get_entities_with<const liminal::script>().each())
+    for (const auto [id, script] : get_entities_with<const liminal::components::script>().each())
     {
         script.lua_state->update(delta_time);
     }
 
     // update animations
-    for (const auto [id, renderable] : get_entities_with<liminal::renderable>().each())
+    for (const auto [id, renderable] : get_entities_with<liminal::components::renderable>().each())
     {
         if (renderable.model && renderable.model->has_animations())
         {
@@ -189,17 +200,17 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
     }
 
     // update audio listener positions
-    for (const auto [id, audio_listener, camera, transform] : get_entities_with<liminal::audio_listener, const liminal::camera, const liminal::transform>().each())
+    for (const auto [id, audio_listener, camera, transform] : get_entities_with<liminal::components::audio_listener, const liminal::components::camera, const liminal::components::transform>().each())
     {
-        liminal::listener::set_position(transform.position);
-        liminal::listener::set_velocity(audio_listener.last_position - transform.position);
-        liminal::listener::set_orientation(camera.calc_front(transform), glm::vec3(0, 1, 0));
+        liminal::audio::listener::set_position(transform.position);
+        liminal::audio::listener::set_velocity(audio_listener.last_position - transform.position);
+        liminal::audio::listener::set_orientation(camera.calc_front(transform), glm::vec3(0, 1, 0));
 
         audio_listener.last_position = transform.position;
     }
 
     // update audio source positions
-    for (const auto [id, audio_source, transform] : get_entities_with<liminal::audio_source, const liminal::transform>().each())
+    for (const auto [id, audio_source, transform] : get_entities_with<liminal::components::audio_source, const liminal::components::transform>().each())
     {
         audio_source.source->set_position(transform.position);
         audio_source.source->set_velocity(audio_source.last_position - transform.position);
@@ -208,7 +219,7 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
     }
 
     {
-        const auto physics_entities = get_entities_with<const liminal::physical, liminal::transform>().each();
+        const auto physics_entities = get_entities_with<const liminal::components::physical, liminal::components::transform>().each();
 
         // update rigidbody in case the transform component changed
         for (const auto [id, physical, transform] : physics_entities)
@@ -233,62 +244,152 @@ void liminal::scene::update(const std::uint64_t current_time, const float delta_
     }
 }
 
-void liminal::scene::stop()
+void liminal::entities::scene::stop()
 {
 }
 
-void liminal::scene::reload_scripts()
+void liminal::entities::scene::reload_scripts()
 {
     // TODO:
-    // for (const auto [id, script] : get_entities_with<const liminal::script>().each())
+    // for (const auto [id, script] : get_entities_with<const liminal::components::script>().each())
     // {
     // }
 }
 
-void liminal::scene::on_audio_source_construct(entt::registry &, entt::entity id)
+liminal::entities::scene *liminal::entities::scene::copy()
 {
-    auto &audio_source = get_entity(id).get_component<liminal::audio_source>();
+    auto new_scene = new liminal::entities::scene(assets);
 
-    audio_source.source = std::make_shared<liminal::source>();
+    new_scene->skybox = skybox;
+
+    for (const auto [id, transform] : get_entities_with<liminal::components::transform>().each())
+    {
+        const auto entity = get_entity(id);
+        auto new_entity = new_scene->create_entity();
+
+        if (entity.has_components<liminal::components::audio_listener>())
+        {
+            new_entity.add_component<liminal::components::audio_listener>();
+        }
+
+        if (entity.has_components<liminal::components::audio_source>())
+        {
+            const auto audio_source = entity.get_component<liminal::components::audio_source>();
+
+            new_entity.add_component<liminal::components::audio_source>();
+        }
+
+        if (entity.has_components<liminal::components::camera>())
+        {
+            const auto camera = entity.get_component<liminal::components::camera>();
+
+            new_entity.add_component<liminal::components::camera>(camera.fov);
+        }
+
+        if (entity.has_components<liminal::components::directional_light>())
+        {
+            const auto directional_light = entity.get_component<liminal::components::directional_light>();
+
+            new_entity.add_component<liminal::components::directional_light>(directional_light.color);
+        }
+
+        if (entity.has_components<liminal::components::physical>())
+        {
+            const auto physical = entity.get_component<liminal::components::physical>();
+
+            new_entity.add_component<liminal::components::physical>(physical.mass);
+        }
+
+        if (entity.has_components<liminal::components::renderable>())
+        {
+            const auto renderable = entity.get_component<liminal::components::renderable>();
+
+            new_entity.add_component<liminal::components::renderable>(renderable.model);
+        }
+
+        if (entity.has_components<liminal::components::script>())
+        {
+            const auto script = entity.get_component<liminal::components::script>();
+
+            new_entity.add_component<liminal::components::script>(script.filename);
+        }
+
+        if (entity.has_components<liminal::components::spot_light>())
+        {
+            const auto spot_light = entity.get_component<liminal::components::spot_light>();
+
+            new_entity.add_component<liminal::components::spot_light>(spot_light.color, spot_light.inner_cutoff, spot_light.outer_cutoff);
+        }
+
+        // if (entity.has_components<liminal::terrain>())
+        // {
+        //     const auto terrain = entity.get_component<liminal::terrain>();
+
+        //     new_entity.add_component<liminal::terrain>(terrain.filename, terrain.tiling, assets);
+        // }
+
+        new_entity.add_component<liminal::components::transform>(
+            transform.name,
+            nullptr,
+            transform.position,
+            transform.rotation,
+            transform.scale);
+
+        if (entity.has_components<liminal::components::water>())
+        {
+            const auto water = entity.get_component<liminal::components::water>();
+
+            new_entity.add_component<liminal::components::water>(water.tiling);
+        }
+    }
+
+    return new_scene;
 }
 
-void liminal::scene::on_character_construct(entt::registry &, entt::entity id)
+void liminal::entities::scene::on_audio_source_construct(entt::registry &, entt::entity id)
 {
-    auto &character = get_entity(id).get_component<liminal::character>();
+    auto &audio_source = get_entity(id).get_component<liminal::components::audio_source>();
 
-    character.character_controller = std::make_shared<liminal::character_controller>();
+    audio_source.source = std::make_shared<liminal::audio::source>();
+}
+
+void liminal::entities::scene::on_character_construct(entt::registry &, entt::entity id)
+{
+    auto &character = get_entity(id).get_component<liminal::components::character>();
+
+    character.character_controller = std::make_shared<liminal::physics::character_controller>();
 
     world->add_character_controller(character.character_controller);
 }
 
-void liminal::scene::on_character_destroy(entt::registry &, entt::entity id)
+void liminal::entities::scene::on_character_destroy(entt::registry &, entt::entity id)
 {
-    auto &character = get_entity(id).get_component<liminal::character>();
+    auto &character = get_entity(id).get_component<liminal::components::character>();
 
     world->remove_character_controller(character.character_controller);
 }
 
-void liminal::scene::on_physical_construct(entt::registry &, entt::entity id)
+void liminal::entities::scene::on_physical_construct(entt::registry &, entt::entity id)
 {
-    auto &physical = get_entity(id).get_component<liminal::physical>();
+    auto &physical = get_entity(id).get_component<liminal::components::physical>();
 
-    physical.rigidbody = std::make_shared<liminal::rigidbody>(physical.mass);
+    physical.rigidbody = std::make_shared<liminal::physics::rigidbody>(physical.mass);
 
     world->add_rigidbody(physical.rigidbody);
 }
 
-void liminal::scene::on_physical_destroy(entt::registry &, entt::entity id)
+void liminal::entities::scene::on_physical_destroy(entt::registry &, entt::entity id)
 {
-    auto &physical = get_entity(id).get_component<liminal::physical>();
+    auto &physical = get_entity(id).get_component<liminal::components::physical>();
 
     world->remove_rigidbody(physical.rigidbody);
 }
 
-void liminal::scene::on_script_construct(entt::registry &, entt::entity id)
+void liminal::entities::scene::on_script_construct(entt::registry &, entt::entity id)
 {
-    auto &script = get_entity(id).get_component<liminal::script>();
+    auto &script = get_entity(id).get_component<liminal::components::script>();
 
-    script.lua_state = std::make_shared<liminal::lua_state>(
+    script.lua_state = std::make_shared<liminal::scripting::lua_state>(
         script.filename,
         this,
         id,

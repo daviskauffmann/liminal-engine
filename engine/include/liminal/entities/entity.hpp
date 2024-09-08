@@ -6,67 +6,70 @@
 
 namespace liminal
 {
-    class entity
+    namespace entities
     {
-    public:
-        entity() = default;
-        entity(const entt::entity id, liminal::scene *const scene)
-            : id(id),
-              scene(scene) {}
-
-        auto operator==(const entity &other) const
+        class entity
         {
-            return id == other.id && scene == other.scene;
-        }
+        public:
+            entity() = default;
+            entity(const entt::entity id, liminal::entities::scene *const scene)
+                : id(id),
+                  scene(scene) {}
 
-        auto operator!=(const entity &other) const
-        {
-            return !(*this == other);
-        }
+            auto operator==(const entity &other) const
+            {
+                return id == other.id && scene == other.scene;
+            }
 
-        operator bool() const
-        {
-            return id != entt::null;
-        }
+            auto operator!=(const entity &other) const
+            {
+                return !(*this == other);
+            }
 
-        operator uint64_t() const
-        {
-            return (uint64_t)id;
-        }
+            operator bool() const
+            {
+                return id != entt::null;
+            }
 
-        operator entt::entity() const
-        {
-            return id;
-        }
+            operator uint64_t() const
+            {
+                return (uint64_t)id;
+            }
 
-        template <typename... Components>
-        auto has_components() const
-        {
-            return scene->registry.all_of<Components...>(id);
-        }
+            operator entt::entity() const
+            {
+                return id;
+            }
 
-        template <typename Component>
-        auto &get_component() const
-        {
-            return scene->registry.get<Component>(id);
-        }
+            template <typename... Components>
+            auto has_components() const
+            {
+                return scene->registry.all_of<Components...>(id);
+            }
 
-        template <typename Component, typename... Args>
-        auto &add_component(Args &&...args)
-        {
-            return scene->registry.emplace<Component>(id, std::forward<Args>(args)...);
-        }
+            template <typename Component>
+            auto &get_component() const
+            {
+                return scene->registry.get<Component>(id);
+            }
 
-        template <typename Component>
-        auto remove_component()
-        {
-            scene->registry.remove<Component>(id);
-        }
+            template <typename Component, typename... Args>
+            auto &add_component(Args &&...args)
+            {
+                return scene->registry.emplace<Component>(id, std::forward<Args>(args)...);
+            }
 
-    private:
-        entt::entity id = entt::null;
-        liminal::scene *scene = nullptr;
-    };
+            template <typename Component>
+            auto remove_component()
+            {
+                scene->registry.remove<Component>(id);
+            }
+
+        private:
+            entt::entity id = entt::null;
+            liminal::entities::scene *scene = nullptr;
+        };
+    }
 }
 
 #endif

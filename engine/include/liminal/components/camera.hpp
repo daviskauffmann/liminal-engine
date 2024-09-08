@@ -7,25 +7,25 @@
 
 namespace liminal
 {
-    struct transform;
-
-    struct camera
+    namespace components
     {
-        static constexpr float near_plane = 0.1f;
-        static constexpr float far_plane = 1000;
+        struct transform;
 
-        float fov;
+        struct camera
+        {
+            static constexpr float near_plane = 0.1f;
+            static constexpr float far_plane = 1000;
 
-        bool render_to_texture;
-        mutable GLuint render_texture_id = 0;
+            float fov;
 
-        camera(float fov = 90, bool render_to_texture = false);
+            camera(float fov = 90);
 
-        glm::vec3 calc_front(const liminal::transform &transform) const;
-        glm::vec3 calc_right(const liminal::transform &transform) const;
-        glm::mat4 calc_projection(float aspect) const;
-        glm::mat4 calc_view(const liminal::transform &transform) const;
-    };
+            glm::vec3 calc_front(const liminal::components::transform &transform) const;
+            glm::vec3 calc_right(const liminal::components::transform &transform) const;
+            glm::mat4 calc_projection(float aspect) const;
+            glm::mat4 calc_view(const liminal::components::transform &transform) const;
+        };
+    }
 }
 
 #endif

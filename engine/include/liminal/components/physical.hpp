@@ -6,14 +6,20 @@
 
 namespace liminal
 {
-    class rigidbody;
-
-    struct physical
+    namespace physics
     {
-        // glm::vec3 scale = glm::vec3(1, 1, 1);
-        float mass = 1.0f;
-        std::shared_ptr<liminal::rigidbody> rigidbody;
-    };
+        class rigidbody;
+    }
+
+    namespace components
+    {
+        struct physical
+        {
+            // glm::vec3 scale = glm::vec3(1, 1, 1);
+            float mass = 1.0f;
+            std::shared_ptr<liminal::physics::rigidbody> rigidbody;
+        };
+    }
 }
 
 #endif

@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-glm::mat4 liminal::sprite::get_model_matrix() const
+glm::mat4 liminal::components::sprite::get_model_matrix() const
 {
     // TODO: parenting?
     // this whole thing should just be removed, and 2d sprites should use the normal transform component

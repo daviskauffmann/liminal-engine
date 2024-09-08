@@ -7,17 +7,20 @@
 
 namespace liminal
 {
-    struct transform
+    namespace components
     {
-        std::string name = "New Entity";
-        liminal::transform *parent = nullptr;
-        glm::vec3 position = {};
-        glm::vec3 rotation = {};
-        glm::vec3 scale = {1, 1, 1};
+        struct transform
+        {
+            std::string name = "New Entity";
+            liminal::components::transform *parent = nullptr;
+            glm::vec3 position = {};
+            glm::vec3 rotation = {};
+            glm::vec3 scale = {1, 1, 1};
 
-        glm::mat4 get_model_matrix() const;
-        void set_model_matrix(const glm::mat4 &matrix);
-    };
+            glm::mat4 get_model_matrix() const;
+            void set_model_matrix(const glm::mat4 &matrix);
+        };
+    }
 }
 
 #endif

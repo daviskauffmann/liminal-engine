@@ -32,7 +32,7 @@ namespace minecraft
         unsigned char get_torchlight(int x, int y, int z) const;
         void set_torchlight(int x, int y, int z, unsigned char value);
 
-        liminal::mesh *create_mesh(std::shared_ptr<liminal::texture> tiles_texture) const;
+        liminal::graphics::mesh *create_mesh(std::shared_ptr<liminal::graphics::texture> tiles_texture) const;
 
     private:
         inline bool in_range(int x, int y, int z) const;

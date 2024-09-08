@@ -2,7 +2,7 @@
 
 #include <liminal/graphics/model.hpp>
 
-liminal::renderable::renderable(const std::shared_ptr<liminal::model> model)
+liminal::components::renderable::renderable(const std::shared_ptr<liminal::graphics::model> model)
     : model(model)
 {
     if (model && model->has_animations())

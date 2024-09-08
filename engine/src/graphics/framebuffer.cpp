@@ -2,53 +2,53 @@
 
 #include <stdexcept>
 
-void liminal::framebuffer::unbind()
+void liminal::graphics::framebuffer::unbind()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-liminal::framebuffer::framebuffer(const GLsizei width, const GLsizei height)
+liminal::graphics::framebuffer::framebuffer(const GLsizei width, const GLsizei height)
     : width(width),
       height(height)
 {
     glGenFramebuffers(1, &framebuffer_id);
 }
 
-liminal::framebuffer::~framebuffer()
+liminal::graphics::framebuffer::~framebuffer()
 {
     glDeleteFramebuffers(1, &framebuffer_id);
 }
 
-GLsizei liminal::framebuffer::get_width() const
+GLsizei liminal::graphics::framebuffer::get_width() const
 {
     return width;
 }
 
-GLsizei liminal::framebuffer::get_height() const
+GLsizei liminal::graphics::framebuffer::get_height() const
 {
     return height;
 }
 
-GLuint liminal::framebuffer::get_framebuffer_id() const
+GLuint liminal::graphics::framebuffer::get_framebuffer_id() const
 {
     return framebuffer_id;
 }
 
-void liminal::framebuffer::set_draw_buffer(const GLenum mode) const
+void liminal::graphics::framebuffer::set_draw_buffer(const GLenum mode) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     glDrawBuffer(mode);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::set_read_buffer(const GLenum mode) const
+void liminal::graphics::framebuffer::set_read_buffer(const GLenum mode) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     glReadBuffer(mode);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::attach_color_texture(const GLuint texture_id) const
+void liminal::graphics::framebuffer::attach_color_texture(const GLuint texture_id) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {
@@ -64,7 +64,7 @@ void liminal::framebuffer::attach_color_texture(const GLuint texture_id) const
     color_texture_ids.push_back(texture_id);
 }
 
-void liminal::framebuffer::attach_depth_renderbuffer(const GLuint renderbuffer_id) const
+void liminal::graphics::framebuffer::attach_depth_renderbuffer(const GLuint renderbuffer_id) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {
@@ -77,7 +77,7 @@ void liminal::framebuffer::attach_depth_renderbuffer(const GLuint renderbuffer_i
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::attach_depth_texture(const GLuint texture_id) const
+void liminal::graphics::framebuffer::attach_depth_texture(const GLuint texture_id) const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {
@@ -90,7 +90,7 @@ void liminal::framebuffer::attach_depth_texture(const GLuint texture_id) const
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::validate() const
+void liminal::graphics::framebuffer::validate() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     {
@@ -111,7 +111,7 @@ void liminal::framebuffer::validate() const
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void liminal::framebuffer::bind() const
+void liminal::graphics::framebuffer::bind() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
     glViewport(0, 0, width, height);

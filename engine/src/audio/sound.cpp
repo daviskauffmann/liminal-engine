@@ -3,7 +3,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <stdexcept>
 
-liminal::sound::sound(const char *const filename)
+liminal::audio::sound::sound(const char *const filename)
 {
     Mix_Chunk *chunk = Mix_LoadWAV(filename);
     if (!chunk)
@@ -22,12 +22,12 @@ liminal::sound::sound(const char *const filename)
     Mix_FreeChunk(chunk);
 }
 
-liminal::sound::~sound()
+liminal::audio::sound::~sound()
 {
     alDeleteBuffers(1, &buffer_id);
 }
 
-ALuint liminal::sound::get_buffer_id() const
+ALuint liminal::audio::sound::get_buffer_id() const
 {
     return buffer_id;
 }

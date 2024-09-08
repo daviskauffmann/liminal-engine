@@ -10,23 +10,26 @@ class btKinematicCharacterController;
 
 namespace liminal
 {
-    class character_controller
+    namespace physics
     {
-    public:
-        character_controller();
-        ~character_controller();
-        character_controller(const character_controller &other) = delete;
-        character_controller &operator=(const character_controller &other) = delete;
-        character_controller(character_controller &&other) = delete;
-        character_controller &operator=(character_controller &&other) = delete;
+        class character_controller
+        {
+        public:
+            character_controller();
+            ~character_controller();
+            character_controller(const character_controller &other) = delete;
+            character_controller &operator=(const character_controller &other) = delete;
+            character_controller(character_controller &&other) = delete;
+            character_controller &operator=(character_controller &&other) = delete;
 
-        btKinematicCharacterController *get_bt_character_controller() const;
+            btKinematicCharacterController *get_bt_character_controller() const;
 
-    private:
-        btPairCachingGhostObject *bt_ghost_object;
-        btConvexShape *bt_convex_shape;
-        btKinematicCharacterController *bt_character_controller;
-    };
+        private:
+            btPairCachingGhostObject *bt_ghost_object;
+            btConvexShape *bt_convex_shape;
+            btKinematicCharacterController *bt_character_controller;
+        };
+    }
 }
 
 #endif

@@ -8,13 +8,16 @@
 
 namespace liminal
 {
-    struct point_light
+    namespace components
     {
-        glm::vec3 color = {1, 1, 1};
+        struct point_light
+        {
+            glm::vec3 color = {1, 1, 1};
 
-        std::array<glm::mat4, 6> view_projection_matrices = {};
-        GLuint depth_cubemap_id = 0;
-    };
+            std::array<glm::mat4, 6> view_projection_matrices = {};
+            GLuint depth_cubemap_id = 0;
+        };
+    }
 }
 
 #endif

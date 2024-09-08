@@ -2,7 +2,7 @@
 
 #include <bullet/btBulletDynamicsCommon.h>
 
-liminal::rigidbody::rigidbody(const float mass)
+liminal::physics::rigidbody::rigidbody(const float mass)
 {
     bt_motion_state = new btDefaultMotionState();
 
@@ -20,19 +20,19 @@ liminal::rigidbody::rigidbody(const float mass)
         local_inertia));
 }
 
-liminal::rigidbody::~rigidbody()
+liminal::physics::rigidbody::~rigidbody()
 {
     delete bt_motion_state;
     delete bt_collision_shape;
     delete bt_rigidbody;
 }
 
-btRigidBody *liminal::rigidbody::get_bt_rigidbody() const
+btRigidBody *liminal::physics::rigidbody::get_bt_rigidbody() const
 {
     return bt_rigidbody;
 }
 
-std::tuple<glm::vec3, glm::vec3> liminal::rigidbody::get_world_transform() const
+std::tuple<glm::vec3, glm::vec3> liminal::physics::rigidbody::get_world_transform() const
 {
     const auto position = glm::vec3(
         bt_rigidbody->getWorldTransform().getOrigin().getX(),
@@ -46,7 +46,7 @@ std::tuple<glm::vec3, glm::vec3> liminal::rigidbody::get_world_transform() const
     return std::make_tuple(position, rotation);
 }
 
-void liminal::rigidbody::set_world_transform(
+void liminal::physics::rigidbody::set_world_transform(
     const glm::vec3 &position,
     const glm::vec3 &rotation,
     const glm::vec3 &scale,

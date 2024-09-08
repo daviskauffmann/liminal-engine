@@ -12,19 +12,19 @@ constexpr GLsizei environment_size = 4096;
 constexpr GLsizei irradiance_size = 32;
 constexpr GLsizei prefilter_size = 128;
 
-liminal::skybox::skybox(const char *const filename)
+liminal::graphics::skybox::skybox(const char *const filename)
 {
     set_cubemaps(filename);
 }
 
-liminal::skybox::~skybox()
+liminal::graphics::skybox::~skybox()
 {
     glDeleteTextures(1, &environment_cubemap_id);
     glDeleteTextures(1, &irradiance_cubemap_id);
     glDeleteTextures(1, &prefilter_cubemap_id);
 }
 
-void liminal::skybox::set_cubemaps(const char *const filename)
+void liminal::graphics::skybox::set_cubemaps(const char *const filename)
 {
     glDeleteTextures(1, &environment_cubemap_id);
     glDeleteTextures(1, &irradiance_cubemap_id);
@@ -192,7 +192,7 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    const auto equirectangular_to_cubemap_program = std::make_unique<liminal::program>(
+    const auto equirectangular_to_cubemap_program = std::make_unique<liminal::graphics::program>(
         "engine/data/shaders/cubemap.vs",
         "engine/data/shaders/equirectangular_to_cubemap.fs");
 
@@ -278,7 +278,7 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    const auto irradiance_convolution_program = std::make_unique<liminal::program>(
+    const auto irradiance_convolution_program = std::make_unique<liminal::graphics::program>(
         "engine/data/shaders/cubemap.vs",
         "engine/data/shaders/irradiance_convolution.fs");
 
@@ -343,7 +343,7 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    const auto prefilter_convolution_program = std::make_unique<liminal::program>(
+    const auto prefilter_convolution_program = std::make_unique<liminal::graphics::program>(
         "engine/data/shaders/cubemap.vs",
         "engine/data/shaders/prefilter_convolution.fs");
 
@@ -409,19 +409,19 @@ void liminal::skybox::set_cubemaps(const char *const filename)
     glDeleteBuffers(1, &capture_vbo_id);
 }
 
-void liminal::skybox::bind_environment_cubemap(const unsigned int index) const
+void liminal::graphics::skybox::bind_environment_cubemap(const unsigned int index) const
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_CUBE_MAP, environment_cubemap_id);
 }
 
-void liminal::skybox::bind_irradiance_cubemap(const unsigned int index) const
+void liminal::graphics::skybox::bind_irradiance_cubemap(const unsigned int index) const
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap_id);
 }
 
-void liminal::skybox::bind_prefilter_cubemap(const unsigned int index) const
+void liminal::graphics::skybox::bind_prefilter_cubemap(const unsigned int index) const
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter_cubemap_id);

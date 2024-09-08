@@ -10,11 +10,11 @@
 
 namespace editor
 {
-    class app : public liminal::app
+    class app : public liminal::core::app
     {
     public:
         app(int argc, char *argv[])
-            : liminal::app(argc, argv)
+            : liminal::core::app(argc, argv)
         {
             window->maximize();
 
@@ -35,27 +35,27 @@ namespace editor
 
             ImGuizmo::BeginFrame();
 
-            if (liminal::input::key_down(liminal::keycode::N))
+            if (liminal::input::input::key_down(liminal::input::keycode::N))
             {
-                if (liminal::input::key(liminal::keycode::LCTRL))
+                if (liminal::input::input::key(liminal::input::keycode::LCTRL))
                 {
                     new_scene();
                 }
             }
 
-            if (liminal::input::key_down(liminal::keycode::O))
+            if (liminal::input::input::key_down(liminal::input::keycode::O))
             {
-                if (liminal::input::key(liminal::keycode::LCTRL))
+                if (liminal::input::input::key(liminal::input::keycode::LCTRL))
                 {
                     load_scene();
                 }
             }
 
-            if (liminal::input::key_down(liminal::keycode::S))
+            if (liminal::input::input::key_down(liminal::input::keycode::S))
             {
-                if (liminal::input::key(liminal::keycode::LCTRL))
+                if (liminal::input::input::key(liminal::input::keycode::LCTRL))
                 {
-                    if (liminal::input::key(liminal::keycode::LSHIFT))
+                    if (liminal::input::input::key(liminal::input::keycode::LSHIFT))
                     {
                         // TODO: save as
                         save_scene();
@@ -67,9 +67,9 @@ namespace editor
                 }
             }
 
-            if (liminal::input::key_down(liminal::keycode::F5))
+            if (liminal::input::input::key_down(liminal::input::keycode::F5))
             {
-                if (liminal::input::key(liminal::keycode::LSHIFT))
+                if (liminal::input::input::key(liminal::input::keycode::LSHIFT))
                 {
                     stop_scene();
                 }
@@ -79,12 +79,27 @@ namespace editor
                 }
             }
 
+            liminal::components::camera *camera;
+            liminal::components::transform *camera_transform;
+
             if (playing)
             {
+                scene->get_entities_with<liminal::components::camera, liminal::components::transform>().each(
+                    [&camera, &camera_transform](liminal::components::camera &c, liminal::components::transform &t)
+                    {
+                        camera = &c;
+                        camera_transform = &t;
+                    });
+
                 scene->update(current_time, delta_time);
             }
+            else
+            {
+                camera = &editor_camera;
+                camera_transform = &editor_transform;
+            }
 
-            renderer->render(*scene, current_time, delta_time);
+            const auto render_texture_id = renderer->render(*scene, *camera, *camera_transform, current_time, delta_time, true);
 
             const auto viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->Pos);
@@ -135,6 +150,7 @@ namespace editor
 
                         if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
                         {
+                            // TODO: save as
                             save_scene();
                         }
 
@@ -166,58 +182,134 @@ namespace editor
 
                 if (ImGui::Begin("Scene", nullptr))
                 {
-                    liminal::camera *camera;
-                    liminal::transform *camera_transform;
+                    if (playing)
+                    {
+                        if (liminal::input::input::key_down(liminal::input::keycode::TAB))
+                        {
+                            sdl->set_relative_mouse_mode(!sdl->get_relative_mouse_mode());
+                        }
 
-                    if (player)
-                    {
-                        camera = &player.get_component<liminal::camera>();
-                        camera_transform = &player.get_component<liminal::transform>();
-                    }
-                    else
-                    {
-                        camera = renderer->default_camera;
-                        camera_transform = renderer->default_camera_transform;
-                    }
-
-                    if (ImGui::IsWindowHovered() && !ImGuizmo::IsOver())
-                    {
+                        // TODO: remove this, should come from script
                         const auto camera_front = camera->calc_front(*camera_transform);
                         const auto camera_right = camera->calc_right(*camera_transform);
 
-                        if (liminal::input::mouse_button_down(liminal::mouse_button::LEFT))
+                        static glm::vec3 velocity(0, 0, 0);
+                        glm::vec3 acceleration(0, 0, 0);
+                        constexpr auto speed = 50.0f;
+                        constexpr auto drag = 10.0f;
+                        auto sprint = false;
+                        if (!io.WantCaptureKeyboard)
                         {
-                            const auto mouse_position = ImGui::GetMousePos();
-                            const auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
-                            const auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
-                            if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
+                            if (liminal::input::input::key(liminal::input::keycode::W))
                             {
-                                selected_entity = renderer->pick(static_cast<int>(mouse_x), static_cast<int>(mouse_y), scene);
+                                acceleration += camera_front;
+                            }
+                            if (liminal::input::input::key(liminal::input::keycode::A))
+                            {
+                                acceleration -= camera_right;
+                            }
+                            if (liminal::input::input::key(liminal::input::keycode::S))
+                            {
+                                acceleration -= camera_front;
+                            }
+                            if (liminal::input::input::key(liminal::input::keycode::D))
+                            {
+                                acceleration += camera_right;
+                            }
+                            if (liminal::input::input::key(liminal::input::keycode::SPACE))
+                            {
+                                acceleration.y = 1;
+                            }
+                            if (liminal::input::input::key(liminal::input::keycode::LCTRL))
+                            {
+                                acceleration.y = -1;
+                            }
+                            if (liminal::input::input::key(liminal::input::keycode::LSHIFT))
+                            {
+                                sprint = true;
                             }
                         }
-
-                        const auto sensitivity = 0.1f;
-                        if (liminal::input::mouse_button(liminal::mouse_button::RIGHT))
+                        if (glm::length(acceleration) > 1)
                         {
-                            camera_transform->rotation.y -= liminal::input::mouse_dx * sensitivity;
-                            camera_transform->rotation.x += liminal::input::mouse_dy * sensitivity;
-                            if (camera_transform->rotation.x > 89)
-                            {
-                                camera_transform->rotation.x = 89;
-                            }
-                            if (camera_transform->rotation.x < -89)
-                            {
-                                camera_transform->rotation.x = -89;
-                            }
+                            acceleration = glm::normalize(acceleration);
+                        }
+                        acceleration *= speed * (sprint ? 2 : 1);
+                        acceleration -= velocity * drag;
+                        camera_transform->position = 0.5f * acceleration * powf(delta_time, 2) + velocity * delta_time + camera_transform->position;
+                        velocity = acceleration * delta_time + velocity;
+                        camera_transform->rotation.z = glm::dot(camera_right, velocity);
+
+                        constexpr auto sensitivity = 0.5f;
+                        camera_transform->rotation.x -= liminal::input::input::mouse_dy * sensitivity;
+                        camera_transform->rotation.y += liminal::input::input::mouse_dx * sensitivity;
+                        if (camera_transform->rotation.x > 89)
+                        {
+                            camera_transform->rotation.x = 89;
+                        }
+                        if (camera_transform->rotation.x < -89)
+                        {
+                            camera_transform->rotation.x = -89;
+                        }
+                        if (camera_transform->rotation.y < 0)
+                        {
+                            camera_transform->rotation.y = 360;
+                        }
+                        if (camera_transform->rotation.y > 360)
+                        {
+                            camera_transform->rotation.y = 0;
                         }
 
-                        if (liminal::input::mouse_button(liminal::mouse_button::MIDDLE))
+                        camera->fov -= liminal::input::input::mouse_wheel_y;
+                        if (camera->fov <= 1)
                         {
-                            camera_transform->position -= camera_right * (liminal::input::mouse_dx * sensitivity);
-                            camera_transform->position += glm::vec3(0, 1, 0) * (liminal::input::mouse_dy * sensitivity);
+                            camera->fov = 1;
                         }
+                        if (camera->fov >= 120)
+                        {
+                            camera->fov = 120;
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui::IsWindowHovered() && !ImGuizmo::IsOver())
+                        {
+                            const auto camera_front = camera->calc_front(*camera_transform);
+                            const auto camera_right = camera->calc_right(*camera_transform);
 
-                        camera_transform->position += camera_front * static_cast<float>(liminal::input::mouse_wheel_y);
+                            if (liminal::input::input::mouse_button_down(liminal::input::mouse_button::LEFT))
+                            {
+                                const auto mouse_position = ImGui::GetMousePos();
+                                const auto mouse_x = mouse_position.x - scene_region_bounds[0].x;
+                                const auto mouse_y = scene_region_size.y - (mouse_position.y - scene_region_bounds[0].y);
+                                if (mouse_x >= 0 && mouse_x < scene_region_size.x && mouse_y >= 0 && mouse_y < scene_region_size.y)
+                                {
+                                    selected_entity = renderer->pick(static_cast<int>(mouse_x), static_cast<int>(mouse_y), scene);
+                                }
+                            }
+
+                            constexpr auto sensitivity = 0.1f;
+                            if (liminal::input::input::mouse_button(liminal::input::mouse_button::RIGHT))
+                            {
+                                camera_transform->rotation.y -= liminal::input::input::mouse_dx * sensitivity;
+                                camera_transform->rotation.x += liminal::input::input::mouse_dy * sensitivity;
+                                if (camera_transform->rotation.x > 89)
+                                {
+                                    camera_transform->rotation.x = 89;
+                                }
+                                if (camera_transform->rotation.x < -89)
+                                {
+                                    camera_transform->rotation.x = -89;
+                                }
+                            }
+
+                            if (liminal::input::input::mouse_button(liminal::input::mouse_button::MIDDLE))
+                            {
+                                camera_transform->position -= camera_right * (liminal::input::input::mouse_dx * sensitivity);
+                                camera_transform->position += glm::vec3(0, 1, 0) * (liminal::input::input::mouse_dy * sensitivity);
+                            }
+
+                            camera_transform->position += camera_front * static_cast<float>(liminal::input::input::mouse_wheel_y);
+                        }
                     }
 
                     scene_region_size = ImGui::GetContentRegionAvail();
@@ -227,7 +319,7 @@ namespace editor
                         prev_scene_region_size = scene_region_size;
                     }
 
-                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(camera->render_texture_id)), scene_region_size, {0, 1}, {1, 0});
+                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<long long>(render_texture_id)), scene_region_size, {0, 1}, {1, 0});
 
                     const auto min_region = ImGui::GetWindowContentRegionMin();
                     const auto max_region = ImGui::GetWindowContentRegionMax();
@@ -244,15 +336,15 @@ namespace editor
                         const auto camera_projection = camera->calc_projection(renderer->get_aspect_ratio());
                         const auto camera_view = camera->calc_view(*camera_transform);
 
-                        auto &transform = selected_entity.get_component<liminal::transform>();
+                        auto &transform = selected_entity.get_component<liminal::components::transform>();
                         auto matrix = transform.get_model_matrix();
 
                         auto operation = ImGuizmo::OPERATION::TRANSLATE;
-                        if (liminal::input::key(liminal::keycode::LSHIFT))
+                        if (liminal::input::input::key(liminal::input::keycode::LSHIFT))
                         {
                             operation = ImGuizmo::OPERATION::ROTATE;
                         }
-                        else if (liminal::input::key(liminal::keycode::LCTRL))
+                        else if (liminal::input::input::key(liminal::input::keycode::LCTRL))
                         {
                             operation = ImGuizmo::OPERATION::SCALE;
                         }
@@ -282,13 +374,13 @@ namespace editor
                         if (ImGui::MenuItem("Create Entity"))
                         {
                             auto entity = selected_entity = scene->create_entity();
-                            entity.add_component<liminal::transform>();
+                            entity.add_component<liminal::components::transform>();
                         }
 
                         ImGui::EndPopup();
                     }
 
-                    for (const auto [id, transform] : scene->get_entities_with<liminal::transform>().each())
+                    for (const auto [id, transform] : scene->get_entities_with<liminal::components::transform>().each())
                     {
                         if (!transform.parent)
                         {
@@ -304,13 +396,13 @@ namespace editor
                     {
                         const auto flags = ImGuiTreeNodeFlags_DefaultOpen;
 
-                        if (selected_entity.has_components<liminal::transform>())
+                        if (selected_entity.has_components<liminal::components::transform>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::transform).hash_code()), flags, "Transform");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::transform).hash_code()), flags, "Transform");
 
                             if (opened)
                             {
-                                auto &transform = selected_entity.get_component<liminal::transform>();
+                                auto &transform = selected_entity.get_component<liminal::components::transform>();
 
                                 char buffer[256];
                                 memset(buffer, 0, sizeof(buffer));
@@ -330,9 +422,9 @@ namespace editor
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::renderable>())
+                        if (selected_entity.has_components<liminal::components::renderable>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::renderable).hash_code()), flags, "Renderable");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::renderable).hash_code()), flags, "Renderable");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -347,7 +439,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &renderable = selected_entity.get_component<liminal::renderable>();
+                                auto &renderable = selected_entity.get_component<liminal::components::renderable>();
 
                                 // TODO: drag and drop from asset browser
                                 if (ImGui::Button("Load Model"))
@@ -371,13 +463,13 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::renderable>();
+                                selected_entity.remove_component<liminal::components::renderable>();
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::directional_light>())
+                        if (selected_entity.has_components<liminal::components::directional_light>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::directional_light).hash_code()), flags, "Directional Light");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::directional_light).hash_code()), flags, "Directional Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -392,7 +484,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &directional_light = selected_entity.get_component<liminal::directional_light>();
+                                auto &directional_light = selected_entity.get_component<liminal::components::directional_light>();
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(directional_light.color), 0.1f);
 
@@ -403,13 +495,13 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::directional_light>();
+                                selected_entity.remove_component<liminal::components::directional_light>();
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::point_light>())
+                        if (selected_entity.has_components<liminal::components::point_light>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::point_light).hash_code()), flags, "Point Light");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::point_light).hash_code()), flags, "Point Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -424,7 +516,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &point_light = selected_entity.get_component<liminal::point_light>();
+                                auto &point_light = selected_entity.get_component<liminal::components::point_light>();
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(point_light.color), 0.1f);
 
@@ -433,13 +525,13 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::point_light>();
+                                selected_entity.remove_component<liminal::components::point_light>();
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::physical>())
+                        if (selected_entity.has_components<liminal::components::physical>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::physical).hash_code()), flags, "Physical");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::physical).hash_code()), flags, "Physical");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -454,7 +546,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &physical = selected_entity.get_component<liminal::physical>();
+                                auto &physical = selected_entity.get_component<liminal::components::physical>();
 
                                 ImGui::DragFloat("Mass", &physical.mass);
 
@@ -463,13 +555,13 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::physical>();
+                                selected_entity.remove_component<liminal::components::physical>();
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::spot_light>())
+                        if (selected_entity.has_components<liminal::components::spot_light>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::spot_light).hash_code()), flags, "Spot Light");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::spot_light).hash_code()), flags, "Spot Light");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -484,7 +576,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &spot_light = selected_entity.get_component<liminal::spot_light>();
+                                auto &spot_light = selected_entity.get_component<liminal::components::spot_light>();
 
                                 ImGui::DragFloat3("Color", glm::value_ptr(spot_light.color), 0.1f);
                                 ImGui::DragFloat("Inner Cutoff", &spot_light.inner_cutoff);
@@ -497,13 +589,13 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::spot_light>();
+                                selected_entity.remove_component<liminal::components::spot_light>();
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::terrain>())
+                        if (selected_entity.has_components<liminal::components::terrain>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::terrain).hash_code()), flags, "Terrain");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::terrain).hash_code()), flags, "Terrain");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -518,7 +610,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &terrain = selected_entity.get_component<liminal::terrain>();
+                                auto &terrain = selected_entity.get_component<liminal::components::terrain>();
 
                                 ImGui::DragFloat("Tiling", &terrain.tiling);
 
@@ -527,13 +619,13 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::terrain>();
+                                selected_entity.remove_component<liminal::components::terrain>();
                             }
                         }
 
-                        if (selected_entity.has_components<liminal::water>())
+                        if (selected_entity.has_components<liminal::components::water>())
                         {
-                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::water).hash_code()), flags, "Water");
+                            const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void *>(typeid(liminal::components::water).hash_code()), flags, "Water");
 
                             auto deleted = false;
                             if (ImGui::BeginPopupContextItem())
@@ -548,7 +640,7 @@ namespace editor
 
                             if (opened)
                             {
-                                auto &water = selected_entity.get_component<liminal::water>();
+                                auto &water = selected_entity.get_component<liminal::components::water>();
 
                                 ImGui::DragFloat("Tiling", &water.tiling);
                                 ImGui::DragFloat("Speed", &water.speed);
@@ -561,7 +653,7 @@ namespace editor
 
                             if (deleted)
                             {
-                                selected_entity.remove_component<liminal::water>();
+                                selected_entity.remove_component<liminal::components::water>();
                             }
                         }
 
@@ -572,23 +664,23 @@ namespace editor
 
                         if (ImGui::BeginPopup("AddComponent"))
                         {
-                            if (!selected_entity.has_components<liminal::renderable>() && ImGui::MenuItem("Mesh Renderer"))
+                            if (!selected_entity.has_components<liminal::components::renderable>() && ImGui::MenuItem("Mesh Renderer"))
                             {
-                                selected_entity.add_component<liminal::renderable>();
+                                selected_entity.add_component<liminal::components::renderable>();
 
                                 ImGui::CloseCurrentPopup();
                             }
 
-                            if (!selected_entity.has_components<liminal::physical>() && ImGui::MenuItem("Physical"))
+                            if (!selected_entity.has_components<liminal::components::physical>() && ImGui::MenuItem("Physical"))
                             {
-                                selected_entity.add_component<liminal::physical>();
+                                selected_entity.add_component<liminal::components::physical>();
 
                                 ImGui::CloseCurrentPopup();
                             }
 
-                            if (!selected_entity.has_components<liminal::point_light>() && ImGui::MenuItem("Point Light"))
+                            if (!selected_entity.has_components<liminal::components::point_light>() && ImGui::MenuItem("Point Light"))
                             {
-                                selected_entity.add_component<liminal::point_light>();
+                                selected_entity.add_component<liminal::components::point_light>();
 
                                 ImGui::CloseCurrentPopup();
                             }
@@ -614,6 +706,7 @@ namespace editor
                         const auto &path = directory_entry.path();
                         const auto filename = path.filename();
                         const auto filename_string = filename.string();
+
                         if (ImGui::Button(filename_string.c_str()))
                         {
                             if (directory_entry.is_directory())
@@ -636,8 +729,11 @@ namespace editor
         }
 
     private:
-        liminal::scene *scene = nullptr;
-        liminal::scene *inactive_scene = nullptr;
+        liminal::entities::scene *scene = nullptr;
+        liminal::entities::scene *inactive_scene = nullptr;
+
+        liminal::components::camera editor_camera = liminal::components::camera(45.f);
+        liminal::components::transform editor_transform;
 
         bool playing = false;
 
@@ -645,12 +741,9 @@ namespace editor
         ImVec2 scene_region_size = {};
         ImVec2 prev_scene_region_size = {};
 
-        liminal::entity selected_entity = {};
+        liminal::entities::entity selected_entity = {};
 
         std::filesystem::path current_asset_directory = "engine/data";
-
-        // TODO: remove!!!
-        liminal::entity player;
 
         void new_scene()
         {
@@ -659,11 +752,7 @@ namespace editor
                 delete scene;
             }
 
-            scene = new liminal::scene(assets);
-
-            renderer->default_camera = new liminal::camera(45.f, true);
-            renderer->default_camera_transform = new liminal::transform();
-            player = {};
+            scene = new liminal::entities::scene(assets);
 
             selected_entity = {};
         }
@@ -671,6 +760,7 @@ namespace editor
         void load_scene()
         {
             new_scene();
+
             scene->load("editor/data/scenes/demo.json");
         }
 
@@ -682,32 +772,36 @@ namespace editor
         void play_scene()
         {
             playing = true;
+
+            // TODO: restore
+            selected_entity = {};
+
+            inactive_scene = scene->copy();
+
             scene->start();
 
-            delete renderer->default_camera;
-            renderer->default_camera = nullptr;
-            delete renderer->default_camera_transform;
-            renderer->default_camera_transform = nullptr;
-
-            // TODO: remove this, should just come from what is placed in the scene
-            // the only caveat is that the camera.render_to_texture needs to be overridden to true when running in the editor, so that the scene can render to the ImGui window
-            player = scene->create_entity();
-            player.add_component<liminal::transform>("Player");
-            player.add_component<liminal::camera>(45.0f, true);
-            player.add_component<liminal::audio_listener>();
+            sdl->set_relative_mouse_mode(true);
         }
 
         void stop_scene()
         {
             playing = false;
+
+            // TODO: restore
+            selected_entity = {};
+
             scene->stop();
 
-            load_scene();
+            delete scene;
+            scene = inactive_scene;
+            inactive_scene = nullptr;
+
+            sdl->set_relative_mouse_mode(false);
         }
 
-        void delete_entity(const liminal::entity entity, const liminal::transform &transform)
+        void delete_entity(const liminal::entities::entity entity, const liminal::components::transform &transform)
         {
-            for (const auto [child_id, child_transform] : scene->get_entities_with<const liminal::transform>().each())
+            for (const auto [child_id, child_transform] : scene->get_entities_with<const liminal::components::transform>().each())
             {
                 if (child_transform.parent == &transform)
                 {
@@ -723,7 +817,7 @@ namespace editor
             }
         }
 
-        void draw_entity_node(const liminal::entity entity, liminal::transform &transform)
+        void draw_entity_node(const liminal::entities::entity entity, liminal::components::transform &transform)
         {
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
             if (entity == selected_entity)
@@ -743,7 +837,7 @@ namespace editor
                 if (ImGui::MenuItem("Create Child"))
                 {
                     auto child = selected_entity = scene->create_entity();
-                    auto &child_transform = child.add_component<liminal::transform>();
+                    auto &child_transform = child.add_component<liminal::components::transform>();
                     child_transform.parent = &transform;
                 }
 
@@ -757,7 +851,7 @@ namespace editor
 
             if (opened)
             {
-                for (const auto [child_id, child_transform] : scene->get_entities_with<liminal::transform>().each())
+                for (const auto [child_id, child_transform] : scene->get_entities_with<liminal::components::transform>().each())
                 {
                     if (child_transform.parent == &transform)
                     {
@@ -770,13 +864,18 @@ namespace editor
 
             if (deleted)
             {
+                if (entity == selected_entity)
+                {
+                    selected_entity = {};
+                }
+
                 delete_entity(entity, transform);
             }
         }
     };
 }
 
-liminal::app *liminal::create_app(int argc, char *argv[])
+liminal::core::app *liminal::core::create_app(int argc, char *argv[])
 {
     return new editor::app(argc, argv);
 }

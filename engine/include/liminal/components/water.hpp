@@ -3,14 +3,17 @@
 
 namespace liminal
 {
-    struct water
+    namespace components
     {
-        float tiling = 1;
-        float speed = 0.02f;
-        float wave_strength = 0.01f;
-        float reflectivity = 0.5f;
-        float shine_damper = 100;
-    };
+        struct water
+        {
+            float tiling = 1;
+            float speed = 0.02f;
+            float wave_strength = 0.01f;
+            float reflectivity = 0.5f;
+            float shine_damper = 100;
+        };
+    }
 }
 
 #endif

@@ -3,26 +3,26 @@
 #include <SDL2/SDL_image.h>
 #include <stdexcept>
 
-void liminal::cubemap::bind(unsigned int index, GLuint texture_id)
+void liminal::graphics::cubemap::bind(unsigned int index, GLuint texture_id)
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 }
 
-void liminal::cubemap::unbind(unsigned int index)
+void liminal::graphics::cubemap::unbind(unsigned int index)
 {
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-liminal::cubemap::cubemap(
+liminal::graphics::cubemap::cubemap(
     const GLenum internal_format,
     const GLsizei width,
     const GLsizei height,
     const GLenum format,
     const GLenum type,
-    const liminal::texture_filter filter,
-    const liminal::texture_wrap wrap)
+    const liminal::graphics::texture_filter filter,
+    const liminal::graphics::texture_wrap wrap)
 {
     glGenTextures(1, &cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_id);
@@ -43,11 +43,11 @@ liminal::cubemap::cubemap(
 
         switch (filter)
         {
-        case liminal::texture_filter::nearest:
+        case liminal::graphics::texture_filter::nearest:
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             break;
-        case liminal::texture_filter::linear:
+        case liminal::graphics::texture_filter::linear:
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             break;
@@ -55,17 +55,17 @@ liminal::cubemap::cubemap(
 
         switch (wrap)
         {
-        case liminal::texture_wrap::repeat:
+        case liminal::graphics::texture_wrap::repeat:
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT);
             break;
-        case liminal::texture_wrap::clamp_to_edge:
+        case liminal::graphics::texture_wrap::clamp_to_edge:
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
             break;
-        case liminal::texture_wrap::clamp_to_border:
+        case liminal::graphics::texture_wrap::clamp_to_border:
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
@@ -75,7 +75,7 @@ liminal::cubemap::cubemap(
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
+liminal::graphics::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
 {
     glGenTextures(1, &cubemap_id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_id);
@@ -111,17 +111,17 @@ liminal::cubemap::cubemap(const std::array<std::string, num_sides> &filenames)
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-liminal::cubemap::~cubemap()
+liminal::graphics::cubemap::~cubemap()
 {
     glDeleteTextures(1, &cubemap_id);
 }
 
-GLuint liminal::cubemap::get_cubemap_id() const
+GLuint liminal::graphics::cubemap::get_cubemap_id() const
 {
     return cubemap_id;
 }
 
-void liminal::cubemap::bind(const unsigned int index) const
+void liminal::graphics::cubemap::bind(const unsigned int index) const
 {
     bind(index, cubemap_id);
 }

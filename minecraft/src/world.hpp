@@ -16,7 +16,7 @@ namespace minecraft
     class world
     {
     public:
-        explicit world(std::shared_ptr<liminal::scene> scene, std::shared_ptr<liminal::assets> assets);
+        explicit world(std::shared_ptr<liminal::entities::scene> scene, std::shared_ptr<liminal::core::assets> assets);
 
         void update() const;
 
@@ -33,14 +33,14 @@ namespace minecraft
         void set_torchlight(int x, int y, int z, unsigned char value);
 
     private:
-        std::shared_ptr<liminal::scene> scene;
-        std::shared_ptr<liminal::texture> tiles_texture;
-        std::unordered_map<glm::ivec3, liminal::entity> chunk_entities;
+        std::shared_ptr<liminal::entities::scene> scene;
+        std::shared_ptr<liminal::graphics::texture> tiles_texture;
+        std::unordered_map<glm::ivec3, liminal::entities::entity> chunk_entities;
 
         SimplexNoise simplex;
 
         glm::ivec3 get_chunk_position(int x, int y, int z) const;
-        liminal::entity get_chunk_entity(const glm::ivec3 &chunk_position) const;
+        liminal::entities::entity get_chunk_entity(const glm::ivec3 &chunk_position) const;
 
         int get_noise(const int x, const int y, const int z, const float scale, const int max) const;
     };

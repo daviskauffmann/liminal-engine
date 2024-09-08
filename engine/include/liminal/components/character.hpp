@@ -5,12 +5,18 @@
 
 namespace liminal
 {
-    class character_controller;
-
-    struct character
+    namespace physics
     {
-        std::shared_ptr<liminal::character_controller> character_controller;
-    };
+        class character_controller;
+    }
+
+    namespace components
+    {
+        struct character
+        {
+            std::shared_ptr<liminal::physics::character_controller> character_controller;
+        };
+    }
 }
 
 #endif

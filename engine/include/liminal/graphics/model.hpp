@@ -12,49 +12,56 @@
 
 namespace liminal
 {
-    class assets;
-    class program;
-
-    class model
+    namespace core
     {
-    public:
-        model(liminal::mesh *mesh);
-        model(const char *filename, std::shared_ptr<liminal::assets> assets, bool flip_uvs = false);
-        ~model();
-        model(const model &other) = delete;
-        model &operator=(const model &other) = delete;
-        model(model &&other) = delete;
-        model &operator=(model &&other) = delete;
+        class assets;
+    }
 
-        bool has_animations() const;
-        unsigned int num_animations() const;
-        std::vector<glm::mat4> calc_bone_transformations(unsigned int animation_index, std::uint64_t current_time) const;
+    namespace graphics
+    {
+        class program;
 
-        void draw_meshes(const liminal::program &program) const;
+        class model
+        {
+        public:
+            model(liminal::graphics::mesh *mesh);
+            model(const char *filename, std::shared_ptr<liminal::core::assets> assets, bool flip_uvs = false);
+            ~model();
+            model(const model &other) = delete;
+            model &operator=(const model &other) = delete;
+            model(model &&other) = delete;
+            model &operator=(model &&other) = delete;
 
-    private:
-        std::string directory;
-        Assimp::Importer importer;
-        const aiScene *ai_scene = nullptr;
+            bool has_animations() const;
+            unsigned int num_animations() const;
+            std::vector<glm::mat4> calc_bone_transformations(unsigned int animation_index, std::uint64_t current_time) const;
 
-        std::vector<liminal::mesh *> meshes;
+            void draw_meshes(const liminal::graphics::program &program) const;
 
-        glm::mat4 global_inverse_transform = {};
-        unsigned int num_bones = 0;
-        std::unordered_map<std::string, unsigned int> bone_ids;
-        std::vector<glm::mat4> bone_offsets;
+        private:
+            std::string directory;
+            Assimp::Importer importer;
+            const aiScene *ai_scene = nullptr;
 
-        void process_node_meshes(const aiNode *ai_node, std::shared_ptr<liminal::assets> assets);
+            std::vector<liminal::graphics::mesh *> meshes;
 
-        void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *ai_node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const;
-        const aiNodeAnim *find_node_animation(const aiAnimation *ai_animation, const std::string &node_name) const;
-        aiVector3D calc_interpolated_position(float animation_time, const aiNodeAnim *ai_node_anim) const;
-        unsigned int find_position_index(float animation_time, const aiNodeAnim *ai_node_anim) const;
-        aiQuaternion calc_interpolated_rotation(float animation_time, const aiNodeAnim *ai_node_anim) const;
-        unsigned int find_rotation_index(float animation_time, const aiNodeAnim *ai_node_anim) const;
-        aiVector3D calc_interpolated_scale(float animation_time, const aiNodeAnim *ai_node_anim) const;
-        unsigned int find_scale_index(float animation_time, const aiNodeAnim *ai_node_anim) const;
-    };
+            glm::mat4 global_inverse_transform = {};
+            unsigned int num_bones = 0;
+            std::unordered_map<std::string, unsigned int> bone_ids;
+            std::vector<glm::mat4> bone_offsets;
+
+            void process_node_meshes(const aiNode *ai_node, std::shared_ptr<liminal::core::assets> assets);
+
+            void process_node_animations(unsigned int animation_index, float animation_time, const aiNode *ai_node, const glm::mat4 &parent_transformation, std::vector<glm::mat4> &bone_transformations) const;
+            const aiNodeAnim *find_node_animation(const aiAnimation *ai_animation, const std::string &node_name) const;
+            aiVector3D calc_interpolated_position(float animation_time, const aiNodeAnim *ai_node_anim) const;
+            unsigned int find_position_index(float animation_time, const aiNodeAnim *ai_node_anim) const;
+            aiQuaternion calc_interpolated_rotation(float animation_time, const aiNodeAnim *ai_node_anim) const;
+            unsigned int find_rotation_index(float animation_time, const aiNodeAnim *ai_node_anim) const;
+            aiVector3D calc_interpolated_scale(float animation_time, const aiNodeAnim *ai_node_anim) const;
+            unsigned int find_scale_index(float animation_time, const aiNodeAnim *ai_node_anim) const;
+        };
+    }
 }
 
 #endif

@@ -12,7 +12,7 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
-liminal::app::app(int argc, char *argv[])
+liminal::core::app::app(int argc, char *argv[])
 {
     // TODO: support config file
 
@@ -58,27 +58,27 @@ liminal::app::app(int argc, char *argv[])
     }
 
     // init subsystems
-    sdl = std::make_unique<liminal::sdl>();
-    sdl_image = std::make_unique<liminal::sdl_image>();
-    sdl_mixer = std::make_unique<liminal::sdl_mixer>();
-    audio = std::make_unique<liminal::audio>();
-    window = std::make_unique<liminal::window>(window_title, window_width, window_height);
-    gl_context = std::make_unique<liminal::gl_context>(window->get_sdl_window());
-    glew = std::make_unique<liminal::glew>();
-    imgui_context = std::make_unique<liminal::imgui_context>(
+    sdl = std::make_unique<liminal::core::sdl>();
+    sdl_image = std::make_unique<liminal::core::sdl_image>();
+    sdl_mixer = std::make_unique<liminal::core::sdl_mixer>();
+    audio = std::make_unique<liminal::core::audio>();
+    window = std::make_unique<liminal::core::window>(window_title, window_width, window_height);
+    gl_context = std::make_unique<liminal::core::gl_context>(window->get_sdl_window());
+    glew = std::make_unique<liminal::core::glew>();
+    imgui_context = std::make_unique<liminal::core::imgui_context>(
         window->get_sdl_window(),
         gl_context->get_sdl_gl_context());
-    al_device = std::make_unique<liminal::al_device>();
-    al_context = std::make_unique<liminal::al_context>(al_device->get_alc_device());
-    assets = std::make_shared<liminal::assets>();
-    renderer = std::make_unique<liminal::renderer>(
+    al_device = std::make_unique<liminal::core::al_device>();
+    al_context = std::make_unique<liminal::core::al_context>(al_device->get_alc_device());
+    assets = std::make_shared<liminal::core::assets>();
+    renderer = std::make_unique<liminal::core::renderer>(
         window_width, window_height, render_scale,
-        4096, 512, 1024,
+        4096, 512, 1024, // TODO: configurable shadow map sizes
         window_width, window_height,
         window_width, window_height);
 }
 
-void liminal::app::run()
+void liminal::core::app::run()
 {
     std::uint64_t current_time = 0;
 
@@ -90,24 +90,24 @@ void liminal::app::run()
         const auto delta_time = (current_time - previous_time) / 1000.0f;
 
         // gather input
-        liminal::input::last_keys = liminal::input::keys;
+        liminal::input::input::last_keys = liminal::input::input::keys;
         const auto keys = sdl->get_keys();
-        for (std::size_t scancode = 0; scancode < liminal::input::keys.size(); scancode++)
+        for (std::size_t scancode = 0; scancode < liminal::input::input::keys.size(); scancode++)
         {
-            liminal::input::keys.at(scancode) = keys[scancode];
+            liminal::input::input::keys.at(scancode) = keys[scancode];
         }
 
-        liminal::input::last_mouse_buttons = liminal::input::mouse_buttons;
-        const auto mouse_buttons = sdl->get_mouse_state(&liminal::input::mouse_x, &liminal::input::mouse_y);
-        for (std::size_t button = 0; button < liminal::input::mouse_buttons.size(); button++)
+        liminal::input::input::last_mouse_buttons = liminal::input::input::mouse_buttons;
+        const auto mouse_buttons = sdl->get_mouse_state(&liminal::input::input::mouse_x, &liminal::input::input::mouse_y);
+        for (std::size_t button = 0; button < liminal::input::input::mouse_buttons.size(); button++)
         {
-            liminal::input::mouse_buttons.at(button) = mouse_buttons & SDL_BUTTON(button);
+            liminal::input::input::mouse_buttons.at(button) = mouse_buttons & SDL_BUTTON(button);
         }
 
-        liminal::input::mouse_dx = 0;
-        liminal::input::mouse_dy = 0;
-        liminal::input::mouse_wheel_x = 0;
-        liminal::input::mouse_wheel_y = 0;
+        liminal::input::input::mouse_dx = 0;
+        liminal::input::input::mouse_dy = 0;
+        liminal::input::input::mouse_wheel_x = 0;
+        liminal::input::input::mouse_wheel_y = 0;
 
         // process events
         SDL_Event event;
@@ -138,14 +138,14 @@ void liminal::app::run()
             break;
             case SDL_MOUSEMOTION:
             {
-                liminal::input::mouse_dx = event.motion.xrel;
-                liminal::input::mouse_dy = event.motion.yrel;
+                liminal::input::input::mouse_dx = event.motion.xrel;
+                liminal::input::input::mouse_dy = event.motion.yrel;
             }
             break;
             case SDL_MOUSEWHEEL:
             {
-                liminal::input::mouse_wheel_x = event.wheel.x;
-                liminal::input::mouse_wheel_y = event.wheel.y;
+                liminal::input::input::mouse_wheel_x = event.wheel.x;
+                liminal::input::input::mouse_wheel_y = event.wheel.y;
             }
             break;
             }
@@ -155,19 +155,19 @@ void liminal::app::run()
 
         if (!ImGui::GetIO().WantCaptureKeyboard)
         {
-            if (liminal::input::key_down(liminal::keycode::RETURN) &&
-                liminal::input::key(liminal::keycode::LALT))
+            if (liminal::input::input::key_down(liminal::input::keycode::RETURN) &&
+                liminal::input::input::key(liminal::input::keycode::LALT))
             {
                 window->toggle_fullscreen();
             }
 
-            if (liminal::input::key_down(liminal::keycode::GRAVE))
+            if (liminal::input::input::key_down(liminal::input::keycode::GRAVE))
             {
                 console_open = !console_open;
             }
 
-            if (liminal::input::key_down(liminal::keycode::F4) &&
-                liminal::input::key(liminal::keycode::LALT))
+            if (liminal::input::input::key_down(liminal::input::keycode::F4) &&
+                liminal::input::input::key(liminal::input::keycode::LALT))
             {
                 stop();
             }
@@ -283,16 +283,16 @@ void liminal::app::run()
     }
 }
 
-void liminal::app::stop()
+void liminal::core::app::stop()
 {
     running = false;
 }
 
-void liminal::app::update(const std::uint64_t, const float)
+void liminal::core::app::update(const std::uint64_t, const float)
 {
 }
 
-void liminal::app::resize(const int width, const int height)
+void liminal::core::app::resize(const int width, const int height)
 {
     renderer->set_target_size(width, height);
 }

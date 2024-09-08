@@ -8,14 +8,17 @@
 
 namespace liminal
 {
-    struct directional_light
+    namespace components
     {
-        glm::vec3 color = {1, 1, 1};
-        bool shadows = true;
+        struct directional_light
+        {
+            glm::vec3 color = {1, 1, 1};
+            bool shadows = true;
 
-        glm::mat4 view_projection_matrix = {};
-        GLuint depth_texture_id = 0;
-    };
+            glm::mat4 view_projection_matrix = {};
+            GLuint depth_texture_id = 0;
+        };
+    }
 }
 
 #endif

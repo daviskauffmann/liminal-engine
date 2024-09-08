@@ -7,30 +7,34 @@ class btDiscreteDynamicsWorld;
 
 namespace liminal
 {
-    class rigidbody;
-    class character_controller;
 
-    class world
+    namespace physics
     {
-    public:
-        world();
-        ~world();
-        world(const world &other) = delete;
-        world &operator=(const world &other) = delete;
-        world(world &&other) = delete;
-        world &operator=(world &&other) = delete;
+        class character_controller;
+        class rigidbody;
 
-        void add_character_controller(std::shared_ptr<liminal::character_controller> character_controller);
-        void remove_character_controller(std::shared_ptr<liminal::character_controller> character_controller);
+        class world
+        {
+        public:
+            world();
+            ~world();
+            world(const world &other) = delete;
+            world &operator=(const world &other) = delete;
+            world(world &&other) = delete;
+            world &operator=(world &&other) = delete;
 
-        void add_rigidbody(std::shared_ptr<liminal::rigidbody> rigidbody);
-        void remove_rigidbody(std::shared_ptr<liminal::rigidbody> rigidbody);
+            void add_character_controller(std::shared_ptr<liminal::physics::character_controller> character_controller);
+            void remove_character_controller(std::shared_ptr<liminal::physics::character_controller> character_controller);
 
-        void update(float delta_time);
+            void add_rigidbody(std::shared_ptr<liminal::physics::rigidbody> rigidbody);
+            void remove_rigidbody(std::shared_ptr<liminal::physics::rigidbody> rigidbody);
 
-    private:
-        btDiscreteDynamicsWorld *bt_world;
-    };
+            void update(float delta_time);
+
+        private:
+            btDiscreteDynamicsWorld *bt_world;
+        };
+    }
 }
 
 #endif

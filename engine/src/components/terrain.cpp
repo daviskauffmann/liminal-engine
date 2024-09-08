@@ -15,7 +15,7 @@
 // TODO: 3d terrain (caves and whatnot)
 // this will probably be a different class
 
-liminal::terrain::terrain(const std::string &filename, const float tiling, std::shared_ptr<liminal::assets> assets)
+liminal::components::terrain::terrain(const std::string &filename, const float tiling, std::shared_ptr<liminal::core::assets> assets)
     : tiling(tiling)
 {
     const auto surface = IMG_Load(filename.c_str());
@@ -24,12 +24,12 @@ liminal::terrain::terrain(const std::string &filename, const float tiling, std::
         throw std::runtime_error(IMG_GetError());
     }
 
-    std::vector<liminal::mesh::vertex> vertices;
+    std::vector<liminal::graphics::mesh::vertex> vertices;
     for (int z = 0; z < surface->h; z++)
     {
         for (int x = 0; x < surface->w; x++)
         {
-            liminal::mesh::vertex vertex;
+            liminal::graphics::mesh::vertex vertex;
             vertex.position = {
                 -(float)x / ((float)surface->w - 1),
                 get_height(surface, x, z),
@@ -65,7 +65,7 @@ liminal::terrain::terrain(const std::string &filename, const float tiling, std::
 
     SDL_FreeSurface(surface);
 
-    std::array<std::vector<std::shared_ptr<liminal::texture>>, liminal::mesh::num_textures> textures;
+    std::array<std::vector<std::shared_ptr<liminal::graphics::texture>>, liminal::graphics::mesh::num_textures> textures;
 
     // TODO: remove hardcoded textures
     textures.at(aiTextureType_DIFFUSE).push_back(assets->load_texture("editor/data/textures/grass/grass1-albedo3.png"));
@@ -98,10 +98,10 @@ liminal::terrain::terrain(const std::string &filename, const float tiling, std::
     // textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture(""));
     // textures.at(aiTextureType_HEIGHT).push_back(assets->load_texture(""));
 
-    mesh = std::make_unique<liminal::mesh>(vertices, indices, textures);
+    mesh = std::make_unique<liminal::graphics::mesh>(vertices, indices, textures);
 }
 
-float liminal::terrain::get_height(const SDL_Surface *const surface, const int x, const int z) const
+float liminal::components::terrain::get_height(const SDL_Surface *const surface, const int x, const int z) const
 {
     if (x < 0 || x >= surface->w || z < 0 || z >= surface->h)
     {

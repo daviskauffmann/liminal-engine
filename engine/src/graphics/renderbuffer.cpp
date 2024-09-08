@@ -1,6 +1,6 @@
 #include <liminal/graphics/renderbuffer.hpp>
 
-liminal::renderbuffer::renderbuffer(
+liminal::graphics::renderbuffer::renderbuffer(
     const GLenum internal_format,
     const GLsizei width,
     const GLsizei height)
@@ -17,12 +17,12 @@ liminal::renderbuffer::renderbuffer(
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
-liminal::renderbuffer::~renderbuffer()
+liminal::graphics::renderbuffer::~renderbuffer()
 {
     glDeleteRenderbuffers(1, &renderbuffer_id);
 }
 
-GLuint liminal::renderbuffer::get_renderbuffer_id() const
+GLuint liminal::graphics::renderbuffer::get_renderbuffer_id() const
 {
     return renderbuffer_id;
 }

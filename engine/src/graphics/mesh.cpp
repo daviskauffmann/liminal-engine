@@ -4,7 +4,7 @@
 #include <liminal/graphics/program.hpp>
 #include <liminal/graphics/texture.hpp>
 
-void liminal::mesh::vertex::add_bone_data(const unsigned int id, const float weight)
+void liminal::graphics::mesh::vertex::add_bone_data(const unsigned int id, const float weight)
 {
     for (std::size_t bone_index = 0; bone_index < num_bones; bone_index++)
     {
@@ -17,11 +17,11 @@ void liminal::mesh::vertex::add_bone_data(const unsigned int id, const float wei
     }
 }
 
-liminal::mesh::mesh(
-    const std::vector<liminal::mesh::vertex> &vertices,
+liminal::graphics::mesh::mesh(
+    const std::vector<liminal::graphics::mesh::vertex> &vertices,
     const std::vector<GLuint> &indices,
-    const std::array<std::vector<std::shared_ptr<liminal::texture>>, num_textures> &textures)
-    : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::mesh::vertex))),
+    const std::array<std::vector<std::shared_ptr<liminal::graphics::texture>>, num_textures> &textures)
+    : vertices_size((GLsizei)(vertices.size() * sizeof(liminal::graphics::mesh::vertex))),
       indices_size((GLsizei)(indices.size() * sizeof(GLuint))),
       textures(textures)
 {
@@ -104,14 +104,14 @@ liminal::mesh::mesh(
     glBindVertexArray(0);
 }
 
-liminal::mesh::~mesh()
+liminal::graphics::mesh::~mesh()
 {
     glDeleteVertexArrays(1, &vao_id);
     glDeleteBuffers(1, &vbo_id);
     glDeleteBuffers(1, &ebo_id);
 }
 
-void liminal::mesh::draw(const liminal::program &program) const
+void liminal::graphics::mesh::draw(const liminal::graphics::program &program) const
 {
     // TODO: support multiple textures per type in the shader?
 
@@ -121,7 +121,7 @@ void liminal::mesh::draw(const liminal::program &program) const
     }
     else
     {
-        liminal::texture::unbind(0);
+        liminal::graphics::texture::unbind(0);
     }
 
     if (textures.at(aiTextureType_NORMALS).size() > 0)
@@ -132,7 +132,7 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_normal_map", 0);
-        liminal::texture::unbind(1);
+        liminal::graphics::texture::unbind(1);
     }
 
     if (textures.at(aiTextureType_SHININESS).size() > 0)
@@ -143,7 +143,7 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_metallic_map", 0);
-        liminal::texture::unbind(2);
+        liminal::graphics::texture::unbind(2);
     }
 
     if (textures.at(aiTextureType_OPACITY).size() > 0)
@@ -154,7 +154,7 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_roughness_map", 0);
-        liminal::texture::unbind(3);
+        liminal::graphics::texture::unbind(3);
     }
 
     if (textures.at(aiTextureType_AMBIENT).size() > 0)
@@ -165,7 +165,7 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_occlusion_map", 0);
-        liminal::texture::unbind(4);
+        liminal::graphics::texture::unbind(4);
     }
 
     if (textures.at(aiTextureType_HEIGHT).size() > 0)
@@ -176,7 +176,7 @@ void liminal::mesh::draw(const liminal::program &program) const
     else
     {
         program.set_int("material.has_height_map", 0);
-        liminal::texture::unbind(5);
+        liminal::graphics::texture::unbind(5);
     }
 
     if (indices_size)
@@ -192,10 +192,10 @@ void liminal::mesh::draw(const liminal::program &program) const
         glBindVertexArray(0);
     }
 
-    liminal::texture::unbind(0);
-    liminal::texture::unbind(1);
-    liminal::texture::unbind(2);
-    liminal::texture::unbind(3);
-    liminal::texture::unbind(4);
-    liminal::texture::unbind(5);
+    liminal::graphics::texture::unbind(0);
+    liminal::graphics::texture::unbind(1);
+    liminal::graphics::texture::unbind(2);
+    liminal::graphics::texture::unbind(3);
+    liminal::graphics::texture::unbind(4);
+    liminal::graphics::texture::unbind(5);
 }

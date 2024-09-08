@@ -6,13 +6,19 @@
 
 namespace liminal
 {
-    class source;
-
-    struct audio_source
+    namespace audio
     {
-        glm::vec3 last_position = {};
-        std::shared_ptr<liminal::source> source;
-    };
+        class source;
+    }
+
+    namespace components
+    {
+        struct audio_source
+        {
+            glm::vec3 last_position = {};
+            std::shared_ptr<liminal::audio::source> source;
+        };
+    }
 }
 
 #endif

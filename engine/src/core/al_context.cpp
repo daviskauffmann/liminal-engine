@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-liminal::al_context::al_context(ALCdevice *const alc_device)
+liminal::core::al_context::al_context(ALCdevice *const alc_device)
 {
     alc_context = alcCreateContext(alc_device, nullptr);
     if (!alc_context)
@@ -18,7 +18,7 @@ liminal::al_context::al_context(ALCdevice *const alc_device)
     }
 }
 
-liminal::al_context::~al_context()
+liminal::core::al_context::~al_context()
 {
     alcMakeContextCurrent(nullptr);
     alcDestroyContext(alc_context);
